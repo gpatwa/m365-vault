@@ -1,0 +1,317 @@
+"""Dashboard API routes — overview stats and charts."""
+from datetime import datetime, timedelta
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy import select, func, and_, or_, desc
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database import get_db
+from app.models.tenant import Tenant
+from app.models.protected_object import ProtectedObject, WorkloadType, ProtectionStatus
+from app.models.backup_job import BackupJob, JobStatus
+from app.models.restore_job import RestoreJob, RestoreStatus
+from app.models.snapshot import Snapshot, SnapshotStatus
+from app.models.user import User
+from app.services.auth import get_current_user
+from app.services.storage import storage_service
+
+router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
+
+
+@router.get("/summary")
+async def get_summary(
+    tenant_id: int = Query(None),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get dashboard summary statistics."""
+    # Tenant count
+    tenant_count = (await db.execute(select(func.count(Tenant.id)))).scalar()
+
+    # Protection stats by workload
+    workload_stats = {}
+    for wt in WorkloadType:
+        stmt = select(ProtectedObject).where(ProtectedObject.workload_type == wt)
+        if tenant_id:
+            stmt = stmt.where(ProtectedObject.tenant_id == tenant_id)
+
+        total = (await db.execute(
+            select(func.count()).select_from(stmt.subquery())
+        )).scalar()
+
+        protected = (await db.execute(
+            select(func.count()).select_from(
+                stmt.where(ProtectedObject.status == ProtectionStatus.PROTECTED).subquery()
+            )
+        )).scalar()
+
+        workload_stats[wt.value] = {
+            "total": total,
+            "protected": protected,
+            "unprotected": total - protected,
+            "protection_rate": round(protected / total * 100, 1) if total > 0 else 0,
+        }
+
+    # Total protected objects
+    total_protected = sum(ws["protected"] for ws in workload_stats.values())
+    total_objects = sum(ws["total"] for ws in workload_stats.values())
+
+    # Recent job stats (last 24h)
+    since_24h = datetime.utcnow() - timedelta(hours=24)
+
+    backup_jobs_24h = (await db.execute(
+        select(func.count(BackupJob.id)).where(BackupJob.created_at >= since_24h)
+    )).scalar()
+
+    successful_backups_24h = (await db.execute(
+        select(func.count(BackupJob.id)).where(
+            BackupJob.created_at >= since_24h,
+            BackupJob.status == JobStatus.COMPLETED,
+        )
+    )).scalar()
+
+    failed_backups_24h = (await db.execute(
+        select(func.count(BackupJob.id)).where(
+            BackupJob.created_at >= since_24h,
+            BackupJob.status == JobStatus.FAILED,
+        )
+    )).scalar()
+
+    restore_jobs_24h = (await db.execute(
+        select(func.count(RestoreJob.id)).where(RestoreJob.created_at >= since_24h)
+    )).scalar()
+
+    # Snapshot stats
+    total_snapshots = (await db.execute(
+        select(func.count(Snapshot.id)).where(Snapshot.status == SnapshotStatus.COMPLETED)
+    )).scalar()
+
+    total_backup_size = (await db.execute(
+        select(func.sum(Snapshot.size_bytes)).where(Snapshot.status == SnapshotStatus.COMPLETED)
+    )).scalar() or 0
+
+    # Storage stats
+    storage_stats = storage_service.get_storage_stats()
+
+    return {
+        "tenants": tenant_count,
+        "total_objects": total_objects,
+        "total_protected": total_protected,
+        "protection_rate": round(total_protected / total_objects * 100, 1) if total_objects > 0 else 0,
+        "workloads": workload_stats,
+        "jobs_24h": {
+            "backup_total": backup_jobs_24h,
+            "backup_successful": successful_backups_24h,
+            "backup_failed": failed_backups_24h,
+            "restore_total": restore_jobs_24h,
+        },
+        "snapshots": {
+            "total": total_snapshots,
+            "total_size_bytes": total_backup_size,
+            "total_size_gb": round(total_backup_size / (1024**3), 2),
+        },
+        "storage": storage_stats,
+    }
+
+
+@router.get("/activity")
+async def get_activity(
+    tenant_id: int = Query(None),
+    days: int = Query(7, ge=1, le=90),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get backup/restore activity over time for charts."""
+    activity = []
+
+    for i in range(days):
+        date = datetime.utcnow().date() - timedelta(days=i)
+        day_start = datetime.combine(date, datetime.min.time())
+        day_end = datetime.combine(date, datetime.max.time())
+
+        # Backup jobs for this day
+        backup_count = (await db.execute(
+            select(func.count(BackupJob.id)).where(
+                BackupJob.created_at >= day_start,
+                BackupJob.created_at <= day_end,
+            )
+        )).scalar()
+
+        backup_success = (await db.execute(
+            select(func.count(BackupJob.id)).where(
+                BackupJob.created_at >= day_start,
+                BackupJob.created_at <= day_end,
+                BackupJob.status == JobStatus.COMPLETED,
+            )
+        )).scalar()
+
+        # Restore jobs for this day
+        restore_count = (await db.execute(
+            select(func.count(RestoreJob.id)).where(
+                RestoreJob.created_at >= day_start,
+                RestoreJob.created_at <= day_end,
+            )
+        )).scalar()
+
+        # Data backed up this day
+        data_size = (await db.execute(
+            select(func.sum(Snapshot.size_bytes)).where(
+                Snapshot.created_at >= day_start,
+                Snapshot.created_at <= day_end,
+                Snapshot.status == SnapshotStatus.COMPLETED,
+            )
+        )).scalar() or 0
+
+        activity.append({
+            "date": date.isoformat(),
+            "backups": backup_count,
+            "backups_successful": backup_success,
+            "restores": restore_count,
+            "data_backed_up_bytes": data_size,
+        })
+
+    activity.reverse()
+    return {"activity": activity}
+
+
+@router.get("/compliance")
+async def get_compliance(
+    tenant_id: int = Query(None),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get SLA compliance status."""
+    from app.models.sla_policy import SLAPolicy
+
+    stmt = select(ProtectedObject, SLAPolicy).join(
+        SLAPolicy, ProtectedObject.sla_policy_id == SLAPolicy.id
+    ).where(ProtectedObject.status == ProtectionStatus.PROTECTED)
+
+    if tenant_id:
+        stmt = stmt.where(ProtectedObject.tenant_id == tenant_id)
+
+    result = await db.execute(stmt)
+    rows = result.all()
+
+    compliant = 0
+    non_compliant = 0
+    pending_first_backup = 0
+    details = []
+
+    for obj, sla in rows:
+        if obj.last_backup_at:
+            expected_next = obj.last_backup_at + timedelta(hours=sla.backup_frequency_hours)
+            is_compliant = datetime.utcnow() <= expected_next
+        else:
+            # Object has never been successfully backed up.
+            # If it was recently assigned (created within one SLA cycle), treat as
+            # "pending first backup" rather than a violation — the scheduler hasn't
+            # had a full cycle yet.
+            grace_window = obj.created_at + timedelta(hours=sla.backup_frequency_hours)
+            if datetime.utcnow() <= grace_window:
+                # Still within the first SLA window — pending, not a violation
+                pending_first_backup += 1
+                compliant += 1
+                continue
+            else:
+                is_compliant = False
+
+        if is_compliant:
+            compliant += 1
+        else:
+            non_compliant += 1
+            reason = "overdue"
+            if obj.last_backup_at is None and obj.last_backup_status == "failed":
+                reason = "initial_backup_failed"
+            elif obj.last_backup_at is None:
+                reason = "never_backed_up"
+
+            details.append({
+                "object_name": obj.display_name,
+                "workload": obj.workload_type.value,
+                "sla_name": sla.name,
+                "last_backup": obj.last_backup_at.isoformat() if obj.last_backup_at else "Never",
+                "last_backup_status": obj.last_backup_status,
+                "frequency_hours": sla.backup_frequency_hours,
+                "reason": reason,
+            })
+
+    total = compliant + non_compliant
+    return {
+        "total": total,
+        "compliant": compliant,
+        "non_compliant": non_compliant,
+        "pending_first_backup": pending_first_backup,
+        "compliance_rate": round(compliant / total * 100, 1) if total > 0 else 100,
+        "violations": details[:20],  # Top 20 violations
+    }
+
+
+@router.get("/unprotected")
+async def get_unprotected_items(
+    tenant_id: int = Query(None),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get all unprotected items grouped by workload, with at-risk details."""
+    # Unprotected objects: no SLA assigned OR status is not PROTECTED
+    stmt = select(ProtectedObject).where(
+        or_(
+            ProtectedObject.status != ProtectionStatus.PROTECTED,
+            ProtectedObject.sla_policy_id.is_(None),
+        )
+    )
+    if tenant_id:
+        stmt = stmt.where(ProtectedObject.tenant_id == tenant_id)
+
+    stmt = stmt.order_by(ProtectedObject.workload_type, ProtectedObject.display_name)
+    result = await db.execute(stmt)
+    unprotected = result.scalars().all()
+
+    # Also find protected objects whose last backup failed
+    failed_stmt = select(ProtectedObject).where(
+        ProtectedObject.status == ProtectionStatus.PROTECTED,
+        ProtectedObject.last_backup_status == "failed",
+    )
+    if tenant_id:
+        failed_stmt = failed_stmt.where(ProtectedObject.tenant_id == tenant_id)
+
+    failed_result = await db.execute(failed_stmt)
+    at_risk = failed_result.scalars().all()
+
+    # Group by workload
+    by_workload: dict = {}
+    for obj in unprotected:
+        wl = obj.workload_type.value if hasattr(obj.workload_type, 'value') else str(obj.workload_type)
+        if wl not in by_workload:
+            by_workload[wl] = {"unprotected": [], "at_risk": []}
+        by_workload[wl]["unprotected"].append(_serialize_object(obj))
+
+    for obj in at_risk:
+        wl = obj.workload_type.value if hasattr(obj.workload_type, 'value') else str(obj.workload_type)
+        if wl not in by_workload:
+            by_workload[wl] = {"unprotected": [], "at_risk": []}
+        by_workload[wl]["at_risk"].append(_serialize_object(obj))
+
+    return {
+        "total_unprotected": len(unprotected),
+        "total_at_risk": len(at_risk),
+        "by_workload": by_workload,
+        "items": [_serialize_object(o) for o in unprotected],
+        "at_risk_items": [_serialize_object(o) for o in at_risk],
+    }
+
+
+def _serialize_object(obj: ProtectedObject) -> dict:
+    return {
+        "id": obj.id,
+        "display_name": obj.display_name,
+        "workload_type": obj.workload_type.value if hasattr(obj.workload_type, 'value') else str(obj.workload_type),
+        "email": obj.email,
+        "site_url": obj.site_url,
+        "status": obj.status.value if hasattr(obj.status, 'value') else str(obj.status),
+        "sla_policy_id": obj.sla_policy_id,
+        "last_backup_at": obj.last_backup_at.isoformat() if obj.last_backup_at else None,
+        "last_backup_status": obj.last_backup_status,
+        "total_items_backed_up": obj.total_items_backed_up,
+        "total_size_bytes": obj.total_size_bytes,
+    }

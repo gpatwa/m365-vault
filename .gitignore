@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Database
+*.db
+*.sqlite3
+
+# Node
+node_modules/
+frontend/dist/
+
+# Environment & secrets
+.env
+*.local
+
+# Backup data (contains encrypted user data)
+backend/data/
+
+# IDE
+.vscode/
+.idea/
+*.sw?
+*.swo
+*.swn
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude
+.claude/
+
+# Logs
+*.log
+
+# Coverage
+htmlcov/
+.coverage

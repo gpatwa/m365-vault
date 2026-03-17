@@ -4,7 +4,7 @@
 
 M365 Vault is a self-hosted SaaS data protection platform for Microsoft 365 workloads. It provides automated, SLA-driven backup and granular point-in-time restore for Exchange Online, OneDrive for Business, and SharePoint Online — with AES-256 encryption at rest, role-based access control, and comprehensive audit logging.
 
-> Version 1.1.0 | Python 3.11+ | React 19 | FastAPI | MIT License
+> Version 1.1.0 | Python 3.11+ | React 19 | FastAPI | Apache-2.0 License
 
 ---
 
@@ -171,4 +171,4 @@ Interactive API docs are available at [http://localhost:8000/docs](http://localh
 
 ## License
 
-MIT License. See [LICENSE](LICENSE) for details.
+Apache-2.0 License. See [LICENSE](LICENSE) for details.

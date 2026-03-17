@@ -20,6 +20,15 @@ All notable changes to M365 Vault are documented in this file.
 - VIEWER role is restricted to read-only browsing (GET endpoints only)
 - Added `require_backup_permission` and `require_restore_permission` convenience dependencies
 
+### Documentation
+
+- Added **Tenant Security Guide** (`docs/TENANT_SECURITY.md`) — comprehensive guide covering Azure AD app registration, credential encryption, tenant data isolation, least-privilege Graph API access, RBAC for tenant operations, and production hardening recommendations
+- Added tenant onboarding security checklist
+
+### Changed
+
+- License changed from MIT to **Apache License 2.0** for stronger patent protection
+
 ---
 
 ## [1.0.0] - 2026-03-16

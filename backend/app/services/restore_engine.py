@@ -33,11 +33,17 @@ class RestoreEngine:
         self.db = db
 
     def _get_graph_client(self, tenant: Tenant) -> GraphClient:
+        """Create a read-write Graph client for restore operations.
+
+        Restore operations need write access to M365 data (POST/PUT) to
+        recreate messages, upload files, and restore SharePoint items.
+        """
         client_secret = encryption_service.decrypt_string(tenant.client_secret_encrypted)
         return GraphClient(
             tenant_id=tenant.ms_tenant_id,
             client_id=tenant.client_id,
             client_secret=client_secret,
+            access_mode="restore",
         )
 
     async def execute_restore(self, restore_job: RestoreJob) -> RestoreJob:

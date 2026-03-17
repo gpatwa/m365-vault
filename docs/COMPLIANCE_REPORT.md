@@ -1,6 +1,6 @@
 # M365 Vault — Compliance & Security Report
 
-**Product:** M365 Vault v1.0.0
+**Product:** M365 Vault v1.1.0
 **Report Date:** 2026-03-16
 **Classification:** Internal — Confidential
 **Prepared By:** Security & Compliance Engineering
@@ -11,7 +11,7 @@
 
 M365 Vault is a data protection platform for Microsoft 365 workloads. It provides automated backup, encrypted storage, and policy-driven retention for Exchange Online mailboxes, SharePoint Online document libraries, and associated collaboration data.
 
-This report documents the security controls implemented in version 1.0.0, assesses their alignment with GDPR, SOC 2 Type II, and HIPAA regulatory frameworks, and identifies gaps that must be addressed before production deployment.
+This report documents the security controls implemented in version 1.1.0, assesses their alignment with GDPR, SOC 2 Type II, and HIPAA regulatory frameworks, and identifies gaps that must be addressed before production deployment.
 
 Key findings:
 
@@ -66,15 +66,26 @@ The master key is loaded at application startup and held in process memory for t
 
 ### 3.1 Role-Based Access Control (RBAC)
 
-Three roles are defined in the `UserRole` enumeration:
+Three roles are defined in the `UserRole` enumeration with least-privilege enforcement (v1.1.0):
 
 | Role | Intended Scope |
 |---|---|
-| `admin` | Full system access: user management, tenant configuration, SLA policy administration, backup and restore operations |
-| `operator` | Operational access: initiate and monitor backups, perform restores, view audit logs |
-| `viewer` | Read-only access: view backup status, snapshot metadata, and reports |
+| `admin` | Full system access: user management, tenant configuration, SLA policy administration, backup triggers, and **restore/recovery operations** (write access) |
+| `operator` | Operational access: trigger and monitor backups, retry failed jobs, SLA assignment, view audit logs. **Cannot perform restore or mass recovery** |
+| `viewer` | Read-only access: view backup status, browse snapshots, search items, and view reports. **Cannot trigger any backup or restore operations** |
 
-Role enforcement is implemented via the `require_role()` dependency factory, which inspects the authenticated user's role and returns HTTP 403 if the role is not in the permitted set.
+Role enforcement is implemented via the `require_role()` dependency factory and two convenience dependencies:
+- `require_backup_permission` — allows ADMIN and OPERATOR (read-only Graph operations)
+- `require_restore_permission` — allows ADMIN only (write Graph operations)
+
+| Endpoint Category | Required Role | Graph Access |
+|---|---|---|
+| Browse / search / list (GET) | Any authenticated user | N/A |
+| Trigger backup | Admin, Operator | Read-only scopes |
+| Trigger restore / mass recovery | Admin only | Read-write scopes |
+| Retry failed jobs | Admin, Operator | Read-only scopes |
+
+This separation ensures that even if an operator's credentials are compromised, the attacker cannot write data back to the M365 tenant.
 
 ### 3.2 Authentication
 
@@ -280,7 +291,8 @@ The following matrix maps implemented controls to applicable regulatory framewor
 | ENC-002 | Per-snapshot unique DEK generation | Art. 32(1)(a) | CC8.1 | 164.312(a)(2)(iv) | `generate_dek()` — `os.urandom(32)` |
 | ENC-003 | TLS for Graph API communication | Art. 32(1)(a) | CC8.1 | 164.312(e)(1) | HTTPS base URL enforced in `Settings` |
 | ENC-004 | GCM authentication tag integrity | Art. 32(1)(b) | CC8.1 | 164.312(c)(1) | 128-bit tag on all encrypted payloads |
-| ACC-001 | RBAC with admin/operator/viewer roles | Art. 32(1)(b) | CC6.1, CC6.3 | 164.312(a)(1) | `UserRole` enum, `require_role()` dependency |
+| ACC-001 | RBAC with admin/operator/viewer roles | Art. 32(1)(b) | CC6.1, CC6.3 | 164.312(a)(1) | `UserRole` enum, `require_role()`, `require_backup_permission`, `require_restore_permission` |
+| ACC-005 | Least-privilege Graph API scopes | Art. 25, Art. 32(1)(b) | CC6.3 | 164.312(a)(1) | Backup uses read-only scopes; restore uses read-write scopes; `ReadOnlyViolationError` blocks writes on backup clients |
 | ACC-002 | JWT token authentication | — | CC6.2 | 164.312(d) | `create_access_token()`, HS256 signing |
 | ACC-003 | bcrypt password hashing | — | CC6.2 | 164.312(d) | `hash_password()` with auto-salt |
 | ACC-004 | User activation/deactivation | — | CC6.1 | 164.312(a)(1) | `is_active` flag; inactive users blocked at token validation |

@@ -16,13 +16,22 @@ Authorization: Bearer <access_token>
 
 Obtain a token via `POST /api/auth/login`. Tokens expire after the configured `ACCESS_TOKEN_EXPIRE_MINUTES`.
 
-### Role-Based Access
+### Role-Based Access (v1.1.0 — Least Privilege)
 
 | Role | Description |
 |------|-------------|
-| `admin` | Full access, tenant/SLA management |
-| `operator` | Backup/restore operations, discovery, SLA assignment |
-| `viewer` | Read-only access to all data |
+| `admin` | Full access: tenant/SLA management, backup triggers, **restore/recovery** (write access) |
+| `operator` | Backup triggers, retry failed jobs, discovery, SLA assignment. **Cannot restore** |
+| `viewer` | Read-only: browse snapshots, search items, view job status. **Cannot trigger backup or restore** |
+
+**Endpoint permission matrix:**
+
+| Operation | Required Role | Auth Dependency |
+|-----------|---------------|-----------------|
+| GET (browse/search/list) | Any authenticated | `get_current_user` |
+| POST backup / backup-all | Admin, Operator | `require_backup_permission` |
+| POST restore / mass-recovery | **Admin only** | `require_restore_permission` |
+| POST retry / retry-all-failed | Admin, Operator | `require_backup_permission` |
 
 ### Pagination
 
@@ -260,9 +269,9 @@ Prefix: `/api/exchange`
 | GET | `/api/exchange/mailboxes/{mailbox_id}/snapshots` | Bearer | List snapshots for a mailbox |
 | GET | `/api/exchange/mailboxes/{mailbox_id}/snapshots/{snapshot_id}/browse` | Bearer | Browse items in a snapshot |
 | GET | `/api/exchange/search` | Bearer | Search emails across snapshots |
-| POST | `/api/exchange/mailboxes/{mailbox_id}/restore` | Bearer | Restore mailbox data |
-| POST | `/api/exchange/mailboxes/{mailbox_id}/backup` | Bearer | Trigger on-demand backup |
-| POST | `/api/exchange/backup-all` | Bearer | Backup all Exchange mailboxes in a tenant |
+| POST | `/api/exchange/mailboxes/{mailbox_id}/restore` | Admin | Restore mailbox data (write access) |
+| POST | `/api/exchange/mailboxes/{mailbox_id}/backup` | Admin, Operator | Trigger on-demand backup |
+| POST | `/api/exchange/backup-all` | Admin, Operator | Backup all Exchange mailboxes in a tenant |
 
 ### GET `/api/exchange/mailboxes`
 
@@ -342,9 +351,9 @@ Prefix: `/api/onedrive`
 | GET | `/api/onedrive/accounts/{account_id}/snapshots` | Bearer | List snapshots for an account |
 | GET | `/api/onedrive/accounts/{account_id}/snapshots/{snapshot_id}/browse` | Bearer | Browse files in a snapshot |
 | GET | `/api/onedrive/search` | Bearer | Search files across snapshots |
-| POST | `/api/onedrive/accounts/{account_id}/restore` | Bearer | Restore OneDrive data |
-| POST | `/api/onedrive/accounts/{account_id}/backup` | Bearer | Trigger on-demand backup |
-| POST | `/api/onedrive/backup-all` | Bearer | Backup all OneDrive accounts in a tenant |
+| POST | `/api/onedrive/accounts/{account_id}/restore` | Admin | Restore OneDrive data (write access) |
+| POST | `/api/onedrive/accounts/{account_id}/backup` | Admin, Operator | Trigger on-demand backup |
+| POST | `/api/onedrive/backup-all` | Admin, Operator | Backup all OneDrive accounts in a tenant |
 
 ### GET `/api/onedrive/accounts`
 
@@ -389,9 +398,9 @@ Prefix: `/api/sharepoint`
 | GET | `/api/sharepoint/sites/{site_id}/snapshots` | Bearer | List snapshots for a site |
 | GET | `/api/sharepoint/sites/{site_id}/snapshots/{snapshot_id}/browse` | Bearer | Browse items in a snapshot |
 | GET | `/api/sharepoint/search` | Bearer | Search files across snapshots |
-| POST | `/api/sharepoint/sites/{site_id}/restore` | Bearer | Restore site data |
-| POST | `/api/sharepoint/sites/{site_id}/backup` | Bearer | Trigger on-demand backup |
-| POST | `/api/sharepoint/backup-all` | Bearer | Backup all SharePoint sites in a tenant |
+| POST | `/api/sharepoint/sites/{site_id}/restore` | Admin | Restore site data (write access) |
+| POST | `/api/sharepoint/sites/{site_id}/backup` | Admin, Operator | Trigger on-demand backup |
+| POST | `/api/sharepoint/backup-all` | Admin, Operator | Backup all SharePoint sites in a tenant |
 
 ### GET `/api/sharepoint/sites`
 
@@ -438,10 +447,10 @@ Prefix: `/api/jobs`
 | GET | `/api/jobs/backup/{job_id}` | Bearer | Get backup job details |
 | GET | `/api/jobs/restore/{job_id}` | Bearer | Get restore job details |
 | GET | `/api/jobs/failed-summary` | Bearer | Summary of failed/partial jobs with retry eligibility |
-| POST | `/api/jobs/backup/{job_id}/retry` | Bearer | Retry a single failed backup job |
-| POST | `/api/jobs/retry-all-failed` | Bearer | Retry all eligible failed jobs |
-| POST | `/api/jobs/snapshots/{snapshot_id}/retry` | Bearer | Retry a failed snapshot |
-| POST | `/api/jobs/mass-recovery` | Bearer | Mass recovery for multiple objects |
+| POST | `/api/jobs/backup/{job_id}/retry` | Admin, Operator | Retry a single failed backup job |
+| POST | `/api/jobs/retry-all-failed` | Admin, Operator | Retry all eligible failed jobs |
+| POST | `/api/jobs/snapshots/{snapshot_id}/retry` | Admin, Operator | Retry a failed snapshot |
+| POST | `/api/jobs/mass-recovery` | Admin | Mass recovery for multiple objects (write access) |
 
 ### GET `/api/jobs/backup`
 

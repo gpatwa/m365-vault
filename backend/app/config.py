@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     # App
     APP_NAME: str = "M365 Vault"
-    APP_VERSION: str = "1.0.0"
+    APP_VERSION: str = "1.1.0"
     DEBUG: bool = True
     SECRET_KEY: str = "change-me-in-production-use-openssl-rand-hex-32"
     ALGORITHM: str = "HS256"
@@ -24,6 +24,26 @@ class Settings(BaseSettings):
     MS_GRAPH_BATCH_URL: str = "https://graph.microsoft.com/v1.0/$batch"
     MS_AUTH_URL: str = "https://login.microsoftonline.com"
     MS_GRAPH_SCOPE: str = "https://graph.microsoft.com/.default"
+
+    # Least-privilege Graph API scopes
+    # Backup: read-only access to M365 data
+    MS_GRAPH_BACKUP_SCOPES: list[str] = [
+        "https://graph.microsoft.com/Mail.Read",
+        "https://graph.microsoft.com/Calendars.Read",
+        "https://graph.microsoft.com/Contacts.Read",
+        "https://graph.microsoft.com/Files.Read.All",
+        "https://graph.microsoft.com/Sites.Read.All",
+        "https://graph.microsoft.com/User.Read.All",
+    ]
+    # Restore: read-write access to M365 data
+    MS_GRAPH_RESTORE_SCOPES: list[str] = [
+        "https://graph.microsoft.com/Mail.ReadWrite",
+        "https://graph.microsoft.com/Calendars.ReadWrite",
+        "https://graph.microsoft.com/Contacts.ReadWrite",
+        "https://graph.microsoft.com/Files.ReadWrite.All",
+        "https://graph.microsoft.com/Sites.ReadWrite.All",
+        "https://graph.microsoft.com/User.Read.All",
+    ]
 
     # Throttling
     GRAPH_MAX_RETRIES: int = 5

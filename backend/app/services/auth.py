@@ -66,3 +66,11 @@ def require_role(*roles: UserRole):
             )
         return current_user
     return role_checker
+
+
+# Pre-built permission dependencies for least-privilege access
+# Backup operations: read-only access — ADMIN and OPERATOR can trigger
+require_backup_permission = require_role(UserRole.ADMIN, UserRole.OPERATOR)
+
+# Restore/recovery operations: write access — ADMIN only (high-risk)
+require_restore_permission = require_role(UserRole.ADMIN)

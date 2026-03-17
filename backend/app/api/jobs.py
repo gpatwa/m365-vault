@@ -9,7 +9,7 @@ from app.database import get_db
 from app.models.backup_job import BackupJob, JobStatus
 from app.models.restore_job import RestoreJob, RestoreStatus
 from app.models.user import User
-from app.services.auth import get_current_user
+from app.services.auth import get_current_user, require_backup_permission, require_restore_permission
 
 router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
 
@@ -181,9 +181,9 @@ async def get_failed_jobs_summary(
 async def retry_backup_job(
     job_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_backup_permission),
 ):
-    """Manually retry a failed backup job."""
+    """Manually retry a failed backup job. Requires ADMIN or OPERATOR role."""
     from app.services.retry_engine import RetryEngine
     engine = RetryEngine(db)
     try:
@@ -195,9 +195,9 @@ async def retry_backup_job(
 @router.post("/retry-all-failed")
 async def retry_all_failed_jobs(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_backup_permission),
 ):
-    """Trigger immediate retry of all eligible failed jobs."""
+    """Trigger immediate retry of all eligible failed jobs. Requires ADMIN or OPERATOR role."""
     from app.services.retry_engine import RetryEngine
     engine = RetryEngine(db)
     return await engine.process_failed_jobs()
@@ -207,9 +207,9 @@ async def retry_all_failed_jobs(
 async def retry_failed_snapshot(
     snapshot_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_backup_permission),
 ):
-    """Retry a specific failed snapshot by creating a new backup."""
+    """Retry a specific failed snapshot by creating a new backup. Requires ADMIN or OPERATOR role."""
     from app.services.retry_engine import RetryEngine
     engine = RetryEngine(db)
     try:
@@ -228,9 +228,9 @@ class MassRecoveryRequest(BaseModel):
 async def mass_recovery(
     req: MassRecoveryRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_restore_permission),
 ):
-    """Trigger mass recovery for multiple objects."""
+    """Trigger mass recovery for multiple objects. Requires ADMIN role (write access)."""
     from app.services.restore_engine import RestoreEngine
     from app.models.restore_job import RestoreType
 

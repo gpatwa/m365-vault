@@ -11,7 +11,7 @@ from app.models.protected_object import ProtectedObject, WorkloadType
 from app.models.snapshot import Snapshot, SnapshotStatus
 from app.models.restore_job import RestoreJob, RestoreType, RestoreStatus
 from app.models.user import User
-from app.services.auth import get_current_user
+from app.services.auth import get_current_user, require_backup_permission, require_restore_permission
 from app.services.catalog import CatalogService
 from app.services.backup_engine import BackupEngine
 
@@ -139,9 +139,9 @@ async def restore_site(
     site_id: int,
     req: RestoreRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_restore_permission),
 ):
-    """Restore SharePoint site data."""
+    """Restore SharePoint site data. Requires ADMIN role (write access)."""
     obj = await db.get(ProtectedObject, site_id)
     if not obj:
         raise HTTPException(status_code=404, detail="Site not found")
@@ -176,9 +176,9 @@ async def restore_site(
 async def trigger_backup(
     site_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_backup_permission),
 ):
-    """Manually trigger a backup for a SharePoint site."""
+    """Manually trigger a backup for a SharePoint site. Requires ADMIN or OPERATOR role."""
     obj = await db.get(ProtectedObject, site_id)
     if not obj:
         raise HTTPException(status_code=404, detail="Site not found")
@@ -197,9 +197,9 @@ async def trigger_backup(
 async def trigger_backup_all(
     tenant_id: int = Query(1),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_backup_permission),
 ):
-    """Trigger backup for ALL SharePoint sites in a tenant with progress tracking."""
+    """Trigger backup for ALL SharePoint sites in a tenant. Requires ADMIN or OPERATOR role."""
     from app.models.backup_job import BackupJob, JobStatus
 
     result = await db.execute(

@@ -213,6 +213,10 @@ Ten services in `backend/app/services/`:
 
 ### 4.2 GraphClient (`graph_client.py`)
 - OAuth2 client credentials flow via **MSAL** with automatic token caching and refresh.
+- **Least-privilege access modes** (v1.1.0):
+  - `backup` mode — read-only scopes (`Mail.Read`, `Files.Read.All`, etc.); POST/PUT/PATCH/DELETE blocked at the client level with `ReadOnlyViolationError`.
+  - `restore` mode — read-write scopes (`Mail.ReadWrite`, `Files.ReadWrite.All`, etc.); all HTTP methods allowed.
+  - `default` mode — legacy `.default` scope for backward compatibility.
 - Concurrency-limited requests (`asyncio.Semaphore`, default 10 concurrent).
 - **Throttle handling:** exponential backoff with jitter on HTTP 429, honoring `Retry-After`.
 - **Server error retry:** exponential backoff on 5xx responses.
@@ -233,6 +237,7 @@ Ten services in `backend/app/services/`:
 
 ### 4.4 BackupEngine (`backup_engine.py`)
 - Orchestrates backup jobs across all workload types.
+- Uses a **read-only** (`access_mode="backup"`) Graph client — write operations are blocked at the client level.
 - Determines snapshot type (full vs. incremental based on prior snapshot existence).
 - Creates `Snapshot` record, initializes encrypted storage, dispatches to the appropriate worker.
 - Tracks per-object progress in `BackupJob.progress_details` (JSON with status, item counts, errors).
@@ -241,6 +246,7 @@ Ten services in `backend/app/services/`:
 
 ### 4.5 RestoreEngine (`restore_engine.py`)
 - Supports five restore types: full in-place, item-level, cross-user, export, and mass recovery.
+- Uses a **read-write** (`access_mode="restore"`) Graph client — full POST/PUT access for restoring data.
 - Decrypts the snapshot's wrapped DEK, then dispatches to the appropriate worker.
 - Mass recovery runs multiple restore jobs in parallel with `asyncio.Semaphore` concurrency control (default 5).
 
@@ -423,16 +429,27 @@ encrypted. The master key never touches disk -- it comes from the environment.
 
 ### RBAC Enforcement
 
-Three roles with hierarchical permissions:
+Three roles with least-privilege permissions (updated in v1.1.0):
 
 | Role       | Capabilities                                              |
 |------------|-----------------------------------------------------------|
-| `admin`    | Full access: tenant management, user management, all operations |
-| `operator` | Run backups, restores, manage SLA policies, view audit logs     |
-| `viewer`   | Read-only access to dashboards, job status, and audit logs      |
+| `admin`    | Full access: tenant management, user management, backup triggers, **restore/recovery** |
+| `operator` | Backup triggers, discovery, SLA assignment, retry failed jobs, view audit logs |
+| `viewer`   | Read-only access to dashboards, job status, snapshots, and audit logs |
+
+**Endpoint-level enforcement (v1.1.0):**
+
+| Operation | Required Role | Dependency |
+|-----------|---------------|------------|
+| Browse / search / list (GET) | Any authenticated user | `get_current_user` |
+| Trigger backup | Admin, Operator | `require_backup_permission` |
+| Trigger restore / mass recovery | **Admin only** | `require_restore_permission` |
+| Retry failed jobs | Admin, Operator | `require_backup_permission` |
+| Tenant / SLA management | Admin | `require_role(ADMIN)` |
 
 Enforcement is at the route level using `Depends(require_role(UserRole.ADMIN))` or
-similar. The dependency raises HTTP 403 if the user's role is not in the allowed set.
+the convenience dependencies `require_backup_permission` / `require_restore_permission`.
+The dependency raises HTTP 403 if the user's role is not in the permitted set.
 
 ### CORS
 

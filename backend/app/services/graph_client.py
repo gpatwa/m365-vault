@@ -6,13 +6,14 @@ Features:
 - Exponential backoff with jitter for throttling (429)
 - Request batching via $batch endpoint
 - Concurrent request limiting
+- Least-privilege access modes: backup (read-only) vs restore (read-write)
 """
 import asyncio
 import json
 import logging
 import time
 import random
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 import httpx
 import msal
@@ -31,13 +32,37 @@ class GraphAPIError(Exception):
         super().__init__(f"Graph API Error {status_code}: {message}")
 
 
-class GraphClient:
-    """Throttle-aware Microsoft Graph API client."""
+class ReadOnlyViolationError(GraphAPIError):
+    """Raised when a write operation is attempted on a read-only (backup) client."""
+    def __init__(self, method: str, url: str):
+        super().__init__(
+            403,
+            f"Write operation ({method}) blocked: backup client is read-only. "
+            f"Restore operations require a read-write client. URL: {url}",
+            "READ_ONLY_VIOLATION",
+        )
 
-    def __init__(self, tenant_id: str, client_id: str, client_secret: str):
+
+class GraphClient:
+    """Throttle-aware Microsoft Graph API client with least-privilege access modes.
+
+    Access modes:
+    - "backup": Read-only — GET requests only. POST/PUT/DELETE are blocked.
+    - "restore": Read-write — all HTTP methods allowed.
+    - "default": Legacy mode using .default scope (all permissions).
+    """
+
+    def __init__(
+        self,
+        tenant_id: str,
+        client_id: str,
+        client_secret: str,
+        access_mode: Literal["backup", "restore", "default"] = "default",
+    ):
         self.tenant_id = tenant_id
         self.client_id = client_id
         self.client_secret = client_secret
+        self.access_mode = access_mode
         self._token_cache: Optional[dict] = None
         self._token_expires_at: float = 0
         self._semaphore = asyncio.Semaphore(settings.GRAPH_MAX_CONCURRENT_REQUESTS)
@@ -52,14 +77,31 @@ class GraphClient:
         self._throttle_count = 0
         self._last_request_time = 0
 
+        logger.info(
+            f"GraphClient initialized in '{access_mode}' mode for tenant {tenant_id}"
+        )
+
+    def _get_scopes(self) -> list[str]:
+        """Get the appropriate OAuth2 scopes based on access mode."""
+        if self.access_mode == "backup":
+            return settings.MS_GRAPH_BACKUP_SCOPES
+        elif self.access_mode == "restore":
+            return settings.MS_GRAPH_RESTORE_SCOPES
+        else:
+            return [settings.MS_GRAPH_SCOPE]
+
+    def _ensure_write_allowed(self, method: str, url: str):
+        """Block write operations on read-only (backup) clients."""
+        if self.access_mode == "backup" and method.upper() in ("POST", "PUT", "PATCH", "DELETE"):
+            raise ReadOnlyViolationError(method, url)
+
     async def _get_token(self) -> str:
         """Get a valid access token, refreshing if needed."""
         if self._token_cache and time.time() < self._token_expires_at - 60:
             return self._token_cache["access_token"]
 
-        result = self._msal_app.acquire_token_for_client(
-            scopes=[settings.MS_GRAPH_SCOPE]
-        )
+        scopes = self._get_scopes()
+        result = self._msal_app.acquire_token_for_client(scopes=scopes)
 
         if "access_token" not in result:
             error_desc = result.get("error_description", "Unknown error")
@@ -67,6 +109,7 @@ class GraphClient:
 
         self._token_cache = result
         self._token_expires_at = time.time() + result.get("expires_in", 3600)
+        logger.debug(f"Token acquired for mode '{self.access_mode}' with {len(scopes)} scope(s)")
         return result["access_token"]
 
     async def _request(
@@ -79,7 +122,13 @@ class GraphClient:
         data: bytes = None,
         retry_count: int = 0,
     ) -> httpx.Response:
-        """Make an HTTP request with throttling and retry logic."""
+        """Make an HTTP request with throttling and retry logic.
+
+        Enforces read-only mode for backup clients — blocks POST/PUT/PATCH/DELETE.
+        """
+        # Enforce least-privilege: block writes on read-only clients
+        self._ensure_write_allowed(method, url)
+
         async with self._semaphore:
             token = await self._get_token()
             req_headers = {

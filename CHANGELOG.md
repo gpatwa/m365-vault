@@ -2,6 +2,26 @@
 
 All notable changes to M365 Vault are documented in this file.
 
+## [1.1.0] - 2026-03-16
+
+### Security
+
+**Least-Privilege Graph API Access**
+- Separated Microsoft Graph API scopes into read-only (backup) and read-write (restore) scope sets
+- Backup operations now use read-only scopes: `Mail.Read`, `Calendars.Read`, `Contacts.Read`, `Files.Read.All`, `Sites.Read.All`
+- Restore operations use read-write scopes: `Mail.ReadWrite`, `Calendars.ReadWrite`, `Contacts.ReadWrite`, `Files.ReadWrite.All`, `Sites.ReadWrite.All`
+- Added `access_mode` parameter to `GraphClient` with three modes: `backup` (read-only), `restore` (read-write), `default` (legacy)
+- Read-only enforcement: backup clients block POST/PUT/PATCH/DELETE at the client level with `ReadOnlyViolationError`
+
+**RBAC Enforcement on All Endpoints**
+- Backup trigger endpoints (`POST backup`, `POST backup-all`) now require ADMIN or OPERATOR role
+- Restore endpoints (`POST restore`, `POST mass-recovery`) now require ADMIN role only
+- Retry endpoints (`POST retry`, `POST retry-all-failed`) now require ADMIN or OPERATOR role
+- VIEWER role is restricted to read-only browsing (GET endpoints only)
+- Added `require_backup_permission` and `require_restore_permission` convenience dependencies
+
+---
+
 ## [1.0.0] - 2026-03-16
 
 ### Added

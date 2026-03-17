@@ -156,6 +156,7 @@ m365-data-protection/
 | Document | Description |
 |----------|-------------|
 | [Onboarding Guide](docs/ONBOARDING.md) | Step-by-step tenant setup and first backup |
+| [Tenant Security](docs/TENANT_SECURITY.md) | Credential encryption, data isolation, least-privilege access, RBAC |
 | [API Reference](docs/API_REFERENCE.md) | Complete REST API documentation (50+ endpoints) |
 | [Architecture](docs/ARCHITECTURE.md) | System design, data model, and service architecture |
 | [Compliance Report](docs/COMPLIANCE_REPORT.md) | Security controls, encryption, and regulatory alignment |

@@ -4,7 +4,7 @@
 
 M365 Vault is a self-hosted SaaS data protection platform for Microsoft 365 workloads. It provides automated, SLA-driven backup and granular point-in-time restore for Exchange Online, OneDrive for Business, and SharePoint Online — with AES-256 encryption at rest, role-based access control, and comprehensive audit logging.
 
-> Version 1.1.0 | Python 3.11+ | React 19 | FastAPI | Apache-2.0 License
+> Version 1.2.0 | Python 3.11+ | React 19 | FastAPI | Apache-2.0 License
 
 ---
 
@@ -15,6 +15,7 @@ M365 Vault is a self-hosted SaaS data protection platform for Microsoft 365 work
 - **Point-in-time restore** with four modes: full in-place, item-level, cross-user, and export
 - **Microsoft Graph API integration** with OAuth2 client credentials, rate limiting (429 handling), exponential backoff with jitter, and batch operations
 - **AES-256-GCM envelope encryption** using a two-layer DEK/KEK key scheme for data at rest
+- **Storage efficiency** with zstd compression (70-85% reduction on JSON), SHA-256 content-addressable deduplication, and CDC chunking for large files
 - **Failed item tracking** with 13 error categories and actionable resolution guidance
 - **Automatic retry engine** with exponential backoff for failed backup jobs
 - **Role-based access control** with three roles: Admin, Operator, Viewer
@@ -62,7 +63,7 @@ M365 Vault is a self-hosted SaaS data protection platform for Microsoft 365 work
 
 | Layer     | Technology |
 |-----------|-----------|
-| Backend   | Python 3.11+, FastAPI 0.115, SQLAlchemy 2.0, aiosqlite, MSAL, APScheduler, cryptography |
+| Backend   | Python 3.11+, FastAPI 0.115, SQLAlchemy 2.0, aiosqlite, MSAL, APScheduler, cryptography, zstandard |
 | Frontend  | React 19, TypeScript 5.9, TailwindCSS 3.4, Recharts 3.8, TanStack Query 5, React Router 7, Vite 8 |
 | Database  | SQLite (dev) / PostgreSQL (production) |
 | Auth      | JWT (python-jose), bcrypt password hashing |
@@ -128,8 +129,8 @@ m365-data-protection/
 ├── backend/
 │   ├── app/
 │   │   ├── api/           # 10 API routers (auth, tenants, exchange, etc.)
-│   │   ├── models/        # 8 SQLAlchemy models
-│   │   ├── services/      # 10 business services
+│   │   ├── models/        # 9 SQLAlchemy models (incl. dedup index)
+│   │   ├── services/      # 12 business services (incl. compression, dedup)
 │   │   ├── workers/       # 3 workload backup workers
 │   │   ├── utils/         # Retry utilities & error classification
 │   │   ├── config.py      # Application settings
@@ -144,6 +145,7 @@ m365-data-protection/
 │   │   ├── hooks/         # Custom React hooks
 │   │   └── types/         # TypeScript type definitions
 │   └── package.json
+├── scripts/               # Simulation & provisioning scripts
 ├── docs/                  # Documentation
 ├── .env.example           # Configuration template
 └── CHANGELOG.md           # Release history

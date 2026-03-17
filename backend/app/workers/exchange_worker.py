@@ -225,8 +225,8 @@ class ExchangeWorker:
         # Serialize full message as JSON for storage
         msg_data = json.dumps(msg, default=str).encode("utf-8")
 
-        # Store encrypted blob
-        blob_path = await self.storage.store_item(
+        # Store through compression/dedup/encryption pipeline
+        result = await self.storage.store_item(
             tenant_id=protected_object.tenant_id,
             workload="exchange",
             object_id=protected_object.ms_object_id,
@@ -234,6 +234,8 @@ class ExchangeWorker:
             item_id=msg_id,
             data=msg_data,
             wrapped_dek=wrapped_dek,
+            mime_type="application/json",
+            db=self.db,
         )
 
         # Create catalog entry
@@ -244,7 +246,10 @@ class ExchangeWorker:
             name=subject,
             path=folder_name,
             size_bytes=len(msg_data),
-            blob_path=blob_path,
+            compressed_size=result.compressed_size,
+            content_hash=result.content_hash,
+            storage_flags=result.storage_flags,
+            blob_path=result.blob_path,
             subject=subject,
             sender=sender,
             recipients=recipients,
@@ -283,7 +288,7 @@ class ExchangeWorker:
                     import base64
                     att_data = base64.b64decode(content_bytes)
 
-                    blob_path = await self.storage.store_item(
+                    att_result = await self.storage.store_item(
                         tenant_id=protected_object.tenant_id,
                         workload="exchange",
                         object_id=protected_object.ms_object_id,
@@ -291,6 +296,9 @@ class ExchangeWorker:
                         item_id=f"{message_id}_att_{att_id}",
                         data=att_data,
                         wrapped_dek=wrapped_dek,
+                        filename=att_name,
+                        mime_type=att.get("contentType"),
+                        db=self.db,
                     )
 
                     item = SnapshotItem(
@@ -301,8 +309,11 @@ class ExchangeWorker:
                         file_name=att_name,
                         path=f"attachments/{message_id}",
                         size_bytes=len(att_data),
+                        compressed_size=att_result.compressed_size,
+                        content_hash=att_result.content_hash,
+                        storage_flags=att_result.storage_flags,
                         mime_type=att.get("contentType"),
-                        blob_path=blob_path,
+                        blob_path=att_result.blob_path,
                     )
                     self.db.add(item)
 
@@ -324,7 +335,7 @@ class ExchangeWorker:
                     event_id = event.get("id")
                     event_data = json.dumps(event, default=str).encode("utf-8")
 
-                    blob_path = await self.storage.store_item(
+                    evt_result = await self.storage.store_item(
                         tenant_id=protected_object.tenant_id,
                         workload="exchange",
                         object_id=protected_object.ms_object_id,
@@ -332,6 +343,8 @@ class ExchangeWorker:
                         item_id=f"cal_{event_id}",
                         data=event_data,
                         wrapped_dek=wrapped_dek,
+                        mime_type="application/json",
+                        db=self.db,
                     )
 
                     item = SnapshotItem(
@@ -341,7 +354,10 @@ class ExchangeWorker:
                         name=event.get("subject", "(No Subject)"),
                         path="Calendar",
                         size_bytes=len(event_data),
-                        blob_path=blob_path,
+                        compressed_size=evt_result.compressed_size,
+                        content_hash=evt_result.content_hash,
+                        storage_flags=evt_result.storage_flags,
+                        blob_path=evt_result.blob_path,
                         metadata_json=json.dumps({
                             "start": event.get("start"),
                             "end": event.get("end"),
@@ -377,7 +393,7 @@ class ExchangeWorker:
                     contact_id = contact.get("id")
                     contact_data = json.dumps(contact, default=str).encode("utf-8")
 
-                    blob_path = await self.storage.store_item(
+                    ct_result = await self.storage.store_item(
                         tenant_id=protected_object.tenant_id,
                         workload="exchange",
                         object_id=protected_object.ms_object_id,
@@ -385,6 +401,8 @@ class ExchangeWorker:
                         item_id=f"contact_{contact_id}",
                         data=contact_data,
                         wrapped_dek=wrapped_dek,
+                        mime_type="application/json",
+                        db=self.db,
                     )
 
                     item = SnapshotItem(
@@ -394,7 +412,10 @@ class ExchangeWorker:
                         name=contact.get("displayName", "Unknown"),
                         path="Contacts",
                         size_bytes=len(contact_data),
-                        blob_path=blob_path,
+                        compressed_size=ct_result.compressed_size,
+                        content_hash=ct_result.content_hash,
+                        storage_flags=ct_result.storage_flags,
+                        blob_path=ct_result.blob_path,
                         metadata_json=json.dumps({
                             "email": (contact.get("emailAddresses") or [{}])[0].get("address") if contact.get("emailAddresses") else None,
                             "company": contact.get("companyName"),

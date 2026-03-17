@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     # App
     APP_NAME: str = "M365 Vault"
-    APP_VERSION: str = "1.1.0"
+    APP_VERSION: str = "1.2.0"
     DEBUG: bool = True
     SECRET_KEY: str = "change-me-in-production-use-openssl-rand-hex-32"
     ALGORITHM: str = "HS256"
@@ -50,6 +50,19 @@ class Settings(BaseSettings):
     GRAPH_RETRY_BASE_DELAY: float = 1.0
     GRAPH_MAX_CONCURRENT_REQUESTS: int = 10
     GRAPH_BATCH_SIZE: int = 20
+
+    # Compression
+    COMPRESSION_ENABLED: bool = True
+    COMPRESSION_ZSTD_LEVEL_TEXT: int = 9       # High compression for JSON/text
+    COMPRESSION_ZSTD_LEVEL_BINARY: int = 3     # Moderate for unknown binary
+    COMPRESSION_MIN_SIZE: int = 256            # Skip compression below 256 bytes
+
+    # Deduplication
+    DEDUP_ENABLED: bool = True
+    CDC_THRESHOLD_BYTES: int = 4 * 1024 * 1024   # 4 MB — files above this use CDC chunking
+    CDC_TARGET_CHUNK_BYTES: int = 64 * 1024      # 64 KB target chunk size
+    CDC_MIN_CHUNK_BYTES: int = 16 * 1024         # 16 KB minimum chunk
+    CDC_MAX_CHUNK_BYTES: int = 256 * 1024        # 256 KB maximum chunk
 
     # Scheduler
     SCHEDULER_CHECK_INTERVAL_SECONDS: int = 60

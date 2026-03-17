@@ -59,9 +59,11 @@ class SnapshotItem(Base):
     name = Column(String(1000), nullable=False)
     path = Column(String(2000), nullable=True)  # Folder path or mailbox folder
     size_bytes = Column(Integer, default=0)
-    content_hash = Column(String(255), nullable=True)  # For dedup detection
-    blob_path = Column(String(1000), nullable=True)  # Path to item blob on disk
-    metadata_json = Column(Text, nullable=True)  # Item-specific metadata
+    compressed_size = Column(Integer, nullable=True)    # Size after compression (before encryption)
+    content_hash = Column(String(255), nullable=True)   # SHA-256 of compressed data (for dedup)
+    storage_flags = Column(Integer, default=0)          # Bit 0=compressed, 1=chunked, 2=deduped
+    blob_path = Column(String(1000), nullable=True)     # Path to item blob on disk
+    metadata_json = Column(Text, nullable=True)         # Item-specific metadata
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Email-specific fields

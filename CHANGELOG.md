@@ -2,6 +2,38 @@
 
 All notable changes to M365 Vault are documented in this file.
 
+## [1.2.0] - 2026-03-17
+
+### Added
+
+**Storage Efficiency — Compression + Deduplication Pipeline**
+- Content-aware **zstd compression** with adaptive levels: level 9 for JSON/text (70-85% reduction), level 3 for unknown binary, automatic skip for pre-compressed formats (.zip, .docx, .jpg, .mp4, .pdf, etc.)
+- **SHA-256 content-addressable deduplication** across snapshots within each tenant — identical items stored once with reference counting
+- **Content-Defined Chunking (CDC)** for large files (≥ 4 MB) using gear-hash rolling hash with variable-size chunks (target 64 KB, min 16 KB, max 256 KB)
+- Per-chunk dedup with 2-level directory fan-out: `data/{tenant}/.chunks/{hash[:2]}/{hash[2:4]}/{hash}.chunk`
+- **M3VZ header protocol** (5-byte magic + flags) placed inside the encrypted envelope for backward-compatible format detection
+- New `StoreResult` dataclass returned by `store_item()` with compression ratio, content hash, and storage flags
+- New `DedupEntry` model with reference counting for safe garbage collection on snapshot deletion
+- New `compressed_size` and `storage_flags` columns on `SnapshotItem` for per-item storage metrics
+- Configurable settings: `COMPRESSION_ENABLED`, `COMPRESSION_ZSTD_LEVEL_TEXT/BINARY`, `COMPRESSION_MIN_SIZE`, `DEDUP_ENABLED`, `CDC_THRESHOLD_BYTES`, `CDC_TARGET/MIN/MAX_CHUNK_BYTES`
+
+**Data Simulation Script**
+- Added `scripts/simulate_backup_data.py` for local testing without a live M365 tenant
+- Covers three use cases: initial full backup, incremental with dedup, and large file CDC chunking
+- Seeds tenant, users, SLA policies, protected objects, backup/restore jobs, failed items, and audit logs
+- Exercises the real compression + dedup + encryption pipeline end-to-end
+
+### Changed
+
+- Storage pipeline order: Raw data → Compress → M3VZ Header → SHA-256 Hash → Dedup Check → CDC (if large) → AES-256-GCM Encrypt → Write → Register Dedup Index
+- Retrieval pipeline: Read → Decrypt → Header Check → Dechunk (if chunked) → Decompress → Return
+- Legacy blobs (pre-compression) are returned as-is — zero migration required
+- All three backup workers (Exchange, OneDrive, SharePoint) now pass `filename`, `mime_type`, and `db` to `store_item()` and populate `compressed_size`, `content_hash`, `storage_flags` on `SnapshotItem`
+- Snapshot deletion decrements dedup reference counts; blobs/chunks deleted only when ref_count reaches 0
+- Added `zstandard>=0.23.0` dependency
+
+---
+
 ## [1.1.0] - 2026-03-16
 
 ### Security

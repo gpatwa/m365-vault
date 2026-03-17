@@ -67,7 +67,7 @@ class SharePointWorker:
 
                 # Store drive metadata
                 drive_data = json.dumps(drive, default=str).encode("utf-8")
-                await self.storage.store_item(
+                drv_result = await self.storage.store_item(
                     tenant_id=protected_object.tenant_id,
                     workload="sharepoint",
                     object_id=protected_object.ms_object_id,
@@ -75,6 +75,8 @@ class SharePointWorker:
                     item_id=f"drive_{drive_id}",
                     data=drive_data,
                     wrapped_dek=wrapped_dek,
+                    mime_type="application/json",
+                    db=self.db,
                 )
 
                 doc_lib_item = SnapshotItem(
@@ -84,7 +86,10 @@ class SharePointWorker:
                     name=drive_name,
                     path="/",
                     size_bytes=len(drive_data),
-                    blob_path=f"drive_{drive_id}",
+                    compressed_size=drv_result.compressed_size,
+                    content_hash=drv_result.content_hash,
+                    storage_flags=drv_result.storage_flags,
+                    blob_path=drv_result.blob_path,
                     metadata_json=json.dumps({
                         "driveType": drive.get("driveType"),
                         "webUrl": drive.get("webUrl"),
@@ -159,7 +164,7 @@ class SharePointWorker:
 
             if is_folder:
                 folder_data = json.dumps(drive_item, default=str).encode("utf-8")
-                blob_path = await self.storage.store_item(
+                folder_result = await self.storage.store_item(
                     tenant_id=protected_object.tenant_id,
                     workload="sharepoint",
                     object_id=protected_object.ms_object_id,
@@ -167,6 +172,8 @@ class SharePointWorker:
                     item_id=item_id,
                     data=folder_data,
                     wrapped_dek=wrapped_dek,
+                    mime_type="application/json",
+                    db=self.db,
                 )
 
                 catalog_item = SnapshotItem(
@@ -176,7 +183,10 @@ class SharePointWorker:
                     name=name,
                     path=path,
                     size_bytes=0,
-                    blob_path=blob_path,
+                    compressed_size=folder_result.compressed_size,
+                    content_hash=folder_result.content_hash,
+                    storage_flags=folder_result.storage_flags,
+                    blob_path=folder_result.blob_path,
                     file_name=name,
                 )
                 self.db.add(catalog_item)
@@ -190,7 +200,10 @@ class SharePointWorker:
                 except Exception:
                     file_content = json.dumps(drive_item, default=str).encode("utf-8")
 
-                blob_path = await self.storage.store_item(
+                last_modified = drive_item.get("lastModifiedDateTime")
+                mime_type = drive_item.get("file", {}).get("mimeType")
+
+                file_result = await self.storage.store_item(
                     tenant_id=protected_object.tenant_id,
                     workload="sharepoint",
                     object_id=protected_object.ms_object_id,
@@ -198,10 +211,10 @@ class SharePointWorker:
                     item_id=item_id,
                     data=file_content,
                     wrapped_dek=wrapped_dek,
+                    filename=name,
+                    mime_type=mime_type,
+                    db=self.db,
                 )
-
-                last_modified = drive_item.get("lastModifiedDateTime")
-                mime_type = drive_item.get("file", {}).get("mimeType")
 
                 catalog_item = SnapshotItem(
                     snapshot_id=snapshot.id,
@@ -210,7 +223,10 @@ class SharePointWorker:
                     name=name,
                     path=path,
                     size_bytes=file_size,
-                    blob_path=blob_path,
+                    compressed_size=file_result.compressed_size,
+                    content_hash=file_result.content_hash,
+                    storage_flags=file_result.storage_flags,
+                    blob_path=file_result.blob_path,
                     file_name=name,
                     mime_type=mime_type,
                     last_modified_at=datetime.fromisoformat(
@@ -255,7 +271,7 @@ class SharePointWorker:
 
                 # Store list metadata
                 list_data = json.dumps(sp_list, default=str).encode("utf-8")
-                blob_path = await self.storage.store_item(
+                list_result = await self.storage.store_item(
                     tenant_id=protected_object.tenant_id,
                     workload="sharepoint",
                     object_id=protected_object.ms_object_id,
@@ -263,6 +279,8 @@ class SharePointWorker:
                     item_id=f"list_{list_id}",
                     data=list_data,
                     wrapped_dek=wrapped_dek,
+                    mime_type="application/json",
+                    db=self.db,
                 )
 
                 list_item = SnapshotItem(
@@ -272,7 +290,10 @@ class SharePointWorker:
                     name=list_name,
                     path="/Lists",
                     size_bytes=len(list_data),
-                    blob_path=blob_path,
+                    compressed_size=list_result.compressed_size,
+                    content_hash=list_result.content_hash,
+                    storage_flags=list_result.storage_flags,
+                    blob_path=list_result.blob_path,
                     metadata_json=json.dumps({
                         "template": sp_list.get("list", {}).get("template"),
                         "description": sp_list.get("description"),
@@ -291,7 +312,7 @@ class SharePointWorker:
                         li_id = li.get("id")
                         li_data = json.dumps(li, default=str).encode("utf-8")
 
-                        li_blob_path = await self.storage.store_item(
+                        li_result = await self.storage.store_item(
                             tenant_id=protected_object.tenant_id,
                             workload="sharepoint",
                             object_id=protected_object.ms_object_id,
@@ -299,6 +320,8 @@ class SharePointWorker:
                             item_id=f"listitem_{list_id}_{li_id}",
                             data=li_data,
                             wrapped_dek=wrapped_dek,
+                            mime_type="application/json",
+                            db=self.db,
                         )
 
                         fields = li.get("fields", {})
@@ -311,7 +334,10 @@ class SharePointWorker:
                             name=li_name,
                             path=f"/Lists/{list_name}",
                             size_bytes=len(li_data),
-                            blob_path=li_blob_path,
+                            compressed_size=li_result.compressed_size,
+                            content_hash=li_result.content_hash,
+                            storage_flags=li_result.storage_flags,
+                            blob_path=li_result.blob_path,
                             metadata_json=json.dumps(fields),
                         )
                         self.db.add(li_item)

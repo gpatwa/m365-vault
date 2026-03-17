@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import init_db
 from app.services.scheduler import start_scheduler, stop_scheduler
+from app.models.dedup import DedupEntry  # noqa: F401 — ensure table is created
 
 # Configure logging
 logging.basicConfig(

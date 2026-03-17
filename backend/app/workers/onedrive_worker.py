@@ -115,7 +115,7 @@ class OneDriveWorker:
 
         if is_folder:
             folder_data = json.dumps(drive_item, default=str).encode("utf-8")
-            blob_path = await self.storage.store_item(
+            folder_result = await self.storage.store_item(
                 tenant_id=protected_object.tenant_id,
                 workload="onedrive",
                 object_id=protected_object.ms_object_id,
@@ -123,6 +123,8 @@ class OneDriveWorker:
                 item_id=item_id,
                 data=folder_data,
                 wrapped_dek=wrapped_dek,
+                mime_type="application/json",
+                db=self.db,
             )
             catalog_item = SnapshotItem(
                 snapshot_id=snapshot.id,
@@ -131,7 +133,10 @@ class OneDriveWorker:
                 name=name,
                 path=path,
                 size_bytes=0,
-                blob_path=blob_path,
+                compressed_size=folder_result.compressed_size,
+                content_hash=folder_result.content_hash,
+                storage_flags=folder_result.storage_flags,
+                blob_path=folder_result.blob_path,
                 file_name=name,
                 metadata_json=json.dumps({
                     "childCount": drive_item.get("folder", {}).get("childCount", 0),
@@ -148,7 +153,10 @@ class OneDriveWorker:
                 logger.warning(f"Could not download file {name}: {e}")
                 file_content = json.dumps(drive_item, default=str).encode("utf-8")
 
-            blob_path = await self.storage.store_item(
+            last_modified = drive_item.get("lastModifiedDateTime")
+            mime_type = drive_item.get("file", {}).get("mimeType")
+
+            file_result = await self.storage.store_item(
                 tenant_id=protected_object.tenant_id,
                 workload="onedrive",
                 object_id=protected_object.ms_object_id,
@@ -156,11 +164,10 @@ class OneDriveWorker:
                 item_id=item_id,
                 data=file_content,
                 wrapped_dek=wrapped_dek,
+                filename=name,
+                mime_type=mime_type,
+                db=self.db,
             )
-
-            last_modified = drive_item.get("lastModifiedDateTime")
-            mime_type = drive_item.get("file", {}).get("mimeType")
-            content_hash = drive_item.get("file", {}).get("hashes", {}).get("sha256Hash")
 
             catalog_item = SnapshotItem(
                 snapshot_id=snapshot.id,
@@ -169,8 +176,10 @@ class OneDriveWorker:
                 name=name,
                 path=path,
                 size_bytes=file_size,
-                content_hash=content_hash,
-                blob_path=blob_path,
+                compressed_size=file_result.compressed_size,
+                content_hash=file_result.content_hash,
+                storage_flags=file_result.storage_flags,
+                blob_path=file_result.blob_path,
                 file_name=name,
                 mime_type=mime_type,
                 last_modified_at=datetime.fromisoformat(

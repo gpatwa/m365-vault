@@ -64,7 +64,7 @@ export default function FailedItems() {
   const qc = useQueryClient();
 
   // Fetch summary
-  const { data: summary, isLoading: loadingSummary } = useQuery({
+  const { data: summary } = useQuery({
     queryKey: ['failed-items-summary'],
     queryFn: () => api.get<FailedItemsSummary>('/failed-items/summary'),
     refetchInterval: 15000,
@@ -99,7 +99,7 @@ export default function FailedItems() {
     onError: (err: any) => { setActionMsg(`Error: ${err.message}`); setTimeout(() => setActionMsg(''), 5000); },
   });
 
-  const dismissCategoryMutation = useMutation({
+  const _dismissCategoryMutation = useMutation({
     mutationFn: ({ snapshotId, category }: { snapshotId: number; category: string }) =>
       api.post(`/failed-items/dismiss-category?snapshot_id=${snapshotId}&category=${category}`),
     onSuccess: (data: any) => {

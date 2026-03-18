@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Shield, Mail, HardDrive, Globe, CheckCircle, XCircle, Database, Activity, AlertTriangle, ShieldOff, ShieldAlert, ChevronDown, ChevronRight, Eye, EyeOff } from 'lucide-react';
+import { Shield, Mail, HardDrive, Globe, CheckCircle, XCircle, Database, Activity, AlertTriangle, ShieldOff, ShieldAlert, ChevronDown, ChevronRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { api } from '../api/client';
 import StatCard from '../components/StatCard';

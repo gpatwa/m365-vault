@@ -47,3 +47,5 @@ Thumbs.db
 # Coverage
 htmlcov/
 .coverage
+**/.terraform/
+**/.terraform.lock.hcl

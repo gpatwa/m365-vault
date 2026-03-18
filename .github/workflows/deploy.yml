@@ -1,0 +1,130 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - prod
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  IMAGE_TAG: sha-${{ github.sha }}
+
+jobs:
+  build:
+    name: Build & Push Images
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ env.IMAGE_TAG }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Login to ACR
+        run: |
+          az acr login --name ${{ secrets.ACR_NAME }}
+
+      - name: Build & push backend
+        run: |
+          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/m365vault-backend:${{ env.IMAGE_TAG }} \
+                        -t ${{ secrets.ACR_LOGIN_SERVER }}/m365vault-backend:latest \
+                        ./backend
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/m365vault-backend:${{ env.IMAGE_TAG }}
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/m365vault-backend:latest
+
+      - name: Build & push frontend
+        run: |
+          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/m365vault-frontend:${{ env.IMAGE_TAG }} \
+                        -t ${{ secrets.ACR_LOGIN_SERVER }}/m365vault-frontend:latest \
+                        ./frontend
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/m365vault-frontend:${{ env.IMAGE_TAG }}
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/m365vault-frontend:latest
+
+  deploy-dev:
+    name: Deploy to Dev
+    needs: build
+    runs-on: ubuntu-latest
+    environment: dev
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'dev')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9"
+
+      - name: Terraform Apply (Dev)
+        run: |
+          cd infra
+          terraform init
+          terraform apply \
+            -var-file=environments/dev.tfvars \
+            -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
+            -var="image_tag=${{ needs.build.outputs.image_tag }}" \
+            -auto-approve
+
+      - name: Smoke Test
+        run: |
+          FRONTEND_URL=$(cd infra && terraform output -raw frontend_url)
+          echo "Frontend URL: $FRONTEND_URL"
+          curl -sf "$FRONTEND_URL" > /dev/null && echo "Frontend OK" || echo "Frontend not ready yet"
+
+  deploy-prod:
+    name: Deploy to Prod
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'prod'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9"
+
+      - name: Terraform Apply (Prod)
+        run: |
+          cd infra
+          terraform init
+          terraform apply \
+            -var-file=environments/prod.tfvars \
+            -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
+            -var="image_tag=${{ needs.build.outputs.image_tag }}" \
+            -auto-approve
+
+      - name: Smoke Test
+        run: |
+          FRONTEND_URL=$(cd infra && terraform output -raw frontend_url)
+          echo "Production URL: $FRONTEND_URL"
+          curl -sf "$FRONTEND_URL" > /dev/null && echo "Production OK"

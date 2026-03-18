@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     # App
     APP_NAME: str = "M365 Vault"
-    APP_VERSION: str = "1.3.0"
+    APP_VERSION: str = "1.4.0"
     DEBUG: bool = True
     SECRET_KEY: str = "change-me-in-production-use-openssl-rand-hex-32"
     ALGORITHM: str = "HS256"
@@ -75,6 +75,9 @@ class Settings(BaseSettings):
     CDC_TARGET_CHUNK_BYTES: int = 64 * 1024      # 64 KB target chunk size
     CDC_MIN_CHUNK_BYTES: int = 16 * 1024         # 16 KB minimum chunk
     CDC_MAX_CHUNK_BYTES: int = 256 * 1024        # 256 KB maximum chunk
+
+    # CORS — comma-separated origins (overridden in production)
+    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:5174,http://localhost:3000,http://127.0.0.1:5173"
 
     # Scheduler
     SCHEDULER_CHECK_INTERVAL_SECONDS: int = 60

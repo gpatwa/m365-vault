@@ -2,6 +2,25 @@
 
 All notable changes to M365 Vault are documented in this file.
 
+## [1.4.0] - 2026-03-17
+
+### Added
+
+**Azure Deployment — Terraform + GitHub Actions**
+- Terraform infrastructure-as-code with 6 modules: resource group, ACR, Blob Storage, PostgreSQL Flexible Server, Key Vault, Container Apps
+- Two environment configurations: dev (burstable, LRS) and prod (general purpose, GRS, 2+ replicas)
+- GitHub Actions CI pipeline: backend/frontend build verification, Terraform validate
+- GitHub Actions CD pipeline: build Docker images → push to ACR → deploy Container Apps (OIDC auth, no stored secrets)
+- Manual production deployment with approval gate
+- Azure Deployment Guide (`docs/AZURE_DEPLOYMENT.md`)
+
+### Changed
+
+- CORS origins now configurable via `CORS_ORIGINS` environment variable (comma-separated)
+- Backend health probes (`/health`) used by Container Apps for liveness and readiness
+
+---
+
 ## [1.3.0] - 2026-03-17
 
 ### Added

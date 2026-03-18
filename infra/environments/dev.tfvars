@@ -1,5 +1,5 @@
 environment           = "dev"
-location              = "westus2"
+location              = "centralus"
 
 # ACR
 acr_sku               = "Basic"

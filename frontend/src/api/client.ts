@@ -1,5 +1,16 @@
-// Use VITE_API_BASE env var for Docker (relative '/api'), fall back to dev URL
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api';
+// API base URL resolution order:
+// 1. Runtime config (injected by nginx config.js in Docker/Azure)
+// 2. Vite build-time env (VITE_API_BASE)
+// 3. Dev fallback (localhost)
+declare global {
+  interface Window {
+    __RUNTIME_CONFIG__?: { API_BASE: string };
+  }
+}
+const API_BASE =
+  window.__RUNTIME_CONFIG__?.API_BASE
+  ? `${window.__RUNTIME_CONFIG__.API_BASE}/api`
+  : import.meta.env.VITE_API_BASE || 'http://localhost:8000/api';
 
 class ApiClient {
   private token: string | null = null;

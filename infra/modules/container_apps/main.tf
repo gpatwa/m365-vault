@@ -100,7 +100,7 @@ resource "azurerm_container_app" "backend" {
       }
       env {
         name  = "CORS_ORIGINS"
-        value = var.cors_origins
+        value = var.cors_origins != "" ? var.cors_origins : "*"
       }
 
       liveness_probe {
@@ -122,7 +122,7 @@ resource "azurerm_container_app" "backend" {
   }
 
   ingress {
-    external_enabled = false
+    external_enabled = true
     target_port      = 8000
     transport        = "http"
 
@@ -163,6 +163,11 @@ resource "azurerm_container_app" "frontend" {
       image  = "${var.acr_login_server}/m365vault-frontend:${var.image_tag}"
       cpu    = 0.25
       memory = "0.5Gi"
+
+      env {
+        name  = "BACKEND_URL"
+        value = "https://${azurerm_container_app.backend.ingress[0].fqdn}"
+      }
     }
   }
 

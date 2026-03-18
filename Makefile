@@ -9,6 +9,10 @@ DOCKER_COMPOSE = docker compose
 TF_DIR         = infra
 ENV           ?= dev
 
+# Auto-load SUBSCRIPTION_ID from .env.azure if not passed on command line
+-include .env.azure
+SUBSCRIPTION_ID ?= $(shell az account show --query id -o tsv 2>/dev/null)
+
 # ── Help ─────────────────────────────────────────────────────────────
 .PHONY: help
 help: ## Show this help
@@ -103,11 +107,26 @@ lint: ## Run linting checks
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Docker Build
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Detect host architecture and set platform accordingly.
+# Cloud targets (Azure, AWS, GCP) require linux/amd64.
+# Local-only builds can use native arch for faster builds.
+HOST_ARCH := $(shell uname -m)
+ifeq ($(HOST_ARCH),arm64)
+  DOCKER_PLATFORM_FLAG = --platform linux/amd64
+  $(info 📦 Apple Silicon detected — Docker builds will target linux/amd64 for cloud compatibility)
+else
+  DOCKER_PLATFORM_FLAG =
+endif
+# Override: PLATFORM=native to build for local arch (faster, no emulation)
+ifeq ($(PLATFORM),native)
+  DOCKER_PLATFORM_FLAG =
+  $(info 📦 Native platform override — building for $(HOST_ARCH))
+endif
 
 .PHONY: build
-build: ## Build Docker images locally
-	docker build -t m365vault-backend:local ./backend
-	docker build -t m365vault-frontend:local ./frontend
+build: ## Build Docker images (auto-detects platform; PLATFORM=native for local arch)
+	docker build $(DOCKER_PLATFORM_FLAG) -t m365vault-backend:local ./backend
+	docker build $(DOCKER_PLATFORM_FLAG) -t m365vault-frontend:local ./frontend
 	@echo "Built: m365vault-backend:local, m365vault-frontend:local"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -152,6 +171,72 @@ tf-set-acr-secrets: ## Set ACR GitHub secrets from Terraform output (run after f
 	gh secret set ACR_NAME --repo gpatwa/m365-vault --body "$$ACR_NAME" && \
 	gh secret set ACR_LOGIN_SERVER --repo gpatwa/m365-vault --body "$$ACR_SERVER" && \
 	echo "Set ACR_NAME=$$ACR_NAME and ACR_LOGIN_SERVER=$$ACR_SERVER"
+
+.PHONY: acr-push
+acr-push: ## Build and push Docker images to ACR (run before first tf-apply)
+	@ACR_NAME=$${ACR_NAME:-acrm365vault$(ENV)}; \
+	echo "Logging into ACR: $$ACR_NAME..."; \
+	az acr login --name $$ACR_NAME && \
+	echo "Building and pushing backend..." && \
+	docker build $(DOCKER_PLATFORM_FLAG) -t $$ACR_NAME.azurecr.io/m365vault-backend:latest ./backend && \
+	docker push $$ACR_NAME.azurecr.io/m365vault-backend:latest && \
+	echo "Building and pushing frontend..." && \
+	docker build $(DOCKER_PLATFORM_FLAG) -t $$ACR_NAME.azurecr.io/m365vault-frontend:latest ./frontend && \
+	docker push $$ACR_NAME.azurecr.io/m365vault-frontend:latest && \
+	echo "✅ Images pushed to $$ACR_NAME.azurecr.io"
+
+.PHONY: tf-import
+tf-import: tf-init ## Import existing Azure resources into Terraform state
+	@./scripts/tf-import-existing.sh
+
+.PHONY: tf-reset
+tf-reset: tf-init ## Clear stale Terraform state (after manual Azure resource deletion)
+	@echo "🧹 Clearing all Terraform state entries..."
+	@cd $(TF_DIR) && terraform state list | while read -r resource; do \
+		echo "  Removing: $$resource"; \
+		terraform state rm "$$resource" >/dev/null 2>&1 || true; \
+	done
+	@echo "✅ State cleared. Run 'make tf-apply' for fresh deploy."
+
+.PHONY: az-cleanup
+az-cleanup: ## Full Azure cleanup: delete RG, purge Key Vault, reset state (ENV=dev|prod)
+	@echo "⚠️  This will DELETE resource group rg-m365vault-$(ENV) and purge Key Vault."
+	@read -rp "Type '$(ENV)' to confirm: " confirm && [ "$$confirm" = "$(ENV)" ] || exit 1
+	@echo "🗑️  Deleting resource group rg-m365vault-$(ENV)..."
+	@az group delete --name rg-m365vault-$(ENV) --yes 2>/dev/null || echo "  Resource group not found (already deleted)"
+	@echo "🔑 Purging soft-deleted Key Vault kv-m365vault-$(ENV)..."
+	@for loc in centralus eastus westus2 westus; do \
+		az keyvault purge --name kv-m365vault-$(ENV) --location $$loc 2>/dev/null && \
+		echo "  Purged from $$loc" && break; \
+	done || echo "  No soft-deleted Key Vault found"
+	@echo "🧹 Clearing Terraform state..."
+	@$(MAKE) tf-reset 2>/dev/null || true
+	@echo "✅ Cleanup complete. Ready for fresh 'make tf-apply'."
+
+.PHONY: az-status
+az-status: ## Show current Azure resource status for this environment (ENV=dev|prod)
+	@echo "━━━ Azure Status: $(ENV) ━━━"
+	@echo ""
+	@echo "Resource Group:"
+	@az group show --name rg-m365vault-$(ENV) --query "{name:name, state:properties.provisioningState, location:location}" -o table 2>/dev/null || echo "  Not found"
+	@echo ""
+	@echo "Container Apps:"
+	@az containerapp list -g rg-m365vault-$(ENV) --query "[].{name:name, state:properties.provisioningState}" -o table 2>/dev/null || echo "  Not found"
+	@echo ""
+	@echo "PostgreSQL:"
+	@az postgres flexible-server list -g rg-m365vault-$(ENV) --query "[].{name:name, state:state, sku:sku.name}" -o table 2>/dev/null || echo "  Not found"
+	@echo ""
+	@echo "Key Vault:"
+	@az keyvault list -g rg-m365vault-$(ENV) --query "[].{name:name, location:location}" -o table 2>/dev/null || echo "  Not found"
+	@echo ""
+	@echo "Soft-Deleted Key Vaults:"
+	@az keyvault list-deleted --query "[?contains(name,'m365vault')].{name:name, location:properties.location, deletion:properties.deletionDate}" -o table 2>/dev/null || echo "  None"
+	@echo ""
+	@echo "ACR:"
+	@az acr list -g rg-m365vault-$(ENV) --query "[].{name:name, loginServer:loginServer}" -o table 2>/dev/null || echo "  Not found"
+	@echo ""
+	@echo "Storage:"
+	@az storage account list -g rg-m365vault-$(ENV) --query "[].{name:name, kind:kind}" -o table 2>/dev/null || echo "  Not found"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Deploy (via GitHub Actions)

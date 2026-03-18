@@ -53,3 +53,4 @@ htmlcov/
 *.tfstate
 *.tfstate.backup
 *.tfplan
+.env.azure

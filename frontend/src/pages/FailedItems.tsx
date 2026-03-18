@@ -99,18 +99,6 @@ export default function FailedItems() {
     onError: (err: any) => { setActionMsg(`Error: ${err.message}`); setTimeout(() => setActionMsg(''), 5000); },
   });
 
-  const _dismissCategoryMutation = useMutation({
-    mutationFn: ({ snapshotId, category }: { snapshotId: number; category: string }) =>
-      api.post(`/failed-items/dismiss-category?snapshot_id=${snapshotId}&category=${category}`),
-    onSuccess: (data: any) => {
-      setActionMsg(`Dismissed ${data.dismissed} ${data.category} items`);
-      qc.invalidateQueries({ queryKey: ['failed-items'] });
-      qc.invalidateQueries({ queryKey: ['failed-items-summary'] });
-      setTimeout(() => setActionMsg(''), 4000);
-    },
-    onError: (err: any) => { setActionMsg(`Error: ${err.message}`); setTimeout(() => setActionMsg(''), 5000); },
-  });
-
   const retryMutation = useMutation({
     mutationFn: (itemIds: number[]) =>
       api.post(`/failed-items/retry?${itemIds.map(id => `item_ids=${id}`).join('&')}`),

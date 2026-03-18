@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     # App
     APP_NAME: str = "M365 Vault"
-    APP_VERSION: str = "1.2.0"
+    APP_VERSION: str = "1.3.0"
     DEBUG: bool = True
     SECRET_KEY: str = "change-me-in-production-use-openssl-rand-hex-32"
     ALGORITHM: str = "HS256"
@@ -15,9 +15,21 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "sqlite+aiosqlite:///./m365_protection.db"
 
-    # Storage
+    # Storage backend: "local" | "azure" | "minio"
+    STORAGE_BACKEND: str = "local"
     BACKUP_STORAGE_PATH: str = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
     ENCRYPTION_MASTER_KEY: str = "change-me-32-byte-master-key-!!"  # Must be 32 bytes for AES-256
+
+    # Azure Blob Storage (when STORAGE_BACKEND=azure)
+    AZURE_STORAGE_CONNECTION_STRING: str = ""
+    AZURE_STORAGE_CONTAINER: str = "m365vault-backups"
+
+    # MinIO / S3 (when STORAGE_BACKEND=minio)
+    MINIO_ENDPOINT: str = "minio:9000"
+    MINIO_ACCESS_KEY: str = "minioadmin"
+    MINIO_SECRET_KEY: str = "minioadmin"
+    MINIO_BUCKET: str = "m365vault-backups"
+    MINIO_USE_SSL: bool = False
 
     # Microsoft Graph API
     MS_GRAPH_BASE_URL: str = "https://graph.microsoft.com/v1.0"

@@ -3,18 +3,13 @@
 Features:
 - Whole-blob dedup for items < CDC threshold (default 4 MB)
 - Content-Defined Chunking (CDC) for large files using gear-hash rolling hash
-- Per-tenant dedup index backed by SQLAlchemy/SQLite
+- Per-tenant dedup index backed by SQLAlchemy
 - Reference counting for safe garbage collection
 """
 import hashlib
-import json
 import logging
-import os
-import struct
 from dataclasses import dataclass, field
 from typing import Optional
-
-import aiofiles
 
 from app.config import settings
 
@@ -89,14 +84,12 @@ class DedupService:
         max_size = settings.CDC_MAX_CHUNK_BYTES
 
         # Mask for boundary detection — tuned for target chunk size
-        # For 64KB target: mask = (1 << 16) - 1 = 0xFFFF
         mask_bits = max(1, (target - 1).bit_length())
         mask = (1 << mask_bits) - 1
 
         while offset < data_len:
             remaining = data_len - offset
 
-            # If remaining is smaller than min chunk, take it all
             if remaining <= min_size:
                 chunk_data = data[offset:offset + remaining]
                 chunks.append(ChunkInfo(
@@ -106,7 +99,6 @@ class DedupService:
                 ))
                 break
 
-            # Scan for boundary starting after min_size
             fingerprint = 0
             boundary = min(offset + max_size, data_len)
             scan_start = offset + min_size
@@ -133,72 +125,5 @@ class DedupService:
         return chunks
 
 
-class ChunkStore:
-    """Manages encrypted chunk storage on disk.
-
-    Chunk directory layout:
-      data/{tenant_id}/.chunks/{hash[:2]}/{hash[2:4]}/{hash}.chunk
-    Two-level fan-out prevents too many files per directory.
-    """
-
-    def __init__(self, base_path: str = None):
-        self.base_path = base_path or settings.BACKUP_STORAGE_PATH
-
-    def _chunk_dir(self, tenant_id: int, chunk_hash: str) -> str:
-        """Get the directory for a chunk based on its hash."""
-        return os.path.join(
-            self.base_path,
-            str(tenant_id),
-            ".chunks",
-            chunk_hash[:2],
-            chunk_hash[2:4],
-        )
-
-    def _chunk_path(self, tenant_id: int, chunk_hash: str) -> str:
-        """Get the full path to a chunk file."""
-        return os.path.join(
-            self._chunk_dir(tenant_id, chunk_hash),
-            f"{chunk_hash}.chunk",
-        )
-
-    def chunk_exists(self, tenant_id: int, chunk_hash: str) -> bool:
-        """Check if a chunk already exists on disk."""
-        return os.path.exists(self._chunk_path(tenant_id, chunk_hash))
-
-    async def store_chunk(
-        self, tenant_id: int, chunk_hash: str, encrypted_data: bytes
-    ) -> str:
-        """Write an encrypted chunk to disk. Returns the chunk path.
-
-        Idempotent: if the chunk already exists, returns the existing path.
-        """
-        path = self._chunk_path(tenant_id, chunk_hash)
-        if os.path.exists(path):
-            return path
-
-        chunk_dir = self._chunk_dir(tenant_id, chunk_hash)
-        os.makedirs(chunk_dir, exist_ok=True)
-
-        async with aiofiles.open(path, "wb") as f:
-            await f.write(encrypted_data)
-
-        return path
-
-    async def retrieve_chunk(self, tenant_id: int, chunk_hash: str) -> bytes:
-        """Read an encrypted chunk from disk."""
-        path = self._chunk_path(tenant_id, chunk_hash)
-        async with aiofiles.open(path, "rb") as f:
-            return await f.read()
-
-    async def delete_chunk(self, tenant_id: int, chunk_hash: str) -> bool:
-        """Delete a chunk from disk. Returns True if deleted."""
-        path = self._chunk_path(tenant_id, chunk_hash)
-        if os.path.exists(path):
-            os.remove(path)
-            return True
-        return False
-
-
-# Singletons
+# Singleton
 dedup_service = DedupService()
-chunk_store = ChunkStore()

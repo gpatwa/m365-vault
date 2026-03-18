@@ -2,6 +2,37 @@
 
 All notable changes to M365 Vault are documented in this file.
 
+## [1.3.0] - 2026-03-17
+
+### Added
+
+**Pluggable Storage Backend**
+- Abstract `StorageBackend` interface with three implementations: `LocalStorageBackend` (filesystem), `AzureBlobStorageBackend` (Azure Blob Storage), `MinIOStorageBackend` (S3-compatible / MinIO)
+- `STORAGE_BACKEND` config switch: `local` (default), `azure`, `minio`
+- Storage factory (`storage_factory.py`) creates the appropriate backend from environment config
+- All storage I/O goes through the backend interface — no direct filesystem coupling in business logic
+
+**Docker Compose — Local-Production Parity**
+- `docker-compose.yml` with PostgreSQL 16, MinIO, Backend, and Frontend services
+- Backend Dockerfile (Python 3.12-slim) and Frontend Dockerfile (Node 20 build + nginx)
+- nginx reverse proxy: `/api` routes to backend, SPA fallback for client-side routing
+- MinIO auto-initialization: creates `m365vault-backups` bucket on startup
+- Health checks for PostgreSQL and MinIO with dependency ordering
+- Volume persistence for database and object storage
+
+**Cloud Database Support**
+- Added `asyncpg>=0.29.0` for PostgreSQL async driver
+- `DATABASE_URL` already supports both SQLite and PostgreSQL — now with the driver installed
+
+### Changed
+
+- Storage service refactored from filesystem-coupled to backend-agnostic: all `os.path`, `os.makedirs`, `aiofiles.open`, `shutil.rmtree` replaced with `StorageBackend.write/read/delete/exists/delete_prefix`
+- `ChunkStore` moved into `storage.py` and uses `StorageBackend` for all chunk I/O
+- Frontend API client uses `VITE_API_BASE` env var (relative `/api` for Docker, absolute URL for dev)
+- Added `azure-storage-blob>=12.0` and `aioboto3>=13.0` dependencies
+
+---
+
 ## [1.2.0] - 2026-03-17
 
 ### Added

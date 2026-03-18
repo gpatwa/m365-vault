@@ -1,4 +1,5 @@
-const API_BASE = 'http://localhost:8000/api';
+// Use VITE_API_BASE env var for Docker (relative '/api'), fall back to dev URL
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api';
 
 class ApiClient {
   private token: string | null = null;

@@ -4,7 +4,7 @@
 
 M365 Vault is a self-hosted SaaS data protection platform for Microsoft 365 workloads. It provides automated, SLA-driven backup and granular point-in-time restore for Exchange Online, OneDrive for Business, and SharePoint Online — with AES-256 encryption at rest, role-based access control, and comprehensive audit logging.
 
-> Version 1.2.0 | Python 3.11+ | React 19 | FastAPI | Apache-2.0 License
+> Version 1.3.0 | Python 3.11+ | React 19 | FastAPI | Apache-2.0 License
 
 ---
 
@@ -119,6 +119,20 @@ npm run dev
 ### 5. Access the Application
 
 Open [http://localhost:5173](http://localhost:5173) and register your first admin account.
+
+### Docker Compose (Recommended)
+
+Run the full stack with PostgreSQL + MinIO + Backend + Frontend:
+
+```bash
+docker compose up -d
+
+# Seed test data
+docker compose exec backend python3 /scripts/simulate_backup_data.py
+
+# Open UI at http://localhost:5173 (login: admin / admin123)
+# MinIO Console at http://localhost:9001 (login: minioadmin / minioadmin)
+```
 
 ---
 

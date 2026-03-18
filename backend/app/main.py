@@ -26,9 +26,12 @@ async def lifespan(app: FastAPI):
     await init_db()
     logger.info("Database initialized")
 
-    # Ensure backup storage directory exists
-    import os
-    os.makedirs(settings.BACKUP_STORAGE_PATH, exist_ok=True)
+    # Initialize pluggable storage backend
+    from app.services.storage_factory import create_storage_backend
+    from app.services import storage as storage_module
+    backend = create_storage_backend()
+    storage_module.storage_service = storage_module.StorageService(backend)
+    logger.info(f"Storage backend: {settings.STORAGE_BACKEND}")
 
     start_scheduler()
     logger.info("Scheduler started")

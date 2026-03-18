@@ -239,7 +239,9 @@ async def main():
     await init_db()
     print("[OK] Database initialized")
 
-    storage = StorageService()
+    from app.services.storage_factory import create_storage_backend
+    backend = create_storage_backend()
+    storage = StorageService(backend)
 
     async with async_session() as db:
         # ── Step 1: Foundation Data ───────────────────────────────────

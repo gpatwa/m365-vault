@@ -13,113 +13,95 @@ Deploy M365 Vault to Azure using Terraform (infrastructure) and GitHub Actions (
 | Secrets | Key Vault | SECRET_KEY, ENCRYPTION_MASTER_KEY, connection strings |
 | Images | Container Registry (ACR) | Docker image repository |
 
-## Prerequisites
+## Automated Setup (Recommended)
 
-- Azure CLI (`az`) installed and logged in
-- Terraform >= 1.5 installed
-- GitHub repository with Actions enabled
-- Azure subscription ID
-
-## Step 1: Create Service Principal for GitHub Actions
+The entire Azure + GitHub setup is automated via a single command. The bootstrap
+script auto-installs all prerequisites, authenticates with Azure and GitHub
+via browser-based login (no tokens or passwords needed), and configures everything.
 
 ```bash
-# Create service principal with Contributor role
-az ad sp create-for-rbac \
-  --name "sp-m365vault-github" \
-  --role Contributor \
-  --scopes /subscriptions/<SUBSCRIPTION_ID> \
-  --sdk-auth
-
-# Create federated credential for OIDC (no stored secrets)
-az ad app federated-credential create \
-  --id <APP_ID> \
-  --parameters '{
-    "name": "github-main",
-    "issuer": "https://token.actions.githubusercontent.com",
-    "subject": "repo:<GITHUB_ORG>/<GITHUB_REPO>:ref:refs/heads/main",
-    "audiences": ["api://AzureADTokenExchange"]
-  }'
+# From project root — that's it!
+make bootstrap
 ```
 
-## Step 2: Configure GitHub Secrets
+**What `make bootstrap` does automatically:**
 
-Go to GitHub repo > Settings > Secrets and variables > Actions:
+| Step | Action | Details |
+|------|--------|---------|
+| 1 | **Install prerequisites** | Installs `az`, `gh`, `jq`, `terraform` via Homebrew if missing |
+| 2 | **Authenticate Azure** | Opens browser for Azure login (device code flow) |
+| 3 | **Authenticate GitHub** | Opens browser for GitHub login (OAuth web flow) |
+| 4 | **Create service principal** | Creates `sp-m365vault-github` with Contributor role + OIDC |
+| 5 | **Create OIDC credentials** | Federated credentials for `main` branch and pull requests |
+| 6 | **Create Terraform state** | Resource group + Storage Account + blob container for remote state |
+| 7 | **Set GitHub secrets** | `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` |
+| 8 | **Enable remote backend** | Generates `infra/backend.tf` for team collaboration |
 
-| Secret | Value |
-|--------|-------|
-| `AZURE_CLIENT_ID` | Service principal App ID |
-| `AZURE_TENANT_ID` | Azure AD tenant ID |
-| `AZURE_SUBSCRIPTION_ID` | Subscription ID |
-| `ACR_NAME` | ACR name (e.g., `acrm365vaultdev`) |
-| `ACR_LOGIN_SERVER` | ACR login server (e.g., `acrm365vaultdev.azurecr.io`) |
+**No manual steps required** — no tokens to generate, no secrets to copy, no Portal clicks.
 
-## Step 3: Deploy Dev Environment
+### Bootstrap with Subscription ID
 
 ```bash
-cd infra
+# Skip the subscription selection prompt
+make bootstrap SUBSCRIPTION_ID=fb665ec0-d69f-49ef-a6e8-40b4a805ad8e
 
-# Initialize Terraform
-terraform init
-
-# Preview changes
-terraform plan \
-  -var-file=environments/dev.tfvars \
-  -var="subscription_id=<YOUR_SUBSCRIPTION_ID>"
-
-# Apply
-terraform apply \
-  -var-file=environments/dev.tfvars \
-  -var="subscription_id=<YOUR_SUBSCRIPTION_ID>"
+# Or run the script directly
+./scripts/bootstrap-azure.sh --subscription <YOUR_SUBSCRIPTION_ID>
 ```
 
-After apply, note the outputs:
-- `frontend_url` — public URL for the application
-- `acr_login_server` — where to push Docker images
+## Deploy Infrastructure
 
-## Step 4: Push Docker Images
+After bootstrap, deploy the Azure resources:
 
 ```bash
-# Login to ACR
-az acr login --name acrm365vaultdev
+# Plan (review what will be created)
+make tf-plan ENV=dev SUBSCRIPTION_ID=<YOUR_SUBSCRIPTION_ID>
 
-# Build and push
-docker build -t acrm365vaultdev.azurecr.io/m365vault-backend:latest ./backend
-docker push acrm365vaultdev.azurecr.io/m365vault-backend:latest
+# Apply (create resources)
+make tf-apply ENV=dev SUBSCRIPTION_ID=<YOUR_SUBSCRIPTION_ID>
 
-docker build -t acrm365vaultdev.azurecr.io/m365vault-frontend:latest ./frontend
-docker push acrm365vaultdev.azurecr.io/m365vault-frontend:latest
+# Set ACR secrets in GitHub (auto-reads from terraform output)
+make tf-set-acr-secrets
+
+# Destroy (tear down everything)
+make tf-destroy ENV=dev SUBSCRIPTION_ID=<YOUR_SUBSCRIPTION_ID>
 ```
 
-## Step 5: Seed Test Data
+### First-Time Azure Provider Registration
+
+If you get `MissingSubscriptionRegistration` errors, register the required providers:
 
 ```bash
-az containerapp exec \
-  --name m365vault-backend-dev \
-  --resource-group rg-m365vault-dev \
-  --command "python3 /scripts/simulate_backup_data.py"
+az provider register --namespace Microsoft.App
+az provider register --namespace Microsoft.OperationalInsights
+
+# Check registration status
+az provider show --namespace Microsoft.App --query "registrationState" -o tsv
 ```
 
-## Step 6: CI/CD (Automatic)
+This is a one-time step per Azure subscription and takes 1-2 minutes.
 
-Once GitHub secrets are configured:
-- **Push to main** → auto-deploys to dev
-- **Manual dispatch** → deploy to prod (with approval gate)
+## CI/CD Pipeline
 
-## Production Deployment
+Once bootstrap and first deploy are complete, CI/CD is fully automatic:
+
+| Trigger | Action |
+|---------|--------|
+| Push to `main` | Build Docker images → push to ACR → deploy to dev |
+| Pull request | Build + test only (no deploy) |
+| Manual dispatch | Deploy to prod (with approval gate) |
+
+### Monitor Deployments
 
 ```bash
-# Deploy production
-terraform apply \
-  -var-file=environments/prod.tfvars \
-  -var="subscription_id=<YOUR_SUBSCRIPTION_ID>"
+make deploy-status         # Show recent GitHub Actions runs
+make deploy-dev            # Manually trigger dev deployment
+make deploy-prod           # Trigger prod deployment (with confirmation)
 ```
 
-Or trigger via GitHub Actions:
-1. Go to Actions > Deploy > Run workflow
-2. Select environment: `prod`
-3. Approve the deployment in the `production` environment gate
+## Environment Configuration
 
-## Environment Sizing
+### Dev vs Prod Sizing
 
 | Resource | Dev | Prod |
 |----------|-----|------|
@@ -130,15 +112,108 @@ Or trigger via GitHub Actions:
 | Backend Replicas | 1-3 | 2-10 |
 | ACR SKU | Basic | Standard |
 
-## Terraform State
+### Environment Variables
 
-For team collaboration, enable remote state:
+The following are configured automatically via Key Vault:
+
+| Variable | Source | Description |
+|----------|--------|-------------|
+| `SECRET_KEY` | Key Vault | JWT signing key (auto-generated) |
+| `ENCRYPTION_MASTER_KEY` | Key Vault | AES-256 master key (auto-generated) |
+| `DATABASE_URL` | Key Vault | PostgreSQL connection string |
+| `AZURE_STORAGE_CONNECTION_STRING` | Key Vault | Blob Storage connection |
+
+### Terraform State
+
+Remote state is stored in Azure Blob Storage (created by bootstrap):
+
+| Resource | Name |
+|----------|------|
+| Resource Group | `rg-m365vault-tfstate` |
+| Storage Account | `stm365vaulttfstate` |
+| Container | `tfstate` |
+| State File | `m365vault.terraform.tfstate` |
+
+## Seed Test Data (Dev)
+
+After deploying to dev, seed the simulation data:
 
 ```bash
-# Create state storage (one-time)
-az group create -n rg-m365vault-tfstate -l eastus
-az storage account create -n stm365vaulttfstate -g rg-m365vault-tfstate --sku Standard_LRS
-az storage container create -n tfstate --account-name stm365vaulttfstate
+# Via Docker (local)
+make seed
+
+# Via Azure Container Apps
+az containerapp exec \
+  --name m365vault-backend-dev \
+  --resource-group rg-m365vault-dev \
+  --command "python3 /scripts/simulate_backup_data.py"
 ```
 
-Then uncomment the backend block in `infra/backend.tf`.
+## Production Deployment
+
+```bash
+# Option 1: Terraform directly
+make tf-apply ENV=prod SUBSCRIPTION_ID=<YOUR_SUBSCRIPTION_ID>
+
+# Option 2: GitHub Actions (with approval gate)
+make deploy-prod
+```
+
+For production, ensure:
+
+1. **PostgreSQL** is General Purpose tier (not Burstable)
+2. **Storage** uses GRS (geo-redundant) replication
+3. **Key Vault** has soft-delete and purge protection enabled
+4. **Network** has private endpoints for PostgreSQL and Storage
+5. **Monitoring** has Azure Monitor and alerts configured
+
+## Troubleshooting
+
+### Common Errors
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `MissingSubscriptionRegistration` | Azure provider not registered | `az provider register --namespace Microsoft.App` |
+| `LocationIsOfferRestricted` | PostgreSQL not available in region | Change region in `dev.tfvars` (e.g., `westus2`) |
+| `count depends on resource attributes` | Terraform conditional on runtime value | Use boolean variable instead of resource attribute in `count` |
+| `Backend initialization required` | Remote state not initialized | `make tf-init` or run bootstrap first |
+
+### Cleanup
+
+```bash
+# Destroy all dev resources
+make tf-destroy ENV=dev SUBSCRIPTION_ID=<YOUR_SUBSCRIPTION_ID>
+
+# Or delete resource group directly (fastest)
+az group delete --name rg-m365vault-dev --yes --no-wait
+
+# Remove tfstate storage (only if decommissioning)
+az group delete --name rg-m365vault-tfstate --yes
+```
+
+## Quick Reference — All Make Commands
+
+```bash
+make help                  # Show all available commands
+
+# Local Development
+make dev                   # Start Docker Compose (postgres + minio + backend + frontend)
+make dev-bg                # Start in background
+make dev-down              # Stop all services
+make dev-clean             # Stop + remove volumes (fresh start)
+make seed                  # Seed simulated backup data
+make seed-clean            # Clean DB + storage, then re-seed
+make build                 # Build Docker images locally
+
+# Azure Deployment
+make bootstrap             # One-time setup: installs tools, creates SP, OIDC, tfstate, secrets
+make tf-init               # Initialize Terraform backend
+make tf-plan               # Plan infrastructure changes
+make tf-apply              # Apply infrastructure changes
+make tf-destroy            # Destroy infrastructure (with confirmation)
+make tf-set-acr-secrets    # Set ACR GitHub secrets from Terraform output
+make deploy-dev            # Trigger dev deployment via GitHub Actions
+make deploy-prod           # Trigger prod deployment (with confirmation)
+make deploy-status         # Show recent CI/CD runs
+make check-prereqs         # Verify all tools are installed
+```

@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
 # ──────────────────────────────────────────────────────────────────────
-# M365 Vault — One-time Azure + GitHub bootstrap
+# M365 Vault — Fully automated Azure + GitHub bootstrap
 #
-# This script automates all manual first-time setup:
-#   1. Creates an Azure service principal with OIDC for GitHub Actions
-#   2. Creates Terraform remote state storage
-#   3. Sets all required GitHub repository secrets
-#   4. Enables Terraform remote backend
-#
-# Prerequisites:
-#   - Azure CLI (az) installed and logged in
-#   - GitHub CLI (gh) installed and authenticated
-#   - jq installed
+# Zero prerequisites required — this script handles everything:
+#   1. Auto-installs missing tools (az, gh, jq, terraform) via Homebrew
+#   2. Authenticates Azure CLI via browser (device code flow)
+#   3. Authenticates GitHub CLI via browser (OAuth web flow)
+#   4. Creates Azure service principal with OIDC for GitHub Actions
+#   5. Creates Terraform remote state storage (Azure Blob)
+#   6. Sets all required GitHub repository secrets automatically
+#   7. Enables Terraform remote backend
 #
 # Usage:
-#   ./scripts/bootstrap-azure.sh                          # interactive
-#   ./scripts/bootstrap-azure.sh --subscription <id>      # non-interactive
+#   make bootstrap                                        # interactive
+#   make bootstrap SUBSCRIPTION_ID=<id>                   # non-interactive
+#   ./scripts/bootstrap-azure.sh                          # direct run
+#   ./scripts/bootstrap-azure.sh --subscription <id>      # direct + sub ID
 # ──────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
@@ -39,16 +39,50 @@ TFSTATE_SA="stm365vaulttfstate"
 TFSTATE_CONTAINER="tfstate"
 LOCATION="eastus"
 
-# ── Prerequisite checks ─────────────────────────────────────────────
-for cmd in az gh jq; do
-  command -v "$cmd" >/dev/null 2>&1 || fail "$cmd is required but not installed."
+# ── Auto-install prerequisites ─────────────────────────────────────
+install_with_brew() {
+  local pkg="$1"
+  if ! command -v brew >/dev/null 2>&1; then
+    info "Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    # Add brew to PATH for Apple Silicon
+    if [[ -f /opt/homebrew/bin/brew ]]; then
+      eval "$(/opt/homebrew/bin/brew shellenv)"
+    fi
+  fi
+  info "Installing $pkg via Homebrew..."
+  brew install "$pkg"
+}
+
+for cmd in az gh jq terraform; do
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    warn "$cmd not found. Installing..."
+    case "$cmd" in
+      az)        install_with_brew azure-cli ;;
+      gh)        install_with_brew gh ;;
+      jq)        install_with_brew jq ;;
+      terraform) install_with_brew hashicorp/tap/terraform ;;
+    esac
+    command -v "$cmd" >/dev/null 2>&1 || fail "Failed to install $cmd."
+    ok "$cmd installed successfully."
+  else
+    ok "$cmd is available."
+  fi
 done
 
-# Check Azure login
-az account show >/dev/null 2>&1 || fail "Not logged in to Azure. Run: az login"
+# Check Azure login (prompt if needed — opens browser)
+if ! az account show >/dev/null 2>&1; then
+  warn "Not logged in to Azure. Opening browser-based login..."
+  az login --use-device-code
+fi
+ok "Azure CLI authenticated."
 
-# Check GitHub login
-gh auth status >/dev/null 2>&1 || fail "Not logged in to GitHub. Run: gh auth login"
+# Check GitHub login (prompt if needed — use browser-based auth, no token required)
+if ! gh auth status >/dev/null 2>&1; then
+  warn "Not logged in to GitHub. Opening browser-based login..."
+  gh auth login --hostname github.com --git-protocol https --web
+fi
+ok "GitHub CLI authenticated."
 
 # ── Parse arguments ─────────────────────────────────────────────────
 SUBSCRIPTION_ID=""

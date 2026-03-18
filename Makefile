@@ -116,24 +116,24 @@ build: ## Build Docker images locally
 
 .PHONY: tf-init
 tf-init: ## Initialize Terraform (with remote backend)
-	cd $(TF_DIR) && terraform init
+	cd $(TF_DIR) && terraform init -reconfigure
 
 .PHONY: tf-plan
-tf-plan: ## Plan infrastructure changes (ENV=dev|prod)
+tf-plan: tf-init ## Plan infrastructure changes (ENV=dev|prod)
 	@test -n "$(SUBSCRIPTION_ID)" || (echo "Error: SUBSCRIPTION_ID required. Usage: make tf-plan SUBSCRIPTION_ID=<id>" && exit 1)
 	cd $(TF_DIR) && terraform plan \
 		-var-file=environments/$(ENV).tfvars \
 		-var="subscription_id=$(SUBSCRIPTION_ID)"
 
 .PHONY: tf-apply
-tf-apply: ## Apply infrastructure changes (ENV=dev|prod)
+tf-apply: tf-init ## Apply infrastructure changes (ENV=dev|prod)
 	@test -n "$(SUBSCRIPTION_ID)" || (echo "Error: SUBSCRIPTION_ID required. Usage: make tf-apply SUBSCRIPTION_ID=<id>" && exit 1)
 	cd $(TF_DIR) && terraform apply \
 		-var-file=environments/$(ENV).tfvars \
 		-var="subscription_id=$(SUBSCRIPTION_ID)"
 
 .PHONY: tf-destroy
-tf-destroy: ## Destroy infrastructure (ENV=dev|prod) — DANGEROUS
+tf-destroy: tf-init ## Destroy infrastructure (ENV=dev|prod) — DANGEROUS
 	@test -n "$(SUBSCRIPTION_ID)" || (echo "Error: SUBSCRIPTION_ID required." && exit 1)
 	@echo "⚠️  This will DESTROY all $(ENV) resources. Press Ctrl+C to cancel."
 	@read -rp "Type '$(ENV)' to confirm: " confirm && [ "$$confirm" = "$(ENV)" ] || exit 1
@@ -142,7 +142,7 @@ tf-destroy: ## Destroy infrastructure (ENV=dev|prod) — DANGEROUS
 		-var="subscription_id=$(SUBSCRIPTION_ID)"
 
 .PHONY: tf-output
-tf-output: ## Show Terraform outputs
+tf-output: tf-init ## Show Terraform outputs
 	cd $(TF_DIR) && terraform output
 
 .PHONY: tf-set-acr-secrets

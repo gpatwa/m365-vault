@@ -238,6 +238,27 @@ az-status: ## Show current Azure resource status for this environment (ENV=dev|p
 	@echo "Storage:"
 	@az storage account list -g rg-m365vault-$(ENV) --query "[].{name:name, kind:kind}" -o table 2>/dev/null || echo "  Not found"
 
+.PHONY: az-sleep
+az-sleep: ## Pause all Azure resources to save cost (deactivate apps + stop DB)
+	@echo "😴 Pausing Azure resources..."
+	@BACKEND_REV=$$(az containerapp revision list --name m365vault-backend-$(ENV) -g rg-m365vault-$(ENV) --query "[0].name" -o tsv 2>/dev/null) && \
+	if [ -n "$$BACKEND_REV" ]; then az containerapp revision deactivate --name m365vault-backend-$(ENV) -g rg-m365vault-$(ENV) --revision $$BACKEND_REV 2>/dev/null && echo "  ✓ Backend deactivated"; fi
+	@FRONTEND_REV=$$(az containerapp revision list --name m365vault-frontend-$(ENV) -g rg-m365vault-$(ENV) --query "[0].name" -o tsv 2>/dev/null) && \
+	if [ -n "$$FRONTEND_REV" ]; then az containerapp revision deactivate --name m365vault-frontend-$(ENV) -g rg-m365vault-$(ENV) --revision $$FRONTEND_REV 2>/dev/null && echo "  ✓ Frontend deactivated"; fi
+	@az postgres flexible-server stop --name psql-m365vault-$(ENV) -g rg-m365vault-$(ENV) 2>/dev/null && echo "  ✓ PostgreSQL stopped" || echo "  ⚠ PostgreSQL already stopped"
+	@echo "✅ All paused. Run 'make az-wake' to resume."
+
+.PHONY: az-wake
+az-wake: ## Resume all Azure resources (start DB + activate apps)
+	@echo "☀️  Waking up Azure resources..."
+	@echo "  Starting PostgreSQL (takes ~2 min)..."
+	@az postgres flexible-server start --name psql-m365vault-$(ENV) -g rg-m365vault-$(ENV) 2>/dev/null && echo "  ✓ PostgreSQL started" || echo "  ⚠ PostgreSQL already running"
+	@BACKEND_REV=$$(az containerapp revision list --name m365vault-backend-$(ENV) -g rg-m365vault-$(ENV) --query "[0].name" -o tsv 2>/dev/null) && \
+	if [ -n "$$BACKEND_REV" ]; then az containerapp revision activate --name m365vault-backend-$(ENV) -g rg-m365vault-$(ENV) --revision $$BACKEND_REV 2>/dev/null && echo "  ✓ Backend activated"; fi
+	@FRONTEND_REV=$$(az containerapp revision list --name m365vault-frontend-$(ENV) -g rg-m365vault-$(ENV) --query "[0].name" -o tsv 2>/dev/null) && \
+	if [ -n "$$FRONTEND_REV" ]; then az containerapp revision activate --name m365vault-frontend-$(ENV) -g rg-m365vault-$(ENV) --revision $$FRONTEND_REV 2>/dev/null && echo "  ✓ Frontend activated"; fi
+	@echo "✅ All running. Frontend: https://m365vault-frontend-$(ENV).$$(az containerapp show --name m365vault-frontend-$(ENV) -g rg-m365vault-$(ENV) --query 'properties.configuration.ingress.fqdn' -o tsv 2>/dev/null | sed 's/m365vault-frontend-$(ENV)\.//')"
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Deploy (via GitHub Actions)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

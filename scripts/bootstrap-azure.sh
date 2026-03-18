@@ -214,16 +214,12 @@ ok "Service principal can access tfstate storage."
 echo ""
 info "Step 4/5: Setting GitHub repository secrets..."
 
-declare -A SECRETS=(
-  [AZURE_CLIENT_ID]="$CLIENT_ID"
-  [AZURE_TENANT_ID]="$TENANT_ID"
-  [AZURE_SUBSCRIPTION_ID]="$SUBSCRIPTION_ID"
-)
-
-for SECRET_NAME in "${!SECRETS[@]}"; do
-  gh secret set "$SECRET_NAME" --repo "$GITHUB_REPO" --body "${SECRETS[$SECRET_NAME]}"
-  ok "Set secret: $SECRET_NAME"
-done
+gh secret set AZURE_CLIENT_ID --repo "$GITHUB_REPO" --body "$CLIENT_ID"
+ok "Set secret: AZURE_CLIENT_ID"
+gh secret set AZURE_TENANT_ID --repo "$GITHUB_REPO" --body "$TENANT_ID"
+ok "Set secret: AZURE_TENANT_ID"
+gh secret set AZURE_SUBSCRIPTION_ID --repo "$GITHUB_REPO" --body "$SUBSCRIPTION_ID"
+ok "Set secret: AZURE_SUBSCRIPTION_ID"
 
 # ACR name/login server will be set after first terraform apply
 info "Note: ACR_NAME and ACR_LOGIN_SERVER will be set after first 'terraform apply'."

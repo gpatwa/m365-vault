@@ -112,6 +112,7 @@ module "container_apps" {
   storage_connection_string = module.storage.connection_string
   storage_container_name    = module.storage.container_name
   keyvault_id               = module.keyvault.vault_id
+  enable_keyvault           = true
   backend_cpu               = var.backend_cpu
   backend_memory            = var.backend_memory
   backend_min_replicas      = var.backend_min_replicas

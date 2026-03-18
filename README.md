@@ -134,6 +134,32 @@ docker compose exec backend python3 /scripts/simulate_backup_data.py
 # MinIO Console at http://localhost:9001 (login: minioadmin / minioadmin)
 ```
 
+### Make Commands
+
+All common operations are available via `make`:
+
+```bash
+make help             # Show all available commands
+
+# Local Development
+make dev              # Start full Docker Compose stack (build + run)
+make dev-bg           # Start in background
+make dev-down         # Stop all services
+make dev-clean        # Stop + remove volumes (fresh start)
+make seed             # Seed simulated backup data
+make seed-clean       # Clean DB + storage, then re-seed
+make build            # Build Docker images locally
+
+# Azure Deployment
+make bootstrap        # One-time Azure + GitHub setup (SP, OIDC, tfstate, secrets)
+make tf-plan          # Plan infrastructure changes (ENV=dev|prod SUBSCRIPTION_ID=...)
+make tf-apply         # Apply infrastructure changes
+make tf-set-acr-secrets  # Set ACR GitHub secrets from Terraform output
+make deploy-dev       # Trigger dev deployment via GitHub Actions
+make deploy-prod      # Trigger prod deployment (with confirmation)
+make deploy-status    # Show recent CI/CD runs
+```
+
 ---
 
 ## Project Structure

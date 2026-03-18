@@ -63,6 +63,12 @@ variable "keyvault_id" {
   default = ""
 }
 
+variable "enable_keyvault" {
+  description = "Whether Key Vault integration is enabled (avoids count depending on unknown values)"
+  type        = bool
+  default     = true
+}
+
 variable "backend_cpu" {
   type    = number
   default = 0.5

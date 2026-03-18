@@ -14,10 +14,18 @@ All notable changes to M365 Vault are documented in this file.
 - Manual production deployment with approval gate
 - Azure Deployment Guide (`docs/AZURE_DEPLOYMENT.md`)
 
+**Deployment Automation**
+- `scripts/bootstrap-azure.sh` — one-command Azure + GitHub bootstrap: creates service principal, OIDC federated credentials, Terraform remote state storage, and sets all GitHub secrets
+- Terraform remote state backend (Azure Blob Storage) for shared state across CI/CD and developers
+- `Makefile` with 25+ targets: `make dev`, `make build`, `make bootstrap`, `make tf-plan`, `make deploy-dev`, `make deploy-prod`, `make seed`, and more
+- Deploy workflow updated with OIDC-authenticated Terraform remote state initialization
+- `make tf-set-acr-secrets` to auto-populate ACR secrets from Terraform output after first apply
+
 ### Changed
 
 - CORS origins now configurable via `CORS_ORIGINS` environment variable (comma-separated)
 - Backend health probes (`/health`) used by Container Apps for liveness and readiness
+- Terraform backend migrated from local state to Azure Blob Storage remote state
 
 ---
 

@@ -182,7 +182,7 @@ resource "azurerm_container_app" "frontend" {
 
 # Grant backend managed identity access to Key Vault secrets
 resource "azurerm_role_assignment" "backend_keyvault" {
-  count                = var.keyvault_id != "" ? 1 : 0
+  count                = var.enable_keyvault ? 1 : 0
   scope                = var.keyvault_id
   role_definition_name = "Key Vault Secrets User"
   principal_id         = azurerm_container_app.backend.identity[0].principal_id

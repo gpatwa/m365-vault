@@ -47,5 +47,9 @@ Thumbs.db
 # Coverage
 htmlcov/
 .coverage
+# Terraform
 **/.terraform/
 **/.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+*.tfplan

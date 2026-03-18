@@ -253,7 +253,7 @@ class ExchangeWorker:
             subject=subject,
             sender=sender,
             recipients=recipients,
-            received_at=datetime.fromisoformat(received_at.replace("Z", "+00:00")) if received_at else None,
+            received_at=datetime.fromisoformat(received_at.replace("Z", "+00:00")).replace(tzinfo=None) if received_at else None,
             metadata_json=json.dumps({
                 "importance": msg.get("importance"),
                 "isRead": msg.get("isRead"),

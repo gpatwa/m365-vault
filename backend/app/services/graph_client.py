@@ -82,13 +82,19 @@ class GraphClient:
         )
 
     def _get_scopes(self) -> list[str]:
-        """Get the appropriate OAuth2 scopes based on access mode."""
-        if self.access_mode == "backup":
-            return settings.MS_GRAPH_BACKUP_SCOPES
-        elif self.access_mode == "restore":
-            return settings.MS_GRAPH_RESTORE_SCOPES
-        else:
-            return [settings.MS_GRAPH_SCOPE]
+        """Get OAuth2 scopes for client credential flow.
+
+        Client credential flows MUST use '.default' — individual scopes like
+        Mail.Read are not supported. The actual permissions are configured as
+        Application Permissions in the Azure AD App Registration.
+
+        The access_mode ('backup' vs 'restore') controls the client-side
+        read-only guard (_ensure_write_allowed), NOT the token scopes.
+
+        See MS_GRAPH_BACKUP_SCOPES / MS_GRAPH_RESTORE_SCOPES in config.py
+        for the list of Application Permissions each mode requires.
+        """
+        return [settings.MS_GRAPH_SCOPE]
 
     def _ensure_write_allowed(self, method: str, url: str):
         """Block write operations on read-only (backup) clients."""

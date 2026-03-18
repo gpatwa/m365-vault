@@ -242,6 +242,9 @@ async def trigger_backup_all(
     succeeded = 0
     failed = 0
 
+    # Cache object names before the loop (session may be invalidated on error)
+    obj_names = {obj.id: (obj.display_name, obj.email) for obj in accounts}
+
     for obj in accounts:
         try:
             snapshot = await engine.run_backup_for_object(obj, job=job)
@@ -249,7 +252,9 @@ async def trigger_backup_all(
             succeeded += 1
             job.objects_processed += 1
         except Exception as e:
-            results.append({"account": obj.display_name, "email": obj.email, "status": "failed", "error": str(e)})
+            await db.rollback()
+            name, email = obj_names.get(obj.id, (str(obj.id), ''))
+            results.append({"account": name, "email": email, "status": "failed", "error": str(e)[:500]})
             failed += 1
             job.objects_failed += 1
         await db.commit()

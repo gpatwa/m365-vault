@@ -184,7 +184,7 @@ class OneDriveWorker:
                 mime_type=mime_type,
                 last_modified_at=datetime.fromisoformat(
                     last_modified.replace("Z", "+00:00")
-                ) if last_modified else None,
+                ).replace(tzinfo=None) if last_modified else None,
                 metadata_json=json.dumps({
                     "webUrl": drive_item.get("webUrl"),
                     "createdBy": drive_item.get("createdBy", {}).get("user", {}).get("displayName"),

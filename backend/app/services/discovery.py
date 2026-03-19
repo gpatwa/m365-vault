@@ -39,8 +39,11 @@ class DiscoveryService:
             "mailboxes": 0,
             "onedrives": 0,
             "sites": 0,
+            "removed": 0,
             "errors": [],
         }
+        # Track discovered object IDs to clean up stale entries
+        discovered_ids = {"exchange": set(), "onedrive": set(), "sharepoint": set()}
 
         # Discover Exchange mailboxes and OneDrive accounts (from users)
         try:
@@ -70,29 +73,44 @@ class DiscoveryService:
             if not email:
                 continue
 
-            # Exchange mailbox
-            await self._upsert_protected_object(
-                tenant_id=tenant.id,
-                workload_type=WorkloadType.EXCHANGE,
-                ms_object_id=user_id,
-                display_name=f"{display_name} (Mailbox)",
-                email=email,
-                user_principal_name=upn,
-                metadata={"source": "user_discovery"},
-            )
-            results["mailboxes"] += 1
+            # Validate Exchange mailbox exists (mailFolders fails if no mailbox)
+            try:
+                await graph.get(f"/users/{user_id}/mailFolders", params={
+                    "$select": "id",
+                    "$top": "1",
+                })
+                await self._upsert_protected_object(
+                    tenant_id=tenant.id,
+                    workload_type=WorkloadType.EXCHANGE,
+                    ms_object_id=user_id,
+                    display_name=f"{display_name} (Mailbox)",
+                    email=email,
+                    user_principal_name=upn,
+                    metadata={"source": "user_discovery"},
+                )
+                discovered_ids["exchange"].add(user_id)
+                results["mailboxes"] += 1
+            except Exception as e:
+                logger.info(f"Skipping Exchange for {display_name}: {e}")
 
-            # OneDrive account
-            await self._upsert_protected_object(
-                tenant_id=tenant.id,
-                workload_type=WorkloadType.ONEDRIVE,
-                ms_object_id=user_id,
-                display_name=f"{display_name} (OneDrive)",
-                email=email,
-                user_principal_name=upn,
-                metadata={"source": "user_discovery"},
-            )
-            results["onedrives"] += 1
+            # Validate OneDrive is provisioned (drive/root fails if no mysite)
+            try:
+                await graph.get(f"/users/{user_id}/drive/root", params={
+                    "$select": "id,name",
+                })
+                await self._upsert_protected_object(
+                    tenant_id=tenant.id,
+                    workload_type=WorkloadType.ONEDRIVE,
+                    ms_object_id=user_id,
+                    display_name=f"{display_name} (OneDrive)",
+                    email=email,
+                    user_principal_name=upn,
+                    metadata={"source": "user_discovery"},
+                )
+                discovered_ids["onedrive"].add(user_id)
+                results["onedrives"] += 1
+            except Exception as e:
+                logger.info(f"Skipping OneDrive for {display_name}: {e}")
 
         # Discover SharePoint sites via multiple methods
         discovered_site_ids = set()
@@ -184,6 +202,34 @@ class DiscoveryService:
             except Exception as e:
                 results["errors"].append(f"SharePoint discovery failed: {str(e)}")
 
+        # Remove stale protected objects that no longer exist
+        workload_map = {
+            WorkloadType.EXCHANGE: discovered_ids["exchange"],
+            WorkloadType.ONEDRIVE: discovered_ids["onedrive"],
+            WorkloadType.SHAREPOINT: discovered_site_ids,
+        }
+        for wl_type, valid_ids in workload_map.items():
+            if not valid_ids:
+                continue  # Skip if discovery returned nothing (possible API error)
+            valid_id_list = list(valid_ids)
+            logger.info(f"Cleanup {wl_type.value}: {len(valid_id_list)} valid IDs")
+            stale = await self.db.execute(
+                select(ProtectedObject).where(
+                    ProtectedObject.tenant_id == tenant.id,
+                    ProtectedObject.workload_type == wl_type,
+                    ProtectedObject.ms_object_id.notin_(valid_id_list),
+                )
+            )
+            for obj in stale.scalars().all():
+                logger.warning(f"Marking stale {wl_type.value} object as ERROR: {obj.display_name} ({obj.ms_object_id})")
+                obj.status = ProtectionStatus.ERROR
+                obj.metadata_json = json.dumps({
+                    **(json.loads(obj.metadata_json) if obj.metadata_json else {}),
+                    "stale_reason": "Not found during discovery validation",
+                    "marked_stale_at": datetime.utcnow().isoformat(),
+                })
+                results["removed"] += 1
+
         # Update tenant counts
         tenant.total_mailboxes = results["mailboxes"]
         tenant.total_onedrives = results["onedrives"]
@@ -195,7 +241,7 @@ class DiscoveryService:
         logger.info(
             f"Discovery complete for tenant {tenant.name}: "
             f"{results['mailboxes']} mailboxes, {results['onedrives']} OneDrives, "
-            f"{results['sites']} SharePoint sites"
+            f"{results['sites']} SharePoint sites, {results['removed']} stale removed"
         )
         return results
 

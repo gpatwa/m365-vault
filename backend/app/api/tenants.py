@@ -1,6 +1,9 @@
 """Tenant management API routes."""
 import json
+import logging
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from pydantic import BaseModel
@@ -139,7 +142,12 @@ async def run_discovery(
         raise HTTPException(status_code=404, detail="Tenant not found")
 
     discovery = DiscoveryService(db)
-    results = await discovery.discover_all(tenant)
+    try:
+        results = await discovery.discover_all(tenant)
+    except Exception as e:
+        import traceback
+        logger.error(f"Discovery failed: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Discovery failed: {str(e)}")
     return {
         "status": "completed",
         "results": results,

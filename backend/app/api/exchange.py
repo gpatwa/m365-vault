@@ -7,7 +7,7 @@ from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models.protected_object import ProtectedObject, WorkloadType
+from app.models.protected_object import ProtectedObject, WorkloadType, ProtectionStatus
 from app.models.snapshot import Snapshot, SnapshotItem, SnapshotStatus, ItemType
 from app.models.restore_job import RestoreJob, RestoreType, RestoreStatus
 from app.models.user import User
@@ -217,6 +217,7 @@ async def trigger_backup_all(
         select(ProtectedObject).where(
             ProtectedObject.tenant_id == tenant_id,
             ProtectedObject.workload_type == WorkloadType.EXCHANGE,
+            ProtectedObject.status != ProtectionStatus.ERROR,
         )
     )
     mailboxes = result.scalars().all()

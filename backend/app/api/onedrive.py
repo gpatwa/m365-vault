@@ -7,7 +7,7 @@ from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models.protected_object import ProtectedObject, WorkloadType
+from app.models.protected_object import ProtectedObject, WorkloadType, ProtectionStatus
 from app.models.snapshot import Snapshot, SnapshotStatus
 from app.models.restore_job import RestoreJob, RestoreType, RestoreStatus
 from app.models.user import User
@@ -212,12 +212,13 @@ async def trigger_backup_all(
         select(ProtectedObject).where(
             ProtectedObject.tenant_id == tenant_id,
             ProtectedObject.workload_type == WorkloadType.ONEDRIVE,
+            ProtectedObject.status != ProtectionStatus.ERROR,
         )
     )
     accounts = result.scalars().all()
 
     if not accounts:
-        raise HTTPException(status_code=404, detail="No OneDrive accounts found")
+        raise HTTPException(status_code=404, detail="No active OneDrive accounts found")
 
     job = BackupJob(
         tenant_id=tenant_id,

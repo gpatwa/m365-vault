@@ -366,7 +366,19 @@ export default function Settings() {
                                   : <XCircle className="w-4 h-4 text-red-500 mx-auto" />}
                             </td>
                             <td className="px-4 py-2 text-gray-500">
-                              {[...(status.missing_backup || []), ...(status.missing_restore || [])].join(', ') || '-'}
+                              {[...(status.missing_backup || []), ...(status.missing_restore || [])].length > 0 ? (
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span>{[...(status.missing_backup || []), ...(status.missing_restore || [])].join(', ')}</span>
+                                  <a
+                                    href={`https://login.microsoftonline.com/${t.ms_tenant_id}/adminconsent?client_id=${t.client_id}&redirect_uri=${encodeURIComponent(window.location.origin + '/settings')}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded text-[10px] font-semibold hover:bg-orange-200 whitespace-nowrap"
+                                  >
+                                    Fix
+                                  </a>
+                                </div>
+                              ) : '-'}
                             </td>
                           </tr>
                         ))}

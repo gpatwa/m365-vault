@@ -195,10 +195,27 @@ class AppProvisioningService:
     ) -> dict:
         """Check which permissions have been granted (admin consented) for an app.
 
+        Dynamically looks up role IDs from Microsoft Graph instead of using
+        hardcoded IDs, ensuring accuracy across all tenants.
+
         Returns per-workload permission status.
         """
         async with httpx.AsyncClient(timeout=30) as client:
-            # Find service principal by appId
+            # Get MS Graph service principal to build role ID → name map
+            ms_sp_response = await client.get(
+                f"https://graph.microsoft.com/v1.0/servicePrincipals?$filter=appId eq '{MS_GRAPH_RESOURCE_APP_ID}'&$select=id,appRoles",
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
+            if ms_sp_response.status_code != 200 or not ms_sp_response.json().get("value"):
+                return {"error": "Could not look up Microsoft Graph permissions"}
+
+            ms_sp = ms_sp_response.json()["value"][0]
+            role_id_to_name = {}
+            for role in ms_sp.get("appRoles", []):
+                if "Application" in (role.get("allowedMemberTypes") or []):
+                    role_id_to_name[role["id"]] = role["value"]
+
+            # Find our service principal by appId
             sp_response = await client.get(
                 f"https://graph.microsoft.com/v1.0/servicePrincipals(appId='{app_id}')",
                 headers={"Authorization": f"Bearer {access_token}"},
@@ -210,22 +227,24 @@ class AppProvisioningService:
             sp_data = sp_response.json()
             sp_id = sp_data["id"]
 
-            # Get app role assignments (granted permissions)
-            assign_response = await client.get(
-                f"https://graph.microsoft.com/v1.0/servicePrincipals/{sp_id}/appRoleAssignments",
-                headers={"Authorization": f"Bearer {access_token}"},
-            )
+            # Get app role assignments (granted permissions) — paginate to get all
+            all_assignments = []
+            url = f"https://graph.microsoft.com/v1.0/servicePrincipals/{sp_id}/appRoleAssignments?$top=100"
+            while url:
+                assign_response = await client.get(
+                    url, headers={"Authorization": f"Bearer {access_token}"},
+                )
+                if assign_response.status_code != 200:
+                    return {"error": "Could not read permission assignments"}
+                data = assign_response.json()
+                all_assignments.extend(data.get("value", []))
+                url = data.get("@odata.nextLink")
 
-            if assign_response.status_code != 200:
-                return {"error": "Could not read permission assignments"}
-
-            assignments = assign_response.json().get("value", [])
-            granted_role_ids = {a["appRoleId"] for a in assignments}
-
-        # Map granted role IDs to permission names
+        # Map granted role IDs to permission names using the dynamic lookup
         granted_permissions = set()
-        for perm_name, role_id in REQUIRED_APP_PERMISSIONS.items():
-            if role_id in granted_role_ids:
+        for assignment in all_assignments:
+            perm_name = role_id_to_name.get(assignment["appRoleId"])
+            if perm_name:
                 granted_permissions.add(perm_name)
 
         # Build per-workload status

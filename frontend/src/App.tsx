@@ -7,6 +7,7 @@ import Exchange from './pages/Exchange';
 import OneDrive from './pages/OneDrive';
 import SharePoint from './pages/SharePoint';
 import EntraID from './pages/EntraID';
+import Teams from './pages/Teams';
 import SLAPolicies from './pages/SLAPolicies';
 import Jobs from './pages/Jobs';
 import Tenants from './pages/Settings';
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="exchange" element={<Exchange />} />
           <Route path="onedrive" element={<OneDrive />} />
           <Route path="sharepoint" element={<SharePoint />} />
+          <Route path="teams" element={<Teams />} />
           <Route path="entra-id" element={<EntraID />} />
           <Route path="sla-policies" element={<SLAPolicies />} />
           <Route path="jobs" element={<Jobs />} />

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Building2, Plus, CheckCircle, XCircle, RefreshCw, Trash2, Wifi, Pause, Play, KeyRound, AlertTriangle } from 'lucide-react';
+import { Building2, Plus, CheckCircle, XCircle, RefreshCw, Trash2, Wifi, Pause, Play, KeyRound, AlertTriangle, ExternalLink } from 'lucide-react';
 import { api } from '../api/client';
 import StatusBadge from '../components/StatusBadge';
 import OnboardingWizard from '../components/OnboardingWizard';
@@ -262,27 +262,41 @@ export default function Settings() {
                   )}
                 </div>
               </div>
-              <div className="grid grid-cols-5 gap-4 mt-4 text-sm">
+              <div className="grid grid-cols-6 gap-3 mt-4 text-sm">
                 <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-gray-500">Mailboxes</p>
+                  <p className="text-gray-500 text-xs">Mailboxes</p>
                   <p className="text-lg font-bold">{t.total_mailboxes}</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-gray-500">OneDrives</p>
+                  <p className="text-gray-500 text-xs">OneDrives</p>
                   <p className="text-lg font-bold">{t.total_onedrives}</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-gray-500">SharePoint Sites</p>
+                  <p className="text-gray-500 text-xs">SharePoint</p>
                   <p className="text-lg font-bold">{t.total_sites}</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-gray-500">Entra ID Objects</p>
+                  <p className="text-gray-500 text-xs">Teams</p>
+                  <p className="text-lg font-bold">{t.total_teams || 0}</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-gray-500 text-xs">Entra ID</p>
                   <p className="text-lg font-bold">{t.total_entra_objects || 0}</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-gray-500">Last Discovery</p>
+                  <p className="text-gray-500 text-xs">Last Discovery</p>
                   <p className="text-sm font-medium">{t.last_discovery_at?.slice(0, 16) || 'Never'}</p>
                 </div>
+              </div>
+              <div className="mt-3 flex gap-2">
+                <a
+                  href={`https://login.microsoftonline.com/${t.ms_tenant_id}/adminconsent?client_id=${t.client_id}&redirect_uri=${encodeURIComponent(window.location.origin + '/settings')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 border border-orange-200 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-50 flex items-center gap-1"
+                >
+                  <ExternalLink className="w-3 h-3" /> Grant Permissions
+                </a>
               </div>
             </div>
           );

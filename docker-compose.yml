@@ -73,6 +73,8 @@ services:
     platform: linux/amd64
     ports:
       - "5173:80"
+    environment:
+      BACKEND_URL: http://localhost:8000
     depends_on:
       - backend
 

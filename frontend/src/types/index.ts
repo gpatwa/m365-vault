@@ -22,6 +22,7 @@ export interface Tenant {
   total_mailboxes: number;
   total_onedrives: number;
   total_sites: number;
+  total_entra_objects: number;
   last_discovery_at: string | null;
   created_at: string;
 }

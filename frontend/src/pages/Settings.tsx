@@ -56,7 +56,7 @@ export default function Settings() {
         <div className="bg-white rounded-xl border shadow-sm p-6 mb-6">
           <h3 className="text-lg font-semibold mb-4">Onboard M365 Tenant</h3>
           <p className="text-sm text-gray-500 mb-4">
-            Register your Azure AD App Registration credentials. Requires an app with Microsoft Graph API permissions for Exchange, OneDrive, and SharePoint.
+            Register your Azure AD App Registration credentials. Requires an app with Microsoft Graph API permissions for Exchange, OneDrive, SharePoint, and Entra ID.
           </p>
           <form onSubmit={(e) => { e.preventDefault(); createMutation.mutate(form); }} className="grid grid-cols-2 gap-4">
             <div>
@@ -125,7 +125,7 @@ export default function Settings() {
                 </button>
               </div>
             </div>
-            <div className="grid grid-cols-4 gap-4 mt-4 text-sm">
+            <div className="grid grid-cols-5 gap-4 mt-4 text-sm">
               <div className="bg-gray-50 rounded-lg p-3">
                 <p className="text-gray-500">Mailboxes</p>
                 <p className="text-lg font-bold">{t.total_mailboxes}</p>
@@ -137,6 +137,10 @@ export default function Settings() {
               <div className="bg-gray-50 rounded-lg p-3">
                 <p className="text-gray-500">SharePoint Sites</p>
                 <p className="text-lg font-bold">{t.total_sites}</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-gray-500">Entra ID Objects</p>
+                <p className="text-lg font-bold">{t.total_entra_objects || 0}</p>
               </div>
               <div className="bg-gray-50 rounded-lg p-3">
                 <p className="text-gray-500">Last Discovery</p>

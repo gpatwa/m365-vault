@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Shield, Plus, Pencil, Trash2, Lock, Clock, Calendar, Link, Mail, HardDrive, Globe } from 'lucide-react';
+import { Shield, Plus, Pencil, Trash2, Lock, Clock, Calendar, Link, Mail, HardDrive, Globe, KeyRound } from 'lucide-react';
 import { api } from '../api/client';
 import type { SLAPolicy } from '../types';
 
@@ -78,6 +78,7 @@ export default function SLAPolicies() {
         api.post('/sla-policies/assign', { sla_policy_id: showAssign.id, tenant_id: 1, workload_type: 'exchange', assignment_type: 'application' }),
         api.post('/sla-policies/assign', { sla_policy_id: showAssign.id, tenant_id: 1, workload_type: 'onedrive', assignment_type: 'application' }),
         api.post('/sla-policies/assign', { sla_policy_id: showAssign.id, tenant_id: 1, workload_type: 'sharepoint', assignment_type: 'application' }),
+        api.post('/sla-policies/assign', { sla_policy_id: showAssign.id, tenant_id: 1, workload_type: 'entra_id', assignment_type: 'application' }),
       ]);
       const total = results.reduce((sum, r) => sum + (r.objects_updated || 0), 0);
       setAssignMsg(`Assigned to ${total} objects across all workloads!`);
@@ -156,7 +157,7 @@ export default function SLAPolicies() {
           {assignMsg && (
             <div className="bg-green-50 border border-green-200 text-green-700 rounded-lg p-3 mb-4 text-sm">{assignMsg}</div>
           )}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <button onClick={() => handleAssign('exchange')}
               className="flex items-center gap-2 px-4 py-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg text-sm font-medium text-blue-700">
               <Mail className="w-5 h-5" /> Exchange
@@ -168,6 +169,10 @@ export default function SLAPolicies() {
             <button onClick={() => handleAssign('sharepoint')}
               className="flex items-center gap-2 px-4 py-3 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg text-sm font-medium text-green-700">
               <Globe className="w-5 h-5" /> SharePoint
+            </button>
+            <button onClick={() => handleAssign('entra_id')}
+              className="flex items-center gap-2 px-4 py-3 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg text-sm font-medium text-amber-700">
+              <KeyRound className="w-5 h-5" /> Entra ID
             </button>
             <button onClick={handleAssignAll}
               className="flex items-center gap-2 px-4 py-3 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-lg text-sm font-medium text-orange-700">

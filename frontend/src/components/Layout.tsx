@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Mail, HardDrive, Globe, Shield, Activity, Settings, FileText, LogOut, ShieldAlert } from 'lucide-react';
+import { LayoutDashboard, Mail, HardDrive, Globe, Shield, Activity, Settings, FileText, LogOut, ShieldAlert, KeyRound } from 'lucide-react';
 import { api } from '../api/client';
 
 const navItems = [
@@ -7,6 +7,7 @@ const navItems = [
   { path: '/exchange', label: 'Exchange', icon: Mail },
   { path: '/onedrive', label: 'OneDrive', icon: HardDrive },
   { path: '/sharepoint', label: 'SharePoint', icon: Globe },
+  { path: '/entra-id', label: 'Entra ID', icon: KeyRound },
   { path: '/sla-policies', label: 'SLA Policies', icon: Shield },
   { path: '/jobs', label: 'Jobs', icon: Activity },
   { path: '/failed-items', label: 'Failed Items', icon: ShieldAlert },

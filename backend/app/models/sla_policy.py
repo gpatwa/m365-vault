@@ -15,6 +15,8 @@ class SLAPolicy(Base):
     retention_days = Column(Integer, default=30, nullable=False)  # How long to keep snapshots
     priority = Column(Integer, default=5)  # 1=highest, 10=lowest
     is_locked = Column(Integer, default=0)  # Retention lock (1=locked)
+    worm_enabled = Column(Integer, default=0)  # WORM: write-once-read-many (1=enabled)
+    legal_hold = Column(Integer, default=0)    # Legal hold: prevents any deletion (1=enabled)
     is_active = Column(Integer, default=1)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

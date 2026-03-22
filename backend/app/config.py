@@ -47,6 +47,10 @@ class Settings(BaseSettings):
         "https://graph.microsoft.com/Sites.Read.All",
         "https://graph.microsoft.com/User.Read.All",
         "https://graph.microsoft.com/Directory.Read.All",
+        "https://graph.microsoft.com/Chat.Read.All",
+        "https://graph.microsoft.com/ChannelMessage.Read.All",
+        "https://graph.microsoft.com/Team.ReadBasic.All",
+        "https://graph.microsoft.com/TeamSettings.Read.All",
     ]
     # Restore: read-write access to M365 data
     MS_GRAPH_RESTORE_SCOPES: list[str] = [
@@ -84,6 +88,26 @@ class Settings(BaseSettings):
 
     # CORS — comma-separated origins (overridden in production)
     CORS_ORIGINS: str = "http://localhost:5173,http://localhost:5174,http://localhost:3000,http://127.0.0.1:5173"
+
+    # Alerts
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM: str = ""
+    ALERT_EMAIL_RECIPIENTS: str = ""  # Comma-separated
+    ALERT_WEBHOOK_URL: str = ""       # Slack, Teams, or custom webhook
+
+    # Smart Engine
+    ANOMALY_Z_SCORE_THRESHOLD: float = 2.0   # Standard deviations to flag as anomaly
+    HEALTH_CHECK_INTERVAL_MINUTES: int = 5
+
+    # SSO / OIDC
+    SSO_ENABLED: bool = False
+    SSO_TENANT_ID: str = ""
+    SSO_CLIENT_ID: str = ""
+    SSO_CLIENT_SECRET: str = ""
+    SSO_REDIRECT_URI: str = "http://localhost:5173/api/auth/sso/callback"
 
     # Scheduler
     SCHEDULER_CHECK_INTERVAL_SECONDS: int = 60

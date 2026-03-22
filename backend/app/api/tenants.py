@@ -38,6 +38,7 @@ class TenantResponse(BaseModel):
     total_mailboxes: int
     total_onedrives: int
     total_sites: int
+    total_teams: int = 0
     total_entra_objects: int = 0
     last_discovery_at: str | None
     created_at: str
@@ -65,7 +66,7 @@ async def list_tenants(
             id=t.id, name=t.name, ms_tenant_id=t.ms_tenant_id,
             client_id=t.client_id, status=t.status.value,
             total_mailboxes=t.total_mailboxes, total_onedrives=t.total_onedrives,
-            total_sites=t.total_sites, total_entra_objects=t.total_entra_objects or 0,
+            total_sites=t.total_sites, total_teams=t.total_teams or 0, total_entra_objects=t.total_entra_objects or 0,
             last_discovery_at=t.last_discovery_at.isoformat() if t.last_discovery_at else None,
             created_at=t.created_at.isoformat(),
         )
@@ -107,7 +108,7 @@ async def create_tenant(
     return TenantResponse(
         id=tenant.id, name=tenant.name, ms_tenant_id=tenant.ms_tenant_id,
         client_id=tenant.client_id, status=tenant.status.value,
-        total_mailboxes=0, total_onedrives=0, total_sites=0, total_entra_objects=0,
+        total_mailboxes=0, total_onedrives=0, total_sites=0, total_teams=0, total_entra_objects=0,
         last_discovery_at=None, created_at=tenant.created_at.isoformat(),
     )
 

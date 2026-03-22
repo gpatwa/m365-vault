@@ -86,6 +86,26 @@ class RetryEngine:
             "still_failed": still_failed,
         }
         logger.info(f"Retry engine summary: {summary}")
+
+        # Send alert if there are persistent failures after retries
+        if still_failed > 0:
+            try:
+                from app.services.alert_service import alert_service
+                failed_workloads = set()
+                for job in failed_jobs:
+                    if job.status in (JobStatus.FAILED, JobStatus.PARTIAL) and job.retry_count >= job.max_retries:
+                        failed_workloads.add(job.workload_type)
+
+                if failed_workloads:
+                    await alert_service.notify(
+                        event_type="backup.failed",
+                        title=f"{len(failed_workloads)} workload(s) have persistent backup failures",
+                        details=f"Workloads: {', '.join(failed_workloads)}. {still_failed} job(s) failed after all retry attempts.",
+                        severity="error",
+                    )
+            except Exception as e:
+                logger.error(f"Failed to send alert: {e}")
+
         return summary
 
     async def _retry_job(self, job: BackupJob):

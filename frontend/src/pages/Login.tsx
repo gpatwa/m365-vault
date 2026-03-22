@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield } from 'lucide-react';
 import { api } from '../api/client';
@@ -9,7 +9,30 @@ export default function Login() {
   const [error, setError] = useState('');
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState('');
+  const [ssoEnabled, setSsoEnabled] = useState(false);
+  const [ssoLoading, setSsoLoading] = useState(false);
   const navigate = useNavigate();
+
+  // Check if SSO is enabled
+  useEffect(() => {
+    api.get<{ enabled: boolean }>('/auth/sso/config')
+      .then(data => setSsoEnabled(data.enabled))
+      .catch(() => setSsoEnabled(false));
+  }, []);
+
+  const handleSSO = async () => {
+    setSsoLoading(true);
+    setError('');
+    try {
+      const data: any = await api.get('/auth/sso/login');
+      if (data.auth_url) {
+        window.location.href = data.auth_url;
+      }
+    } catch (err: any) {
+      setError(err.message || 'SSO login failed');
+      setSsoLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,6 +107,23 @@ export default function Login() {
             {isRegister ? 'Create Account & Sign In' : 'Sign In'}
           </button>
         </form>
+
+        {ssoEnabled && (
+          <>
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
+              <div className="relative flex justify-center text-sm"><span className="bg-white px-3 text-gray-400">or</span></div>
+            </div>
+            <button
+              onClick={handleSSO}
+              disabled={ssoLoading}
+              className="w-full py-2.5 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 21 21"><path d="M0 0h10v10H0z" fill="#f25022"/><path d="M11 0h10v10H11z" fill="#7fba00"/><path d="M0 11h10v10H0z" fill="#00a4ef"/><path d="M11 11h10v10H11z" fill="#ffb900"/></svg>
+              {ssoLoading ? 'Redirecting...' : 'Sign in with Microsoft'}
+            </button>
+          </>
+        )}
 
         <p className="text-center text-sm text-gray-500 mt-4">
           {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}

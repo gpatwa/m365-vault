@@ -113,12 +113,14 @@ class BackupEngine:
             from app.workers.onedrive_worker import OneDriveWorker
             from app.workers.sharepoint_worker import SharePointWorker
             from app.workers.entra_id_worker import EntraIDWorker
+            from app.workers.teams_worker import TeamsWorker
 
             worker_map = {
                 WorkloadType.EXCHANGE: ExchangeWorker,
                 WorkloadType.ONEDRIVE: OneDriveWorker,
                 WorkloadType.SHAREPOINT: SharePointWorker,
                 WorkloadType.ENTRA_ID: EntraIDWorker,
+                WorkloadType.TEAMS: TeamsWorker,
             }
 
             worker_class = worker_map.get(protected_object.workload_type)

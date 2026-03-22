@@ -11,6 +11,7 @@ class WorkloadType(str, enum.Enum):
     ONEDRIVE = "onedrive"
     SHAREPOINT = "sharepoint"
     ENTRA_ID = "entra_id"
+    TEAMS = "teams"
 
 
 class ProtectionStatus(str, enum.Enum):

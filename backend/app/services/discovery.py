@@ -39,12 +39,13 @@ class DiscoveryService:
             "mailboxes": 0,
             "onedrives": 0,
             "sites": 0,
+            "teams": 0,
             "entra_objects": 0,
             "removed": 0,
             "errors": [],
         }
         # Track discovered object IDs to clean up stale entries
-        discovered_ids = {"exchange": set(), "onedrive": set(), "sharepoint": set(), "entra_id": set()}
+        discovered_ids = {"exchange": set(), "onedrive": set(), "sharepoint": set(), "teams": set(), "entra_id": set()}
 
         # Discover Exchange mailboxes and OneDrive accounts (from users)
         try:
@@ -203,6 +204,14 @@ class DiscoveryService:
             except Exception as e:
                 results["errors"].append(f"SharePoint discovery failed: {str(e)}")
 
+        # Discover Microsoft Teams
+        try:
+            teams_count, teams_ids = await self._discover_teams(tenant, graph)
+            discovered_ids["teams"] = teams_ids
+            results["teams"] = teams_count
+        except Exception as e:
+            results["errors"].append(f"Teams discovery failed: {str(e)}")
+
         # Discover Entra ID directory objects
         try:
             entra_count = await self._discover_entra_id(tenant, graph)
@@ -216,6 +225,7 @@ class DiscoveryService:
             WorkloadType.EXCHANGE: discovered_ids["exchange"],
             WorkloadType.ONEDRIVE: discovered_ids["onedrive"],
             WorkloadType.SHAREPOINT: discovered_site_ids,
+            WorkloadType.TEAMS: discovered_ids["teams"],
             WorkloadType.ENTRA_ID: discovered_ids["entra_id"],
         }
         for wl_type, valid_ids in workload_map.items():
@@ -244,6 +254,7 @@ class DiscoveryService:
         tenant.total_mailboxes = results["mailboxes"]
         tenant.total_onedrives = results["onedrives"]
         tenant.total_sites = results["sites"]
+        tenant.total_teams = results.get("teams", 0)
         tenant.total_entra_objects = results.get("entra_objects", 0)
         tenant.last_discovery_at = datetime.utcnow()
         tenant.status = TenantStatus.ACTIVE
@@ -256,6 +267,45 @@ class DiscoveryService:
             f"{results['removed']} stale removed"
         )
         return results
+
+    async def _discover_teams(self, tenant: Tenant, graph: GraphClient) -> tuple[int, set]:
+        """Discover Microsoft Teams by finding M365 groups with Teams provisioned."""
+        team_ids = set()
+        try:
+            groups = await graph.get_all_pages("/groups", params={
+                "$filter": "resourceProvisioningOptions/Any(x:x eq 'Team')",
+                "$select": "id,displayName,description,mail",
+                "$top": "999",
+            })
+        except Exception as e:
+            logger.warning(f"Teams discovery with filter failed, trying fallback: {e}")
+            try:
+                groups = await graph.get_all_pages("/groups", params={
+                    "$filter": "groupTypes/any(g:g eq 'Unified')",
+                    "$select": "id,displayName,description,mail,resourceProvisioningOptions",
+                    "$top": "999",
+                })
+                groups = [g for g in groups if "Team" in (g.get("resourceProvisioningOptions") or [])]
+            except Exception as e2:
+                logger.error(f"Teams discovery fallback also failed: {e2}")
+                groups = []
+
+        for group in groups:
+            group_id = group.get("id")
+            display_name = group.get("displayName", "Unknown Team")
+
+            await self._upsert_protected_object(
+                tenant_id=tenant.id,
+                workload_type=WorkloadType.TEAMS,
+                ms_object_id=group_id,
+                display_name=f"{display_name} (Team)",
+                email=group.get("mail"),
+                metadata={"source": "teams_discovery", "description": group.get("description")},
+            )
+            team_ids.add(group_id)
+
+        logger.info(f"Teams discovery: {len(team_ids)} teams found")
+        return len(team_ids), team_ids
 
     async def _discover_entra_id(self, tenant: Tenant, graph: GraphClient) -> int:
         """Discover Entra ID directory objects. Creates a single ProtectedObject

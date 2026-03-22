@@ -6,7 +6,7 @@
  * 2. Add entry here
  * 3. Everything else (Jobs swimlanes, SLA assign, Dashboard, nav) picks it up automatically
  */
-import { Mail, HardDrive, Globe, KeyRound, type LucideIcon } from 'lucide-react';
+import { Mail, HardDrive, Globe, KeyRound, MessageSquare, type LucideIcon } from 'lucide-react';
 
 export interface WorkloadConfig {
   key: string;
@@ -61,6 +61,19 @@ export const WORKLOADS: WorkloadConfig[] = [
     barColor: 'bg-green-500',
     ringColor: 'ring-green-400',
     iconColor: 'text-green-600',
+  },
+  {
+    key: 'teams',
+    label: 'Teams',
+    description: 'Channels, messages, files',
+    icon: MessageSquare,
+    color: 'pink',
+    bgColor: 'bg-pink-50',
+    borderColor: 'border-pink-200',
+    textColor: 'text-pink-700',
+    barColor: 'bg-pink-500',
+    ringColor: 'ring-pink-400',
+    iconColor: 'text-pink-600',
   },
   {
     key: 'entra_id',

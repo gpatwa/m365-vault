@@ -35,6 +35,7 @@ class Snapshot(Base):
     error_message = Column(Text, nullable=True)
     items_failed = Column(Integer, default=0)      # Count of items that failed during backup
     items_skipped = Column(Integer, default=0)      # Count of items intentionally skipped
+    locked_until = Column(DateTime, nullable=True)  # WORM: immutable until this date
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -55,6 +56,11 @@ class ItemType(str, enum.Enum):
     CONDITIONAL_ACCESS_POLICY = "conditional_access_policy"
     APP_REGISTRATION = "app_registration"
     NAMED_LOCATION = "named_location"
+    # Teams object types
+    CHAT_MESSAGE = "chat_message"
+    CHANNEL_MESSAGE = "channel_message"
+    TEAM_CHANNEL = "team_channel"
+    MEETING = "meeting"
 
 
 class SnapshotItem(Base):

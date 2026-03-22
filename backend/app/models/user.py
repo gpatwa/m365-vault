@@ -18,9 +18,11 @@ class User(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(100), unique=True, nullable=False, index=True)
     email = Column(String(255), unique=True, nullable=False)
-    password_hash = Column(String(255), nullable=False)
+    password_hash = Column(String(255), nullable=True)  # Nullable for SSO-only users
     full_name = Column(String(255), nullable=True)
     role = Column(Enum(UserRole), default=UserRole.VIEWER, nullable=False)
     is_active = Column(Integer, default=1)
+    sso_provider = Column(String(50), nullable=True)   # "entra_id", "google", etc.
+    sso_subject_id = Column(String(255), nullable=True, index=True)  # IdP unique ID
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

@@ -71,6 +71,9 @@ from app.api.dashboard import router as dashboard_router
 from app.api.audit import router as audit_router
 from app.api.failed_items import router as failed_items_router
 from app.api.entra_id import router as entra_id_router
+from app.api.teams import router as teams_router
+from app.api.alerts import router as alerts_router
+from app.api.health import router as health_router
 
 app.include_router(auth_router)
 app.include_router(tenants_router)
@@ -79,10 +82,13 @@ app.include_router(exchange_router)
 app.include_router(onedrive_router)
 app.include_router(sharepoint_router)
 app.include_router(entra_id_router)
+app.include_router(teams_router)
 app.include_router(jobs_router)
 app.include_router(dashboard_router)
 app.include_router(audit_router)
 app.include_router(failed_items_router)
+app.include_router(alerts_router)
+app.include_router(health_router)
 
 
 @app.get("/")

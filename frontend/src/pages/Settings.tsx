@@ -347,42 +347,56 @@ export default function Settings() {
                           <th className="text-left px-4 py-2 font-medium text-gray-600">Workload</th>
                           <th className="text-center px-4 py-2 font-medium text-gray-600">Backup</th>
                           <th className="text-center px-4 py-2 font-medium text-gray-600">Restore</th>
-                          <th className="text-left px-4 py-2 font-medium text-gray-600">Missing</th>
+                          <th className="text-left px-4 py-2 font-medium text-gray-600">Missing Permissions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100">
-                        {Object.entries(permsData.workloads).map(([wl, status]: [string, any]) => (
-                          <tr key={wl}>
-                            <td className="px-4 py-2 font-medium capitalize">{wl.replace('_', ' ')}</td>
-                            <td className="px-4 py-2 text-center">
-                              {status.backup
-                                ? <CheckCircle className="w-4 h-4 text-green-500 mx-auto" />
-                                : <XCircle className="w-4 h-4 text-red-500 mx-auto" />}
-                            </td>
-                            <td className="px-4 py-2 text-center">
-                              {status.restore === null ? <span className="text-gray-300">N/A</span>
-                                : status.restore
+                        {Object.entries(permsData.workloads).map(([wl, status]: [string, any]) => {
+                          const allMissing = [...(status.missing_backup || []), ...(status.missing_restore || [])];
+                          return (
+                            <tr key={wl}>
+                              <td className="px-4 py-2 font-medium capitalize">{wl.replace('_', ' ')}</td>
+                              <td className="px-4 py-2 text-center">
+                                {status.backup
                                   ? <CheckCircle className="w-4 h-4 text-green-500 mx-auto" />
                                   : <XCircle className="w-4 h-4 text-red-500 mx-auto" />}
-                            </td>
-                            <td className="px-4 py-2 text-gray-500">
-                              {[...(status.missing_backup || []), ...(status.missing_restore || [])].length > 0 ? (
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span>{[...(status.missing_backup || []), ...(status.missing_restore || [])].join(', ')}</span>
-                                  <a
-                                    href={`https://login.microsoftonline.com/${t.ms_tenant_id}/adminconsent?client_id=${t.client_id}&redirect_uri=${encodeURIComponent(window.location.origin + '/settings')}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded text-[10px] font-semibold hover:bg-orange-200 whitespace-nowrap"
-                                  >
-                                    Fix
-                                  </a>
-                                </div>
-                              ) : '-'}
-                            </td>
-                          </tr>
-                        ))}
+                              </td>
+                              <td className="px-4 py-2 text-center">
+                                {status.restore === null ? <span className="text-gray-300">N/A</span>
+                                  : status.restore
+                                    ? <CheckCircle className="w-4 h-4 text-green-500 mx-auto" />
+                                    : <XCircle className="w-4 h-4 text-red-500 mx-auto" />}
+                              </td>
+                              <td className="px-4 py-2">
+                                {allMissing.length > 0 ? (
+                                  <div className="space-y-1">
+                                    {allMissing.map((perm: string) => (
+                                      <code key={perm} className="inline-block bg-red-50 text-red-700 px-1.5 py-0.5 rounded text-[10px] font-mono mr-1">{perm}</code>
+                                    ))}
+                                  </div>
+                                ) : <span className="text-green-600 text-xs font-medium">All granted</span>}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
+                      <tfoot>
+                        <tr className="bg-gray-50 border-t">
+                          <td colSpan={4} className="px-4 py-3">
+                            <div className="flex items-center gap-3">
+                              <a
+                                href={`https://login.microsoftonline.com/${t.ms_tenant_id}/adminconsent?client_id=${t.client_id}&redirect_uri=${encodeURIComponent(window.location.origin + '/settings')}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-3 py-1.5 bg-orange-600 text-white rounded-lg text-xs font-medium hover:bg-orange-700 flex items-center gap-1"
+                              >
+                                <ExternalLink className="w-3 h-3" /> Grant All Permissions
+                              </a>
+                              <span className="text-[10px] text-gray-400">Opens Microsoft consent page to grant all configured permissions at once</span>
+                            </div>
+                          </td>
+                        </tr>
+                      </tfoot>
                     </table>
 
                     {/* Instructions for fixing permissions */}

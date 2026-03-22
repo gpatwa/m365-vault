@@ -346,14 +346,14 @@ async def get_consent_url(
 
     from app.services.app_provisioning import app_provisioning
 
-    redirect_uri = settings.PROVISIONING_REDIRECT_URI or "http://localhost:5173/settings"
+    redirect_uri = settings.PROVISIONING_REDIRECT_URI or None
     consent_url = app_provisioning.get_admin_consent_url(
         tenant_id=tenant.ms_tenant_id,
         client_id=tenant.client_id,
         redirect_uri=redirect_uri,
     )
 
-    return {"consent_url": consent_url, "redirect_uri": redirect_uri}
+    return {"consent_url": consent_url}
 
 
 @router.post("/provision/create-app")
@@ -443,7 +443,6 @@ async def check_permissions(
     consent_url = app_provisioning.get_admin_consent_url(
         tenant_id=tenant.ms_tenant_id,
         client_id=tenant.client_id,
-        redirect_uri=settings.PROVISIONING_REDIRECT_URI or "http://localhost:5173/settings",
     )
 
     try:

@@ -370,7 +370,7 @@ export default function Settings() {
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <span>{[...(status.missing_backup || []), ...(status.missing_restore || [])].join(', ')}</span>
                                   <a
-                                    href={`https://login.microsoftonline.com/${t.ms_tenant_id}/adminconsent?client_id=${t.client_id}&redirect_uri=${encodeURIComponent(window.location.origin + '/settings')}`}
+                                    href={`https://login.microsoftonline.com/${t.ms_tenant_id}/adminconsent?client_id=${t.client_id}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded text-[10px] font-semibold hover:bg-orange-200 whitespace-nowrap"

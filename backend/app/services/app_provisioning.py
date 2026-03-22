@@ -66,16 +66,19 @@ BACKUP_PERMISSIONS = {
 class AppProvisioningService:
     """Automates Azure AD app registration for tenant onboarding."""
 
-    def get_admin_consent_url(self, tenant_id: str, client_id: str, redirect_uri: str) -> str:
+    def get_admin_consent_url(self, tenant_id: str, client_id: str, redirect_uri: str = None) -> str:
         """Generate the admin consent URL for an existing app registration.
 
         The admin clicks this link to grant all configured permissions at once.
+        Omits redirect_uri if not registered in the app to avoid AADSTS500113.
         """
-        return (
+        url = (
             f"https://login.microsoftonline.com/{tenant_id}/adminconsent"
             f"?client_id={client_id}"
-            f"&redirect_uri={redirect_uri}"
         )
+        if redirect_uri:
+            url += f"&redirect_uri={redirect_uri}"
+        return url
 
     async def create_app_registration(
         self,

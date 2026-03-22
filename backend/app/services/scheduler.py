@@ -16,6 +16,7 @@ from app.database import async_session
 from app.models.sla_policy import SLAPolicy
 from app.models.protected_object import ProtectedObject, ProtectionStatus
 from app.models.backup_job import BackupJob, JobStatus
+from app.models.tenant import Tenant, TenantStatus
 
 logger = logging.getLogger(__name__)
 
@@ -27,13 +28,15 @@ async def check_and_schedule_backups():
     then execute any queued jobs."""
     async with async_session() as db:
         try:
-            # Get all active protected objects with SLA policies
+            # Get all active protected objects with SLA policies (skip inactive tenants)
             result = await db.execute(
                 select(ProtectedObject, SLAPolicy)
                 .join(SLAPolicy, ProtectedObject.sla_policy_id == SLAPolicy.id)
+                .join(Tenant, ProtectedObject.tenant_id == Tenant.id)
                 .where(
                     ProtectedObject.status == ProtectionStatus.PROTECTED,
                     SLAPolicy.is_active == 1,
+                    Tenant.status == TenantStatus.ACTIVE,
                 )
             )
             rows = result.all()

@@ -16,6 +16,7 @@ from app.models.user import User, UserRole
 from app.services.auth import get_current_user, require_role
 from app.services.encryption import encryption_service
 from app.services.discovery import DiscoveryService
+from app.services.tenant_lifecycle import TenantLifecycleService
 
 router = APIRouter(prefix="/api/tenants", tags=["Tenants"])
 
@@ -155,18 +156,92 @@ async def run_discovery(
     }
 
 
-@router.delete("/{tenant_id}")
-async def delete_tenant(
+@router.post("/{tenant_id}/deactivate")
+async def deactivate_tenant(
     tenant_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_role(UserRole.ADMIN)),
 ):
-    """Remove a tenant configuration."""
+    """Deactivate a tenant — stops backups, preserves all data."""
     tenant = await db.get(Tenant, tenant_id)
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant not found")
-    await db.delete(tenant)
-    return {"status": "deleted"}
+    if tenant.status == TenantStatus.INACTIVE:
+        raise HTTPException(status_code=400, detail="Tenant is already inactive")
+
+    lifecycle = TenantLifecycleService(db)
+    return await lifecycle.deactivate(tenant)
+
+
+@router.post("/{tenant_id}/reactivate")
+async def reactivate_tenant(
+    tenant_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.ADMIN)),
+):
+    """Reactivate a tenant — resumes backups."""
+    tenant = await db.get(Tenant, tenant_id)
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+    if tenant.status == TenantStatus.ACTIVE:
+        raise HTTPException(status_code=400, detail="Tenant is already active")
+
+    lifecycle = TenantLifecycleService(db)
+    return await lifecycle.reactivate(tenant)
+
+
+class UpdateCredentialsRequest(BaseModel):
+    client_id: str | None = None
+    client_secret: str | None = None
+
+
+@router.post("/{tenant_id}/update-credentials")
+async def update_credentials(
+    tenant_id: int,
+    req: UpdateCredentialsRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.ADMIN)),
+):
+    """Update tenant credentials without losing backup data."""
+    tenant = await db.get(Tenant, tenant_id)
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+
+    if req.client_id:
+        tenant.client_id = req.client_id
+    if req.client_secret:
+        tenant.client_secret_encrypted = encryption_service.encrypt_string(req.client_secret)
+
+    tenant.updated_at = datetime.utcnow()
+    await db.commit()
+
+    return {"status": "updated", "message": "Credentials updated. Run test to verify."}
+
+
+@router.delete("/{tenant_id}")
+async def delete_tenant(
+    tenant_id: int,
+    confirm: str = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.ADMIN)),
+):
+    """Permanently purge a tenant and ALL associated data.
+
+    Requires ?confirm=TENANT_NAME to prevent accidental deletion.
+    This is IRREVERSIBLE — all backups, snapshots, and storage will be deleted.
+    """
+    tenant = await db.get(Tenant, tenant_id)
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+
+    if not confirm or confirm != tenant.name:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Confirmation required. Add ?confirm={tenant.name} to permanently delete this tenant and ALL data."
+        )
+
+    lifecycle = TenantLifecycleService(db)
+    return await lifecycle.purge(tenant)
 
 
 @router.post("/{tenant_id}/setup")

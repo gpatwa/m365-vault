@@ -332,7 +332,7 @@ export default function Settings() {
                       </span>
                       {!permsData.all_backup_ready && (
                         <a
-                          href={`https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/CallAnAPI/appId/${t.client_id}`}
+                          href={`https://login.microsoftonline.com/${t.ms_tenant_id}/adminconsent?client_id=${t.client_id}&redirect_uri=${encodeURIComponent(window.location.origin + '/settings')}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="px-2.5 py-1 bg-orange-600 text-white rounded text-xs font-medium hover:bg-orange-700 flex items-center gap-1"
@@ -370,7 +370,7 @@ export default function Settings() {
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <span>{[...(status.missing_backup || []), ...(status.missing_restore || [])].join(', ')}</span>
                                   <a
-                                    href={`https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/CallAnAPI/appId/${t.client_id}`}
+                                    href={`https://login.microsoftonline.com/${t.ms_tenant_id}/adminconsent?client_id=${t.client_id}&redirect_uri=${encodeURIComponent(window.location.origin + '/settings')}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded text-[10px] font-semibold hover:bg-orange-200 whitespace-nowrap"
@@ -389,23 +389,33 @@ export default function Settings() {
                     {!permsData.all_backup_ready && (
                       <div className="bg-blue-50 border-t border-blue-100 px-4 py-3">
                         <p className="text-xs font-semibold text-blue-800 mb-2">How to grant missing permissions:</p>
-                        <ol className="text-xs text-blue-700 space-y-1 list-decimal list-inside">
-                          <li>Click <strong>"Grant in Azure Portal"</strong> above — this opens the app's API Permissions page</li>
-                          <li>Click <strong>"+ Add a permission"</strong> → <strong>"Microsoft Graph"</strong> → <strong>"Application permissions"</strong></li>
-                          <li>Search for each missing permission listed above and check the box:
+                        <ol className="text-xs text-blue-700 space-y-1.5 list-decimal list-inside">
+                          <li>
+                            <strong>One-time setup:</strong> Add redirect URI to your app registration in{' '}
+                            <a href={`https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Authentication/appId/${t.client_id}`}
+                              target="_blank" rel="noopener noreferrer" className="underline font-medium">Azure Portal → Authentication</a>
+                            {' '}→ Add platform → Web → enter:
+                            <code className="block mt-1 ml-4 bg-blue-100 px-2 py-1 rounded text-[11px] font-mono text-blue-900 select-all">
+                              {window.location.origin}/settings
+                            </code>
+                          </li>
+                          <li>
+                            Add the missing permissions in{' '}
+                            <a href={`https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/CallAnAPI/appId/${t.client_id}`}
+                              target="_blank" rel="noopener noreferrer" className="underline font-medium">Azure Portal → API Permissions</a>
+                            {' '}→ Add a permission → Microsoft Graph → Application permissions:
                             <div className="mt-1 ml-4 space-y-0.5">
                               {Object.entries(permsData.workloads)
                                 .flatMap(([, s]: [string, any]) => [...(s.missing_backup || []), ...(s.missing_restore || [])])
                                 .filter((v, i, a) => a.indexOf(v) === i)
                                 .map((perm: string) => (
-                                  <code key={perm} className="block bg-blue-100 px-1.5 py-0.5 rounded text-[11px] font-mono text-blue-900">{perm}</code>
+                                  <code key={perm} className="block bg-blue-100 px-1.5 py-0.5 rounded text-[11px] font-mono text-blue-900 select-all">{perm}</code>
                                 ))
                               }
                             </div>
                           </li>
-                          <li>Click <strong>"Add permissions"</strong> at the bottom</li>
-                          <li>Click <strong>"Grant admin consent for [your org]"</strong> → confirm <strong>"Yes"</strong></li>
-                          <li>Come back here and click <strong>"Check Permissions"</strong> to verify</li>
+                          <li>Click <strong>"Grant admin consent"</strong> in Azure Portal, or use the <strong>"Fix"</strong> buttons above (works after step 1)</li>
+                          <li>Click <strong>"Check Permissions"</strong> here to verify</li>
                         </ol>
                       </div>
                     )}

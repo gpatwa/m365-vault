@@ -384,6 +384,31 @@ export default function Settings() {
                         ))}
                       </tbody>
                     </table>
+
+                    {/* Instructions for fixing permissions */}
+                    {!permsData.all_backup_ready && (
+                      <div className="bg-blue-50 border-t border-blue-100 px-4 py-3">
+                        <p className="text-xs font-semibold text-blue-800 mb-2">How to grant missing permissions:</p>
+                        <ol className="text-xs text-blue-700 space-y-1 list-decimal list-inside">
+                          <li>Click <strong>"Grant in Azure Portal"</strong> above — this opens the app's API Permissions page</li>
+                          <li>Click <strong>"+ Add a permission"</strong> → <strong>"Microsoft Graph"</strong> → <strong>"Application permissions"</strong></li>
+                          <li>Search for each missing permission listed above and check the box:
+                            <div className="mt-1 ml-4 space-y-0.5">
+                              {Object.entries(permsData.workloads)
+                                .flatMap(([, s]: [string, any]) => [...(s.missing_backup || []), ...(s.missing_restore || [])])
+                                .filter((v, i, a) => a.indexOf(v) === i)
+                                .map((perm: string) => (
+                                  <code key={perm} className="block bg-blue-100 px-1.5 py-0.5 rounded text-[11px] font-mono text-blue-900">{perm}</code>
+                                ))
+                              }
+                            </div>
+                          </li>
+                          <li>Click <strong>"Add permissions"</strong> at the bottom</li>
+                          <li>Click <strong>"Grant admin consent for [your org]"</strong> → confirm <strong>"Yes"</strong></li>
+                          <li>Come back here and click <strong>"Check Permissions"</strong> to verify</li>
+                        </ol>
+                      </div>
+                    )}
                   </div>
                 )}
 

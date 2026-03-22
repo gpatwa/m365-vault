@@ -332,12 +332,12 @@ export default function Settings() {
                       </span>
                       {!permsData.all_backup_ready && (
                         <a
-                          href={permsData.consent_url}
+                          href={`https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/CallAnAPI/appId/${t.client_id}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="px-2.5 py-1 bg-orange-600 text-white rounded text-xs font-medium hover:bg-orange-700 flex items-center gap-1"
                         >
-                          <ExternalLink className="w-3 h-3" /> Grant All
+                          <ExternalLink className="w-3 h-3" /> Grant in Azure Portal
                         </a>
                       )}
                     </div>
@@ -370,7 +370,7 @@ export default function Settings() {
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <span>{[...(status.missing_backup || []), ...(status.missing_restore || [])].join(', ')}</span>
                                   <a
-                                    href={`https://login.microsoftonline.com/${t.ms_tenant_id}/adminconsent?client_id=${t.client_id}`}
+                                    href={`https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/CallAnAPI/appId/${t.client_id}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded text-[10px] font-semibold hover:bg-orange-200 whitespace-nowrap"

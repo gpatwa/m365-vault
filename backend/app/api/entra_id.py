@@ -9,6 +9,7 @@ from app.models.protected_object import ProtectedObject, WorkloadType
 from app.models.snapshot import Snapshot, SnapshotItem, SnapshotStatus, ItemType
 from app.models.user import User
 from app.services.auth import get_current_user
+from app.services.backup_engine import BackupEngine
 
 router = APIRouter(prefix="/api/entra-id", tags=["Entra ID"])
 
@@ -226,4 +227,34 @@ async def get_snapshot_item(
         "blob_path": item.blob_path,
         "metadata": json.loads(item.metadata_json) if item.metadata_json else None,
         "created_at": item.created_at.isoformat() if hasattr(item, 'created_at') and item.created_at else None,
+    }
+
+
+@router.post("/backup")
+async def backup_entra_id(
+    tenant_id: int = Query(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Trigger on-demand backup of Entra ID directory."""
+    result = await db.execute(
+        select(ProtectedObject).where(
+            ProtectedObject.tenant_id == tenant_id,
+            ProtectedObject.workload_type == WorkloadType.ENTRA_ID,
+        )
+    )
+    obj = result.scalar_one_or_none()
+    if not obj:
+        raise HTTPException(status_code=404, detail="No Entra ID object found for this tenant. Run discovery first.")
+
+    engine = BackupEngine(db)
+    snapshot = await engine.run_backup_for_object(obj)
+    await db.commit()
+
+    return {
+        "status": "completed",
+        "snapshot_id": snapshot.id,
+        "item_count": snapshot.item_count,
+        "size_bytes": snapshot.size_bytes,
+        "snapshot_status": snapshot.status.value,
     }

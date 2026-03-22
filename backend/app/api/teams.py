@@ -9,6 +9,7 @@ from app.models.protected_object import ProtectedObject, WorkloadType
 from app.models.snapshot import Snapshot, SnapshotItem, SnapshotStatus, ItemType
 from app.models.user import User
 from app.services.auth import get_current_user
+from app.services.backup_engine import BackupEngine
 
 router = APIRouter(prefix="/api/teams", tags=["Teams"])
 
@@ -89,4 +90,59 @@ async def list_snapshot_items(
             }
             for i in items
         ],
+    }
+
+
+@router.post("/backup-all")
+async def backup_all_teams(
+    tenant_id: int = Query(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Trigger on-demand backup of all Teams for a tenant."""
+    result = await db.execute(
+        select(ProtectedObject).where(
+            ProtectedObject.tenant_id == tenant_id,
+            ProtectedObject.workload_type == WorkloadType.TEAMS,
+        )
+    )
+    teams = result.scalars().all()
+    if not teams:
+        raise HTTPException(status_code=404, detail="No Teams found for this tenant. Run discovery first.")
+
+    engine = BackupEngine(db)
+    results = []
+    for team in teams:
+        snapshot = await engine.run_backup_for_object(team)
+        results.append({
+            "team": team.display_name,
+            "snapshot_id": snapshot.id,
+            "item_count": snapshot.item_count,
+            "status": snapshot.status.value,
+        })
+    await db.commit()
+
+    return {"backed_up": len(results), "results": results}
+
+
+@router.post("/teams/{team_id}/backup")
+async def backup_single_team(
+    team_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Trigger on-demand backup of a single Team."""
+    obj = await db.get(ProtectedObject, team_id)
+    if not obj or obj.workload_type != WorkloadType.TEAMS:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    engine = BackupEngine(db)
+    snapshot = await engine.run_backup_for_object(obj)
+    await db.commit()
+
+    return {
+        "status": "completed",
+        "snapshot_id": snapshot.id,
+        "item_count": snapshot.item_count,
+        "size_bytes": snapshot.size_bytes,
     }

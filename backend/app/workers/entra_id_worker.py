@@ -172,9 +172,12 @@ class EntraIDWorker:
                     "/users/delta", delta_token=delta_token
                 )
             else:
-                users, new_delta = await self.graph.get_delta(
-                    "/users/delta", params={"$select": select_fields}
+                # Initial full sync — use get_all_pages for reliability
+                # (get_delta doesn't accept params for $select)
+                users = await self.graph.get_all_pages(
+                    "/users", params={"$select": select_fields, "$top": "999"}
                 )
+                new_delta = None  # Will get delta token on next incremental run
 
             count = 0
             for user in users:
@@ -232,10 +235,12 @@ class EntraIDWorker:
                     "/groups/delta", delta_token=delta_token
                 )
             else:
-                groups, new_delta = await self.graph.get_delta(
-                    "/groups/delta",
-                    params={"$select": "id,displayName,description,mail,groupTypes,securityEnabled,mailEnabled,membershipRule,membershipRuleProcessingState"}
+                # Initial full sync
+                groups = await self.graph.get_all_pages(
+                    "/groups",
+                    params={"$select": "id,displayName,description,mail,groupTypes,securityEnabled,mailEnabled,membershipRule,membershipRuleProcessingState", "$top": "999"}
                 )
+                new_delta = None
 
             count = 0
             for group in groups:

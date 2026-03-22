@@ -2,12 +2,13 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle, Loader2, RotateCcw, Briefcase } from 'lucide-react';
 import { api } from '../api/client';
+import { WORKLOAD_KEYS } from '../config/workloads';
 import WorkloadSwimlane from '../components/jobs/WorkloadSwimlane';
 import type { WorkloadStats } from '../components/jobs/WorkloadSwimlane';
 import type { BackupJob, RestoreJob, PaginatedResponse, FailedJobsSummary } from '../types';
 
-type Workload = 'exchange' | 'onedrive' | 'sharepoint' | 'entra_id';
-const WORKLOADS: Workload[] = ['exchange', 'onedrive', 'sharepoint', 'entra_id'];
+type Workload = string;
+const WORKLOADS = WORKLOAD_KEYS;
 
 export default function Jobs() {
   const [expandedWorkload, setExpandedWorkload] = useState<Workload | null>(null);

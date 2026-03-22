@@ -206,7 +206,7 @@ async def trigger_backup(
 
 @router.post("/backup-all")
 async def trigger_backup_all(
-    tenant_id: int = Query(1),
+    tenant_id: int = Query(..., description="Tenant ID to backup"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_backup_permission),
 ):

@@ -1,58 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
-import { ChevronRight, Mail, HardDrive, Globe, Shield, X, CheckCircle2, XCircle, Loader2, Clock } from 'lucide-react';
+import { ChevronRight, X, CheckCircle2, XCircle, Loader2, Clock } from 'lucide-react';
 import StatusFilterBar from './StatusFilterBar';
 import JobTable from './JobTable';
 import { formatSize, timeAgo } from '../../utils/format';
+import { WORKLOAD_MAP } from '../../config/workloads';
 import type { BackupJob, RestoreJob } from '../../types';
-
-type Workload = 'exchange' | 'onedrive' | 'sharepoint' | 'entra_id';
-
-const WORKLOAD_CONFIG: Record<Workload, {
-  label: string;
-  icon: typeof Mail;
-  color: string;
-  bgColor: string;
-  borderColor: string;
-  barColor: string;
-  ringColor: string;
-}> = {
-  exchange: {
-    label: 'Exchange',
-    icon: Mail,
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-200',
-    barColor: 'bg-blue-500',
-    ringColor: 'ring-blue-400',
-  },
-  onedrive: {
-    label: 'OneDrive',
-    icon: HardDrive,
-    color: 'text-purple-600',
-    bgColor: 'bg-purple-50',
-    borderColor: 'border-purple-200',
-    barColor: 'bg-purple-500',
-    ringColor: 'ring-purple-400',
-  },
-  sharepoint: {
-    label: 'SharePoint',
-    icon: Globe,
-    color: 'text-green-600',
-    bgColor: 'bg-green-50',
-    borderColor: 'border-green-200',
-    barColor: 'bg-green-500',
-    ringColor: 'ring-green-400',
-  },
-  entra_id: {
-    label: 'Entra ID',
-    icon: Shield,
-    color: 'text-amber-600',
-    bgColor: 'bg-amber-50',
-    borderColor: 'border-amber-200',
-    barColor: 'bg-amber-500',
-    ringColor: 'ring-amber-400',
-  },
-};
 
 export interface WorkloadStats {
   total: number;
@@ -67,7 +19,7 @@ export interface WorkloadStats {
 }
 
 interface WorkloadSwimlaneProps {
-  workload: Workload;
+  workload: string;
   stats: WorkloadStats;
   backupJobs: BackupJob[];
   restoreJobs: RestoreJob[];
@@ -84,7 +36,16 @@ export default function WorkloadSwimlane({
   isExpanded, onToggle, loadingBackup, loadingRestore,
   onRetryJob, isRetrying,
 }: WorkloadSwimlaneProps) {
-  const config = WORKLOAD_CONFIG[workload];
+  const wlConfig = WORKLOAD_MAP[workload];
+  const config = {
+    label: wlConfig?.label || workload,
+    icon: wlConfig?.icon,
+    color: wlConfig?.iconColor || 'text-gray-600',
+    bgColor: wlConfig?.bgColor || 'bg-gray-50',
+    borderColor: wlConfig?.borderColor || 'border-gray-200',
+    barColor: wlConfig?.barColor || 'bg-gray-500',
+    ringColor: wlConfig?.ringColor || 'ring-gray-400',
+  };
   const Icon = config.icon;
 
   const [tab, setTab] = useState<'backup' | 'restore'>('backup');

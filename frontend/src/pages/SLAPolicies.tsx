@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Shield, Plus, Pencil, Trash2, Lock, Clock, Calendar, Link, Mail, HardDrive, Globe, KeyRound } from 'lucide-react';
+import { Shield, Plus, Pencil, Trash2, Lock, Clock, Calendar, Link } from 'lucide-react';
 import { api } from '../api/client';
 import { useTenantId } from '../hooks/useTenant';
+import { WORKLOADS, WORKLOAD_KEYS } from '../config/workloads';
 import type { SLAPolicy } from '../types';
 
 export default function SLAPolicies() {
@@ -76,12 +77,11 @@ export default function SLAPolicies() {
   const handleAssignAll = async () => {
     if (!showAssign) return;
     try {
-      const results: any[] = await Promise.all([
-        api.post('/sla-policies/assign', { sla_policy_id: showAssign.id, tenant_id: tenantId, workload_type: 'exchange', assignment_type: 'application' }),
-        api.post('/sla-policies/assign', { sla_policy_id: showAssign.id, tenant_id: tenantId, workload_type: 'onedrive', assignment_type: 'application' }),
-        api.post('/sla-policies/assign', { sla_policy_id: showAssign.id, tenant_id: tenantId, workload_type: 'sharepoint', assignment_type: 'application' }),
-        api.post('/sla-policies/assign', { sla_policy_id: showAssign.id, tenant_id: tenantId, workload_type: 'entra_id', assignment_type: 'application' }),
-      ]);
+      const results: any[] = await Promise.all(
+        WORKLOAD_KEYS.map(wt =>
+          api.post('/sla-policies/assign', { sla_policy_id: showAssign.id, tenant_id: tenantId, workload_type: wt, assignment_type: 'application' })
+        )
+      );
       const total = results.reduce((sum, r) => sum + (r.objects_updated || 0), 0);
       setAssignMsg(`Assigned to ${total} objects across all workloads!`);
       qc.invalidateQueries({ queryKey: ['sla-policies'] });
@@ -159,23 +159,16 @@ export default function SLAPolicies() {
           {assignMsg && (
             <div className="bg-green-50 border border-green-200 text-green-700 rounded-lg p-3 mb-4 text-sm">{assignMsg}</div>
           )}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            <button onClick={() => handleAssign('exchange')}
-              className="flex items-center gap-2 px-4 py-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg text-sm font-medium text-blue-700">
-              <Mail className="w-5 h-5" /> Exchange
-            </button>
-            <button onClick={() => handleAssign('onedrive')}
-              className="flex items-center gap-2 px-4 py-3 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg text-sm font-medium text-purple-700">
-              <HardDrive className="w-5 h-5" /> OneDrive
-            </button>
-            <button onClick={() => handleAssign('sharepoint')}
-              className="flex items-center gap-2 px-4 py-3 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg text-sm font-medium text-green-700">
-              <Globe className="w-5 h-5" /> SharePoint
-            </button>
-            <button onClick={() => handleAssign('entra_id')}
-              className="flex items-center gap-2 px-4 py-3 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg text-sm font-medium text-amber-700">
-              <KeyRound className="w-5 h-5" /> Entra ID
-            </button>
+          <div className={`grid grid-cols-2 md:grid-cols-${WORKLOADS.length + 1} gap-3`}>
+            {WORKLOADS.map(w => {
+              const Icon = w.icon;
+              return (
+                <button key={w.key} onClick={() => handleAssign(w.key)}
+                  className={`flex items-center gap-2 px-4 py-3 ${w.bgColor} hover:opacity-80 border ${w.borderColor} rounded-lg text-sm font-medium ${w.textColor}`}>
+                  <Icon className="w-5 h-5" /> {w.label}
+                </button>
+              );
+            })}
             <button onClick={handleAssignAll}
               className="flex items-center gap-2 px-4 py-3 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-lg text-sm font-medium text-orange-700">
               <Shield className="w-5 h-5" /> All Workloads

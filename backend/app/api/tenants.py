@@ -18,6 +18,7 @@ from app.services.encryption import encryption_service
 from app.services.discovery import DiscoveryService
 from app.services.tenant_lifecycle import TenantLifecycleService
 from app.services.audit import audit_log
+from app.config import settings
 
 router = APIRouter(prefix="/api/tenants", tags=["Tenants"])
 

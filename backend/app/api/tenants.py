@@ -36,6 +36,7 @@ class TenantResponse(BaseModel):
     total_mailboxes: int
     total_onedrives: int
     total_sites: int
+    total_entra_objects: int = 0
     last_discovery_at: str | None
     created_at: str
 
@@ -62,7 +63,7 @@ async def list_tenants(
             id=t.id, name=t.name, ms_tenant_id=t.ms_tenant_id,
             client_id=t.client_id, status=t.status.value,
             total_mailboxes=t.total_mailboxes, total_onedrives=t.total_onedrives,
-            total_sites=t.total_sites,
+            total_sites=t.total_sites, total_entra_objects=t.total_entra_objects or 0,
             last_discovery_at=t.last_discovery_at.isoformat() if t.last_discovery_at else None,
             created_at=t.created_at.isoformat(),
         )
@@ -166,3 +167,52 @@ async def delete_tenant(
         raise HTTPException(status_code=404, detail="Tenant not found")
     await db.delete(tenant)
     return {"status": "deleted"}
+
+
+@router.post("/{tenant_id}/setup")
+async def setup_tenant(
+    tenant_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.ADMIN)),
+):
+    """Combined test + discover + activate for onboarding wizard.
+
+    Step 1: Tests Graph API connection
+    Step 2: If test passes, runs full workload discovery
+    Step 3: Updates tenant status to ACTIVE
+    Returns combined result for the wizard UI.
+    """
+    tenant = await db.get(Tenant, tenant_id)
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+
+    result = {"test": None, "discovery": None, "status": "failed"}
+
+    # Test connection
+    try:
+        from app.services.graph_client import GraphClient
+        client_secret = encryption_service.decrypt_string(tenant.client_secret_encrypted)
+        graph = GraphClient(tenant.ms_tenant_id, tenant.client_id, client_secret)
+        users = await graph.get("/users", params={"$top": "1", "$select": "id"})
+        result["test"] = {"success": True, "message": "Connection successful"}
+    except Exception as e:
+        result["test"] = {"success": False, "message": str(e)}
+        return result
+
+    # Run discovery
+    try:
+        discovery = DiscoveryService(db)
+        discovery_results = await discovery.discover_all(tenant)
+        result["discovery"] = discovery_results
+        result["status"] = "completed"
+
+        # Refresh tenant from DB (discovery updated it)
+        await db.refresh(tenant)
+        tenant.status = TenantStatus.ACTIVE
+        await db.commit()
+    except Exception as e:
+        logger.error(f"Setup discovery failed for tenant {tenant_id}: {e}")
+        result["discovery"] = {"error": str(e)}
+        result["status"] = "partial"
+
+    return result

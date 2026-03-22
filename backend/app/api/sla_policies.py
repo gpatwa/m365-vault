@@ -229,3 +229,81 @@ async def unassign_sla(
             updated += 1
 
     return {"status": "unassigned", "objects_updated": updated}
+
+
+class QuickProtectRequest(BaseModel):
+    tenant_id: int
+    workload_types: list[str]  # ["exchange", "onedrive", "sharepoint", "entra_id"]
+    frequency_hours: int = 24
+    retention_days: int = 30
+
+
+@router.post("/quick-protect")
+async def quick_protect(
+    req: QuickProtectRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.ADMIN)),
+):
+    """One-call protection setup for onboarding wizard.
+
+    Creates or reuses an SLA policy and assigns it to all objects
+    of the specified workload types for the given tenant.
+    """
+    # Find or create policy
+    policy_name = f"Auto-{req.frequency_hours}h-{req.retention_days}d"
+    result = await db.execute(
+        select(SLAPolicy).where(
+            SLAPolicy.name == policy_name,
+            SLAPolicy.backup_frequency_hours == req.frequency_hours,
+            SLAPolicy.retention_days == req.retention_days,
+        )
+    )
+    policy = result.scalar_one_or_none()
+
+    if not policy:
+        policy = SLAPolicy(
+            name=policy_name,
+            description=f"Auto-created: backup every {req.frequency_hours}h, retain {req.retention_days} days",
+            backup_frequency_hours=req.frequency_hours,
+            retention_days=req.retention_days,
+            priority=5,
+        )
+        db.add(policy)
+        await db.flush()
+
+    # Assign to all selected workloads
+    total_protected = 0
+    workload_details = {}
+
+    for wt_str in req.workload_types:
+        try:
+            wt = WorkloadType(wt_str)
+        except ValueError:
+            continue
+
+        objects_result = await db.execute(
+            select(ProtectedObject).where(
+                ProtectedObject.tenant_id == req.tenant_id,
+                ProtectedObject.workload_type == wt,
+            )
+        )
+        objects = objects_result.scalars().all()
+        count = 0
+        for obj in objects:
+            obj.sla_policy_id = policy.id
+            obj.sla_assignment_type = "application"
+            obj.status = ProtectionStatus.PROTECTED
+            count += 1
+
+        total_protected += count
+        workload_details[wt_str] = count
+
+    await db.flush()
+
+    return {
+        "status": "protected",
+        "policy_id": policy.id,
+        "policy_name": policy.name,
+        "total_protected": total_protected,
+        "workloads": workload_details,
+    }

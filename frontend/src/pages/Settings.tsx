@@ -3,26 +3,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Settings as SettingsIcon, Plus, CheckCircle, XCircle, RefreshCw, Trash2, Wifi } from 'lucide-react';
 import { api } from '../api/client';
 import StatusBadge from '../components/StatusBadge';
+import OnboardingWizard from '../components/OnboardingWizard';
 import type { Tenant } from '../types';
 
 export default function Settings() {
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: '', ms_tenant_id: '', client_id: '', client_secret: '' });
+  const [showWizard, setShowWizard] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const qc = useQueryClient();
 
   const { data: tenants, isLoading } = useQuery({
     queryKey: ['tenants'],
     queryFn: () => api.get<Tenant[]>('/tenants/'),
-  });
-
-  const createMutation = useMutation({
-    mutationFn: (data: any) => api.post('/tenants/', data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['tenants'] });
-      setShowForm(false);
-      setForm({ name: '', ms_tenant_id: '', client_id: '', client_secret: '' });
-    },
   });
 
   const deleteMutation = useMutation({
@@ -47,48 +38,22 @@ export default function Settings() {
           <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
           <p className="text-gray-500">Manage M365 tenant connections</p>
         </div>
-        <button onClick={() => setShowForm(true)} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
-          <Plus className="w-4 h-4" /> Add Tenant
-        </button>
+        {!showWizard && (
+          <button onClick={() => setShowWizard(true)} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
+            <Plus className="w-4 h-4" /> Add Tenant
+          </button>
+        )}
       </div>
 
-      {showForm && (
-        <div className="bg-white rounded-xl border shadow-sm p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-4">Onboard M365 Tenant</h3>
-          <p className="text-sm text-gray-500 mb-4">
-            Register your Azure AD App Registration credentials. Requires an app with Microsoft Graph API permissions for Exchange, OneDrive, SharePoint, and Entra ID.
-          </p>
-          <form onSubmit={(e) => { e.preventDefault(); createMutation.mutate(form); }} className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tenant Name</label>
-              <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required placeholder="My Organization"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Azure AD Tenant ID</label>
-              <input type="text" value={form.ms_tenant_id} onChange={e => setForm({ ...form, ms_tenant_id: e.target.value })} required placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Application (Client) ID</label>
-              <input type="text" value={form.client_id} onChange={e => setForm({ ...form, client_id: e.target.value })} required placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Client Secret</label>
-              <input type="password" value={form.client_secret} onChange={e => setForm({ ...form, client_secret: e.target.value })} required placeholder="Client secret value"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
-            </div>
-            <div className="col-span-2 flex gap-3">
-              <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
-                Add Tenant
-              </button>
-              <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
+      {showWizard && (
+        <OnboardingWizard
+          onComplete={() => {
+            setShowWizard(false);
+            qc.invalidateQueries({ queryKey: ['tenants'] });
+            qc.invalidateQueries({ queryKey: ['dashboard'] });
+          }}
+          onCancel={() => setShowWizard(false)}
+        />
       )}
 
       {testResult && (

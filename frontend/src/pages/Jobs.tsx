@@ -17,14 +17,14 @@ export default function Jobs() {
   // Fetch ALL backup jobs (no status filter) for summary stats
   const { data: allBackupJobs, isLoading: loadingBackup } = useQuery({
     queryKey: ['backup-jobs-all'],
-    queryFn: () => api.get<PaginatedResponse<BackupJob>>('/jobs/backup?page_size=200'),
+    queryFn: () => api.get<PaginatedResponse<BackupJob>>('/jobs/backup?page_size=100'),
     refetchInterval: 5000,
   });
 
   // Fetch ALL restore jobs
   const { data: allRestoreJobs, isLoading: loadingRestore } = useQuery({
     queryKey: ['restore-jobs-all'],
-    queryFn: () => api.get<PaginatedResponse<RestoreJob>>('/jobs/restore?page_size=200'),
+    queryFn: () => api.get<PaginatedResponse<RestoreJob>>('/jobs/restore?page_size=100'),
     refetchInterval: 10000,
   });
 

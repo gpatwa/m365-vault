@@ -4,7 +4,7 @@
 
 M365 Vault is a self-hosted SaaS data protection platform for Microsoft 365 workloads. It provides automated, SLA-driven backup and granular point-in-time restore for Exchange Online, OneDrive for Business, and SharePoint Online — with AES-256 encryption at rest, role-based access control, and comprehensive audit logging.
 
-> Version 1.4.0 | Python 3.11+ | React 19 | FastAPI | Apache-2.0 License
+> Version 1.5.0 | Python 3.11+ | React 19 | FastAPI | Apache-2.0 License
 
 ---
 
@@ -20,7 +20,7 @@ M365 Vault is a self-hosted SaaS data protection platform for Microsoft 365 work
 - **Automatic retry engine** with exponential backoff for failed backup jobs
 - **Role-based access control** with three roles: Admin, Operator, Viewer
 - **Comprehensive audit logging** with severity levels and full-text search
-- **Dashboard** with SLA compliance monitoring, backup activity charts, and collapsible unprotected item visibility
+- **Workload swimlane dashboard** with per-workload stats, progress bars, and click-to-expand drill-down
 - **Retention management** with automated expired snapshot cleanup
 - **Mass recovery** operations for bulk restore across workloads
 - **50+ REST API endpoints** with auto-generated OpenAPI documentation
@@ -32,7 +32,7 @@ M365 Vault is a self-hosted SaaS data protection platform for Microsoft 365 work
 ```
                           +-------------------+
                           |   React Frontend  |
-                          |  (Port 5173)      |
+                          |  (nginx / Vite)   |
                           +--------+----------+
                                    |
                                    | REST API (JWT Auth)
@@ -45,10 +45,10 @@ M365 Vault is a self-hosted SaaS data protection platform for Microsoft 365 work
               +---------------+      |    +----------------+
               |                      |                     |
      +--------v--------+   +--------v--------+   +--------v--------+
-     | SQLite Database  |   | Microsoft Graph |   | Encrypted File  |
-     | (SQLAlchemy)     |   | API (MSAL)      |   | Storage (AES)   |
-     +---------+--------+   +-----------------+   +-----------------+
-               |
+     |   PostgreSQL 16  |   | Microsoft Graph |   | Encrypted Object|
+     |  (SQLAlchemy)    |   | API (MSAL)      |   | Storage (AES)   |
+     +---------+--------+   +-----------------+   | MinIO / Azure   |
+               |                                  +-----------------+
      +---------v------------------+
      | Background Jobs            |
      | - Backup Scheduler (60s)   |
@@ -65,7 +65,7 @@ M365 Vault is a self-hosted SaaS data protection platform for Microsoft 365 work
 |-----------|-----------|
 | Backend   | Python 3.11+, FastAPI 0.115, SQLAlchemy 2.0, aiosqlite, MSAL, APScheduler, cryptography, zstandard |
 | Frontend  | React 19, TypeScript 5.9, TailwindCSS 3.4, Recharts 3.8, TanStack Query 5, React Router 7, Vite 8 |
-| Database  | SQLite (dev) / PostgreSQL (production) |
+| Database  | PostgreSQL 16 (Docker local / Azure Flexible Server production) |
 | Auth      | JWT (python-jose), bcrypt password hashing |
 | Encryption| AES-256-GCM envelope encryption |
 
@@ -152,12 +152,19 @@ make build            # Build Docker images locally
 
 # Azure Deployment
 make bootstrap        # One-time Azure + GitHub setup (SP, OIDC, tfstate, secrets)
-make tf-plan          # Plan infrastructure changes (ENV=dev|prod SUBSCRIPTION_ID=...)
+make tf-plan          # Plan infrastructure changes (ENV=dev|prod)
 make tf-apply         # Apply infrastructure changes
+make acr-push         # Build + push Docker images to ACR
 make tf-set-acr-secrets  # Set ACR GitHub secrets from Terraform output
 make deploy-dev       # Trigger dev deployment via GitHub Actions
 make deploy-prod      # Trigger prod deployment (with confirmation)
 make deploy-status    # Show recent CI/CD runs
+
+# Cost Management
+make az-sleep         # Pause all Azure resources (scale to 0 + stop DB)
+make az-wake          # Resume all Azure resources
+make az-status        # Show current Azure resource status
+make az-cleanup       # Full Azure teardown + state reset
 ```
 
 ---
@@ -180,12 +187,13 @@ m365-data-protection/
 ├── frontend/
 │   ├── src/
 │   │   ├── pages/         # 10 page components
-│   │   ├── components/    # Shared UI components
+│   │   ├── components/    # Shared UI components (incl. jobs/ swimlanes)
 │   │   ├── api/           # API client
 │   │   ├── hooks/         # Custom React hooks
+│   │   ├── utils/         # Shared utilities (format, etc.)
 │   │   └── types/         # TypeScript type definitions
 │   └── package.json
-├── scripts/               # Simulation & provisioning scripts
+├── scripts/               # Simulation, discovery & provisioning scripts
 ├── infra/                 # Terraform IaC (Azure Container Apps)
 ├── .github/workflows/     # CI/CD (GitHub Actions)
 ├── docs/                  # Documentation
@@ -205,6 +213,7 @@ m365-data-protection/
 | [API Reference](docs/API_REFERENCE.md) | Complete REST API documentation (50+ endpoints) |
 | [Architecture](docs/ARCHITECTURE.md) | System design, data model, and service architecture |
 | [Compliance Report](docs/COMPLIANCE_REPORT.md) | Security controls, encryption, and regulatory alignment |
+| [Product Roadmap](docs/M365_Vault_Product_Roadmap.docx) | Strategic roadmap, competitive analysis, and pricing strategy |
 
 ---
 

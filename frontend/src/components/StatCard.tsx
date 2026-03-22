@@ -15,6 +15,7 @@ const colorMap: Record<string, string> = {
   yellow: 'bg-yellow-50 text-yellow-600',
   purple: 'bg-purple-50 text-purple-600',
   indigo: 'bg-indigo-50 text-indigo-600',
+  amber: 'bg-amber-50 text-amber-600',
 };
 
 export default function StatCard({ title, value, subtitle, icon: Icon, color = 'blue' }: StatCardProps) {

@@ -47,6 +47,14 @@ class ItemType(str, enum.Enum):
     LIST = "list"
     LIST_ITEM = "list_item"
     DOCUMENT_LIBRARY = "document_library"
+    # Entra ID object types
+    USER = "user"
+    GROUP = "group"
+    DIRECTORY_ROLE = "directory_role"
+    ROLE_ASSIGNMENT = "role_assignment"
+    CONDITIONAL_ACCESS_POLICY = "conditional_access_policy"
+    APP_REGISTRATION = "app_registration"
+    NAMED_LOCATION = "named_location"
 
 
 class SnapshotItem(Base):

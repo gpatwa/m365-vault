@@ -6,8 +6,8 @@ import WorkloadSwimlane from '../components/jobs/WorkloadSwimlane';
 import type { WorkloadStats } from '../components/jobs/WorkloadSwimlane';
 import type { BackupJob, RestoreJob, PaginatedResponse, FailedJobsSummary } from '../types';
 
-type Workload = 'exchange' | 'onedrive' | 'sharepoint';
-const WORKLOADS: Workload[] = ['exchange', 'onedrive', 'sharepoint'];
+type Workload = 'exchange' | 'onedrive' | 'sharepoint' | 'entra_id';
+const WORKLOADS: Workload[] = ['exchange', 'onedrive', 'sharepoint', 'entra_id'];
 
 export default function Jobs() {
   const [expandedWorkload, setExpandedWorkload] = useState<Workload | null>(null);

@@ -19,7 +19,8 @@ help: ## Show this help
 	@echo ""
 	@echo "M365 Vault — Available Commands"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+		sed 's/^.*Makefile://' | sort | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-22s\033[0m %s\n", $$1, $$2}'
 	@echo ""
 
@@ -241,8 +242,8 @@ az-status: ## Show current Azure resource status for this environment (ENV=dev|p
 .PHONY: az-sleep
 az-sleep: ## Pause all Azure resources to save cost (scale to 0 + stop DB)
 	@echo "😴 Pausing Azure resources..."
-	@az containerapp update --name m365vault-backend-$(ENV) -g rg-m365vault-$(ENV) --min-replicas 0 --max-replicas 0 -o none 2>/dev/null && echo "  ✓ Backend scaled to 0" || echo "  ⚠ Backend not found"
-	@az containerapp update --name m365vault-frontend-$(ENV) -g rg-m365vault-$(ENV) --min-replicas 0 --max-replicas 0 -o none 2>/dev/null && echo "  ✓ Frontend scaled to 0" || echo "  ⚠ Frontend not found"
+	@az containerapp update --name m365vault-backend-$(ENV) -g rg-m365vault-$(ENV) --min-replicas 0 --max-replicas 1 -o none 2>/dev/null && echo "  ✓ Backend scaled to 0" || echo "  ⚠ Backend not found"
+	@az containerapp update --name m365vault-frontend-$(ENV) -g rg-m365vault-$(ENV) --min-replicas 0 --max-replicas 1 -o none 2>/dev/null && echo "  ✓ Frontend scaled to 0" || echo "  ⚠ Frontend not found"
 	@az postgres flexible-server stop --name psql-m365vault-$(ENV) -g rg-m365vault-$(ENV) 2>/dev/null && echo "  ✓ PostgreSQL stopped" || echo "  ⚠ PostgreSQL already stopped"
 	@echo "✅ All paused. Run 'make az-wake' to resume. (~\$$5/mo idle cost)"
 

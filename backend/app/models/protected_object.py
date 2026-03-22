@@ -10,6 +10,7 @@ class WorkloadType(str, enum.Enum):
     EXCHANGE = "exchange"
     ONEDRIVE = "onedrive"
     SHAREPOINT = "sharepoint"
+    ENTRA_ID = "entra_id"
 
 
 class ProtectionStatus(str, enum.Enum):

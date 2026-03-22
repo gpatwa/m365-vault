@@ -2,6 +2,52 @@
 
 All notable changes to M365 Vault are documented in this file.
 
+## [1.5.0] - 2026-03-20
+
+### Added
+
+**Jobs UI Redesign — Workload Swimlanes**
+- Replaced flat job table with per-workload swimlane architecture (Exchange, OneDrive, SharePoint)
+- Each swimlane shows live stats: total/completed/failed/in-progress counts, segmented progress bar, success rate, average duration, total size
+- Click-to-expand drill-down with backup/restore tabs, status filter bar, and per-object progress details
+- Color-coded workloads: Exchange (blue), OneDrive (purple), SharePoint (green)
+- Scales cleanly to additional workloads — just add to the `WORKLOADS` array
+- New components: `WorkloadSwimlane`, `JobTable`, `StatusFilterBar`
+- New shared utilities: `formatSize()`, `formatDuration()`, `timeAgo()`
+
+**M365 Workload Discovery Script**
+- `scripts/discover_m365.py` discovers users, Exchange mailboxes, OneDrive accounts, and SharePoint sites via Microsoft Graph API
+- `--provision` flag triggers OneDrive provisioning for users without activated OneDrive
+- Outputs JSON manifest with all discovered objects for onboarding
+
+**Incremental Data Creation Script**
+- `scripts/create_incremental_data.py` creates real test data in M365 tenants
+- Exchange: emails between users, calendar events, contacts
+- SharePoint: document uploads, list creation with custom columns and items
+
+**Cost Management**
+- `make az-sleep` — scale Container Apps to zero replicas and stop PostgreSQL to minimize idle costs
+- `make az-wake` — resume all Azure resources (start DB + scale apps back up)
+- `make az-status` — show current Azure resource status for any environment
+
+**Product Roadmap**
+- `docs/M365_Vault_Product_Roadmap.docx` — comprehensive product roadmap with competitive analysis, 4-phase feature plan, pricing strategy, and go-to-market strategy
+
+### Fixed
+
+- Graph API client: client credential flows now use `/.default` scope (individual scopes like `Mail.Read` only work for delegated flows)
+- Timezone-aware datetime handling across backup workers (consistent UTC timestamps)
+- `make help` now correctly displays target names instead of "Makefile" for each row
+- `az-sleep`/`az-wake` use `--min-replicas 0/1` instead of `revision deactivate/activate` (deactivate permanently destroys revisions)
+
+### Changed
+
+- Makefile now auto-loads `SUBSCRIPTION_ID` from `.env.azure` file
+- Makefile `help` target fixed to strip filename prefix from `$(MAKEFILE_LIST)` grep output
+- Version bumped to 1.5.0
+
+---
+
 ## [1.4.0] - 2026-03-17
 
 ### Added

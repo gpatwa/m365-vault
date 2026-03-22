@@ -35,6 +35,7 @@ const WorkloadIcon = ({ type, className }: { type: string; className?: string })
     case 'exchange': return <Mail className={className || 'w-4 h-4 text-blue-500'} />;
     case 'onedrive': return <HardDrive className={className || 'w-4 h-4 text-purple-500'} />;
     case 'sharepoint': return <Globe className={className || 'w-4 h-4 text-green-500'} />;
+    case 'entra_id': return <Shield className={className || 'w-4 h-4 text-amber-500'} />;
     default: return <Shield className={className || 'w-4 h-4 text-gray-500'} />;
   }
 };
@@ -86,7 +87,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         <StatCard
           title="Total Protected"
           value={summary?.total_protected ?? 0}
@@ -114,6 +115,13 @@ export default function Dashboard() {
           subtitle={`${summary?.workloads?.sharepoint?.protected ?? 0} protected`}
           icon={Globe}
           color="indigo"
+        />
+        <StatCard
+          title="Entra ID"
+          value={summary?.workloads?.entra_id?.total ?? 0}
+          subtitle={`${summary?.workloads?.entra_id?.protected ?? 0} protected`}
+          icon={Shield}
+          color="amber"
         />
       </div>
 

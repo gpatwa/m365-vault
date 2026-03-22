@@ -26,5 +26,6 @@ class Tenant(Base):
     total_mailboxes = Column(Integer, default=0)
     total_onedrives = Column(Integer, default=0)
     total_sites = Column(Integer, default=0)
+    total_entra_objects = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

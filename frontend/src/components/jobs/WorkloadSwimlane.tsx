@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
-import { ChevronRight, Mail, HardDrive, Globe, X, CheckCircle2, XCircle, Loader2, Clock } from 'lucide-react';
+import { ChevronRight, Mail, HardDrive, Globe, Shield, X, CheckCircle2, XCircle, Loader2, Clock } from 'lucide-react';
 import StatusFilterBar from './StatusFilterBar';
 import JobTable from './JobTable';
 import { formatSize, timeAgo } from '../../utils/format';
 import type { BackupJob, RestoreJob } from '../../types';
 
-type Workload = 'exchange' | 'onedrive' | 'sharepoint';
+type Workload = 'exchange' | 'onedrive' | 'sharepoint' | 'entra_id';
 
 const WORKLOAD_CONFIG: Record<Workload, {
   label: string;
@@ -42,6 +42,15 @@ const WORKLOAD_CONFIG: Record<Workload, {
     borderColor: 'border-green-200',
     barColor: 'bg-green-500',
     ringColor: 'ring-green-400',
+  },
+  entra_id: {
+    label: 'Entra ID',
+    icon: Shield,
+    color: 'text-amber-600',
+    bgColor: 'bg-amber-50',
+    borderColor: 'border-amber-200',
+    barColor: 'bg-amber-500',
+    ringColor: 'ring-amber-400',
   },
 };
 

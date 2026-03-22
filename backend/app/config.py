@@ -46,6 +46,7 @@ class Settings(BaseSettings):
         "https://graph.microsoft.com/Files.Read.All",
         "https://graph.microsoft.com/Sites.Read.All",
         "https://graph.microsoft.com/User.Read.All",
+        "https://graph.microsoft.com/Directory.Read.All",
     ]
     # Restore: read-write access to M365 data
     MS_GRAPH_RESTORE_SCOPES: list[str] = [
@@ -55,6 +56,11 @@ class Settings(BaseSettings):
         "https://graph.microsoft.com/Files.ReadWrite.All",
         "https://graph.microsoft.com/Sites.ReadWrite.All",
         "https://graph.microsoft.com/User.Read.All",
+        "https://graph.microsoft.com/User.ReadWrite.All",
+        "https://graph.microsoft.com/Group.ReadWrite.All",
+        "https://graph.microsoft.com/Application.ReadWrite.All",
+        "https://graph.microsoft.com/Policy.ReadWrite.ConditionalAccess",
+        "https://graph.microsoft.com/RoleManagement.ReadWrite.Directory",
     ]
 
     # Throttling

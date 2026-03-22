@@ -39,11 +39,12 @@ class DiscoveryService:
             "mailboxes": 0,
             "onedrives": 0,
             "sites": 0,
+            "entra_objects": 0,
             "removed": 0,
             "errors": [],
         }
         # Track discovered object IDs to clean up stale entries
-        discovered_ids = {"exchange": set(), "onedrive": set(), "sharepoint": set()}
+        discovered_ids = {"exchange": set(), "onedrive": set(), "sharepoint": set(), "entra_id": set()}
 
         # Discover Exchange mailboxes and OneDrive accounts (from users)
         try:
@@ -202,11 +203,20 @@ class DiscoveryService:
             except Exception as e:
                 results["errors"].append(f"SharePoint discovery failed: {str(e)}")
 
+        # Discover Entra ID directory objects
+        try:
+            entra_count = await self._discover_entra_id(tenant, graph)
+            discovered_ids["entra_id"].add(tenant.ms_tenant_id)
+            results["entra_objects"] = entra_count
+        except Exception as e:
+            results["errors"].append(f"Entra ID discovery failed: {str(e)}")
+
         # Remove stale protected objects that no longer exist
         workload_map = {
             WorkloadType.EXCHANGE: discovered_ids["exchange"],
             WorkloadType.ONEDRIVE: discovered_ids["onedrive"],
             WorkloadType.SHAREPOINT: discovered_site_ids,
+            WorkloadType.ENTRA_ID: discovered_ids["entra_id"],
         }
         for wl_type, valid_ids in workload_map.items():
             if not valid_ids:
@@ -234,6 +244,7 @@ class DiscoveryService:
         tenant.total_mailboxes = results["mailboxes"]
         tenant.total_onedrives = results["onedrives"]
         tenant.total_sites = results["sites"]
+        tenant.total_entra_objects = results.get("entra_objects", 0)
         tenant.last_discovery_at = datetime.utcnow()
         tenant.status = TenantStatus.ACTIVE
         await self.db.commit()
@@ -241,9 +252,58 @@ class DiscoveryService:
         logger.info(
             f"Discovery complete for tenant {tenant.name}: "
             f"{results['mailboxes']} mailboxes, {results['onedrives']} OneDrives, "
-            f"{results['sites']} SharePoint sites, {results['removed']} stale removed"
+            f"{results['sites']} SharePoint sites, {results.get('entra_objects', 0)} Entra ID objects, "
+            f"{results['removed']} stale removed"
         )
         return results
+
+    async def _discover_entra_id(self, tenant: Tenant, graph: GraphClient) -> int:
+        """Discover Entra ID directory objects. Creates a single ProtectedObject
+        representing the entire directory for this tenant."""
+        total_objects = 0
+
+        # Count users
+        try:
+            users = await graph.get_all_pages("/users", params={"$select": "id", "$top": "999"})
+            total_objects += len(users)
+        except Exception as e:
+            logger.warning(f"Entra ID user count failed: {e}")
+
+        # Count groups
+        try:
+            groups = await graph.get_all_pages("/groups", params={"$select": "id", "$top": "999"})
+            total_objects += len(groups)
+        except Exception as e:
+            logger.warning(f"Entra ID group count failed: {e}")
+
+        # Count app registrations
+        try:
+            apps = await graph.get_all_pages("/applications", params={"$select": "id", "$top": "999"})
+            total_objects += len(apps)
+        except Exception as e:
+            logger.warning(f"Entra ID app count failed: {e}")
+
+        # Count Conditional Access policies
+        try:
+            policies = await graph.get_all_pages("/identity/conditionalAccess/policies", params={"$select": "id"})
+            total_objects += len(policies)
+        except Exception as e:
+            logger.info(f"Entra ID CA policy count failed (may need P1 license): {e}")
+
+        # Create single ProtectedObject for the directory
+        await self._upsert_protected_object(
+            tenant_id=tenant.id,
+            workload_type=WorkloadType.ENTRA_ID,
+            ms_object_id=tenant.ms_tenant_id,
+            display_name=f"{tenant.name} (Entra ID)",
+            metadata={
+                "source": "entra_id_discovery",
+                "total_objects": total_objects,
+            },
+        )
+
+        logger.info(f"Entra ID discovery: {total_objects} directory objects")
+        return total_objects
 
     async def _upsert_protected_object(
         self,

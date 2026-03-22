@@ -17,6 +17,7 @@ from app.services.auth import get_current_user, require_role
 from app.services.encryption import encryption_service
 from app.services.discovery import DiscoveryService
 from app.services.tenant_lifecycle import TenantLifecycleService
+from app.services.audit import audit_log
 
 router = APIRouter(prefix="/api/tenants", tags=["Tenants"])
 
@@ -99,10 +100,14 @@ async def create_tenant(
     db.add(tenant)
     await db.flush()
 
+    await audit_log(db, action="tenant.created", resource_type="tenant",
+                    resource_id=tenant.id, details=f"Tenant '{req.name}' onboarded",
+                    user_id=current_user.id)
+
     return TenantResponse(
         id=tenant.id, name=tenant.name, ms_tenant_id=tenant.ms_tenant_id,
         client_id=tenant.client_id, status=tenant.status.value,
-        total_mailboxes=0, total_onedrives=0, total_sites=0,
+        total_mailboxes=0, total_onedrives=0, total_sites=0, total_entra_objects=0,
         last_discovery_at=None, created_at=tenant.created_at.isoformat(),
     )
 
@@ -149,7 +154,15 @@ async def run_discovery(
     except Exception as e:
         import traceback
         logger.error(f"Discovery failed: {traceback.format_exc()}")
+        await audit_log(db, action="discovery.failed", resource_type="tenant",
+                        resource_id=tenant_id, details=str(e), severity="error",
+                        user_id=current_user.id)
         raise HTTPException(status_code=500, detail=f"Discovery failed: {str(e)}")
+
+    await audit_log(db, action="discovery.completed", resource_type="tenant",
+                    resource_id=tenant_id,
+                    details=f"Discovered {results.get('mailboxes', 0)} mailboxes, {results.get('onedrives', 0)} OneDrives, {results.get('sites', 0)} sites, {results.get('entra_objects', 0)} Entra ID objects",
+                    user_id=current_user.id)
     return {
         "status": "completed",
         "results": results,
@@ -170,7 +183,11 @@ async def deactivate_tenant(
         raise HTTPException(status_code=400, detail="Tenant is already inactive")
 
     lifecycle = TenantLifecycleService(db)
-    return await lifecycle.deactivate(tenant)
+    result = await lifecycle.deactivate(tenant)
+    await audit_log(db, action="tenant.deactivated", resource_type="tenant",
+                    resource_id=tenant_id, details=f"Tenant deactivated: {result['objects_paused']} objects paused",
+                    severity="warning", user_id=current_user.id)
+    return result
 
 
 @router.post("/{tenant_id}/reactivate")
@@ -187,7 +204,11 @@ async def reactivate_tenant(
         raise HTTPException(status_code=400, detail="Tenant is already active")
 
     lifecycle = TenantLifecycleService(db)
-    return await lifecycle.reactivate(tenant)
+    result = await lifecycle.reactivate(tenant)
+    await audit_log(db, action="tenant.reactivated", resource_type="tenant",
+                    resource_id=tenant_id, details=f"Tenant reactivated: {result['objects_reactivated']} objects resumed",
+                    user_id=current_user.id)
+    return result
 
 
 class UpdateCredentialsRequest(BaseModel):
@@ -213,6 +234,10 @@ async def update_credentials(
         tenant.client_secret_encrypted = encryption_service.encrypt_string(req.client_secret)
 
     tenant.updated_at = datetime.utcnow()
+
+    await audit_log(db, action="credentials.updated", resource_type="tenant",
+                    resource_id=tenant_id, details="Tenant credentials updated",
+                    user_id=current_user.id)
     await db.commit()
 
     return {"status": "updated", "message": "Credentials updated. Run test to verify."}
@@ -239,6 +264,13 @@ async def delete_tenant(
             status_code=400,
             detail=f"Confirmation required. Add ?confirm={tenant.name} to permanently delete this tenant and ALL data."
         )
+
+    tenant_name = tenant.name
+    # Write audit log before purge (since tenant will be deleted)
+    await audit_log(db, action="tenant.purged", resource_type="tenant",
+                    resource_id=tenant_id, details=f"Tenant '{tenant_name}' purged: all data deleted",
+                    severity="critical", user_id=current_user.id)
+    await db.flush()
 
     lifecycle = TenantLifecycleService(db)
     return await lifecycle.purge(tenant)

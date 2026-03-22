@@ -12,6 +12,7 @@ from app.models.sla_policy import SLAPolicy
 from app.models.protected_object import ProtectedObject, ProtectionStatus, WorkloadType
 from app.models.user import User, UserRole
 from app.services.auth import get_current_user, require_role
+from app.services.audit import audit_log
 
 router = APIRouter(prefix="/api/sla-policies", tags=["SLA Policies"])
 
@@ -203,6 +204,10 @@ async def assign_sla(
                 obj.status = ProtectionStatus.PROTECTED
                 updated_count += 1
 
+    await audit_log(db, action="sla.assigned", resource_type="sla_policy",
+                    resource_id=req.sla_policy_id,
+                    details=f"Assigned to {updated_count} objects (workload={req.workload_type or 'individual'})",
+                    user_id=current_user.id)
     await db.flush()
     return {"status": "assigned", "objects_updated": updated_count}
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Settings as SettingsIcon, Plus, CheckCircle, XCircle, RefreshCw, Trash2, Wifi, Pause, Play, KeyRound, AlertTriangle } from 'lucide-react';
+import { Building2, Plus, CheckCircle, XCircle, RefreshCw, Trash2, Wifi, Pause, Play, KeyRound, AlertTriangle } from 'lucide-react';
 import { api } from '../api/client';
 import StatusBadge from '../components/StatusBadge';
 import OnboardingWizard from '../components/OnboardingWizard';
@@ -77,8 +77,8 @@ export default function Settings() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-          <p className="text-gray-500">Manage M365 tenant connections</p>
+          <h1 className="text-2xl font-bold text-gray-900">Tenants</h1>
+          <p className="text-gray-500">Manage M365 tenant connections and lifecycle</p>
         </div>
         {!showWizard && (
           <button onClick={() => setShowWizard(true)} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
@@ -93,6 +93,7 @@ export default function Settings() {
             setShowWizard(false);
             qc.invalidateQueries({ queryKey: ['tenants'] });
             qc.invalidateQueries({ queryKey: ['dashboard'] });
+            showMsg('Tenant onboarded and protection started! Backups will begin automatically based on your schedule.');
           }}
           onCancel={() => setShowWizard(false)}
         />
@@ -219,7 +220,7 @@ export default function Settings() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-lg ${isInactive ? 'bg-gray-100' : 'bg-blue-50'}`}>
-                    <SettingsIcon className={`w-6 h-6 ${isInactive ? 'text-gray-400' : 'text-blue-600'}`} />
+                    <Building2 className={`w-6 h-6 ${isInactive ? 'text-gray-400' : 'text-blue-600'}`} />
                   </div>
                   <div>
                     <h3 className="font-semibold">{t.name}</h3>
@@ -289,7 +290,7 @@ export default function Settings() {
         {isLoading && <p className="text-gray-400 text-center py-8">Loading...</p>}
         {!isLoading && !tenants?.length && (
           <div className="text-center py-12 text-gray-400">
-            <SettingsIcon className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+            <Building2 className="w-12 h-12 mx-auto mb-3 text-gray-300" />
             <p className="text-lg font-medium">No tenants configured</p>
             <p className="text-sm">Add your first M365 tenant to get started</p>
           </div>

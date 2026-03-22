@@ -9,7 +9,7 @@ import SharePoint from './pages/SharePoint';
 import EntraID from './pages/EntraID';
 import SLAPolicies from './pages/SLAPolicies';
 import Jobs from './pages/Jobs';
-import Settings from './pages/Settings';
+import Tenants from './pages/Settings';
 import AuditLog from './pages/AuditLog';
 import FailedItems from './pages/FailedItems';
 
@@ -40,7 +40,8 @@ export default function App() {
           <Route path="entra-id" element={<EntraID />} />
           <Route path="sla-policies" element={<SLAPolicies />} />
           <Route path="jobs" element={<Jobs />} />
-          <Route path="settings" element={<Settings />} />
+          <Route path="tenants" element={<Tenants />} />
+          <Route path="settings" element={<Tenants />} />
           <Route path="audit" element={<AuditLog />} />
           <Route path="failed-items" element={<FailedItems />} />
         </Route>

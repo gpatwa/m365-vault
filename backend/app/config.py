@@ -109,6 +109,11 @@ class Settings(BaseSettings):
     SSO_CLIENT_SECRET: str = ""
     SSO_REDIRECT_URI: str = "http://localhost:5173/api/auth/sso/callback"
 
+    # App Provisioning (automated onboarding)
+    PROVISIONING_CLIENT_ID: str = ""      # Multi-tenant app for automated app registration
+    PROVISIONING_CLIENT_SECRET: str = ""
+    PROVISIONING_REDIRECT_URI: str = "http://localhost:5173/settings"
+
     # Scheduler
     SCHEDULER_CHECK_INTERVAL_SECONDS: int = 60
 

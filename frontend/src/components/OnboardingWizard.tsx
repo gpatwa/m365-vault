@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Mail, HardDrive, Globe, KeyRound, Shield, CheckCircle, XCircle, Loader2, ChevronRight, ChevronDown, ExternalLink, Zap, Clock, Calendar } from 'lucide-react';
+import { Mail, HardDrive, Globe, KeyRound, MessageSquare, Shield, CheckCircle, XCircle, Loader2, ChevronRight, ChevronDown, ExternalLink, Zap, Clock, Calendar, ShieldCheck } from 'lucide-react';
 import { api } from '../api/client';
 
 interface OnboardingWizardProps {
@@ -11,15 +11,23 @@ interface DiscoveryResult {
   mailboxes: number;
   onedrives: number;
   sites: number;
+  teams: number;
   entra_objects: number;
   removed: number;
   errors: string[];
+}
+
+interface PermissionStatus {
+  all_backup_ready: boolean;
+  consent_url: string;
+  workloads: Record<string, { backup: boolean; restore: boolean | null; missing_backup: string[]; missing_restore: string[] }>;
 }
 
 const WORKLOADS = [
   { key: 'exchange', label: 'Exchange', desc: 'Mailboxes, calendars, contacts', icon: Mail, color: 'blue' },
   { key: 'onedrive', label: 'OneDrive', desc: 'Files and folders', icon: HardDrive, color: 'purple' },
   { key: 'sharepoint', label: 'SharePoint', desc: 'Sites, lists, documents', icon: Globe, color: 'green' },
+  { key: 'teams', label: 'Teams', desc: 'Channels, messages, files', icon: MessageSquare, color: 'pink' },
   { key: 'entra_id', label: 'Entra ID', desc: 'Users, groups, policies', icon: KeyRound, color: 'amber' },
 ] as const;
 
@@ -39,12 +47,14 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [discovering, setDiscovering] = useState(false);
   const [discovery, setDiscovery] = useState<DiscoveryResult | null>(null);
-  const [selectedWorkloads, setSelectedWorkloads] = useState<Set<string>>(new Set(['exchange', 'onedrive', 'sharepoint', 'entra_id']));
+  const [selectedWorkloads, setSelectedWorkloads] = useState<Set<string>>(new Set(['exchange', 'onedrive', 'sharepoint', 'teams', 'entra_id']));
   const [frequency, setFrequency] = useState(24);
   const [retention, setRetention] = useState(30);
   const [autoBackup, setAutoBackup] = useState(true);
   const [protecting, setProtecting] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
+  const [permissions, setPermissions] = useState<PermissionStatus | null>(null);
+  const [checkingPerms, setCheckingPerms] = useState(false);
   const [error, setError] = useState('');
 
   // Step 2: Auto-discover when entering step 2
@@ -66,11 +76,28 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
         setTestResult({ success: false, message: result.test.message });
       } else if (result.discovery) {
         setDiscovery(result.discovery);
+        // Check permissions after discovery
+        checkPermissions();
       }
     } catch (err: any) {
       setError(`Setup failed: ${err.message}`);
     } finally {
       setDiscovering(false);
+    }
+  };
+
+  const checkPermissions = async () => {
+    if (!tenantId) return;
+    setCheckingPerms(true);
+    try {
+      const result: any = await api.get(`/tenants/${tenantId}/permissions`);
+      if (!result.error) {
+        setPermissions(result);
+      }
+    } catch {
+      // Permission check is optional — don't block onboarding
+    } finally {
+      setCheckingPerms(false);
     }
   };
 
@@ -135,6 +162,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
       case 'exchange': return discovery.mailboxes;
       case 'onedrive': return discovery.onedrives;
       case 'sharepoint': return discovery.sites;
+      case 'teams': return discovery.teams || 0;
       case 'entra_id': return discovery.entra_objects;
       default: return 0;
     }
@@ -148,6 +176,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
     blue: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', ring: 'ring-blue-400' },
     purple: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', ring: 'ring-purple-400' },
     green: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700', ring: 'ring-green-400' },
+    pink: { bg: 'bg-pink-50', border: 'border-pink-200', text: 'text-pink-700', ring: 'ring-pink-400' },
     amber: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', ring: 'ring-amber-400' },
   };
 
@@ -331,6 +360,52 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 text-sm text-yellow-800">
                     <p className="font-medium mb-1">Warnings:</p>
                     {discovery.errors.map((err, i) => <p key={i}>{err}</p>)}
+                  </div>
+                )}
+
+                {/* Permission Status */}
+                {permissions && !permissions.all_backup_ready && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <ShieldCheck className="w-5 h-5 text-orange-600" />
+                        <p className="text-sm font-semibold text-orange-800">Missing Permissions</p>
+                      </div>
+                      <a
+                        href={permissions.consent_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1.5 bg-orange-600 text-white rounded-lg text-xs font-medium hover:bg-orange-700 flex items-center gap-1"
+                      >
+                        <ExternalLink className="w-3 h-3" /> Grant Permissions
+                      </a>
+                    </div>
+                    <div className="space-y-1">
+                      {Object.entries(permissions.workloads).map(([wl, status]) => {
+                        if (status.backup) return null;
+                        return (
+                          <div key={wl} className="flex items-center gap-2 text-xs text-orange-700">
+                            <XCircle className="w-3 h-3" />
+                            <span className="font-medium capitalize">{wl.replace('_', ' ')}</span>
+                            <span>— missing: {status.missing_backup.join(', ')}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <button
+                      onClick={checkPermissions}
+                      disabled={checkingPerms}
+                      className="mt-2 text-xs text-orange-600 hover:text-orange-800 underline"
+                    >
+                      {checkingPerms ? 'Checking...' : 'Re-check permissions'}
+                    </button>
+                  </div>
+                )}
+
+                {permissions && permissions.all_backup_ready && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4 flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <p className="text-sm text-green-700 font-medium">All backup permissions granted</p>
                   </div>
                 )}
 

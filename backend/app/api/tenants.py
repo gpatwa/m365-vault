@@ -324,3 +324,140 @@ async def setup_tenant(
         result["status"] = "partial"
 
     return result
+
+
+# ── Automated App Provisioning ──
+
+@router.get("/provision/consent-url")
+async def get_consent_url(
+    tenant_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.ADMIN)),
+):
+    """Generate admin consent URL for a tenant's app registration.
+
+    The admin clicks this link to grant all configured permissions at once.
+    Returns the consent URL — the admin is redirected to Microsoft's consent page.
+    """
+    tenant = await db.get(Tenant, tenant_id)
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+
+    from app.services.app_provisioning import app_provisioning
+
+    redirect_uri = settings.PROVISIONING_REDIRECT_URI or "http://localhost:5173/settings"
+    consent_url = app_provisioning.get_admin_consent_url(
+        tenant_id=tenant.ms_tenant_id,
+        client_id=tenant.client_id,
+        redirect_uri=redirect_uri,
+    )
+
+    return {"consent_url": consent_url, "redirect_uri": redirect_uri}
+
+
+@router.post("/provision/create-app")
+async def provision_app_registration(
+    access_token: str,
+    tenant_name: str,
+    ms_tenant_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.ADMIN)),
+):
+    """Create an app registration in the customer's tenant automatically.
+
+    Called after the admin has signed in with a delegated access token
+    that has Application.ReadWrite.All permission.
+    Creates the app, generates a client secret, stores credentials,
+    and returns the admin consent URL.
+    """
+    from app.services.app_provisioning import app_provisioning
+
+    try:
+        # 1. Create app registration with all required permissions
+        app_result = await app_provisioning.create_app_registration(
+            access_token=access_token,
+            app_name=f"M365 Vault - {tenant_name}",
+        )
+
+        # 2. Create client secret
+        secret_result = await app_provisioning.create_client_secret(
+            access_token=access_token,
+            app_object_id=app_result["object_id"],
+        )
+
+        # 3. Store tenant with auto-generated credentials
+        encrypted_secret = encryption_service.encrypt_string(secret_result["secret_text"])
+        tenant = Tenant(
+            name=tenant_name,
+            ms_tenant_id=ms_tenant_id,
+            client_id=app_result["app_id"],
+            client_secret_encrypted=encrypted_secret,
+            status=TenantStatus.ONBOARDING,
+        )
+        db.add(tenant)
+        await db.flush()
+
+        # 4. Generate admin consent URL
+        redirect_uri = settings.PROVISIONING_REDIRECT_URI or "http://localhost:5173/settings"
+        consent_url = app_provisioning.get_admin_consent_url(
+            tenant_id=ms_tenant_id,
+            client_id=app_result["app_id"],
+            redirect_uri=redirect_uri,
+        )
+
+        await db.commit()
+
+        return {
+            "tenant_id": tenant.id,
+            "app_id": app_result["app_id"],
+            "app_name": app_result["display_name"],
+            "consent_url": consent_url,
+            "secret_expires": secret_result["end_date"],
+            "message": "App registration created. Admin must grant consent via the consent_url.",
+        }
+
+    except Exception as e:
+        logger.error(f"App provisioning failed: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/{tenant_id}/permissions")
+async def check_permissions(
+    tenant_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Check which Graph API permissions have been granted for a tenant.
+
+    Returns per-workload permission status (backup ready / restore ready).
+    Includes a consent URL to grant missing permissions.
+    """
+    tenant = await db.get(Tenant, tenant_id)
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+
+    from app.services.app_provisioning import app_provisioning
+    from app.services.graph_client import GraphClient
+
+    consent_url = app_provisioning.get_admin_consent_url(
+        tenant_id=tenant.ms_tenant_id,
+        client_id=tenant.client_id,
+        redirect_uri=settings.PROVISIONING_REDIRECT_URI or "http://localhost:5173/settings",
+    )
+
+    try:
+        client_secret = encryption_service.decrypt_string(tenant.client_secret_encrypted)
+        graph = GraphClient(tenant.ms_tenant_id, tenant.client_id, client_secret)
+        token = await graph._get_token()
+
+        result = await app_provisioning.check_granted_permissions(
+            access_token=token,
+            app_id=tenant.client_id,
+        )
+        result["consent_url"] = consent_url
+
+        return result
+
+    except Exception as e:
+        logger.error(f"Permission check failed for tenant {tenant_id}: {e}")
+        return {"error": str(e), "consent_url": consent_url}

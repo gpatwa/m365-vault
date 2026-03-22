@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Building2, Plus, CheckCircle, XCircle, RefreshCw, Trash2, Wifi, Pause, Play, KeyRound, AlertTriangle, ExternalLink } from 'lucide-react';
+import { Building2, Plus, CheckCircle, XCircle, RefreshCw, Trash2, Wifi, Pause, Play, KeyRound, AlertTriangle, ExternalLink, ShieldCheck, Loader2 } from 'lucide-react';
 import { api } from '../api/client';
 import StatusBadge from '../components/StatusBadge';
 import OnboardingWizard from '../components/OnboardingWizard';
@@ -14,7 +14,27 @@ export default function Settings() {
   const [credentialsEdit, setCredentialsEdit] = useState<{ id: number } | null>(null);
   const [credForm, setCredForm] = useState({ client_id: '', client_secret: '' });
   const [actionMsg, setActionMsg] = useState('');
+  const [permsTenant, setPermsTenant] = useState<number | null>(null);
+  const [permsData, setPermsData] = useState<any>(null);
+  const [permsLoading, setPermsLoading] = useState(false);
   const qc = useQueryClient();
+
+  const checkPerms = async (tenantId: number) => {
+    if (permsTenant === tenantId && permsData) {
+      setPermsTenant(null); // toggle off
+      return;
+    }
+    setPermsTenant(tenantId);
+    setPermsLoading(true);
+    try {
+      const data = await api.get(`/tenants/${tenantId}/permissions`);
+      setPermsData(data);
+    } catch {
+      setPermsData({ error: 'Failed to check permissions' });
+    } finally {
+      setPermsLoading(false);
+    }
+  };
 
   const { data: tenants, isLoading } = useQuery({
     queryKey: ['tenants'],
@@ -288,15 +308,78 @@ export default function Settings() {
                   <p className="text-sm font-medium">{t.last_discovery_at?.slice(0, 16) || 'Never'}</p>
                 </div>
               </div>
-              <div className="mt-3 flex gap-2">
-                <a
-                  href={`https://login.microsoftonline.com/${t.ms_tenant_id}/adminconsent?client_id=${t.client_id}&redirect_uri=${encodeURIComponent(window.location.origin + '/settings')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3 py-1.5 border border-orange-200 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-50 flex items-center gap-1"
+              {/* Permission Status */}
+              <div className="mt-3">
+                <button
+                  onClick={() => checkPerms(t.id)}
+                  disabled={permsLoading && permsTenant === t.id}
+                  className="px-3 py-1.5 border border-gray-200 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-50 flex items-center gap-1"
                 >
-                  <ExternalLink className="w-3 h-3" /> Grant Permissions
-                </a>
+                  {permsLoading && permsTenant === t.id
+                    ? <><Loader2 className="w-3 h-3 animate-spin" /> Checking...</>
+                    : <><ShieldCheck className="w-3 h-3" /> {permsTenant === t.id && permsData ? 'Hide' : 'Check'} Permissions</>
+                  }
+                </button>
+
+                {permsTenant === t.id && permsData && !permsData.error && (
+                  <div className="mt-3 border rounded-lg overflow-hidden">
+                    <div className={`px-4 py-2 text-sm font-medium flex items-center justify-between ${
+                      permsData.all_backup_ready ? 'bg-green-50 text-green-700' : 'bg-orange-50 text-orange-700'
+                    }`}>
+                      <span className="flex items-center gap-1.5">
+                        {permsData.all_backup_ready ? <CheckCircle className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
+                        {permsData.all_backup_ready ? 'All backup permissions granted' : 'Some permissions missing'}
+                      </span>
+                      {!permsData.all_backup_ready && (
+                        <a
+                          href={permsData.consent_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2.5 py-1 bg-orange-600 text-white rounded text-xs font-medium hover:bg-orange-700 flex items-center gap-1"
+                        >
+                          <ExternalLink className="w-3 h-3" /> Grant All
+                        </a>
+                      )}
+                    </div>
+                    <table className="w-full text-xs">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="text-left px-4 py-2 font-medium text-gray-600">Workload</th>
+                          <th className="text-center px-4 py-2 font-medium text-gray-600">Backup</th>
+                          <th className="text-center px-4 py-2 font-medium text-gray-600">Restore</th>
+                          <th className="text-left px-4 py-2 font-medium text-gray-600">Missing</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {Object.entries(permsData.workloads).map(([wl, status]: [string, any]) => (
+                          <tr key={wl}>
+                            <td className="px-4 py-2 font-medium capitalize">{wl.replace('_', ' ')}</td>
+                            <td className="px-4 py-2 text-center">
+                              {status.backup
+                                ? <CheckCircle className="w-4 h-4 text-green-500 mx-auto" />
+                                : <XCircle className="w-4 h-4 text-red-500 mx-auto" />}
+                            </td>
+                            <td className="px-4 py-2 text-center">
+                              {status.restore === null ? <span className="text-gray-300">N/A</span>
+                                : status.restore
+                                  ? <CheckCircle className="w-4 h-4 text-green-500 mx-auto" />
+                                  : <XCircle className="w-4 h-4 text-red-500 mx-auto" />}
+                            </td>
+                            <td className="px-4 py-2 text-gray-500">
+                              {[...(status.missing_backup || []), ...(status.missing_restore || [])].join(', ') || '-'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {permsTenant === t.id && permsData?.error && (
+                  <div className="mt-3 bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+                    {permsData.error}
+                  </div>
+                )}
               </div>
             </div>
           );

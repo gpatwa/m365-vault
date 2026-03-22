@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Shield, Search, Users, KeyRound, ShieldCheck, AppWindow, MapPin, UserCog } from 'lucide-react';
 import { api } from '../api/client';
+import { useTenantId } from '../hooks/useTenant';
 import { formatSize, timeAgo } from '../utils/format';
 
 interface EntraSummary {
@@ -39,7 +40,7 @@ const ITEM_TYPE_CONFIG: Record<string, { label: string; icon: typeof Users; colo
 export default function EntraID() {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const tenantId = 1;
+  const tenantId = useTenantId();
 
   const { data: summary, isLoading } = useQuery({
     queryKey: ['entra-summary', tenantId],

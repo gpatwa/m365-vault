@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Mail, Search, RefreshCw, Download, ArrowRight, Loader2 } from 'lucide-react';
 import { api } from '../api/client';
 import StatusBadge from '../components/StatusBadge';
+import { useTenantId } from '../hooks/useTenant';
 import type { ProtectedObject, PaginatedResponse, Snapshot, SnapshotItem } from '../types';
 
 export default function Exchange() {
@@ -11,7 +12,7 @@ export default function Exchange() {
   const [selectedSnapshot, setSelectedSnapshot] = useState<Snapshot | null>(null);
   const [emailSearch, setEmailSearch] = useState('');
   const [backupMsg, setBackupMsg] = useState('');
-  const tenantId = 1; // TODO: from context
+  const tenantId = useTenantId();
   const qc = useQueryClient();
 
   const backupAllMutation = useMutation({

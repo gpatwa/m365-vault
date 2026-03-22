@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Shield, Plus, Pencil, Trash2, Lock, Clock, Calendar, Link, Mail, HardDrive, Globe, KeyRound } from 'lucide-react';
 import { api } from '../api/client';
+import { useTenantId } from '../hooks/useTenant';
 import type { SLAPolicy } from '../types';
 
 export default function SLAPolicies() {
+  const tenantId = useTenantId();
   const [showForm, setShowForm] = useState(false);
   const [editPolicy, setEditPolicy] = useState<SLAPolicy | null>(null);
   const [showAssign, setShowAssign] = useState<SLAPolicy | null>(null);
@@ -58,7 +60,7 @@ export default function SLAPolicies() {
     try {
       const result: any = await api.post('/sla-policies/assign', {
         sla_policy_id: showAssign.id,
-        tenant_id: 1,
+        tenant_id: tenantId,
         workload_type: workloadType,
         assignment_type: 'application',
       });
@@ -75,10 +77,10 @@ export default function SLAPolicies() {
     if (!showAssign) return;
     try {
       const results: any[] = await Promise.all([
-        api.post('/sla-policies/assign', { sla_policy_id: showAssign.id, tenant_id: 1, workload_type: 'exchange', assignment_type: 'application' }),
-        api.post('/sla-policies/assign', { sla_policy_id: showAssign.id, tenant_id: 1, workload_type: 'onedrive', assignment_type: 'application' }),
-        api.post('/sla-policies/assign', { sla_policy_id: showAssign.id, tenant_id: 1, workload_type: 'sharepoint', assignment_type: 'application' }),
-        api.post('/sla-policies/assign', { sla_policy_id: showAssign.id, tenant_id: 1, workload_type: 'entra_id', assignment_type: 'application' }),
+        api.post('/sla-policies/assign', { sla_policy_id: showAssign.id, tenant_id: tenantId, workload_type: 'exchange', assignment_type: 'application' }),
+        api.post('/sla-policies/assign', { sla_policy_id: showAssign.id, tenant_id: tenantId, workload_type: 'onedrive', assignment_type: 'application' }),
+        api.post('/sla-policies/assign', { sla_policy_id: showAssign.id, tenant_id: tenantId, workload_type: 'sharepoint', assignment_type: 'application' }),
+        api.post('/sla-policies/assign', { sla_policy_id: showAssign.id, tenant_id: tenantId, workload_type: 'entra_id', assignment_type: 'application' }),
       ]);
       const total = results.reduce((sum, r) => sum + (r.objects_updated || 0), 0);
       setAssignMsg(`Assigned to ${total} objects across all workloads!`);

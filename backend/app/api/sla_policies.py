@@ -75,7 +75,8 @@ async def list_sla_policies(
             id=p.id, name=p.name, description=p.description,
             backup_frequency_hours=p.backup_frequency_hours,
             retention_days=p.retention_days, priority=p.priority,
-            is_locked=p.is_locked, is_active=p.is_active,
+            is_locked=p.is_locked, worm_enabled=p.worm_enabled or 0,
+            legal_hold=p.legal_hold or 0, is_active=p.is_active,
             created_at=p.created_at.isoformat(),
             protected_objects_count=count,
         ))

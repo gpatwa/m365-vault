@@ -1,10 +1,11 @@
+import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Mail, HardDrive, Globe, Shield, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search } from 'lucide-react';
+import { LayoutDashboard, Mail, HardDrive, Globe, Shield, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search, Command } from 'lucide-react';
 import { api } from '../api/client';
+import CommandPalette from './CommandPalette';
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/search', label: 'Search', icon: Search },
   { path: '/exchange', label: 'Exchange', icon: Mail },
   { path: '/onedrive', label: 'OneDrive', icon: HardDrive },
   { path: '/sharepoint', label: 'SharePoint', icon: Globe },
@@ -22,6 +23,19 @@ const navItems = [
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [commandOpen, setCommandOpen] = useState(false);
+
+  // ⌘K / Ctrl+K to open command palette
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setCommandOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   const handleLogout = () => {
     api.clearToken();
@@ -41,7 +55,20 @@ export default function Layout() {
             </div>
           </div>
         </div>
-        <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
+
+        {/* Search trigger */}
+        <button
+          onClick={() => setCommandOpen(true)}
+          className="mx-3 mt-3 flex items-center gap-2 px-3 py-2 text-sm text-gray-400 bg-gray-800 rounded-lg hover:bg-gray-700 hover:text-gray-200 transition-colors"
+        >
+          <Search className="w-4 h-4" />
+          <span className="flex-1 text-left">Search...</span>
+          <kbd className="flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] bg-gray-700 rounded font-mono">
+            <Command className="w-2.5 h-2.5" />K
+          </kbd>
+        </button>
+
+        <nav className="flex-1 p-2 mt-1 space-y-1 overflow-y-auto">
           {navItems.map(item => {
             const active = location.pathname === item.path ||
               (item.path !== '/' && location.pathname.startsWith(item.path));
@@ -78,6 +105,9 @@ export default function Layout() {
           <Outlet />
         </div>
       </main>
+
+      {/* Command Palette (⌘K) */}
+      <CommandPalette isOpen={commandOpen} onClose={() => setCommandOpen(false)} />
     </div>
   );
 }

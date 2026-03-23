@@ -132,6 +132,100 @@ class CatalogService:
             for item, snapshot, obj in rows
         ]
 
+    async def search_all(
+        self,
+        tenant_id: int,
+        query: str,
+        workload_filter: str = None,
+        limit: int = 50,
+    ) -> dict:
+        """Global search across ALL workloads — emails, files, Entra ID objects, Teams messages.
+
+        Returns results grouped by workload with unified result format.
+        """
+        results = {"query": query, "total": 0, "items": []}
+
+        # Search across all SnapshotItems matching the query
+        stmt = (
+            select(SnapshotItem, Snapshot, ProtectedObject)
+            .join(Snapshot, SnapshotItem.snapshot_id == Snapshot.id)
+            .join(ProtectedObject, Snapshot.protected_object_id == ProtectedObject.id)
+            .where(
+                ProtectedObject.tenant_id == tenant_id,
+                Snapshot.status == SnapshotStatus.COMPLETED,
+                or_(
+                    SnapshotItem.name.ilike(f"%{query}%"),
+                    SnapshotItem.subject.ilike(f"%{query}%"),
+                    SnapshotItem.sender.ilike(f"%{query}%"),
+                    SnapshotItem.file_name.ilike(f"%{query}%"),
+                    SnapshotItem.path.ilike(f"%{query}%"),
+                ),
+            )
+        )
+
+        if workload_filter:
+            try:
+                wt = WorkloadType(workload_filter)
+                stmt = stmt.where(ProtectedObject.workload_type == wt)
+            except ValueError:
+                pass
+
+        # Deduplicate: same ms_item_id can appear in multiple snapshots,
+        # show only the latest snapshot's version
+        stmt = stmt.order_by(desc(Snapshot.completed_at)).limit(limit * 2)  # Fetch extra for dedup
+
+        result = await self.db.execute(stmt)
+        rows = result.all()
+
+        seen_items = set()
+        for item, snapshot, obj in rows:
+            if len(results["items"]) >= limit:
+                break
+
+            # Dedup by ms_item_id + workload
+            dedup_key = f"{obj.workload_type.value}:{item.ms_item_id}"
+            if dedup_key in seen_items:
+                continue
+            seen_items.add(dedup_key)
+
+            workload = obj.workload_type.value
+            item_data = {
+                "item_id": item.id,
+                "snapshot_id": snapshot.id,
+                "workload": workload,
+                "object_name": obj.display_name,
+                "item_type": item.item_type.value,
+                "name": item.name,
+                "path": item.path,
+                "size_bytes": item.size_bytes,
+                "blob_path": item.blob_path,
+                "snapshot_date": snapshot.completed_at.isoformat() if snapshot.completed_at else None,
+            }
+
+            # Add workload-specific fields
+            if item.subject:
+                item_data["subject"] = item.subject
+            if item.sender:
+                item_data["sender"] = item.sender
+            if item.file_name:
+                item_data["file_name"] = item.file_name
+            if item.mime_type:
+                item_data["mime_type"] = item.mime_type
+            if item.received_at:
+                item_data["received_at"] = item.received_at.isoformat()
+            if item.last_modified_at:
+                item_data["last_modified_at"] = item.last_modified_at.isoformat()
+            if item.metadata_json:
+                try:
+                    item_data["metadata"] = json.loads(item.metadata_json)
+                except (json.JSONDecodeError, TypeError):
+                    pass
+
+            results["items"].append(item_data)
+
+        results["total"] = len(results["items"])
+        return results
+
     async def browse_snapshot(
         self,
         snapshot_id: int,

@@ -1,9 +1,10 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Mail, HardDrive, Globe, Shield, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain } from 'lucide-react';
+import { LayoutDashboard, Mail, HardDrive, Globe, Shield, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search } from 'lucide-react';
 import { api } from '../api/client';
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/search', label: 'Search', icon: Search },
   { path: '/exchange', label: 'Exchange', icon: Mail },
   { path: '/onedrive', label: 'OneDrive', icon: HardDrive },
   { path: '/sharepoint', label: 'SharePoint', icon: Globe },

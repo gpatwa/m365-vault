@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Shield, Mail, HardDrive, Globe, MessageSquare, CheckCircle, XCircle, Database, Activity, AlertTriangle, ShieldOff, ShieldAlert, ChevronDown, ChevronRight, Heart } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { api } from '../api/client';
 import StatCard from '../components/StatCard';
 import type { DashboardSummary, ActivityData } from '../types';
 
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
 
 interface UnprotectedItem {
   id: number;
@@ -72,17 +71,6 @@ export default function Dashboard() {
     queryFn: () => api.get<{ score: number; components: any; details: any }>('/health/score?tenant_id=2'),
     refetchInterval: 60000,
   });
-
-  const workloadData = summary ? Object.entries(summary.workloads).map(([name, data]) => ({
-    name: name.charAt(0).toUpperCase() + name.slice(1),
-    protected: data.protected,
-    unprotected: data.unprotected,
-  })) : [];
-
-  const pieData = summary ? [
-    { name: 'Protected', value: summary.total_protected },
-    { name: 'Unprotected', value: summary.total_objects - summary.total_protected },
-  ] : [];
 
   const totalExposed = (unprotectedData?.total_unprotected ?? 0) + (unprotectedData?.total_at_risk ?? 0);
 
@@ -394,59 +382,17 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Activity chart */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Backup Activity (7 Days)</h3>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={activityData?.activity || []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="date" tick={{ fontSize: 12 }} tickFormatter={v => v.slice(5)} />
-              <YAxis tick={{ fontSize: 12 }} />
-              <Tooltip />
-              <Bar dataKey="backups_successful" fill="#10b981" name="Successful" radius={[4,4,0,0]} />
-              <Bar dataKey="restores" fill="#3b82f6" name="Restores" radius={[4,4,0,0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Protection pie chart */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Protection Coverage</h3>
-          <ResponsiveContainer width="100%" height={280}>
-            <PieChart>
-              <Pie
-                data={pieData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                paddingAngle={4}
-                dataKey="value"
-                label={({ name, value }) => `${name}: ${value}`}
-              >
-                {pieData.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Workload breakdown */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-        <h3 className="text-lg font-semibold mb-4">Protection by Workload</h3>
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={workloadData} layout="vertical">
+      {/* Backup Activity Chart */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm mb-6">
+        <h3 className="text-lg font-semibold mb-4">Backup Activity (7 Days)</h3>
+        <ResponsiveContainer width="100%" height={280}>
+          <BarChart data={activityData?.activity || []}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis type="number" tick={{ fontSize: 12 }} />
-            <YAxis dataKey="name" type="category" tick={{ fontSize: 12 }} width={100} />
+            <XAxis dataKey="date" tick={{ fontSize: 12 }} tickFormatter={v => v.slice(5)} />
+            <YAxis tick={{ fontSize: 12 }} />
             <Tooltip />
-            <Bar dataKey="protected" fill="#10b981" name="Protected" stackId="a" />
-            <Bar dataKey="unprotected" fill="#e5e7eb" name="Unprotected" stackId="a" />
+            <Bar dataKey="backups_successful" fill="#10b981" name="Successful" radius={[4,4,0,0]} />
+            <Bar dataKey="restores" fill="#3b82f6" name="Restores" radius={[4,4,0,0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

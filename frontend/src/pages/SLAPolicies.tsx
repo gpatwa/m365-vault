@@ -194,6 +194,8 @@ export default function SLAPolicies() {
                 <Shield className="w-5 h-5 text-blue-500" />
                 <h3 className="font-semibold">{p.name}</h3>
                 {p.is_locked ? <Lock className="w-4 h-4 text-orange-500" /> : null}
+                {(p as any).worm_enabled ? <span className="px-1.5 py-0.5 bg-orange-100 text-orange-700 text-[10px] font-bold rounded" title="WORM: Write-Once Read-Many">WORM</span> : null}
+                {(p as any).legal_hold ? <span className="px-1.5 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded" title="Legal Hold: Cannot delete">HOLD</span> : null}
               </div>
               <div className="flex gap-1">
                 <button onClick={() => setShowAssign(p)} title="Assign to workloads" className="p-1.5 text-gray-400 hover:text-green-600 rounded"><Link className="w-4 h-4" /></button>

@@ -153,6 +153,14 @@ class BackupEngine:
             snapshot.size_bytes = total_size
             snapshot.delta_token = new_delta_token
 
+            # Apply WORM lock if SLA policy has worm_enabled
+            if protected_object.sla_policy_id:
+                from app.models.sla_policy import SLAPolicy
+                sla = await self.db.get(SLAPolicy, protected_object.sla_policy_id)
+                if sla and getattr(sla, 'worm_enabled', 0):
+                    storage_service.apply_worm_lock(snapshot, sla.retention_days)
+                    logger.info(f"WORM lock applied: snapshot {snapshot.id} locked until {snapshot.locked_until}")
+
             # Update protected object
             protected_object.last_backup_at = datetime.utcnow()
             protected_object.last_backup_status = "success"

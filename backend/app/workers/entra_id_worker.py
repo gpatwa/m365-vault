@@ -551,3 +551,99 @@ class EntraIDWorker:
 
         except Exception as e:
             logger.error(f"Failed to backup named locations: {e}")
+
+    # ── Restore Operations ──
+
+    async def restore_items(
+        self,
+        item_ids: list[int],
+        snapshot: Snapshot,
+        wrapped_dek: str,
+        protected_object: ProtectedObject = None,
+    ) -> int:
+        """Restore Entra ID objects by recreating them via Graph API.
+
+        Supports: Conditional Access policies, groups, app registrations, named locations.
+        Users and directory roles are read-only (can't be created via API).
+        """
+        from sqlalchemy import select
+        result = await self.db.execute(
+            select(SnapshotItem).where(SnapshotItem.id.in_(item_ids))
+        )
+        items = result.scalars().all()
+        restored = 0
+
+        for item in items:
+            try:
+                # Retrieve and decrypt the backed-up JSON
+                data = await self.storage.retrieve_item(item.blob_path, wrapped_dek)
+                obj_data = json.loads(data)
+
+                if item.item_type == ItemType.CONDITIONAL_ACCESS_POLICY:
+                    await self._restore_ca_policy(obj_data)
+                    restored += 1
+                elif item.item_type == ItemType.GROUP:
+                    await self._restore_group(obj_data)
+                    restored += 1
+                elif item.item_type == ItemType.APP_REGISTRATION:
+                    await self._restore_app(obj_data)
+                    restored += 1
+                elif item.item_type == ItemType.NAMED_LOCATION:
+                    await self._restore_named_location(obj_data)
+                    restored += 1
+                else:
+                    logger.info(f"Skipping restore of {item.item_type.value} — read-only object type")
+
+            except Exception as e:
+                logger.error(f"Failed to restore {item.item_type.value} {item.ms_item_id}: {e}")
+
+        return restored
+
+    async def _restore_ca_policy(self, obj_data: dict):
+        """Recreate a Conditional Access policy."""
+        restore_body = {
+            "displayName": f"[Restored] {obj_data.get('displayName', 'Unknown')}",
+            "state": "disabled",  # Always restore as disabled for safety
+            "conditions": obj_data.get("conditions", {}),
+            "grantControls": obj_data.get("grantControls"),
+            "sessionControls": obj_data.get("sessionControls"),
+        }
+        await self.graph.post("/identity/conditionalAccess/policies", json_data=restore_body)
+
+    async def _restore_group(self, obj_data: dict):
+        """Recreate a group with its members."""
+        restore_body = {
+            "displayName": f"[Restored] {obj_data.get('displayName', 'Unknown')}",
+            "description": obj_data.get("description"),
+            "mailEnabled": obj_data.get("mailEnabled", False),
+            "mailNickname": f"restored_{obj_data.get('mailNickname', 'group')}",
+            "securityEnabled": obj_data.get("securityEnabled", True),
+            "groupTypes": obj_data.get("groupTypes", []),
+        }
+        await self.graph.post("/groups", json_data=restore_body)
+
+    async def _restore_app(self, obj_data: dict):
+        """Recreate an app registration."""
+        restore_body = {
+            "displayName": f"[Restored] {obj_data.get('displayName', 'Unknown')}",
+            "signInAudience": obj_data.get("signInAudience", "AzureADMyOrg"),
+        }
+        if obj_data.get("web"):
+            restore_body["web"] = obj_data["web"]
+        if obj_data.get("api"):
+            restore_body["api"] = obj_data["api"]
+        await self.graph.post("/applications", json_data=restore_body)
+
+    async def _restore_named_location(self, obj_data: dict):
+        """Recreate a named location."""
+        odata_type = obj_data.get("@odata.type", "")
+        restore_body = {
+            "@odata.type": odata_type,
+            "displayName": f"[Restored] {obj_data.get('displayName', 'Unknown')}",
+        }
+        if "ipNamedLocation" in odata_type:
+            restore_body["ipRanges"] = obj_data.get("ipRanges", [])
+            restore_body["isTrusted"] = obj_data.get("isTrusted", False)
+        elif "countryNamedLocation" in odata_type:
+            restore_body["countriesAndRegions"] = obj_data.get("countriesAndRegions", [])
+        await self.graph.post("/identity/conditionalAccess/namedLocations", json_data=restore_body)

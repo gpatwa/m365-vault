@@ -395,6 +395,31 @@ class StorageService:
         """Get storage usage statistics."""
         return self.backend.get_storage_stats()
 
+    @staticmethod
+    def can_delete_snapshot(snapshot, sla_policy=None) -> tuple[bool, str]:
+        """Check if a snapshot can be deleted (WORM / legal hold enforcement).
+
+        Returns (can_delete, reason).
+        """
+        from datetime import datetime
+
+        # Check legal hold — never deletable
+        if sla_policy and getattr(sla_policy, 'legal_hold', 0):
+            return False, "Snapshot is under legal hold — deletion blocked"
+
+        # Check WORM lock
+        if hasattr(snapshot, 'locked_until') and snapshot.locked_until:
+            if datetime.utcnow() < snapshot.locked_until:
+                return False, f"WORM lock active until {snapshot.locked_until.isoformat()} — deletion blocked"
+
+        return True, "OK"
+
+    @staticmethod
+    def apply_worm_lock(snapshot, retention_days: int):
+        """Apply WORM lock to a snapshot based on retention period."""
+        from datetime import datetime, timedelta
+        snapshot.locked_until = snapshot.created_at + timedelta(days=retention_days)
+
     async def delete_snapshot_storage(
         self,
         tenant_id: int,
@@ -403,7 +428,11 @@ class StorageService:
         snapshot_id: int,
         db: AsyncSession = None,
     ):
-        """Delete all storage for a snapshot (for retention cleanup)."""
+        """Delete all storage for a snapshot (for retention cleanup).
+
+        IMPORTANT: Callers must check can_delete_snapshot() before calling this.
+        This method does NOT enforce WORM — it trusts the caller.
+        """
         if settings.DEDUP_ENABLED and db is not None:
             await self._cleanup_dedup_refs(
                 db=db, tenant_id=tenant_id, snapshot_id=snapshot_id,

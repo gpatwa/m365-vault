@@ -369,3 +369,78 @@ class TeamsWorker:
 
         except Exception as e:
             logger.error(f"Failed to backup team settings for {team_id}: {e}")
+
+    # ── Restore Operations ──
+
+    async def restore_items(
+        self,
+        item_ids: list[int],
+        snapshot: Snapshot,
+        wrapped_dek: str,
+        target_team_id: str = None,
+        protected_object: ProtectedObject = None,
+    ) -> int:
+        """Restore Teams items by reposting messages to channels.
+
+        Supports: channel messages (posted as new messages with [Restored] prefix).
+        Files are restored by re-uploading to the channel's files folder.
+        """
+        from sqlalchemy import select
+        target = target_team_id or protected_object.ms_object_id
+        result = await self.db.execute(
+            select(SnapshotItem).where(SnapshotItem.id.in_(item_ids))
+        )
+        items = result.scalars().all()
+        restored = 0
+
+        for item in items:
+            try:
+                data = await self.storage.retrieve_item(item.blob_path, wrapped_dek)
+                obj_data = json.loads(data)
+
+                if item.item_type == ItemType.CHANNEL_MESSAGE:
+                    # Get channel ID from path (Channels/{channel_name})
+                    # Find the channel by listing channels
+                    channel_name = item.path.replace("Channels/", "") if item.path else None
+                    if channel_name:
+                        channels = await self.graph.get_all_pages(
+                            f"/teams/{target}/channels",
+                            params={"$filter": f"displayName eq '{channel_name}'", "$select": "id"},
+                        )
+                        if channels:
+                            channel_id = channels[0]["id"]
+                            body_content = obj_data.get("body", {}).get("content", "")
+                            sender = obj_data.get("from", {}).get("user", {}).get("displayName", "Unknown")
+                            await self.graph.post(
+                                f"/teams/{target}/channels/{channel_id}/messages",
+                                json_data={
+                                    "body": {
+                                        "contentType": "html",
+                                        "content": f"<b>[Restored from backup]</b> Originally from {sender}:<br/>{body_content}",
+                                    }
+                                },
+                            )
+                            restored += 1
+
+                elif item.item_type == ItemType.FILE:
+                    # Re-upload file to channel
+                    file_data = await self.storage.retrieve_item(item.blob_path, wrapped_dek)
+                    file_name = item.file_name or item.name
+                    # Upload to root of channel files
+                    channel_path = item.path.split("/")[1] if item.path and "/" in item.path else "General"
+                    channels = await self.graph.get_all_pages(
+                        f"/teams/{target}/channels",
+                        params={"$filter": f"displayName eq '{channel_path}'", "$select": "id"},
+                    )
+                    if channels:
+                        channel_id = channels[0]["id"]
+                        await self.graph.put(
+                            f"/teams/{target}/channels/{channel_id}/filesFolder/root:/{file_name}:/content",
+                            data=file_data,
+                        )
+                        restored += 1
+
+            except Exception as e:
+                logger.error(f"Failed to restore Teams item {item.id}: {e}")
+
+        return restored

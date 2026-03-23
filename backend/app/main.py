@@ -78,6 +78,8 @@ from app.api.search import router as search_router
 from app.api.sensitive_data import router as sensitive_data_router
 from app.api.validation import router as validation_router
 from app.api.self_restore import router as self_restore_router
+from app.api.reports import router as reports_router
+from app.api.usage import router as usage_router
 
 app.include_router(auth_router)
 app.include_router(tenants_router)
@@ -97,6 +99,8 @@ app.include_router(search_router)
 app.include_router(sensitive_data_router)
 app.include_router(validation_router)
 app.include_router(self_restore_router)
+app.include_router(reports_router)
+app.include_router(usage_router)
 
 
 @app.get("/")

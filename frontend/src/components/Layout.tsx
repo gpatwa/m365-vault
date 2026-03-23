@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Mail, HardDrive, Globe, Shield, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search, Command, RotateCcw } from 'lucide-react';
+import { LayoutDashboard, Mail, HardDrive, Globe, Shield, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search, Command, RotateCcw, BarChart3, Gauge } from 'lucide-react';
 import { api } from '../api/client';
 import CommandPalette from './CommandPalette';
 
@@ -18,6 +18,8 @@ const navItems = [
   { path: '/smart-engine', label: 'Smart Engine', icon: Brain },
   { path: '/alerts', label: 'Alerts', icon: Bell },
   { path: '/restore', label: 'Self Restore', icon: RotateCcw },
+  { path: '/reports', label: 'Reports', icon: BarChart3 },
+  { path: '/usage', label: 'Usage & License', icon: Gauge },
   { path: '/audit', label: 'Audit Log', icon: FileText },
 ];
 

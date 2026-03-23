@@ -112,6 +112,9 @@ class Settings(BaseSettings):
     BACKUP_VALIDATION_ENABLED: bool = True
     VALIDATION_SAMPLE_PERCENT: int = 10
 
+    # License
+    LICENSE_TIER: str = "community"  # community, professional, enterprise
+
     # SSO / OIDC
     SSO_ENABLED: bool = False
     SSO_TENANT_ID: str = ""

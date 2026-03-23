@@ -10,7 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.models.user import User, UserRole
 from app.services.auth import (
-    hash_password, verify_password, create_access_token, get_current_user
+    hash_password, verify_password, create_access_token, create_refresh_token,
+    verify_refresh_token, validate_password, get_current_user
 )
 from app.config import settings
 
@@ -39,6 +40,7 @@ class UserResponse(BaseModel):
 
 class TokenResponse(BaseModel):
     access_token: str
+    refresh_token: str = None
     token_type: str = "bearer"
     user: UserResponse
 
@@ -46,6 +48,11 @@ class TokenResponse(BaseModel):
 @router.post("/register", response_model=UserResponse)
 async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
     """Register a new user."""
+    # Validate password
+    is_valid, error_msg = validate_password(req.password)
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=error_msg)
+
     # Check existing
     result = await db.execute(
         select(User).where((User.username == req.username) | (User.email == req.email))
@@ -87,9 +94,11 @@ async def login(
         data={"sub": user.username, "role": user.role.value},
         expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
     )
+    refresh = create_refresh_token(data={"sub": user.username, "role": user.role.value})
 
     return TokenResponse(
         access_token=token,
+        refresh_token=refresh,
         user=UserResponse(
             id=user.id,
             username=user.username,
@@ -97,6 +106,38 @@ async def login(
             full_name=user.full_name,
             role=user.role.value,
             is_active=user.is_active,
+        ),
+    )
+
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+
+@router.post("/refresh", response_model=TokenResponse)
+async def refresh_token(req: RefreshRequest, db: AsyncSession = Depends(get_db)):
+    """Exchange refresh token for new access + refresh tokens."""
+    username = verify_refresh_token(req.refresh_token)
+    if not username:
+        raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
+
+    result = await db.execute(select(User).where(User.username == username))
+    user = result.scalar_one_or_none()
+    if not user or not user.is_active:
+        raise HTTPException(status_code=401, detail="User not found or disabled")
+
+    new_access = create_access_token(
+        data={"sub": user.username, "role": user.role.value},
+        expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
+    )
+    new_refresh = create_refresh_token(data={"sub": user.username, "role": user.role.value})
+
+    return TokenResponse(
+        access_token=new_access,
+        refresh_token=new_refresh,
+        user=UserResponse(
+            id=user.id, username=user.username, email=user.email,
+            full_name=user.full_name, role=user.role.value, is_active=user.is_active,
         ),
     )
 

@@ -1,20 +1,45 @@
 """M365 Data Protection — FastAPI Application Entry Point."""
+import json
 import logging
+import time
+import uuid
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.database import init_db
 from app.services.scheduler import start_scheduler, stop_scheduler
 from app.models.dedup import DedupEntry  # noqa: F401 — ensure table is created
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-)
+# Configure structured JSON logging for production
+if settings.LOG_FORMAT == "json":
+    class JSONFormatter(logging.Formatter):
+        def format(self, record):
+            log_data = {
+                "timestamp": self.formatTime(record),
+                "level": record.levelname,
+                "logger": record.name,
+                "message": record.getMessage(),
+            }
+            if record.exc_info:
+                log_data["exception"] = self.formatException(record.exc_info)
+            if hasattr(record, "correlation_id"):
+                log_data["correlation_id"] = record.correlation_id
+            return json.dumps(log_data)
+
+    handler = logging.StreamHandler()
+    handler.setFormatter(JSONFormatter())
+    logging.root.handlers = [handler]
+    logging.root.setLevel(logging.INFO)
+else:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    )
+
 logger = logging.getLogger(__name__)
 
 
@@ -58,6 +83,75 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── Rate Limiting (in-memory, use Redis in production) ──
+_rate_limit_store: dict[str, list[float]] = {}
+RATE_LIMIT_REQUESTS = settings.RATE_LIMIT_REQUESTS_PER_MINUTE
+RATE_LIMIT_WINDOW = 60  # seconds
+
+
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    """Simple in-memory rate limiter per IP."""
+    if RATE_LIMIT_REQUESTS > 0:
+        client_ip = request.client.host if request.client else "unknown"
+        now = time.time()
+
+        if client_ip not in _rate_limit_store:
+            _rate_limit_store[client_ip] = []
+
+        # Clean old entries
+        _rate_limit_store[client_ip] = [t for t in _rate_limit_store[client_ip] if now - t < RATE_LIMIT_WINDOW]
+
+        if len(_rate_limit_store[client_ip]) >= RATE_LIMIT_REQUESTS:
+            return JSONResponse(
+                status_code=429,
+                content={"detail": "Too many requests. Try again later."},
+                headers={"Retry-After": str(RATE_LIMIT_WINDOW)},
+            )
+
+        _rate_limit_store[client_ip].append(now)
+
+    response = await call_next(request)
+    return response
+
+
+@app.middleware("http")
+async def correlation_id_middleware(request: Request, call_next):
+    """Add correlation ID to every request for tracing."""
+    correlation_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4())[:8])
+    request.state.correlation_id = correlation_id
+
+    start_time = time.time()
+    response = await call_next(request)
+    duration_ms = round((time.time() - start_time) * 1000, 1)
+
+    response.headers["X-Correlation-ID"] = correlation_id
+    response.headers["X-Response-Time"] = f"{duration_ms}ms"
+
+    # Log request (skip noisy health checks)
+    if not request.url.path.startswith("/health"):
+        logger.info(
+            f"{request.method} {request.url.path} → {response.status_code} ({duration_ms}ms) [cid={correlation_id}]"
+        )
+
+    return response
+
+
+# ── Global Error Handler ──
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Catch unhandled exceptions — return clean JSON, never leak stack traces."""
+    correlation_id = getattr(request.state, "correlation_id", "unknown")
+    logger.error(f"Unhandled error on {request.method} {request.url.path}: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": "Internal server error",
+            "correlation_id": correlation_id,
+        },
+    )
+
 
 # Register API routers
 from app.api.auth import router as auth_router
@@ -115,4 +209,38 @@ async def root():
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy"}
+    """Deep health check — verifies DB and storage connectivity."""
+    checks = {"database": "unknown", "storage": "unknown"}
+    healthy = True
+
+    # Check database
+    try:
+        from app.database import async_session
+        from sqlalchemy import text
+        async with async_session() as db:
+            await db.execute(text("SELECT 1"))
+        checks["database"] = "healthy"
+    except Exception as e:
+        checks["database"] = f"unhealthy: {str(e)[:100]}"
+        healthy = False
+
+    # Check storage
+    try:
+        from app.services.storage import storage_service
+        if storage_service and storage_service.backend:
+            checks["storage"] = "healthy"
+        else:
+            checks["storage"] = "not initialized"
+    except Exception as e:
+        checks["storage"] = f"unhealthy: {str(e)[:100]}"
+        healthy = False
+
+    status_code = 200 if healthy else 503
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "status": "healthy" if healthy else "degraded",
+            "version": settings.APP_VERSION,
+            "checks": checks,
+        },
+    )

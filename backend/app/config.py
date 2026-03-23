@@ -89,6 +89,24 @@ class Settings(BaseSettings):
     # CORS — comma-separated origins (overridden in production)
     CORS_ORIGINS: str = "http://localhost:5173,http://localhost:5174,http://localhost:3000,http://127.0.0.1:5173"
 
+    # Rate Limiting
+    RATE_LIMIT_REQUESTS_PER_MINUTE: int = 120  # 0 = disabled
+
+    # Logging
+    LOG_FORMAT: str = "text"  # "text" for dev, "json" for production
+
+    # Password Policy
+    PASSWORD_MIN_LENGTH: int = 8
+    PASSWORD_REQUIRE_UPPERCASE: bool = True
+    PASSWORD_REQUIRE_DIGIT: bool = True
+
+    # Refresh Tokens
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+    # License
+    LICENSE_TIER: str = "community"  # community, professional, enterprise
+    LICENSE_MAX_USERS: int = 25      # for community tier
+
     # Alerts
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587

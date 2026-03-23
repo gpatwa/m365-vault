@@ -16,6 +16,17 @@ from app.models.user import User, UserRole
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
+def validate_password(password: str) -> tuple[bool, str]:
+    """Validate password against policy. Returns (is_valid, error_message)."""
+    if len(password) < settings.PASSWORD_MIN_LENGTH:
+        return False, f"Password must be at least {settings.PASSWORD_MIN_LENGTH} characters"
+    if settings.PASSWORD_REQUIRE_UPPERCASE and not any(c.isupper() for c in password):
+        return False, "Password must contain at least one uppercase letter"
+    if settings.PASSWORD_REQUIRE_DIGIT and not any(c.isdigit() for c in password):
+        return False, "Password must contain at least one digit"
+    return True, ""
+
+
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
@@ -27,8 +38,26 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire, "type": "access"})
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
+def create_refresh_token(data: dict) -> str:
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    to_encode.update({"exp": expire, "type": "refresh"})
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
+def verify_refresh_token(token: str) -> Optional[str]:
+    """Verify refresh token, return username if valid."""
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        if payload.get("type") != "refresh":
+            return None
+        return payload.get("sub")
+    except JWTError:
+        return None
 
 
 async def get_current_user(

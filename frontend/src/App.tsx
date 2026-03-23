@@ -17,6 +17,7 @@ import SSOCallback from './pages/SSOCallback';
 import AlertSettings from './pages/AlertSettings';
 import SmartEngine from './pages/SmartEngine';
 import Search from './pages/Search';
+import SelfRestore from './pages/SelfRestore';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!api.getToken()) {
@@ -54,6 +55,7 @@ export default function App() {
           <Route path="alerts" element={<AlertSettings />} />
           <Route path="search" element={<Search />} />
           <Route path="smart-engine" element={<SmartEngine />} />
+          <Route path="restore" element={<SelfRestore />} />
         </Route>
       </Routes>
     </BrowserRouter>

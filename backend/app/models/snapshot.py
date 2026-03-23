@@ -36,6 +36,8 @@ class Snapshot(Base):
     items_failed = Column(Integer, default=0)      # Count of items that failed during backup
     items_skipped = Column(Integer, default=0)      # Count of items intentionally skipped
     locked_until = Column(DateTime, nullable=True)  # WORM: immutable until this date
+    validation_status = Column(String(50), nullable=True)  # passed/failed/partial
+    validated_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 

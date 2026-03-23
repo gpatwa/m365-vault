@@ -102,6 +102,16 @@ class Settings(BaseSettings):
     ANOMALY_Z_SCORE_THRESHOLD: float = 2.0   # Standard deviations to flag as anomaly
     HEALTH_CHECK_INTERVAL_MINUTES: int = 5
 
+    # Sensitive Data Scanner
+    SENSITIVE_DATA_SCAN_ENABLED: bool = True
+
+    # Malware Scanner
+    MALWARE_SCAN_ON_RESTORE: bool = True
+
+    # Backup Validation
+    BACKUP_VALIDATION_ENABLED: bool = True
+    VALIDATION_SAMPLE_PERCENT: int = 10
+
     # SSO / OIDC
     SSO_ENABLED: bool = False
     SSO_TENANT_ID: str = ""

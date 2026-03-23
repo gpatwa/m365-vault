@@ -12,6 +12,7 @@ class RestoreType(str, enum.Enum):
     CROSS_USER = "cross_user"
     EXPORT = "export"
     MASS_RECOVERY = "mass_recovery"
+    CROSS_TENANT = "cross_tenant"
 
 
 class RestoreStatus(str, enum.Enum):
@@ -31,7 +32,10 @@ class RestoreJob(Base):
     source_object_id = Column(Integer, ForeignKey("protected_objects.id"), nullable=False)
     restore_type = Column(Enum(RestoreType), nullable=False)
     target_object_id = Column(Integer, nullable=True)  # For cross-user restore
+    target_tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True)  # For cross-tenant restore
     target_path = Column(String(1000), nullable=True)  # For export
+    scan_status = Column(String(50), nullable=True)  # Malware scan: clean/blocked/skipped
+    scan_details = Column(Text, nullable=True)  # JSON with scan results
     status = Column(Enum(RestoreStatus), default=RestoreStatus.QUEUED, nullable=False, index=True)
     started_at = Column(DateTime, nullable=True)
     completed_at = Column(DateTime, nullable=True)

@@ -6,7 +6,7 @@ import { api } from '../api/client';
 export default function AlertSettings() {
   const [testResult, setTestResult] = useState<{ sent: boolean; message: string } | null>(null);
 
-  const { data: config, isLoading } = useQuery({
+  const { data: config } = useQuery({
     queryKey: ['alert-config'],
     queryFn: () => api.get<any>('/alerts/config'),
   });

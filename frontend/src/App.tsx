@@ -15,6 +15,7 @@ import AuditLog from './pages/AuditLog';
 import FailedItems from './pages/FailedItems';
 import SSOCallback from './pages/SSOCallback';
 import AlertSettings from './pages/AlertSettings';
+import SmartEngine from './pages/SmartEngine';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!api.getToken()) {
@@ -50,6 +51,7 @@ export default function App() {
           <Route path="audit" element={<AuditLog />} />
           <Route path="failed-items" element={<FailedItems />} />
           <Route path="alerts" element={<AlertSettings />} />
+          <Route path="smart-engine" element={<SmartEngine />} />
         </Route>
       </Routes>
     </BrowserRouter>

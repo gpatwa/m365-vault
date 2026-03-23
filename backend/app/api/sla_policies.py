@@ -24,6 +24,8 @@ class SLAPolicyCreate(BaseModel):
     retention_days: int = 30
     priority: int = 5
     is_locked: bool = False
+    worm_enabled: bool = False
+    legal_hold: bool = False
 
 
 class SLAPolicyResponse(BaseModel):
@@ -34,6 +36,8 @@ class SLAPolicyResponse(BaseModel):
     retention_days: int
     priority: int
     is_locked: int
+    worm_enabled: int
+    legal_hold: int
     is_active: int
     created_at: str
     protected_objects_count: int = 0
@@ -95,6 +99,8 @@ async def create_sla_policy(
         backup_frequency_hours=req.backup_frequency_hours,
         retention_days=req.retention_days,
         priority=req.priority,
+        worm_enabled=int(req.worm_enabled),
+        legal_hold=int(req.legal_hold),
         is_locked=1 if req.is_locked else 0,
     )
     db.add(policy)

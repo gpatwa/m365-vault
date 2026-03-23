@@ -80,6 +80,81 @@ class AppProvisioningService:
             url += f"&redirect_uri={redirect_uri}"
         return url
 
+    async def ensure_app_configured(
+        self,
+        access_token: str,
+        app_id: str,
+        redirect_uri: str = None,
+    ) -> dict:
+        """Ensure an existing app registration has all required permissions and redirect URI.
+
+        Automatically adds missing permissions and redirect URI to the app registration.
+        Returns a summary of what was added.
+        """
+        async with httpx.AsyncClient(timeout=30) as client:
+            # Get MS Graph SP to look up correct role IDs
+            ms_resp = await client.get(
+                f"https://graph.microsoft.com/v1.0/servicePrincipals?$filter=appId eq '{MS_GRAPH_RESOURCE_APP_ID}'&$select=id,appRoles",
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
+            if ms_resp.status_code != 200 or not ms_resp.json().get("value"):
+                return {"error": "Could not look up Microsoft Graph permissions"}
+
+            ms_sp = ms_resp.json()["value"][0]
+            name_to_id = {}
+            for role in ms_sp.get("appRoles", []):
+                if "Application" in (role.get("allowedMemberTypes") or []):
+                    name_to_id[role["value"]] = role["id"]
+
+            # Find app by appId
+            app_resp = await client.get(
+                f"https://graph.microsoft.com/v1.0/applications?$filter=appId eq '{app_id}'&$select=id,requiredResourceAccess,web",
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
+            if app_resp.status_code != 200 or not app_resp.json().get("value"):
+                return {"error": "App registration not found"}
+
+            app = app_resp.json()["value"][0]
+            app_obj_id = app["id"]
+
+            # Build complete permission list with correct role IDs
+            all_permissions = list(REQUIRED_APP_PERMISSIONS.keys())
+            all_roles = []
+            for perm_name in all_permissions:
+                role_id = name_to_id.get(perm_name)
+                if role_id:
+                    all_roles.append({"id": role_id, "type": "Role"})
+
+            # Update requiredResourceAccess
+            patch_body = {
+                "requiredResourceAccess": [{
+                    "resourceAppId": MS_GRAPH_RESOURCE_APP_ID,
+                    "resourceAccess": all_roles,
+                }]
+            }
+
+            # Add redirect URI if provided
+            existing_uris = app.get("web", {}).get("redirectUris", [])
+            if redirect_uri and redirect_uri not in existing_uris:
+                patch_body["web"] = {"redirectUris": list(set(existing_uris + [redirect_uri]))}
+
+            patch_resp = await client.patch(
+                f"https://graph.microsoft.com/v1.0/applications/{app_obj_id}",
+                json=patch_body,
+                headers={"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"},
+            )
+
+            if patch_resp.status_code == 204:
+                logger.info(f"App {app_id}: configured {len(all_roles)} permissions + redirect URI")
+                return {
+                    "status": "configured",
+                    "permissions_configured": len(all_roles),
+                    "redirect_uri_added": redirect_uri if redirect_uri and redirect_uri not in existing_uris else None,
+                }
+            else:
+                error = patch_resp.json().get("error", {}).get("message", patch_resp.text[:200])
+                return {"error": f"Failed to update app: {error}"}
+
     async def create_app_registration(
         self,
         access_token: str,

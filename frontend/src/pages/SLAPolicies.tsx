@@ -12,7 +12,7 @@ export default function SLAPolicies() {
   const [editPolicy, setEditPolicy] = useState<SLAPolicy | null>(null);
   const [showAssign, setShowAssign] = useState<SLAPolicy | null>(null);
   const [assignMsg, setAssignMsg] = useState('');
-  const [form, setForm] = useState({ name: '', description: '', backup_frequency_hours: 24, retention_days: 30, priority: 5, is_locked: false });
+  const [form, setForm] = useState({ name: '', description: '', backup_frequency_hours: 24, retention_days: 30, priority: 5, is_locked: false, worm_enabled: false, legal_hold: false });
   const qc = useQueryClient();
 
   const { data: policies, isLoading } = useQuery({
@@ -46,13 +46,13 @@ export default function SLAPolicies() {
 
   const openEdit = (p: SLAPolicy) => {
     setEditPolicy(p);
-    setForm({ name: p.name, description: p.description || '', backup_frequency_hours: p.backup_frequency_hours, retention_days: p.retention_days, priority: p.priority, is_locked: !!p.is_locked });
+    setForm({ name: p.name, description: p.description || '', backup_frequency_hours: p.backup_frequency_hours, retention_days: p.retention_days, priority: p.priority, is_locked: !!p.is_locked, worm_enabled: !!(p as any).worm_enabled, legal_hold: !!(p as any).legal_hold });
     setShowForm(true);
   };
 
   const openNew = () => {
     setEditPolicy(null);
-    setForm({ name: '', description: '', backup_frequency_hours: 24, retention_days: 30, priority: 5, is_locked: false });
+    setForm({ name: '', description: '', backup_frequency_hours: 24, retention_days: 30, priority: 5, is_locked: false, worm_enabled: false, legal_hold: false });
     setShowForm(true);
   };
 
@@ -133,10 +133,18 @@ export default function SLAPolicies() {
               <input type="text" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
             </div>
-            <div className="col-span-2 flex items-center gap-4">
+            <div className="col-span-2 flex items-center gap-6">
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" checked={form.is_locked} onChange={e => setForm({ ...form, is_locked: e.target.checked })} className="rounded" />
                 <Lock className="w-4 h-4" /> Retention Lock
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={form.worm_enabled} onChange={e => setForm({ ...form, worm_enabled: e.target.checked })} className="rounded" />
+                <Shield className="w-4 h-4 text-orange-500" /> WORM (Immutable)
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={form.legal_hold} onChange={e => setForm({ ...form, legal_hold: e.target.checked })} className="rounded" />
+                <Lock className="w-4 h-4 text-red-500" /> Legal Hold
               </label>
             </div>
             <div className="col-span-2 flex gap-3">

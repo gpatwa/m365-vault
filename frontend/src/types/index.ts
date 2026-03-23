@@ -36,6 +36,8 @@ export interface SLAPolicy {
   retention_days: number;
   priority: number;
   is_locked: number;
+  worm_enabled: number;
+  legal_hold: number;
   is_active: number;
   created_at: string;
   protected_objects_count?: number;

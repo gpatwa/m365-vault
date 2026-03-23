@@ -13,6 +13,8 @@ import Jobs from './pages/Jobs';
 import Tenants from './pages/Settings';
 import AuditLog from './pages/AuditLog';
 import FailedItems from './pages/FailedItems';
+import SSOCallback from './pages/SSOCallback';
+import AlertSettings from './pages/AlertSettings';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!api.getToken()) {
@@ -26,6 +28,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/sso/callback" element={<SSOCallback />} />
         <Route
           path="/"
           element={
@@ -46,6 +49,7 @@ export default function App() {
           <Route path="settings" element={<Tenants />} />
           <Route path="audit" element={<AuditLog />} />
           <Route path="failed-items" element={<FailedItems />} />
+          <Route path="alerts" element={<AlertSettings />} />
         </Route>
       </Routes>
     </BrowserRouter>

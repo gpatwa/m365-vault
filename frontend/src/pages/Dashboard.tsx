@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Shield, Mail, HardDrive, Globe, CheckCircle, XCircle, Database, Activity, AlertTriangle, ShieldOff, ShieldAlert, ChevronDown, ChevronRight } from 'lucide-react';
+import { Shield, Mail, HardDrive, Globe, MessageSquare, CheckCircle, XCircle, Database, Activity, AlertTriangle, ShieldOff, ShieldAlert, ChevronDown, ChevronRight, Heart } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { api } from '../api/client';
 import StatCard from '../components/StatCard';
@@ -35,6 +35,7 @@ const WorkloadIcon = ({ type, className }: { type: string; className?: string })
     case 'exchange': return <Mail className={className || 'w-4 h-4 text-blue-500'} />;
     case 'onedrive': return <HardDrive className={className || 'w-4 h-4 text-purple-500'} />;
     case 'sharepoint': return <Globe className={className || 'w-4 h-4 text-green-500'} />;
+    case 'teams': return <MessageSquare className={className || 'w-4 h-4 text-pink-500'} />;
     case 'entra_id': return <Shield className={className || 'w-4 h-4 text-amber-500'} />;
     default: return <Shield className={className || 'w-4 h-4 text-gray-500'} />;
   }
@@ -66,6 +67,12 @@ export default function Dashboard() {
     refetchInterval: 30000,
   });
 
+  const { data: healthData } = useQuery({
+    queryKey: ['health-score'],
+    queryFn: () => api.get<{ score: number; components: any; details: any }>('/health/score?tenant_id=2'),
+    refetchInterval: 60000,
+  });
+
   const workloadData = summary ? Object.entries(summary.workloads).map(([name, data]) => ({
     name: name.charAt(0).toUpperCase() + name.slice(1),
     protected: data.protected,
@@ -87,7 +94,36 @@ export default function Dashboard() {
       </div>
 
       {/* Stats cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      {/* Health Score Banner */}
+      {healthData && (
+        <div className={`mb-6 rounded-xl border p-4 flex items-center gap-4 ${
+          healthData.score >= 80 ? 'bg-green-50 border-green-200' :
+          healthData.score >= 50 ? 'bg-yellow-50 border-yellow-200' :
+          'bg-red-50 border-red-200'
+        }`}>
+          <div className={`text-3xl font-bold ${
+            healthData.score >= 80 ? 'text-green-700' :
+            healthData.score >= 50 ? 'text-yellow-700' :
+            'text-red-700'
+          }`}>
+            {healthData.score}
+          </div>
+          <div>
+            <p className="font-semibold text-gray-800">Health Score</p>
+            <p className="text-xs text-gray-500">
+              Success: {healthData.components.success_rate}% | SLA: {healthData.components.sla_adherence}% | Anomalies: {healthData.details.active_anomalies}
+            </p>
+          </div>
+          <Heart className={`w-6 h-6 ml-auto ${
+            healthData.score >= 80 ? 'text-green-500' :
+            healthData.score >= 50 ? 'text-yellow-500' :
+            'text-red-500'
+          }`} />
+        </div>
+      )}
+
+      {/* Stats cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
         <StatCard
           title="Total Protected"
           value={summary?.total_protected ?? 0}
@@ -96,25 +132,32 @@ export default function Dashboard() {
           color="green"
         />
         <StatCard
-          title="Exchange Mailboxes"
+          title="Exchange"
           value={summary?.workloads?.exchange?.total ?? 0}
           subtitle={`${summary?.workloads?.exchange?.protected ?? 0} protected`}
           icon={Mail}
           color="blue"
         />
         <StatCard
-          title="OneDrive Accounts"
+          title="OneDrive"
           value={summary?.workloads?.onedrive?.total ?? 0}
           subtitle={`${summary?.workloads?.onedrive?.protected ?? 0} protected`}
           icon={HardDrive}
           color="purple"
         />
         <StatCard
-          title="SharePoint Sites"
+          title="SharePoint"
           value={summary?.workloads?.sharepoint?.total ?? 0}
           subtitle={`${summary?.workloads?.sharepoint?.protected ?? 0} protected`}
           icon={Globe}
           color="indigo"
+        />
+        <StatCard
+          title="Teams"
+          value={summary?.workloads?.teams?.total ?? 0}
+          subtitle={`${summary?.workloads?.teams?.protected ?? 0} protected`}
+          icon={MessageSquare}
+          color="red"
         />
         <StatCard
           title="Entra ID"

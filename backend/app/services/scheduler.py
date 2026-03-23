@@ -140,6 +140,11 @@ async def cleanup_expired_snapshots():
             expired_count = 0
             for snapshot, obj, sla in rows:
                 expiry_date = snapshot.created_at + timedelta(days=sla.retention_days)
+                # Block deletion if WORM locked or legal hold
+                if snapshot.locked_until and datetime.utcnow() < snapshot.locked_until:
+                    continue  # WORM: immutable until locked_until
+                if sla.legal_hold:
+                    continue  # Legal hold: never delete
                 if datetime.utcnow() > expiry_date and not sla.is_locked:
                     # Mark as expired
                     snapshot.status = SnapshotStatus.EXPIRED
@@ -180,6 +185,84 @@ async def retry_failed_jobs():
             await db.rollback()
 
 
+async def run_smart_engine():
+    """Run Smart Engine: update baselines, detect anomalies, send alerts."""
+    from app.services.smart_engine import SmartEngine
+    from app.services.alert_service import alert_service
+
+    async with async_session() as db:
+        try:
+            # Get all active tenants
+            result = await db.execute(
+                select(Tenant).where(Tenant.status == TenantStatus.ACTIVE)
+            )
+            tenants = result.scalars().all()
+
+            engine = SmartEngine(db)
+            total_anomalies = 0
+
+            for tenant in tenants:
+                # Update baselines
+                await engine.update_baselines(tenant.id)
+
+                # Detect anomalies
+                anomalies = await engine.detect_anomalies(tenant.id)
+                total_anomalies += len(anomalies)
+
+                # Alert on critical anomalies
+                for anomaly in anomalies:
+                    if anomaly["severity"] == "critical":
+                        await alert_service.notify(
+                            event_type="anomaly.detected",
+                            title=f"Critical anomaly: {anomaly['workload']} {anomaly['metric']}",
+                            details=anomaly["message"],
+                            severity="critical",
+                            tenant_name=tenant.name,
+                            workload=anomaly["workload"],
+                        )
+
+            await db.commit()
+            if total_anomalies > 0:
+                logger.warning(f"Smart Engine: {total_anomalies} anomalies detected across {len(tenants)} tenants")
+
+        except Exception as e:
+            logger.error(f"Smart Engine error: {e}")
+            await db.rollback()
+
+
+async def apply_worm_locks():
+    """Apply WORM locks to snapshots in WORM-enabled SLA policies."""
+    from app.models.snapshot import Snapshot, SnapshotStatus
+
+    async with async_session() as db:
+        try:
+            # Find completed snapshots without locked_until in WORM-enabled policies
+            result = await db.execute(
+                select(Snapshot, SLAPolicy)
+                .join(ProtectedObject, Snapshot.protected_object_id == ProtectedObject.id)
+                .join(SLAPolicy, ProtectedObject.sla_policy_id == SLAPolicy.id)
+                .where(
+                    Snapshot.status == SnapshotStatus.COMPLETED,
+                    Snapshot.locked_until.is_(None),
+                    SLAPolicy.worm_enabled == 1,
+                )
+            )
+            rows = result.all()
+
+            locked_count = 0
+            for snapshot, sla in rows:
+                snapshot.locked_until = snapshot.created_at + timedelta(days=sla.retention_days)
+                locked_count += 1
+
+            await db.commit()
+            if locked_count > 0:
+                logger.info(f"WORM: Applied retention locks to {locked_count} snapshots")
+
+        except Exception as e:
+            logger.error(f"WORM lock error: {e}")
+            await db.rollback()
+
+
 def start_scheduler():
     """Start the background scheduler."""
     scheduler.add_job(
@@ -203,8 +286,22 @@ def start_scheduler():
         name="Retry failed backup jobs with backoff",
         replace_existing=True,
     )
+    scheduler.add_job(
+        run_smart_engine,
+        IntervalTrigger(minutes=settings.HEALTH_CHECK_INTERVAL_MINUTES),
+        id="smart_engine",
+        name="Smart Engine: baselines + anomaly detection",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        apply_worm_locks,
+        IntervalTrigger(hours=1),
+        id="worm_locks",
+        name="Apply WORM retention locks to new snapshots",
+        replace_existing=True,
+    )
     scheduler.start()
-    logger.info("Backup scheduler started (with retry engine)")
+    logger.info("Backup scheduler started (with retry engine, smart engine, WORM)")
 
 
 def stop_scheduler():

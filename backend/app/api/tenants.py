@@ -461,3 +461,45 @@ async def check_permissions(
     except Exception as e:
         logger.error(f"Permission check failed for tenant {tenant_id}: {e}")
         return {"error": str(e), "consent_url": consent_url}
+
+
+@router.post("/{tenant_id}/configure-permissions")
+async def configure_permissions(
+    tenant_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Auto-configure all required permissions and redirect URI in the app registration.
+
+    Requires the app to have Application.ReadWrite.All permission.
+    After this, clicking 'Grant All Permissions' will show all required scopes.
+    """
+    from app.services.app_provisioning import app_provisioning
+    from app.services.graph_client import GraphClient
+
+    tenant = await db.get(Tenant, tenant_id)
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+
+    try:
+        client_secret = encryption_service.decrypt_string(tenant.client_secret_encrypted)
+        graph = GraphClient(tenant.ms_tenant_id, tenant.client_id, client_secret)
+        token = await graph._get_token()
+
+        # Determine redirect URI from request origin
+        redirect_uri = f"http://localhost:5173/settings"
+
+        result = await app_provisioning.ensure_app_configured(
+            access_token=token,
+            app_id=tenant.client_id,
+            redirect_uri=redirect_uri,
+        )
+
+        await audit_log(db, current_user, "configure_permissions", "tenant", tenant_id,
+                       details=f"Auto-configured permissions for {tenant.name}")
+
+        return result
+
+    except Exception as e:
+        logger.error(f"Auto-configure failed for tenant {tenant_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

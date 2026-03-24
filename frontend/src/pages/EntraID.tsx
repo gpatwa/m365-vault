@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Shield, Users, KeyRound, ShieldCheck, AppWindow, MapPin, UserCog, RefreshCw, Loader2 } from 'lucide-react';
+import { Shield, Users, KeyRound, ShieldCheck, AppWindow, MapPin, UserCog } from 'lucide-react';
 import { api } from '../api/client';
-import { Breadcrumb } from '../components/design-system';
+import { WorkloadPageLayout } from '../components/design-system';
 import { useTenantId } from '../hooks/useTenant';
-import { formatSize, timeAgo } from '../utils/format';
+import { formatSize } from '../utils/format';
 import DataTable, { type Column, type FilterOption } from '../components/DataTable';
 
 interface EntraSummary {
@@ -137,39 +137,22 @@ export default function EntraID() {
   }
 
   return (
-    <div className="space-y-6">
-      <Breadcrumb items={[{ label: 'Microsoft 365', path: '/' }, { label: 'Entra ID' }]} />
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-amber-50 rounded-lg">
-            <Shield className="w-6 h-6 text-amber-600" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Entra ID</h1>
-            <p className="text-sm text-gray-500">
-              {summary.last_backup ? `Last backup ${timeAgo(summary.last_backup)}` : 'No backups yet'}
-              {summary.item_count ? ` \u2022 ${summary.item_count} objects \u2022 ${formatSize(summary.size_bytes || 0)}` : ''}
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={() => backupMutation.mutate()}
-          disabled={backupMutation.isPending}
-          className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 disabled:opacity-50 flex items-center gap-2"
-        >
-          {backupMutation.isPending
-            ? <><Loader2 className="w-4 h-4 animate-spin" /> Backing up...</>
-            : <><RefreshCw className="w-4 h-4" /> Backup Now</>
-          }
-        </button>
-      </div>
-
-      {backupMutation.isSuccess && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-700 flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4" /> Backup completed successfully — {(backupMutation.data as any)?.item_count || 0} objects backed up
-        </div>
-      )}
+    <WorkloadPageLayout
+      workloadLabel="Entra ID"
+      workloadIcon={Shield}
+      iconColor="text-amber-600"
+      stats={{
+        protected: summary.protected ? 1 : 0,
+        total: 1,
+        lastBackup: summary.last_backup || null,
+        totalItems: summary.item_count || 0,
+        totalSize: summary.size_bytes || 0,
+        successRate: 100,
+      }}
+      onBackupAll={() => backupMutation.mutate()}
+      isBackingUp={backupMutation.isPending}
+      statusMessage={backupMutation.isSuccess ? `Backup completed — ${(backupMutation.data as any)?.item_count || 0} objects backed up` : undefined}
+    >
 
       {/* Object Type Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
@@ -209,6 +192,6 @@ export default function EntraID() {
           emptyMessage={selectedType ? 'No items of this type' : 'No backed-up objects yet'}
         />
       )}
-    </div>
+    </WorkloadPageLayout>
   );
 }

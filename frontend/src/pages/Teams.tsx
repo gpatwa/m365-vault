@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { MessageSquare, RefreshCw, Loader2, CheckCircle, Users } from 'lucide-react';
+import { MessageSquare, RefreshCw, Loader2, Users } from 'lucide-react';
 import { api } from '../api/client';
-import { Breadcrumb } from '../components/design-system';
+import { WorkloadPageLayout } from '../components/design-system';
 import { useTenantId } from '../hooks/useTenant';
 import { formatSize, timeAgo } from '../utils/format';
 import DataTable, { type Column } from '../components/DataTable';
@@ -86,24 +86,20 @@ export default function Teams() {
   }
 
   return (
-    <div className="space-y-6">
-      <Breadcrumb items={[{ label: 'Microsoft 365', path: '/' }, { label: 'Teams' }]} />
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-2 bg-pink-50 rounded-lg">
-          <MessageSquare className="w-6 h-6 text-pink-600" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Microsoft Teams</h1>
-          <p className="text-sm text-gray-500">Team channels, chats, and messages</p>
-        </div>
-      </div>
-
-      {backupMutation.isSuccess && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-700 flex items-center gap-2">
-          <CheckCircle className="w-4 h-4" /> Backup completed successfully
-        </div>
-      )}
+    <WorkloadPageLayout
+      workloadLabel="Teams"
+      workloadIcon={MessageSquare}
+      iconColor="text-pink-600"
+      stats={{
+        protected: 0, total: 0,
+        lastBackup: null,
+        totalItems: 0, totalSize: 0,
+        successRate: 100,
+      }}
+      onBackupAll={() => backupMutation.mutate(undefined)}
+      isBackingUp={backupMutation.isPending}
+      statusMessage={backupMutation.isSuccess ? 'Backup completed successfully' : undefined}
+    >
 
       {/* Teams DataTable */}
       <DataTable<Team>
@@ -138,6 +134,6 @@ export default function Teams() {
           </button>
         )}
       />
-    </div>
+    </WorkloadPageLayout>
   );
 }

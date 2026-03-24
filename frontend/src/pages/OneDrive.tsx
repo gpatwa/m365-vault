@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { HardDrive, Search, Folder, FileText, ArrowRight, RefreshCw, Download, Loader2 } from 'lucide-react';
 import { api } from '../api/client';
 import DataTable, { type Column } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
 import { useTenantId } from '../hooks/useTenant';
-import { Breadcrumb } from '../components/design-system';
+import { WorkloadPageLayout, Breadcrumb } from '../components/design-system';
 import { formatSize, timeAgo } from '../utils/format';
 import type { ProtectedObject, Snapshot, SnapshotItem } from '../types';
 
@@ -200,28 +200,29 @@ export default function OneDrive() {
     },
   ];
 
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">OneDrive</h1>
-          <p className="text-gray-500">Manage and protect OneDrive accounts</p>
-        </div>
-        <button
-          onClick={() => backupAllMutation.mutate()}
-          disabled={backupAllMutation.isPending}
-          className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 flex items-center gap-2 disabled:opacity-50"
-        >
-          {backupAllMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-          {backupAllMutation.isPending ? 'Backing up all...' : 'Backup All Accounts'}
-        </button>
-      </div>
+  const { data: wlSummary } = useQuery({
+    queryKey: ['dashboard-summary'],
+    queryFn: () => api.get<any>('/dashboard/summary'),
+    staleTime: 30000,
+  });
+  const wlStats = useMemo(() => {
+    const wl = wlSummary?.workloads?.onedrive || {};
+    return {
+      protected: wl.protected || 0, total: wl.total || 0,
+      lastBackup: null as string | null, totalItems: 0, totalSize: 0, successRate: 100,
+    };
+  }, [wlSummary]);
 
-      {backupMsg && !selectedAccount && (
-        <div className={`rounded-lg p-3 mb-4 text-sm ${backupMsg.includes('failed') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-green-50 border border-green-200 text-green-700'}`}>
-          {backupMsg}
-        </div>
-      )}
+  return (
+    <WorkloadPageLayout
+      workloadLabel="OneDrive"
+      workloadIcon={HardDrive}
+      iconColor="text-purple-600"
+      stats={wlStats}
+      onBackupAll={() => backupAllMutation.mutate()}
+      isBackingUp={backupAllMutation.isPending}
+      statusMessage={backupMsg}
+    >
 
       {/* Cross-snapshot file search */}
       <div className="mb-6">
@@ -288,6 +289,6 @@ export default function OneDrive() {
         onRowClick={(row) => setSelectedAccount(row)}
         rowKey="id"
       />
-    </div>
+    </WorkloadPageLayout>
   );
 }

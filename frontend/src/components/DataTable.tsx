@@ -97,7 +97,7 @@ export default function DataTable<T extends Record<string, any>>({
   endpoint,
   columns,
   extraParams = {},
-  searchable = true,
+  searchable = false,
   searchPlaceholder = 'Search...',
   filters = [],
   exportable = false,

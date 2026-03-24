@@ -12,7 +12,6 @@ import { RefreshCw, Loader2, type LucideIcon } from 'lucide-react';
 import Breadcrumb, { type BreadcrumbItem } from './Breadcrumb';
 import HeroSummaryBar, { type HeroStat } from './HeroSummaryBar';
 import ActionBanner, { type ActionItem } from './ActionBanner';
-import SearchTrigger from './SearchTrigger';
 
 interface WorkloadPageLayoutProps {
   /** Workload display name (e.g., "Exchange", "SharePoint") */
@@ -172,13 +171,6 @@ export default function WorkloadPageLayout({
       {/* Action Banners */}
       <ActionBanner items={actions} />
 
-      {/* Unified Search */}
-      <div className="mb-6">
-        <SearchTrigger
-          placeholder={`Search ${workloadLabel} backups...`}
-          workloadFilter={workloadLabel.toLowerCase().replace(' ', '_')}
-        />
-      </div>
 
       {/* Content */}
       {children}

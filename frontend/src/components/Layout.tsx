@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Mail, HardDrive, Globe, Shield, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search, RotateCcw, BarChart3, Gauge, ChevronDown } from 'lucide-react';
+import { LayoutDashboard, Mail, HardDrive, Globe, Shield, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, RotateCcw, BarChart3, Gauge, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import CommandPalette from './CommandPalette';
 
@@ -171,19 +171,6 @@ export default function Layout() {
 
       {/* Main content */}
       <main className="flex-1 overflow-auto">
-        {/* Top bar with search */}
-        <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-gray-100 px-6 py-2.5 flex items-center justify-between">
-          <button
-            onClick={() => setCommandOpen(true)}
-            className="flex items-center gap-2.5 px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-400 hover:border-gray-300 hover:text-gray-500 hover:shadow-sm transition-all w-full max-w-md"
-          >
-            <Search className="w-4 h-4" />
-            <span className="flex-1 text-left">Search backups, check status, investigate...</span>
-            <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-white border border-gray-200 rounded text-[10px] text-gray-400 font-mono">
-              ⌘K
-            </kbd>
-          </button>
-        </div>
         <div className="p-6">
           <Outlet />
         </div>

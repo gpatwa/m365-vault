@@ -1,4 +1,4 @@
-"""Database models for M365 Data Protection."""
+"""Database models for Shieldio — SaaS Data Protection."""
 from app.models.user import User
 from app.models.tenant import Tenant
 from app.models.sla_policy import SLAPolicy

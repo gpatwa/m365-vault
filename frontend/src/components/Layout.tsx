@@ -113,8 +113,8 @@ export default function Layout() {
           <div className="flex items-center gap-2">
             <Shield className="w-7 h-7 text-blue-400" />
             <div>
-              <h1 className="text-base font-bold leading-tight">M365 Vault</h1>
-              <p className="text-[10px] text-gray-500">Data Protection</p>
+              <h1 className="text-base font-bold leading-tight">Shieldio</h1>
+              <p className="text-[10px] text-gray-500">Protect Your Cloud Data</p>
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ──────────────────────────────────────────────────────────────────────
-# M365 Vault — Fully automated Azure + GitHub bootstrap
+# Shieldio — Fully automated Azure + GitHub bootstrap
 #
 # Zero prerequisites required — this script handles everything:
 #   1. Auto-installs missing tools (az, gh, jq, terraform) via Homebrew

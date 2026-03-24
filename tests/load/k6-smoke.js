@@ -1,5 +1,5 @@
 /**
- * M365 Vault — k6 Smoke Test
+ * Shieldio — k6 Smoke Test
  *
  * Quick validation that core endpoints respond correctly under light load.
  * Usage: k6 run tests/load/k6-smoke.js

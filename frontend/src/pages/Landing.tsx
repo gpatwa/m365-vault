@@ -61,7 +61,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <Shield className="w-7 h-7 text-blue-600" />
-            <span className="text-lg font-bold text-gray-900">M365 Vault</span>
+            <span className="text-lg font-bold text-gray-900">Shieldio</span>
           </Link>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
             <a href="#features" className="hover:text-gray-900 transition-colors">Features</a>
@@ -84,12 +84,12 @@ export default function Landing() {
       <section className="pt-20 pb-16 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium mb-6">
-            <Zap className="w-3 h-3" /> Open-Source M365 Data Protection
+            <Zap className="w-3 h-3" /> SaaS Data Protection Platform
           </div>
           <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 leading-tight tracking-tight">
             Protect Your<br />
             <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              Microsoft 365 Data
+              Cloud Data
             </span>
           </h1>
           <p className="mt-6 text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed">
@@ -161,11 +161,11 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ═══ Why M365 Vault ═══ */}
+      {/* ═══ Why Shieldio ═══ */}
       <section className="py-16 px-6 bg-gray-900 text-white">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold">Why M365 Vault?</h2>
+            <h2 className="text-3xl font-bold">Why Shieldio?</h2>
             <p className="mt-2 text-gray-400">What makes us different from Veeam, Druva, and Commvault</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -228,7 +228,7 @@ export default function Landing() {
       {/* ═══ CTA ═══ */}
       <section className="py-16 px-6 bg-blue-600">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-white">Ready to protect your M365 data?</h2>
+          <h2 className="text-3xl font-bold text-white">Ready to protect your cloud data?</h2>
           <p className="mt-3 text-blue-100 text-lg">Free for up to 25 users. Deploy in minutes.</p>
           <div className="mt-8 flex items-center justify-center gap-4">
             <Link to="/login" className="px-6 py-3 bg-white text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition-colors flex items-center gap-2">
@@ -245,9 +245,9 @@ export default function Landing() {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <Shield className="w-5 h-5 text-blue-400" />
-                <span className="font-bold text-white">M365 Vault</span>
+                <span className="font-bold text-white">Shieldio</span>
               </div>
-              <p className="text-sm">Open-source M365 data protection platform.</p>
+              <p className="text-sm">SaaS data protection platform.</p>
             </div>
             <div>
               <h4 className="font-semibold text-white text-sm mb-3">Product</h4>

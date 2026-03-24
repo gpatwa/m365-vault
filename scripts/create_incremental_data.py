@@ -215,7 +215,7 @@ Revenue Highlights:
 - Net retention: 118%
 
 Product Updates:
-- M365 Vault launched to 3 pilot customers
+- Shieldio launched to 3 pilot customers
 - SharePoint backup GA this month
 - OneDrive incremental backup in beta
 - Compression pipeline reduced storage costs by 40%
@@ -304,8 +304,8 @@ INCREMENTAL_CALENDAR_EVENTS = [
         "location": {"displayName": "Conference Room B"},
     },
     {
-        "subject": "Customer Demo: M365 Vault",
-        "body": {"contentType": "text", "content": "Demo of M365 Vault backup and restore capabilities to Acme Corp."},
+        "subject": "Customer Demo: Shieldio",
+        "body": {"contentType": "text", "content": "Demo of Shieldio backup and restore capabilities to Acme Corp."},
         "start": {"dateTime": (NOW + timedelta(days=2, hours=4)).strftime("%Y-%m-%dT%H:%M:%S"), "timeZone": "UTC"},
         "end": {"dateTime": (NOW + timedelta(days=2, hours=5)).strftime("%Y-%m-%dT%H:%M:%S"), "timeZone": "UTC"},
         "location": {"displayName": "Zoom Meeting"},
@@ -447,7 +447,7 @@ Connection pool exhaustion due to long-running backup queries.
     },
     {
         "name": f"Release_Notes_v2.3.1_{TODAY}.md",
-        "content": f"""# Release Notes - M365 Vault v2.3.1
+        "content": f"""# Release Notes - Shieldio v2.3.1
 
 **Release Date:** {TODAY}
 
@@ -516,7 +516,7 @@ Implement a layered pipeline: Raw -> Compress -> Hash -> Dedup -> Encrypt -> Sto
     {
         "name": f"Customer_Onboarding_Guide_{NOW.strftime('%Y%m%d')}.docx",
         "content": f"""Customer Onboarding Guide
-M365 Vault - Data Protection Platform
+Shieldio - Data Protection Platform
 Last Updated: {TODAY}
 
 Step 1: Azure AD App Registration

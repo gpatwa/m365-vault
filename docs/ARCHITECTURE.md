@@ -1,8 +1,8 @@
-# M365 Vault — Architecture Guide
+# Shieldio — Architecture Guide
 
 ## 1. System Overview
 
-M365 Vault is an enterprise backup and recovery platform for Microsoft 365 workloads
+Shieldio is a SaaS data protection platform for Microsoft 365 workloads
 (Exchange Online, OneDrive for Business, SharePoint Online). It connects to tenants via
 the Microsoft Graph API, discovers protectable objects, runs SLA-driven backup schedules,
 stores encrypted point-in-time snapshots, and provides granular restore capabilities.

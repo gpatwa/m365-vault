@@ -1,4 +1,4 @@
-"""M365 Data Protection — FastAPI Application Entry Point."""
+"""Shieldio — SaaS Data Protection — FastAPI Application Entry Point."""
 import json
 import logging
 import time
@@ -71,7 +71,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
-    description="M365 Vault — Enterprise Backup & Recovery for Exchange, OneDrive, and SharePoint",
+    description="Shieldio — SaaS Data Protection for Exchange, OneDrive, SharePoint, Teams, and Entra ID",
     lifespan=lifespan,
 )
 

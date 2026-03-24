@@ -1,6 +1,6 @@
-# M365 Vault — Compliance & Security Report
+# Shieldio — Compliance & Security Report
 
-**Product:** M365 Vault v1.1.0
+**Product:** Shieldio v1.1.0
 **Report Date:** 2026-03-16
 **Classification:** Internal — Confidential
 **Prepared By:** Security & Compliance Engineering
@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary
 
-M365 Vault is a data protection platform for Microsoft 365 workloads. It provides automated backup, encrypted storage, and policy-driven retention for Exchange Online mailboxes, SharePoint Online document libraries, and associated collaboration data.
+Shieldio is a data protection platform for Microsoft 365 workloads. It provides automated backup, encrypted storage, and policy-driven retention for Exchange Online mailboxes, SharePoint Online document libraries, and associated collaboration data.
 
 This report documents the security controls implemented in version 1.1.0, assesses their alignment with GDPR, SOC 2 Type II, and HIPAA regulatory frameworks, and identifies gaps that must be addressed before production deployment.
 
@@ -29,7 +29,7 @@ Several production-hardening gaps remain, most notably around key management (no
 
 ### 2.1 Encryption at Rest
 
-M365 Vault implements a two-layer envelope encryption scheme using AES-256-GCM, provided by the `cryptography` library's `AESGCM` primitive.
+Shieldio implements a two-layer envelope encryption scheme using AES-256-GCM, provided by the `cryptography` library's `AESGCM` primitive.
 
 | Property | Implementation |
 |---|---|
@@ -222,7 +222,7 @@ The `classify_error()` function distinguishes retryable from permanent errors fo
 
 ### 7.1 GDPR (General Data Protection Regulation)
 
-| GDPR Requirement | M365 Vault Control | Status |
+| GDPR Requirement | Shieldio Control | Status |
 |---|---|---|
 | Data minimization | Backup scope defined by SLA policy and protected object assignment | Implemented |
 | Encryption of personal data | AES-256-GCM envelope encryption at rest; TLS in transit | Implemented |
@@ -234,7 +234,7 @@ The `classify_error()` function distinguishes retryable from permanent errors fo
 
 ### 7.2 SOC 2 Type II
 
-| SOC 2 Criterion | M365 Vault Control | Status |
+| SOC 2 Criterion | Shieldio Control | Status |
 |---|---|---|
 | CC6.1 — Logical access | RBAC with three roles; JWT authentication; inactive-user blocking | Implemented |
 | CC6.2 — Credentials | bcrypt password hashing; configurable token expiration | Implemented |
@@ -247,7 +247,7 @@ The `classify_error()` function distinguishes retryable from permanent errors fo
 
 ### 7.3 HIPAA (Health Insurance Portability and Accountability Act)
 
-| HIPAA Safeguard | M365 Vault Control | Status |
+| HIPAA Safeguard | Shieldio Control | Status |
 |---|---|---|
 | 164.312(a)(1) — Access control | RBAC; unique user identifiers; emergency access not implemented | Partial |
 | 164.312(a)(2)(iv) — Encryption | AES-256-GCM meets the NIST standard for ePHI encryption | Implemented |

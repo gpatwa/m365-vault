@@ -1,6 +1,6 @@
 """App Registration Provisioning Service.
 
-Automates the creation of Azure AD app registrations for M365 Vault tenants.
+Automates the creation of Azure AD app registrations for Shieldio tenants.
 
 Flow:
 1. Admin signs in with Microsoft (delegated flow, needs Application.ReadWrite.All)
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 # Microsoft Graph resource app ID (constant)
 MS_GRAPH_RESOURCE_APP_ID = "00000003-0000-0000-c000-000000000000"
 
-# Required application permissions for M365 Vault backup/restore
+# Required application permissions for Shieldio backup/restore
 REQUIRED_APP_PERMISSIONS = {
     # Backup (read-only)
     "Mail.Read": "810c84a8-4a9e-49e6-bf7d-12d183f40d01",
@@ -64,7 +64,7 @@ BACKUP_PERMISSIONS = {
 
 
 class AppProvisioningService:
-    """Automates Azure AD app registration for tenant onboarding."""
+    """Automates Azure AD app registration for Shieldio tenant onboarding."""
 
     def get_admin_consent_url(self, tenant_id: str, client_id: str, redirect_uri: str = None) -> str:
         """Generate the admin consent URL for an existing app registration.
@@ -158,7 +158,7 @@ class AppProvisioningService:
     async def create_app_registration(
         self,
         access_token: str,
-        app_name: str = "M365 Vault Backup",
+        app_name: str = "Shieldio Backup",
     ) -> dict:
         """Create an app registration in the customer's tenant with all required permissions.
 
@@ -190,7 +190,7 @@ class AppProvisioningService:
             "web": {
                 "redirectUris": [settings.SSO_REDIRECT_URI] if settings.SSO_REDIRECT_URI else [],
             },
-            "notes": f"Created by M365 Vault on {datetime.utcnow().isoformat()}",
+            "notes": f"Created by Shieldio on {datetime.utcnow().isoformat()}",
         }
 
         async with httpx.AsyncClient(timeout=30) as client:
@@ -223,7 +223,7 @@ class AppProvisioningService:
         self,
         access_token: str,
         app_object_id: str,
-        description: str = "M365 Vault Auto-Generated",
+        description: str = "Shieldio Auto-Generated",
     ) -> dict:
         """Create a client secret for an app registration.
 

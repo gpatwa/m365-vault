@@ -1,4 +1,4 @@
-"""Alembic env.py — configured for M365 Vault SQLAlchemy models."""
+"""Alembic env.py — configured for Shieldio SQLAlchemy models."""
 import os
 import sys
 from logging.config import fileConfig

@@ -1,6 +1,6 @@
 # Azure Deployment Guide
 
-Deploy M365 Vault to Azure using Terraform (infrastructure) and GitHub Actions (CI/CD).
+Deploy Shieldio to Azure using Terraform (infrastructure) and GitHub Actions (CI/CD).
 
 ## Architecture
 

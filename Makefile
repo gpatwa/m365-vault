@@ -1,5 +1,5 @@
 # ──────────────────────────────────────────────────────────────────────
-# M365 Vault — Unified Task Runner
+# Shieldio — Unified Task Runner
 # ──────────────────────────────────────────────────────────────────────
 .DEFAULT_GOAL := help
 SHELL := /bin/bash
@@ -17,7 +17,7 @@ SUBSCRIPTION_ID ?= $(shell az account show --query id -o tsv 2>/dev/null)
 .PHONY: help
 help: ## Show this help
 	@echo ""
-	@echo "M365 Vault — Available Commands"
+	@echo "Shieldio — Available Commands"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		sed 's/^.*Makefile://' | sort | \

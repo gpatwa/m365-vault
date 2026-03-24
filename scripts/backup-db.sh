@@ -1,5 +1,5 @@
 #!/bin/bash
-# PostgreSQL backup script for M365 Vault
+# PostgreSQL backup script for Shieldio
 # Run via cron: 0 2 * * * /path/to/backup-db.sh
 #
 # For Azure: Azure Flexible Server has built-in automated backups (7-35 days).

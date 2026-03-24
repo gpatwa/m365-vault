@@ -1,5 +1,5 @@
 /**
- * M365 Vault — k6 Stress Test
+ * Shieldio — k6 Stress Test
  *
  * Tests system behavior under increasing load to find breaking point.
  * Usage: k6 run tests/load/k6-stress.js

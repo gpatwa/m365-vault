@@ -78,7 +78,7 @@ export default function Dashboard() {
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500">M365 Vault Overview</p>
+        <p className="text-gray-500">Shieldio Overview</p>
       </div>
 
       {/* Stats cards */}

@@ -185,7 +185,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
       {/* Progress Header */}
       <div className="bg-gray-50 border-b px-6 py-4">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-bold text-gray-900">Connect M365 Tenant</h2>
+          <h2 className="text-lg font-bold text-gray-900">Connect Microsoft 365 Tenant</h2>
           <span className="text-sm text-gray-500">Step {step} of 3</span>
         </div>
         <div className="flex gap-1">
@@ -214,7 +214,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
         {step === 1 && (
           <div>
             <p className="text-gray-600 text-sm mb-4">
-              Enter your Azure AD App Registration credentials to connect your M365 tenant.
+              Enter your Azure AD App Registration credentials to connect your Microsoft 365 tenant.
             </p>
 
             {/* Setup Guide */}
@@ -231,7 +231,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                 <p className="font-medium">Quick Setup Guide:</p>
                 <ol className="list-decimal list-inside space-y-1.5 text-blue-700">
                   <li>Go to <a href="https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade" target="_blank" rel="noopener noreferrer" className="underline inline-flex items-center gap-1">Azure Portal &gt; App Registrations <ExternalLink className="w-3 h-3" /></a></li>
-                  <li>Click "New registration" &gt; Name it "M365 Vault Backup" &gt; Register</li>
+                  <li>Click "New registration" &gt; Name it "Shieldio Backup" &gt; Register</li>
                   <li>Go to "API permissions" &gt; Add: <code className="bg-blue-100 px-1 rounded">Mail.Read</code>, <code className="bg-blue-100 px-1 rounded">Files.Read.All</code>, <code className="bg-blue-100 px-1 rounded">Sites.Read.All</code>, <code className="bg-blue-100 px-1 rounded">User.Read.All</code>, <code className="bg-blue-100 px-1 rounded">Directory.Read.All</code></li>
                   <li>Click "Grant admin consent"</li>
                   <li>Go to "Certificates & secrets" &gt; New client secret &gt; Copy the value</li>
@@ -312,7 +312,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
             {discovering ? (
               <div className="text-center py-12">
                 <Loader2 className="w-10 h-10 animate-spin text-blue-600 mx-auto mb-4" />
-                <p className="text-lg font-medium text-gray-700">Discovering M365 workloads...</p>
+                <p className="text-lg font-medium text-gray-700">Discovering Microsoft 365 workloads...</p>
                 <p className="text-sm text-gray-500 mt-1">Scanning mailboxes, drives, sites, and directory objects</p>
               </div>
             ) : discovery ? (

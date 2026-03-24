@@ -1,5 +1,5 @@
 #!/bin/bash
-# M365 Vault — PostgreSQL backup script
+# Shieldio — PostgreSQL backup script
 # Run via cron: 0 2 * * * /path/to/db-backup.sh
 #
 # Supports:

@@ -98,7 +98,7 @@ export default function Settings() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Tenants</h1>
-          <p className="text-gray-500">Manage M365 tenant connections and lifecycle</p>
+          <p className="text-gray-500">Manage Microsoft 365 tenant connections and lifecycle</p>
         </div>
         {!showWizard && (
           <button onClick={() => setShowWizard(true)} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
@@ -450,7 +450,7 @@ export default function Settings() {
           <div className="text-center py-12 text-gray-400">
             <Building2 className="w-12 h-12 mx-auto mb-3 text-gray-300" />
             <p className="text-lg font-medium">No tenants configured</p>
-            <p className="text-sm">Add your first M365 tenant to get started</p>
+            <p className="text-sm">Add your first Microsoft 365 tenant to get started</p>
           </div>
         )}
       </div>

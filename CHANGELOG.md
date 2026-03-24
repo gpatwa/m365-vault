@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to M365 Vault are documented in this file.
+All notable changes to Shieldio are documented in this file.
 
 ## [1.5.0] - 2026-03-20
 

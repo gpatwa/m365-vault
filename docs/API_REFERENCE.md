@@ -1,4 +1,4 @@
-# M365 Vault — API Reference
+# Shieldio — API Reference
 
 Base URL: `/api`
 

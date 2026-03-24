@@ -1,5 +1,5 @@
 /**
- * M365 Vault — k6 Load Test Suite
+ * Shieldio — k6 Load Test Suite
  *
  * Tests API performance under load for scale readiness.
  *

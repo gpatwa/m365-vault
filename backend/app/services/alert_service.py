@@ -51,7 +51,7 @@ class AlertService:
             try:
                 await self._send_email(
                     to=settings.ALERT_EMAIL_RECIPIENTS,
-                    subject=f"[M365 Vault] [{severity.upper()}] {title}",
+                    subject=f"[Shieldio] [{severity.upper()}] {title}",
                     body=self._format_email(payload),
                 )
             except Exception as e:
@@ -116,7 +116,7 @@ class AlertService:
                 {'<p style="margin: 0; color: #6b7280; font-size: 13px;">Workload: ' + payload['workload'] + '</p>' if payload.get('workload') else ''}
             </div>
             <p style="color: #9ca3af; font-size: 11px; margin-top: 12px;">
-                Sent by M365 Vault &bull; <a href="#" style="color: #9ca3af;">Manage alerts</a>
+                Sent by Shieldio &bull; <a href="#" style="color: #9ca3af;">Manage alerts</a>
             </p>
         </div>
         """
@@ -125,7 +125,7 @@ class AlertService:
         """Send a test alert to verify configuration."""
         await self.notify(
             event_type="test",
-            title="Test Alert — M365 Vault",
+            title="Test Alert — Shieldio",
             details="This is a test alert to verify your notification configuration is working correctly.",
             severity="info",
         )

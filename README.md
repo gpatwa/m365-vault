@@ -1,8 +1,8 @@
-# M365 Vault
+# Shieldio
 
-**Enterprise Backup & Recovery for Microsoft 365**
+**SaaS Data Protection Platform — Protect Your Cloud Data**
 
-M365 Vault is a self-hosted SaaS data protection platform for Microsoft 365 workloads. It provides automated, SLA-driven backup and granular point-in-time restore for Exchange Online, OneDrive for Business, and SharePoint Online — with AES-256 encryption at rest, role-based access control, and comprehensive audit logging.
+Shieldio is a self-hosted SaaS data protection platform for Microsoft 365 workloads. It provides automated, SLA-driven backup and granular point-in-time restore for Exchange Online, OneDrive for Business, and SharePoint Online — with AES-256 encryption at rest, role-based access control, and comprehensive audit logging.
 
 > Version 1.5.0 | Python 3.11+ | React 19 | FastAPI | Apache-2.0 License
 
@@ -10,7 +10,7 @@ M365 Vault is a self-hosted SaaS data protection platform for Microsoft 365 work
 
 ## Key Features
 
-- **Multi-tenant M365 protection** across Exchange, OneDrive, and SharePoint workloads
+- **Multi-tenant Microsoft 365 protection** across Exchange, OneDrive, and SharePoint workloads
 - **SLA policy-driven scheduling** with configurable backup frequency and retention periods
 - **Point-in-time restore** with four modes: full in-place, item-level, cross-user, and export
 - **Microsoft Graph API integration** with OAuth2 client credentials, rate limiting (429 handling), exponential backoff with jitter, and batch operations
@@ -213,7 +213,7 @@ m365-data-protection/
 | [API Reference](docs/API_REFERENCE.md) | Complete REST API documentation (50+ endpoints) |
 | [Architecture](docs/ARCHITECTURE.md) | System design, data model, and service architecture |
 | [Compliance Report](docs/COMPLIANCE_REPORT.md) | Security controls, encryption, and regulatory alignment |
-| [Product Roadmap](docs/M365_Vault_Product_Roadmap.docx) | Strategic roadmap, competitive analysis, and pricing strategy |
+| [Product Roadmap](docs/M365_Vault_Product_Roadmap.docx) | Strategic roadmap, competitive analysis, and pricing |
 
 ---
 

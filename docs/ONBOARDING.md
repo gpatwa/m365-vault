@@ -1,6 +1,6 @@
-# M365 Vault — Onboarding Guide
+# Shieldio — Onboarding Guide
 
-This guide walks you through setting up M365 Vault, connecting your first Microsoft 365 tenant, and running your first backup.
+This guide walks you through setting up Shieldio, connecting your first Microsoft 365 tenant, and running your first backup.
 
 ---
 
@@ -8,10 +8,10 @@ This guide walks you through setting up M365 Vault, connecting your first Micros
 
 ### Azure AD App Registration
 
-Before connecting M365 Vault to your tenant, create an App Registration in Azure AD:
+Before connecting Shieldio to your tenant, create an App Registration in Azure AD:
 
 1. Go to **Azure Portal > Azure Active Directory > App Registrations > New Registration**
-2. Name: `M365 Vault Backup` (or your preferred name)
+2. Name: `Shieldio Backup` (or your preferred name)
 3. Supported account types: **Single tenant**
 4. Click **Register**
 
@@ -95,7 +95,7 @@ curl -X POST http://localhost:8000/api/tenants/ \
 
 ## Step 3: Test Connection
 
-Verify that M365 Vault can authenticate with your tenant:
+Verify that Shieldio can authenticate with your tenant:
 
 ```bash
 curl -X POST http://localhost:8000/api/tenants/{tenant_id}/test \

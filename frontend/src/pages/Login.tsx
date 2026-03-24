@@ -55,14 +55,14 @@ export default function Login() {
         <div className="max-w-md">
           <div className="flex items-center gap-2 mb-8">
             <Shield className="w-8 h-8 text-blue-400" />
-            <span className="text-2xl font-bold text-white">M365 Vault</span>
+            <span className="text-2xl font-bold text-white">Shieldio</span>
           </div>
           <h2 className="text-3xl font-bold text-white leading-tight mb-4">
-            Enterprise Backup for<br />Microsoft 365
+            Protect Your<br />Cloud Data
           </h2>
           <p className="text-gray-400 mb-8 leading-relaxed">
-            Protect Exchange, OneDrive, SharePoint, Teams, and Entra ID with
-            self-hosted, open-source data protection.
+            Back up Exchange, OneDrive, SharePoint, Teams, and Entra ID with
+            enterprise-grade, self-hosted data protection.
           </p>
           <div className="space-y-3">
             {['5 workloads with automated scheduling', 'AES-256-GCM encryption per tenant', 'Smart Engine with zero AI token cost', 'WORM storage + legal hold', 'Self-service restore portal'].map(f => (
@@ -74,7 +74,7 @@ export default function Login() {
           </div>
           <div className="mt-10 pt-6 border-t border-gray-800">
             <a href="/welcome" className="text-sm text-gray-500 hover:text-gray-300 transition-colors">
-              Learn more about M365 Vault →
+              Learn more about Shieldio →
             </a>
           </div>
         </div>
@@ -91,7 +91,7 @@ export default function Login() {
             {isRegister ? 'Create Account' : 'Welcome Back'}
           </h1>
           <p className="text-gray-500 mt-1 text-sm">
-            {isRegister ? 'Set up your admin account' : 'Sign in to M365 Vault'}
+            {isRegister ? 'Set up your admin account' : 'Sign in to Shieldio'}
           </p>
         </div>
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Mail, HardDrive, Globe, Shield, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search, Command, RotateCcw, BarChart3, Gauge, ChevronDown } from 'lucide-react';
-import { api } from '../api/client';
+import { useAuth } from '../contexts/AuthContext';
 import CommandPalette from './CommandPalette';
 
 interface NavItem {
@@ -96,8 +96,9 @@ export default function Layout() {
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
+  const { logout } = useAuth();
   const handleLogout = () => {
-    api.clearToken();
+    logout();
     navigate('/login');
   };
 

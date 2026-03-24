@@ -3,16 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Shield, Activity, AlertTriangle, Database, TrendingUp,
-  Lock, Eye, FileCheck,
+  Lock, Eye, FileCheck, CreditCard,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { api } from '../api/client';
 import { WORKLOADS } from '../config/workloads';
-import { HeroSummaryBar, ActionBanner, PlatformCard, ActivityFeed } from '../components/design-system';
+import { HeroSummaryBar, ActionBanner, PlatformCard } from '../components/design-system';
 import type { HeroStat } from '../components/design-system/HeroSummaryBar';
 import type { ActionItem } from '../components/design-system/ActionBanner';
 import type { WorkloadStat } from '../components/design-system/PlatformCard';
-import type { ActivityItem } from '../components/design-system/ActivityFeed';
 import type { DashboardSummary, ActivityData } from '../types';
 
 export default function Dashboard() {
@@ -48,6 +47,12 @@ export default function Dashboard() {
     queryKey: ['dashboard-unprotected'],
     queryFn: () => api.get<{ total_unprotected: number; total_at_risk: number }>('/dashboard/unprotected'),
     refetchInterval: 30000,
+  });
+
+  const { data: licenseData } = useQuery({
+    queryKey: ['usage-license'],
+    queryFn: () => api.get<any>('/usage/license'),
+    staleTime: 60000,
   });
 
   // ── Computed: Hero Stats ──
@@ -160,21 +165,6 @@ export default function Dashboard() {
   const platformTotalProtected = workloadStats.reduce((s, w) => s + w.protected, 0);
   const platformTotalObjects = workloadStats.reduce((s, w) => s + w.total, 0);
 
-  // ── Computed: Activity Feed ──
-
-  const activityItems: ActivityItem[] = useMemo(() => {
-    if (!activityData?.activity) return [];
-    return activityData.activity.slice(0, 10).map((a: any, i: number) => ({
-      id: i,
-      type: a.status === 'completed' ? 'success' as const :
-            a.status === 'failed' ? 'failure' as const :
-            a.status === 'in_progress' ? 'running' as const : 'queued' as const,
-      workload: a.workload_type || 'system',
-      message: a.description || `${a.workload_type} ${a.status}`,
-      time: a.timestamp || a.completed_at || new Date().toISOString(),
-    }));
-  }, [activityData]);
-
   // ── Computed: Trend chart data ──
 
   const trendData = useMemo(() => {
@@ -236,9 +226,66 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Row 3: Activity Feed + 7-Day Trend */}
+      {/* Row 3: License/Usage + 7-Day Trend */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <ActivityFeed items={activityItems} maxItems={8} />
+        {/* License & Usage */}
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CreditCard className="w-4 h-4 text-blue-500" />
+              <h3 className="text-sm font-semibold text-gray-800">License & Usage</h3>
+            </div>
+            <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+              licenseData?.tier === 'enterprise' ? 'bg-purple-100 text-purple-700' :
+              licenseData?.tier === 'professional' ? 'bg-blue-100 text-blue-700' :
+              'bg-gray-100 text-gray-600'
+            }`}>
+              {licenseData?.tier_label || 'Community'}
+            </span>
+          </div>
+          <div className="p-4 space-y-3">
+            {(licenseData?.usage || []).map((u: any, i: number) => (
+              <div key={i}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-gray-600">{u.name}</span>
+                  <span className="text-xs font-semibold text-gray-800">
+                    {u.current}{u.limit > 0 ? ` / ${u.limit}` : ''}
+                  </span>
+                </div>
+                {u.limit > 0 && (
+                  <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        u.usage_percent >= 90 ? 'bg-red-500' :
+                        u.usage_percent >= 70 ? 'bg-amber-500' :
+                        'bg-blue-500'
+                      }`}
+                      style={{ width: `${Math.min(u.usage_percent, 100)}%` }}
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+            {licenseData?.features && (
+              <div className="pt-2 border-t border-gray-100">
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">Included Workloads</p>
+                <div className="flex flex-wrap gap-1">
+                  {licenseData.features.map((f: string) => (
+                    <span key={f} className="text-[10px] px-1.5 py-0.5 bg-gray-50 border border-gray-100 rounded text-gray-500 capitalize">
+                      {f.replace('_', ' ')}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            <button
+              onClick={() => navigate('/usage')}
+              className="w-full text-xs text-blue-600 hover:text-blue-800 font-medium pt-1"
+            >
+              View full usage details →
+            </button>
+          </div>
+        </div>
 
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
           <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">

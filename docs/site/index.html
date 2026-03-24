@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>M365 Vault — Documentation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .prose h2 { margin-top: 2rem; padding-bottom: 0.5rem; border-bottom: 1px solid #e5e7eb; }
+    .prose h3 { margin-top: 1.5rem; }
+    .prose pre { background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; }
+    .prose code { background: #f1f5f9; padding: 0.15rem 0.4rem; border-radius: 0.25rem; font-size: 0.875rem; }
+    .prose pre code { background: none; padding: 0; }
+    .prose table { width: 100%; border-collapse: collapse; }
+    .prose th, .prose td { border: 1px solid #e5e7eb; padding: 0.5rem 0.75rem; text-align: left; }
+    .prose th { background: #f9fafb; font-weight: 600; }
+    .nav-link { display: block; padding: 0.375rem 0.75rem; border-radius: 0.375rem; color: #4b5563; text-decoration: none; font-size: 0.875rem; }
+    .nav-link:hover { background: #f3f4f6; color: #111827; }
+    .nav-link.active { background: #eff6ff; color: #2563eb; font-weight: 500; }
+    .nav-section { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #9ca3af; padding: 0.75rem 0.75rem 0.25rem; }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <!-- Header -->
+  <header class="bg-white border-b sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+      <div class="flex items-center gap-2">
+        <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        <span class="text-xl font-bold text-gray-900">M365 Vault</span>
+        <span class="text-sm text-gray-400 ml-1">Documentation</span>
+      </div>
+      <div class="flex-1"></div>
+      <a href="https://github.com/gpatwa/m365-vault" class="text-sm text-gray-500 hover:text-gray-700">GitHub</a>
+      <a href="/docs" class="text-sm text-blue-600 hover:text-blue-700 font-medium">API Reference (OpenAPI)</a>
+    </div>
+  </header>
+
+  <div class="max-w-7xl mx-auto flex">
+    <!-- Sidebar -->
+    <nav class="w-64 flex-shrink-0 bg-white border-r min-h-screen p-4 sticky top-14 overflow-y-auto" style="max-height: calc(100vh - 56px);">
+      <div class="nav-section">Getting Started</div>
+      <a href="#overview" class="nav-link active">Overview</a>
+      <a href="#quickstart" class="nav-link">Quick Start</a>
+      <a href="#architecture" class="nav-link">Architecture</a>
+
+      <div class="nav-section mt-4">Deployment</div>
+      <a href="#local-dev" class="nav-link">Local Development</a>
+      <a href="#azure-deploy" class="nav-link">Azure Deployment</a>
+      <a href="#configuration" class="nav-link">Configuration</a>
+
+      <div class="nav-section mt-4">Workloads</div>
+      <a href="#exchange" class="nav-link">Exchange</a>
+      <a href="#onedrive" class="nav-link">OneDrive</a>
+      <a href="#sharepoint" class="nav-link">SharePoint</a>
+      <a href="#teams" class="nav-link">Teams</a>
+      <a href="#entra-id" class="nav-link">Entra ID</a>
+
+      <div class="nav-section mt-4">Features</div>
+      <a href="#smart-engine" class="nav-link">Smart Engine</a>
+      <a href="#worm" class="nav-link">WORM Storage</a>
+      <a href="#alerts" class="nav-link">Alerts</a>
+      <a href="#sso" class="nav-link">SSO / OIDC</a>
+      <a href="#sensitive-data" class="nav-link">Sensitive Data Scanner</a>
+      <a href="#malware-scan" class="nav-link">Malware Scan</a>
+
+      <div class="nav-section mt-4">Administration</div>
+      <a href="#tenant-management" class="nav-link">Tenant Management</a>
+      <a href="#sla-policies" class="nav-link">SLA Policies</a>
+      <a href="#permissions" class="nav-link">Permissions</a>
+      <a href="#backup-restore" class="nav-link">Backup & Restore</a>
+
+      <div class="nav-section mt-4">API Reference</div>
+      <a href="#api-auth" class="nav-link">Authentication</a>
+      <a href="#api-endpoints" class="nav-link">All Endpoints</a>
+      <a href="#api-errors" class="nav-link">Error Handling</a>
+    </nav>
+
+    <!-- Content -->
+    <main class="flex-1 p-8 prose max-w-none">
+      <section id="overview">
+        <h1 class="text-3xl font-bold mb-2">M365 Vault Documentation</h1>
+        <p class="text-lg text-gray-600 mb-8">Open-source Microsoft 365 data protection platform. Back up and restore Exchange, OneDrive, SharePoint, Teams, and Entra ID.</p>
+
+        <div class="grid grid-cols-3 gap-4 not-prose mb-8">
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 class="font-semibold text-blue-800 mb-1">5 Workloads</h3>
+            <p class="text-sm text-blue-600">Exchange, OneDrive, SharePoint, Teams, Entra ID</p>
+          </div>
+          <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+            <h3 class="font-semibold text-green-800 mb-1">100+ API Endpoints</h3>
+            <p class="text-sm text-green-600">Full REST API with OpenAPI docs</p>
+          </div>
+          <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+            <h3 class="font-semibold text-purple-800 mb-1">Zero-Cost Intelligence</h3>
+            <p class="text-sm text-purple-600">Smart Engine: anomaly detection, health scoring, self-healing</p>
+          </div>
+        </div>
+
+        <h2 id="key-features">Key Features</h2>
+        <table>
+          <tr><th>Category</th><th>Features</th></tr>
+          <tr><td>Backup</td><td>SLA-based scheduling, delta/incremental, CDC dedup, zstd compression, AES-256-GCM encryption</td></tr>
+          <tr><td>Restore</td><td>Granular item-level, full workload, cross-tenant, self-service portal, Teams migration API</td></tr>
+          <tr><td>Intelligence</td><td>Health scoring, anomaly detection, self-healing, sensitive data scanner, malware scan</td></tr>
+          <tr><td>Security</td><td>WORM immutability, legal hold, SSO/OIDC, MFA, RBAC, audit logging</td></tr>
+          <tr><td>Operations</td><td>Reports, usage analytics, alerts (email/webhook), tenant lifecycle management</td></tr>
+        </table>
+      </section>
+
+      <section id="quickstart">
+        <h2>Quick Start</h2>
+        <h3>Prerequisites</h3>
+        <ul>
+          <li>Docker + Docker Compose</li>
+          <li>Microsoft 365 tenant with admin access</li>
+          <li>Azure AD App Registration with Graph API permissions</li>
+        </ul>
+
+        <h3>1. Clone and start</h3>
+        <pre><code>git clone https://github.com/gpatwa/m365-vault.git
+cd m365-vault
+make dev</code></pre>
+
+        <h3>2. Access the UI</h3>
+        <p>Open <code>http://localhost:5173</code> and login with <code>admin / admin123</code></p>
+
+        <h3>3. Onboard your tenant</h3>
+        <p>Go to <strong>Tenants</strong> &rarr; <strong>Add Tenant</strong> &rarr; Follow the 3-step wizard.</p>
+
+        <h3>4. Run your first backup</h3>
+        <p>After onboarding, the scheduler automatically runs backups based on your SLA policy. Or trigger an on-demand backup from any workload page.</p>
+      </section>
+
+      <section id="architecture">
+        <h2>Architecture</h2>
+        <table>
+          <tr><th>Component</th><th>Technology</th><th>Port</th></tr>
+          <tr><td>Backend API</td><td>Python / FastAPI</td><td>8000</td></tr>
+          <tr><td>Frontend UI</td><td>React / Vite / TailwindCSS</td><td>5173 (dev) / 80 (prod)</td></tr>
+          <tr><td>Database</td><td>PostgreSQL 16</td><td>5432</td></tr>
+          <tr><td>Object Storage</td><td>MinIO (dev) / Azure Blob (prod)</td><td>9000</td></tr>
+        </table>
+
+        <h3>Data Flow</h3>
+        <pre><code>Microsoft Graph API
+    ↓ (backup)
+GraphClient (auth, throttling, retry)
+    ↓
+Worker (Exchange/OneDrive/SharePoint/Teams/EntraID)
+    ↓
+Compress (zstd) → Dedup (CDC) → Encrypt (AES-256-GCM)
+    ↓
+Storage Backend (MinIO / Azure Blob / Local)
+    ↓
+Catalog (PostgreSQL: snapshots, items, metadata)</code></pre>
+      </section>
+
+      <section id="local-dev">
+        <h2>Local Development</h2>
+        <pre><code># Start all services
+make dev
+
+# Rebuild after code changes
+docker compose up -d --build
+
+# View logs
+docker compose logs -f backend
+
+# Stop
+docker compose down</code></pre>
+
+        <h3>Makefile Commands</h3>
+        <table>
+          <tr><th>Command</th><th>Purpose</th></tr>
+          <tr><td><code>make dev</code></td><td>Start local dev stack (Docker Compose)</td></tr>
+          <tr><td><code>make build</code></td><td>Build Docker images (linux/amd64)</td></tr>
+          <tr><td><code>make acr-push</code></td><td>Build + push to Azure Container Registry</td></tr>
+          <tr><td><code>make tf-apply</code></td><td>Deploy infrastructure via Terraform</td></tr>
+          <tr><td><code>make az-sleep</code></td><td>Scale Azure to zero (save costs)</td></tr>
+          <tr><td><code>make az-wake</code></td><td>Wake Azure resources</td></tr>
+        </table>
+      </section>
+
+      <section id="azure-deploy">
+        <h2>Azure Deployment</h2>
+        <h3>One-time setup</h3>
+        <pre><code># Bootstrap Azure + GitHub secrets
+make bootstrap
+
+# Deploy infrastructure
+make tf-apply
+
+# Push Docker images
+make acr-push</code></pre>
+
+        <h3>Azure Resources</h3>
+        <table>
+          <tr><th>Resource</th><th>Service</th></tr>
+          <tr><td>Container Apps</td><td>Backend + Frontend containers</td></tr>
+          <tr><td>PostgreSQL Flexible Server</td><td>Database</td></tr>
+          <tr><td>Storage Account</td><td>Backup blob storage</td></tr>
+          <tr><td>Container Registry</td><td>Docker image registry</td></tr>
+          <tr><td>Key Vault</td><td>Secret management</td></tr>
+        </table>
+      </section>
+
+      <section id="configuration">
+        <h2>Configuration</h2>
+        <p>All configuration is via environment variables:</p>
+        <table>
+          <tr><th>Variable</th><th>Default</th><th>Description</th></tr>
+          <tr><td><code>DATABASE_URL</code></td><td>sqlite+aiosqlite:///./m365vault.db</td><td>Database connection string</td></tr>
+          <tr><td><code>SECRET_KEY</code></td><td>(random)</td><td>JWT signing key</td></tr>
+          <tr><td><code>STORAGE_BACKEND</code></td><td>local</td><td>local, minio, or azure</td></tr>
+          <tr><td><code>FORCE_HTTPS</code></td><td>false</td><td>Redirect HTTP to HTTPS</td></tr>
+          <tr><td><code>RATE_LIMIT_REQUESTS_PER_MINUTE</code></td><td>120</td><td>API rate limit per IP</td></tr>
+          <tr><td><code>LOG_FORMAT</code></td><td>text</td><td>text or json (structured)</td></tr>
+          <tr><td><code>SSO_ENABLED</code></td><td>false</td><td>Enable Entra ID SSO</td></tr>
+          <tr><td><code>SMTP_HOST</code></td><td>(empty)</td><td>SMTP server for email alerts</td></tr>
+          <tr><td><code>ALERT_WEBHOOK_URL</code></td><td>(empty)</td><td>Webhook URL for alerts</td></tr>
+        </table>
+      </section>
+
+      <section id="api-auth">
+        <h2>API Authentication</h2>
+        <h3>Login</h3>
+        <pre><code>POST /api/auth/login
+Content-Type: application/x-www-form-urlencoded
+
+username=admin&password=admin123</code></pre>
+
+        <h3>Use token</h3>
+        <pre><code>GET /api/dashboard/summary
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...</code></pre>
+
+        <h3>Refresh token</h3>
+        <pre><code>POST /api/auth/refresh
+Content-Type: application/json
+
+{"refresh_token": "eyJhbGciOiJIUzI1NiIs..."}</code></pre>
+      </section>
+
+      <section id="api-endpoints">
+        <h2>API Endpoints</h2>
+        <p>Full interactive API documentation is available at <a href="/docs">/docs</a> (Swagger UI).</p>
+
+        <h3>Core Endpoints</h3>
+        <table>
+          <tr><th>Method</th><th>Path</th><th>Description</th></tr>
+          <tr><td>GET</td><td>/health</td><td>Deep health check (DB + storage)</td></tr>
+          <tr><td>GET</td><td>/api/status</td><td>Public system status (no auth)</td></tr>
+          <tr><td>GET</td><td>/api/dashboard/summary</td><td>Dashboard overview</td></tr>
+          <tr><td>GET</td><td>/api/jobs/backup</td><td>List backup jobs</td></tr>
+          <tr><td>GET</td><td>/api/health/score</td><td>Tenant health score</td></tr>
+          <tr><td>GET</td><td>/api/reports/backup-performance</td><td>Backup performance report</td></tr>
+          <tr><td>GET</td><td>/api/usage/license</td><td>License and usage info</td></tr>
+        </table>
+
+        <h3>Workload Endpoints</h3>
+        <table>
+          <tr><th>Workload</th><th>List</th><th>Backup</th><th>Restore</th></tr>
+          <tr><td>Exchange</td><td>GET /api/exchange/mailboxes</td><td>POST /api/exchange/backup-all</td><td>POST /api/exchange/mailboxes/{id}/restore</td></tr>
+          <tr><td>OneDrive</td><td>GET /api/onedrive/accounts</td><td>POST /api/onedrive/backup-all</td><td>POST /api/onedrive/accounts/{id}/restore</td></tr>
+          <tr><td>SharePoint</td><td>GET /api/sharepoint/sites</td><td>POST /api/sharepoint/backup-all</td><td>POST /api/sharepoint/sites/{id}/restore</td></tr>
+          <tr><td>Teams</td><td>GET /api/teams/teams</td><td>POST /api/teams/backup-all</td><td>(via migration API)</td></tr>
+          <tr><td>Entra ID</td><td>GET /api/entra-id/summary</td><td>POST /api/entra-id/backup</td><td>(via restore_items)</td></tr>
+        </table>
+      </section>
+
+      <section id="api-errors">
+        <h2>Error Handling</h2>
+        <p>All errors return JSON with a correlation ID for debugging:</p>
+        <pre><code>{
+  "detail": "Internal server error",
+  "correlation_id": "a1b2c3d4"
+}</code></pre>
+
+        <h3>HTTP Status Codes</h3>
+        <table>
+          <tr><th>Code</th><th>Meaning</th></tr>
+          <tr><td>200</td><td>Success</td></tr>
+          <tr><td>400</td><td>Bad request (validation error)</td></tr>
+          <tr><td>401</td><td>Not authenticated</td></tr>
+          <tr><td>403</td><td>Insufficient permissions</td></tr>
+          <tr><td>404</td><td>Resource not found</td></tr>
+          <tr><td>429</td><td>Rate limited</td></tr>
+          <tr><td>500</td><td>Server error (check correlation_id)</td></tr>
+        </table>
+      </section>
+
+      <section id="permissions">
+        <h2>Microsoft Graph API Permissions</h2>
+        <p>M365 Vault requires these application permissions on your Azure AD app registration:</p>
+
+        <h3>Backup (Read)</h3>
+        <table>
+          <tr><th>Permission</th><th>Workload</th></tr>
+          <tr><td>Mail.Read</td><td>Exchange</td></tr>
+          <tr><td>Calendars.Read</td><td>Exchange</td></tr>
+          <tr><td>Contacts.Read</td><td>Exchange</td></tr>
+          <tr><td>Files.Read.All</td><td>OneDrive</td></tr>
+          <tr><td>Sites.Read.All</td><td>SharePoint</td></tr>
+          <tr><td>User.Read.All</td><td>All (user discovery)</td></tr>
+          <tr><td>Directory.Read.All</td><td>Entra ID</td></tr>
+          <tr><td>Chat.Read.All</td><td>Teams (chats)</td></tr>
+          <tr><td>ChannelMessage.Read.All</td><td>Teams (channels)</td></tr>
+          <tr><td>Team.ReadBasic.All</td><td>Teams</td></tr>
+          <tr><td>TeamSettings.Read.All</td><td>Teams</td></tr>
+        </table>
+
+        <h3>Restore (Write)</h3>
+        <table>
+          <tr><th>Permission</th><th>Workload</th></tr>
+          <tr><td>Mail.ReadWrite</td><td>Exchange</td></tr>
+          <tr><td>Calendars.ReadWrite</td><td>Exchange</td></tr>
+          <tr><td>Contacts.ReadWrite</td><td>Exchange</td></tr>
+          <tr><td>Files.ReadWrite.All</td><td>OneDrive + Teams files</td></tr>
+          <tr><td>Sites.ReadWrite.All</td><td>SharePoint</td></tr>
+          <tr><td>User.ReadWrite.All</td><td>Entra ID</td></tr>
+          <tr><td>Group.ReadWrite.All</td><td>Entra ID</td></tr>
+          <tr><td>Application.ReadWrite.All</td><td>Entra ID + auto-provisioning</td></tr>
+          <tr><td>Policy.ReadWrite.ConditionalAccess</td><td>Entra ID (CA policies)</td></tr>
+          <tr><td>Teamwork.Migrate.All</td><td>Teams (migration restore)</td></tr>
+        </table>
+      </section>
+
+      <footer class="mt-16 pt-8 border-t text-sm text-gray-400">
+        <p>M365 Vault &mdash; Open Source SaaS Data Protection. <a href="https://github.com/gpatwa/m365-vault" class="text-blue-500">GitHub</a></p>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    // Highlight active nav on scroll
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.nav-link');
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) current = s.id; });
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${current}`) link.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

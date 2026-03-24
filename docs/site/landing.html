@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>M365 Vault — Open Source Microsoft 365 Data Protection</title>
+  <meta name="description" content="Back up and protect Exchange, OneDrive, SharePoint, Teams, and Entra ID. Open-source, self-hosted, zero vendor lock-in.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .gradient-bg { background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); }
+    .feature-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+    .feature-card { transition: all 0.2s; }
+  </style>
+</head>
+<body class="bg-white">
+  <!-- Nav -->
+  <nav class="fixed top-0 w-full bg-white/90 backdrop-blur border-b z-50">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        <span class="text-xl font-bold">M365 Vault</span>
+      </div>
+      <div class="flex items-center gap-6">
+        <a href="#features" class="text-sm text-gray-600 hover:text-gray-900">Features</a>
+        <a href="#workloads" class="text-sm text-gray-600 hover:text-gray-900">Workloads</a>
+        <a href="#pricing" class="text-sm text-gray-600 hover:text-gray-900">Pricing</a>
+        <a href="/docs/site/" class="text-sm text-gray-600 hover:text-gray-900">Docs</a>
+        <a href="https://github.com/gpatwa/m365-vault" class="text-sm text-gray-600 hover:text-gray-900">GitHub</a>
+        <a href="/login" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">Sign In</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="gradient-bg text-white pt-32 pb-20">
+    <div class="max-w-4xl mx-auto text-center px-4">
+      <div class="inline-block px-3 py-1 bg-blue-500/20 border border-blue-400/30 rounded-full text-blue-200 text-sm mb-6">
+        Open Source &bull; Self-Hosted &bull; Apache 2.0
+      </div>
+      <h1 class="text-5xl font-bold mb-6 leading-tight">
+        Microsoft 365 Data Protection<br>
+        <span class="text-blue-400">Without Vendor Lock-In</span>
+      </h1>
+      <p class="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+        Back up Exchange, OneDrive, SharePoint, Teams, and Entra ID.
+        Built-in intelligence at zero token cost. Deploy anywhere.
+      </p>
+      <div class="flex justify-center gap-4">
+        <a href="https://github.com/gpatwa/m365-vault" class="px-6 py-3 bg-white text-gray-900 rounded-lg font-semibold hover:bg-gray-100 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          View on GitHub
+        </a>
+        <a href="/docs/site/" class="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700">
+          Read the Docs
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="py-12 border-b">
+    <div class="max-w-6xl mx-auto px-4 grid grid-cols-5 gap-8 text-center">
+      <div><div class="text-3xl font-bold text-gray-900">5</div><div class="text-sm text-gray-500">Workloads</div></div>
+      <div><div class="text-3xl font-bold text-gray-900">100+</div><div class="text-sm text-gray-500">API Endpoints</div></div>
+      <div><div class="text-3xl font-bold text-gray-900">$0</div><div class="text-sm text-gray-500">Intelligence Cost</div></div>
+      <div><div class="text-3xl font-bold text-gray-900">AES-256</div><div class="text-sm text-gray-500">Encryption</div></div>
+      <div><div class="text-3xl font-bold text-gray-900">Apache 2.0</div><div class="text-sm text-gray-500">License</div></div>
+    </div>
+  </section>
+
+  <!-- Workloads -->
+  <section id="workloads" class="py-20 bg-gray-50">
+    <div class="max-w-6xl mx-auto px-4">
+      <h2 class="text-3xl font-bold text-center mb-4">5 Microsoft 365 Workloads</h2>
+      <p class="text-gray-500 text-center mb-12 max-w-2xl mx-auto">Complete protection for your entire Microsoft 365 environment. Each workload uses the optimal Microsoft Graph API for maximum performance.</p>
+      <div class="grid grid-cols-5 gap-4">
+        <div class="bg-white rounded-xl p-6 text-center border shadow-sm feature-card">
+          <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3"><svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></div>
+          <h3 class="font-semibold mb-1">Exchange</h3>
+          <p class="text-xs text-gray-500">Mail, Calendar, Contacts</p>
+        </div>
+        <div class="bg-white rounded-xl p-6 text-center border shadow-sm feature-card">
+          <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3"><svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg></div>
+          <h3 class="font-semibold mb-1">OneDrive</h3>
+          <p class="text-xs text-gray-500">Files, Folders</p>
+        </div>
+        <div class="bg-white rounded-xl p-6 text-center border shadow-sm feature-card">
+          <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3"><svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg></div>
+          <h3 class="font-semibold mb-1">SharePoint</h3>
+          <p class="text-xs text-gray-500">Sites, Lists, Documents</p>
+        </div>
+        <div class="bg-white rounded-xl p-6 text-center border shadow-sm feature-card">
+          <div class="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center mx-auto mb-3"><svg class="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg></div>
+          <h3 class="font-semibold mb-1">Teams</h3>
+          <p class="text-xs text-gray-500">Channels, Chats, Files</p>
+        </div>
+        <div class="bg-white rounded-xl p-6 text-center border shadow-sm feature-card">
+          <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center mx-auto mb-3"><svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg></div>
+          <h3 class="font-semibold mb-1">Entra ID</h3>
+          <p class="text-xs text-gray-500">Users, Groups, Policies</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="py-20">
+    <div class="max-w-6xl mx-auto px-4">
+      <h2 class="text-3xl font-bold text-center mb-12">Enterprise Features, Open Source Price</h2>
+      <div class="grid grid-cols-3 gap-6">
+        <div class="border rounded-xl p-6 feature-card">
+          <div class="text-2xl mb-3">🧠</div>
+          <h3 class="font-semibold mb-2">Smart Engine</h3>
+          <p class="text-sm text-gray-600">Anomaly detection, health scoring, self-healing — all at zero AI token cost. Pure Python statistics, no LLM bills.</p>
+        </div>
+        <div class="border rounded-xl p-6 feature-card">
+          <div class="text-2xl mb-3">🔒</div>
+          <h3 class="font-semibold mb-2">WORM + Legal Hold</h3>
+          <p class="text-sm text-gray-600">Immutable backups with write-once-read-many locks. Legal hold prevents deletion. Ransomware resilience built in.</p>
+        </div>
+        <div class="border rounded-xl p-6 feature-card">
+          <div class="text-2xl mb-3">🔍</div>
+          <h3 class="font-semibold mb-2">Sensitive Data Scanner</h3>
+          <p class="text-sm text-gray-600">Regex-based PII/PHI/PCI detection in backup data. Finds data deleted from production that Purview can't see.</p>
+        </div>
+        <div class="border rounded-xl p-6 feature-card">
+          <div class="text-2xl mb-3">🛡️</div>
+          <h3 class="font-semibold mb-2">Malware Scan on Restore</h3>
+          <p class="text-sm text-gray-600">YARA rules scan backup data before restore. Prevents ransomware reinfection from compromised backups.</p>
+        </div>
+        <div class="border rounded-xl p-6 feature-card">
+          <div class="text-2xl mb-3">🔑</div>
+          <h3 class="font-semibold mb-2">SSO + MFA</h3>
+          <p class="text-sm text-gray-600">Entra ID OIDC single sign-on with auto-provisioning. MFA enforcement via your identity provider.</p>
+        </div>
+        <div class="border rounded-xl p-6 feature-card">
+          <div class="text-2xl mb-3">📊</div>
+          <h3 class="font-semibold mb-2">Reports + Analytics</h3>
+          <p class="text-sm text-gray-600">Backup performance, storage analytics, failure analysis, SLA compliance, security summary — all built in.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section id="pricing" class="py-20 bg-gray-50">
+    <div class="max-w-5xl mx-auto px-4">
+      <h2 class="text-3xl font-bold text-center mb-4">Simple, Transparent Pricing</h2>
+      <p class="text-gray-500 text-center mb-12">No per-GB charges. No storage surprises. Intelligence included at every tier.</p>
+      <div class="grid grid-cols-3 gap-6">
+        <div class="bg-white rounded-xl border-2 border-gray-200 p-8">
+          <h3 class="text-lg font-bold mb-1">Community</h3>
+          <div class="text-3xl font-bold mb-1">Free</div>
+          <p class="text-sm text-gray-500 mb-6">Open source, self-hosted</p>
+          <ul class="text-sm text-gray-600 space-y-2">
+            <li>✅ Exchange, OneDrive, SharePoint</li>
+            <li>✅ Up to 25 users</li>
+            <li>✅ Basic Smart Engine</li>
+            <li>✅ AES-256 encryption</li>
+            <li>✅ Community support (GitHub)</li>
+          </ul>
+        </div>
+        <div class="bg-white rounded-xl border-2 border-blue-500 p-8 relative">
+          <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">Most Popular</div>
+          <h3 class="text-lg font-bold mb-1">Professional</h3>
+          <div class="text-3xl font-bold mb-1">$1.50<span class="text-base font-normal text-gray-500">/user/mo</span></div>
+          <p class="text-sm text-gray-500 mb-6">Unlimited users + storage</p>
+          <ul class="text-sm text-gray-600 space-y-2">
+            <li>✅ All 5 workloads (+ Teams, Entra ID)</li>
+            <li>✅ Full Smart Engine</li>
+            <li>✅ WORM + Sensitive Data Scan</li>
+            <li>✅ SSO (OIDC/SAML)</li>
+            <li>✅ Self-service restore portal</li>
+            <li>✅ Email support + SLA</li>
+          </ul>
+        </div>
+        <div class="bg-white rounded-xl border-2 border-gray-200 p-8">
+          <h3 class="text-lg font-bold mb-1">Enterprise</h3>
+          <div class="text-3xl font-bold mb-1">$3.00<span class="text-base font-normal text-gray-500">/user/mo</span></div>
+          <p class="text-sm text-gray-500 mb-6">MSP + unlimited tenants</p>
+          <ul class="text-sm text-gray-600 space-y-2">
+            <li>✅ Everything in Professional</li>
+            <li>✅ Multi-tenant MSP console</li>
+            <li>✅ Custom branding (white-label)</li>
+            <li>✅ SIEM integration</li>
+            <li>✅ Priority support + CSM</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="py-20 gradient-bg text-white">
+    <div class="max-w-3xl mx-auto text-center px-4">
+      <h2 class="text-3xl font-bold mb-4">Ready to protect your Microsoft 365 data?</h2>
+      <p class="text-gray-300 mb-8">Deploy in minutes. No credit card required for the Community edition.</p>
+      <div class="flex justify-center gap-4">
+        <a href="https://github.com/gpatwa/m365-vault" class="px-6 py-3 bg-white text-gray-900 rounded-lg font-semibold hover:bg-gray-100">Get Started Free</a>
+        <a href="mailto:hello@m365vault.com" class="px-6 py-3 border border-white/30 text-white rounded-lg font-semibold hover:bg-white/10">Request Demo</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-8 border-t">
+    <div class="max-w-6xl mx-auto px-4 flex items-center justify-between text-sm text-gray-400">
+      <span>&copy; 2026 M365 Vault. Open source under Apache 2.0.</span>
+      <div class="flex gap-6">
+        <a href="/legal" class="hover:text-gray-600">Terms</a>
+        <a href="/legal" class="hover:text-gray-600">Privacy</a>
+        <a href="/docs/site/" class="hover:text-gray-600">Docs</a>
+        <a href="https://github.com/gpatwa/m365-vault" class="hover:text-gray-600">GitHub</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

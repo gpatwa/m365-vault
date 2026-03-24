@@ -4,7 +4,17 @@ from sqlalchemy.orm import DeclarativeBase
 
 from app.config import settings
 
-engine = create_async_engine(settings.DATABASE_URL, echo=settings.DEBUG)
+# Pool settings only for PostgreSQL (SQLite uses NullPool)
+_engine_kwargs = {"echo": settings.DEBUG}
+if "postgresql" in settings.DATABASE_URL:
+    _engine_kwargs.update(
+        pool_pre_ping=True,       # Validate connections before use (resilience)
+        pool_recycle=300,          # Recycle stale connections every 5 min
+        pool_size=10,              # Connection pool size
+        max_overflow=20,           # Burst capacity
+    )
+
+engine = create_async_engine(settings.DATABASE_URL, **_engine_kwargs)
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 

@@ -85,8 +85,11 @@ async def check_and_schedule_backups():
 
 
 async def execute_queued_jobs():
-    """Pick up and execute all queued backup jobs."""
-    from app.services.backup_engine import BackupEngine
+    """Pick up and execute all queued backup jobs via dispatcher."""
+    from app.interfaces.dispatcher_factory import get_dispatcher
+    from app.interfaces.job_message import BackupJobMessage
+
+    dispatcher = get_dispatcher()
 
     async with async_session() as db:
         try:
@@ -100,18 +103,19 @@ async def execute_queued_jobs():
             if not jobs:
                 return
 
-            logger.info(f"Executing {len(jobs)} queued backup jobs")
-            engine = BackupEngine(db)
+            logger.info(f"Dispatching {len(jobs)} queued backup jobs")
 
             for job in jobs:
                 try:
-                    await engine._execute_backup_job(job)
-                    logger.info(
-                        f"Job {job.id} completed: {job.objects_processed}/{job.objects_total} objects, "
-                        f"{job.objects_failed} failed"
+                    job_result = await dispatcher.dispatch_backup_job(
+                        BackupJobMessage(backup_job_id=job.id), db=db
                     )
+                    if job_result.success:
+                        logger.info(f"Job {job.id} completed: status={job_result.status}")
+                    else:
+                        logger.error(f"Job {job.id} failed: {job_result.error}")
                 except Exception as e:
-                    logger.error(f"Backup job {job.id} failed: {e}")
+                    logger.error(f"Backup job {job.id} dispatch failed: {e}")
                     job.status = JobStatus.FAILED
                     job.error_message = str(e)
                     job.completed_at = datetime.utcnow()
@@ -164,6 +168,52 @@ async def cleanup_expired_snapshots():
 
         except Exception as e:
             logger.error(f"Retention cleanup error: {e}")
+            await db.rollback()
+
+
+async def detect_stale_jobs():
+    """Reset IN_PROGRESS jobs that haven't updated within JOB_TIMEOUT_MINUTES.
+
+    Handles worker crashes: if a job is stuck IN_PROGRESS for too long,
+    reset it to QUEUED so it gets re-dispatched to another worker.
+    """
+    async with async_session() as db:
+        try:
+            stale_cutoff = datetime.utcnow() - timedelta(minutes=settings.JOB_TIMEOUT_MINUTES)
+            result = await db.execute(
+                select(BackupJob).where(
+                    BackupJob.status == JobStatus.IN_PROGRESS,
+                    BackupJob.started_at < stale_cutoff,
+                )
+            )
+            stale_jobs = result.scalars().all()
+
+            for job in stale_jobs:
+                logger.warning(
+                    f"Stale job detected: job {job.id} (workload={job.workload_type}) "
+                    f"started at {job.started_at}, resetting to QUEUED"
+                )
+                job.status = JobStatus.QUEUED
+                job.error_message = f"Reset: worker unresponsive since {job.started_at.isoformat()}"
+
+            if stale_jobs:
+                await db.commit()
+                logger.info(f"Reset {len(stale_jobs)} stale jobs to QUEUED")
+
+                # Alert
+                try:
+                    from app.services.alert_service import alert_service
+                    await alert_service.notify(
+                        event_type="job.stale",
+                        title=f"{len(stale_jobs)} backup job(s) reset — worker may have crashed",
+                        details=f"Jobs stuck IN_PROGRESS for >{settings.JOB_TIMEOUT_MINUTES} minutes were reset to QUEUED for retry.",
+                        severity="warning",
+                    )
+                except Exception:
+                    pass
+
+        except Exception as e:
+            logger.error(f"Stale job detection error: {e}")
             await db.rollback()
 
 
@@ -300,8 +350,15 @@ def start_scheduler():
         name="Apply WORM retention locks to new snapshots",
         replace_existing=True,
     )
+    scheduler.add_job(
+        detect_stale_jobs,
+        IntervalTrigger(minutes=15),
+        id="stale_job_detector",
+        name="Detect and reset stale IN_PROGRESS jobs",
+        replace_existing=True,
+    )
     scheduler.start()
-    logger.info("Backup scheduler started (with retry engine, smart engine, WORM)")
+    logger.info("Scheduler started (backup, retry, smart engine, WORM, stale detector)")
 
 
 def stop_scheduler():

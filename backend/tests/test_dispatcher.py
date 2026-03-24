@@ -76,13 +76,13 @@ class TestDispatcherFactory:
         assert isinstance(dispatcher, InProcessDispatcher)
 
     @patch("app.interfaces.dispatcher_factory.settings")
-    def test_redis_fallback_when_not_installed(self, mock_settings):
+    def test_redis_mode_creates_redis_dispatcher(self, mock_settings):
         mock_settings.DISPATCH_MODE = "redis"
         mock_settings.REDIS_URL = "redis://localhost:6379/0"
-        # RedisDispatcher doesn't exist yet — should fallback
         dispatcher = get_dispatcher()
-        # Should be InProcessDispatcher (fallback) since redis_dispatcher module doesn't exist
-        assert isinstance(dispatcher, InProcessDispatcher)
+        # RedisDispatcher is now available
+        from app.interfaces.redis_dispatcher import RedisDispatcher
+        assert isinstance(dispatcher, RedisDispatcher)
 
     @patch("app.interfaces.dispatcher_factory.settings")
     def test_singleton_pattern(self, mock_settings):

@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  AlertTriangle, CheckCircle2, RotateCcw, XCircle,
+  CheckCircle2, RotateCcw, XCircle,
   ChevronDown, ChevronRight, ShieldAlert, Info, Eye, EyeOff,
   Mail, HardDrive, Globe, File, Folder, List, ListOrdered, Library,
+  MessageSquare, KeyRound,
 } from 'lucide-react';
 import { api } from '../api/client';
 import DataTable, { type Column, type FilterOption } from '../components/DataTable';
+import { WORKLOAD_MAP } from '../config/workloads';
 import type { FailedItemEntry, FailedItemsSummary, FailedItemCategory } from '../types';
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -25,7 +27,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   unknown: 'bg-gray-100 text-gray-600 border-gray-200',
 };
 
-const CATEGORY_ICONS: Record<string, string> = {
+const CATEGORY_LABELS: Record<string, string> = {
   permission_denied: 'Permission Denied',
   not_found: 'Not Found',
   throttled: 'Rate Limited',
@@ -43,20 +45,41 @@ const CATEGORY_ICONS: Record<string, string> = {
 
 const ItemTypeIcon = ({ type }: { type: string | null }) => {
   switch (type) {
-    case 'email': return <Mail className="w-4 h-4 text-blue-500" />;
-    case 'file': return <File className="w-4 h-4 text-green-500" />;
-    case 'folder': return <Folder className="w-4 h-4 text-yellow-500" />;
-    case 'list': return <List className="w-4 h-4 text-purple-500" />;
-    case 'list_item': return <ListOrdered className="w-4 h-4 text-purple-400" />;
-    case 'document_library': return <Library className="w-4 h-4 text-teal-500" />;
-    case 'calendar_event': return <Globe className="w-4 h-4 text-orange-500" />;
-    case 'contact': return <HardDrive className="w-4 h-4 text-indigo-500" />;
-    default: return <File className="w-4 h-4 text-gray-400" />;
+    case 'email': return <Mail className="w-3.5 h-3.5 text-blue-500" />;
+    case 'file': return <File className="w-3.5 h-3.5 text-green-500" />;
+    case 'folder': return <Folder className="w-3.5 h-3.5 text-yellow-500" />;
+    case 'list': return <List className="w-3.5 h-3.5 text-purple-500" />;
+    case 'list_item': return <ListOrdered className="w-3.5 h-3.5 text-purple-400" />;
+    case 'document_library': return <Library className="w-3.5 h-3.5 text-teal-500" />;
+    case 'calendar_event': return <Globe className="w-3.5 h-3.5 text-orange-500" />;
+    case 'contact': return <HardDrive className="w-3.5 h-3.5 text-indigo-500" />;
+    case 'channel_message': return <MessageSquare className="w-3.5 h-3.5 text-pink-500" />;
+    case 'chat_message': return <MessageSquare className="w-3.5 h-3.5 text-pink-400" />;
+    case 'user': return <KeyRound className="w-3.5 h-3.5 text-amber-500" />;
+    default: return <File className="w-3.5 h-3.5 text-gray-400" />;
   }
 };
 
+// Workload icon for swimlane headers
+const WorkloadIcon = ({ workload }: { workload: string }) => {
+  const config = WORKLOAD_MAP[workload];
+  if (!config) return <ShieldAlert className="w-5 h-5 text-gray-400" />;
+  const Icon = config.icon;
+  return <Icon className={`w-5 h-5 ${config.iconColor || 'text-gray-500'}`} />;
+};
+
+interface WorkloadFailureSummary {
+  workload: string;
+  total: number;
+  unresolved: number;
+  retriable: number;
+  topCategory: string;
+  topCategoryCount: number;
+}
+
 export default function FailedItems() {
   const [showResolved, setShowResolved] = useState(false);
+  const [selectedWorkload, setSelectedWorkload] = useState<string | null>(null);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [actionMsg, setActionMsg] = useState('');
   const qc = useQueryClient();
@@ -67,6 +90,19 @@ export default function FailedItems() {
     queryFn: () => api.get<FailedItemsSummary>('/failed-items/summary'),
     refetchInterval: 15000,
   });
+
+  // Compute per-workload failure stats from summary
+  const workloadStats: WorkloadFailureSummary[] = (() => {
+    if (!summary?.by_workload) return [];
+    return Object.entries(summary.by_workload as Record<string, any>).map(([wl, data]: [string, any]) => ({
+      workload: wl,
+      total: data.total || 0,
+      unresolved: data.unresolved || 0,
+      retriable: data.retriable || 0,
+      topCategory: data.top_category || 'unknown',
+      topCategoryCount: data.top_category_count || 0,
+    })).sort((a, b) => b.unresolved - a.unresolved);
+  })();
 
   // Mutations
   const resolveMutation = useMutation({
@@ -92,14 +128,15 @@ export default function FailedItems() {
     onError: (err: any) => { setActionMsg(`Error: ${err.message}`); setTimeout(() => setActionMsg(''), 5000); },
   });
 
-  // Build category filter options from summary
+  // Category filter options
   const categoryFilterOptions: { value: string; label: string }[] = (summary?.categories || []).map(
     (cat: FailedItemCategory) => ({
       value: cat.category,
-      label: `${CATEGORY_ICONS[cat.category] || cat.category} (${cat.unresolved})`,
+      label: `${CATEGORY_LABELS[cat.category] || cat.category} (${cat.unresolved})`,
     })
   );
 
+  // DataTable columns
   const columns: Column<FailedItemEntry>[] = [
     {
       key: 'item_name',
@@ -108,52 +145,33 @@ export default function FailedItems() {
       render: (row) => (
         <div className="flex items-center gap-2">
           <ItemTypeIcon type={row.item_type} />
-          <span className="font-medium text-gray-900 max-w-[200px] truncate" title={row.item_name || undefined}>
+          <span className="font-medium text-gray-900 max-w-[180px] truncate" title={row.item_name || undefined}>
             {row.item_name || 'Unknown'}
           </span>
         </div>
       ),
     },
     {
-      key: 'item_type',
-      label: 'Type',
+      key: 'error_category',
+      label: 'Error',
       sortable: true,
       render: (row) => (
-        <span className="capitalize text-gray-600 text-xs">
-          {(row.item_type || 'unknown').replace(/_/g, ' ')}
-        </span>
-      ),
-    },
-    {
-      key: 'item_path',
-      label: 'Path',
-      render: (row) => (
-        <span className="text-gray-500 text-xs max-w-[150px] truncate block" title={row.item_path || undefined}>
-          {row.item_path || '—'}
-        </span>
-      ),
-    },
-    {
-      key: 'error_message',
-      label: 'Error',
-      render: (row) => (
-        <div className="max-w-[250px]">
-          <p className="text-xs text-red-600 truncate" title={row.error_message}>
+        <div>
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${CATEGORY_COLORS[row.error_category] || CATEGORY_COLORS.unknown}`}>
+            {CATEGORY_LABELS[row.error_category] || row.error_category}
+          </span>
+          <p className="text-[11px] text-gray-400 mt-0.5 max-w-[200px] truncate" title={row.error_message}>
             {row.error_message}
           </p>
-          {row.error_code && (
-            <p className="text-xs text-gray-400 mt-0.5">{row.error_code}</p>
-          )}
         </div>
       ),
     },
     {
-      key: 'error_category',
-      label: 'Category',
-      sortable: true,
+      key: 'item_path',
+      label: 'Location',
       render: (row) => (
-        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${CATEGORY_COLORS[row.error_category] || CATEGORY_COLORS.unknown}`}>
-          {CATEGORY_ICONS[row.error_category] || row.error_category}
+        <span className="text-gray-500 text-xs max-w-[120px] truncate block" title={row.item_path || undefined}>
+          {row.item_path || '—'}
         </span>
       ),
     },
@@ -161,7 +179,8 @@ export default function FailedItems() {
       key: 'retries_attempted',
       label: 'Retries',
       sortable: true,
-      render: (row) => <span className="text-center text-xs text-gray-500">{row.retries_attempted}</span>,
+      className: 'text-center',
+      render: (row) => <span className="text-xs text-gray-500">{row.retries_attempted}</span>,
     },
     {
       key: 'is_resolved',
@@ -169,15 +188,15 @@ export default function FailedItems() {
       sortable: true,
       render: (row) => (
         row.is_resolved ? (
-          <span className="inline-flex items-center gap-1 text-xs text-green-600 font-medium">
+          <span className="inline-flex items-center gap-1 text-[11px] text-green-600 font-medium">
             <CheckCircle2 className="w-3 h-3" /> Resolved
           </span>
         ) : row.can_retry ? (
-          <span className="inline-flex items-center gap-1 text-xs text-orange-600 font-medium">
+          <span className="inline-flex items-center gap-1 text-[11px] text-orange-600 font-medium">
             <RotateCcw className="w-3 h-3" /> Retriable
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1 text-xs text-gray-500 font-medium">
+          <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 font-medium">
             <XCircle className="w-3 h-3" /> Permanent
           </span>
         )
@@ -186,11 +205,7 @@ export default function FailedItems() {
   ];
 
   const filters: FilterOption[] = [
-    {
-      key: 'error_category',
-      label: 'All Categories',
-      options: categoryFilterOptions,
-    },
+    { key: 'error_category', label: 'All Categories', options: categoryFilterOptions },
   ];
 
   return (
@@ -202,73 +217,109 @@ export default function FailedItems() {
             <ShieldAlert className="w-7 h-7 text-red-500" />
             Failed Items
           </h1>
-          <p className="text-gray-500">Review skipped items, understand failures, and take action</p>
+          <p className="text-sm text-gray-500">Review failures by workload, understand root causes, take action</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowResolved(!showResolved)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
-              showResolved ? 'bg-gray-100 border-gray-300 text-gray-700' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
-            }`}
-          >
-            {showResolved ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-            {showResolved ? 'Showing Resolved' : 'Hide Resolved'}
-          </button>
-        </div>
+        <button
+          onClick={() => setShowResolved(!showResolved)}
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
+            showResolved ? 'bg-gray-100 border-gray-300 text-gray-700' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
+          }`}
+        >
+          {showResolved ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+          {showResolved ? 'Showing Resolved' : 'Hide Resolved'}
+        </button>
       </div>
 
-      {/* Action message */}
       {actionMsg && (
         <div className={`rounded-lg p-3 mb-4 text-sm ${actionMsg.includes('Error') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-green-50 border border-green-200 text-green-700'}`}>
           {actionMsg}
         </div>
       )}
 
-      {/* Summary cards */}
+      {/* ═══ Workload Failure Swimlanes ═══ */}
       {summary && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-xl border shadow-sm p-5">
-            <div className="flex items-center gap-3">
+        <div className="grid grid-cols-1 gap-3 mb-6">
+          {/* Summary row */}
+          <div className="flex items-center gap-4 px-4 py-3 bg-white rounded-xl border shadow-sm">
+            <div className="flex items-center gap-2">
               <div className="p-2 bg-red-100 rounded-lg">
                 <XCircle className="w-5 h-5 text-red-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Total Failed</p>
-                <p className="text-2xl font-bold text-gray-900">{summary.total_failed}</p>
+                <p className="text-xs text-gray-500">Total Failed</p>
+                <p className="text-xl font-bold">{summary.total_failed}</p>
               </div>
             </div>
+            <div className="w-px h-10 bg-gray-200" />
+            <div>
+              <p className="text-xs text-gray-500">Unresolved</p>
+              <p className="text-xl font-bold text-orange-600">{summary.total_unresolved}</p>
+            </div>
+            <div className="w-px h-10 bg-gray-200" />
+            <div>
+              <p className="text-xs text-gray-500">Categories</p>
+              <p className="text-xl font-bold">{summary.categories?.length || 0}</p>
+            </div>
+            <div className="flex-1" />
+            {selectedWorkload && (
+              <button
+                onClick={() => setSelectedWorkload(null)}
+                className="text-xs text-blue-600 hover:underline font-medium"
+              >
+                Show all workloads
+              </button>
+            )}
           </div>
-          <div className="bg-white rounded-xl border shadow-sm p-5">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <AlertTriangle className="w-5 h-5 text-orange-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Unresolved</p>
-                <p className="text-2xl font-bold text-gray-900">{summary.total_unresolved}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl border shadow-sm p-5">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Info className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Error Categories</p>
-                <p className="text-2xl font-bold text-gray-900">{summary.categories.length}</p>
-              </div>
-            </div>
+
+          {/* Per-workload cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+            {workloadStats.map(ws => {
+              const config = WORKLOAD_MAP[ws.workload];
+              const isSelected = selectedWorkload === ws.workload;
+              const bgColor = config?.bgColor || 'bg-gray-50';
+              const borderColor = isSelected ? 'border-blue-400 ring-2 ring-blue-200' : (config?.borderColor || 'border-gray-200');
+
+              return (
+                <div
+                  key={ws.workload}
+                  onClick={() => setSelectedWorkload(isSelected ? null : ws.workload)}
+                  className={`${bgColor} border ${borderColor} rounded-xl p-4 cursor-pointer hover:shadow-md transition-all`}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <WorkloadIcon workload={ws.workload} />
+                    <span className="text-sm font-semibold text-gray-900">
+                      {config?.label || ws.workload}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs">
+                    <span className="text-red-600 font-bold">{ws.unresolved}</span>
+                    <span className="text-gray-400">unresolved</span>
+                    {ws.retriable > 0 && (
+                      <span className="text-orange-500 font-medium">{ws.retriable} retriable</span>
+                    )}
+                  </div>
+                  {ws.topCategory && ws.topCategoryCount > 0 && (
+                    <div className="mt-2">
+                      <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium border ${CATEGORY_COLORS[ws.topCategory] || CATEGORY_COLORS.unknown}`}>
+                        {CATEGORY_LABELS[ws.topCategory]} ({ws.topCategoryCount})
+                      </span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
 
-      {/* Error category breakdown */}
-      {summary && summary.categories.length > 0 && (
+      {/* ═══ Error Categories (collapsible) ═══ */}
+      {summary && summary.categories.length > 0 && !selectedWorkload && (
         <div className="bg-white rounded-xl border shadow-sm mb-6">
-          <div className="px-5 py-4 border-b">
-            <h2 className="text-lg font-semibold text-gray-900">Error Categories</h2>
-            <p className="text-sm text-gray-500">Click a category to see resolution guidance</p>
+          <div className="px-5 py-3 border-b flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900">Error Categories</h2>
+              <p className="text-xs text-gray-400">Click for resolution guidance</p>
+            </div>
           </div>
           <div className="divide-y">
             {summary.categories.map((cat: FailedItemCategory) => {
@@ -276,40 +327,25 @@ export default function FailedItems() {
               return (
                 <div key={cat.category}>
                   <div
-                    className="flex items-center gap-4 px-5 py-3.5 cursor-pointer hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-3 px-5 py-2.5 cursor-pointer hover:bg-gray-50 transition-colors"
                     onClick={() => setExpandedCategory(isExpanded ? null : cat.category)}
                   >
-                    {isExpanded ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${CATEGORY_COLORS[cat.category] || CATEGORY_COLORS.unknown}`}>
-                      {CATEGORY_ICONS[cat.category] || cat.category}
+                    {isExpanded ? <ChevronDown className="w-3.5 h-3.5 text-gray-400" /> : <ChevronRight className="w-3.5 h-3.5 text-gray-400" />}
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${CATEGORY_COLORS[cat.category] || CATEGORY_COLORS.unknown}`}>
+                      {CATEGORY_LABELS[cat.category] || cat.category}
                     </span>
-                    <div className="flex-1 flex items-center gap-6">
-                      <span className="text-sm font-medium text-gray-900">{cat.count} total</span>
-                      {cat.unresolved > 0 && (
-                        <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
-                          {cat.unresolved} unresolved
-                        </span>
-                      )}
-                      {cat.resolved > 0 && (
-                        <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
-                          {cat.resolved} resolved
-                        </span>
-                      )}
-                      {cat.retriable > 0 && (
-                        <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                          {cat.retriable} retriable
-                        </span>
-                      )}
-                    </div>
+                    <span className="text-xs text-gray-600 font-medium">{cat.count}</span>
+                    {cat.unresolved > 0 && <span className="text-[10px] text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded-full">{cat.unresolved} open</span>}
+                    {cat.retriable > 0 && <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full">{cat.retriable} retriable</span>}
                   </div>
                   {isExpanded && (
-                    <div className="px-14 pb-4">
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="px-12 pb-3">
+                      <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
                         <div className="flex items-start gap-2">
-                          <Info className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                          <Info className="w-3.5 h-3.5 text-blue-500 mt-0.5 flex-shrink-0" />
                           <div>
-                            <p className="text-sm font-medium text-blue-900 mb-1">How to Fix</p>
-                            <p className="text-sm text-blue-800">{cat.resolution_hint}</p>
+                            <p className="text-xs font-semibold text-blue-900 mb-0.5">Resolution</p>
+                            <p className="text-xs text-blue-800">{cat.resolution_hint}</p>
                           </div>
                         </div>
                       </div>
@@ -322,12 +358,16 @@ export default function FailedItems() {
         </div>
       )}
 
-      {/* Failed items table — DataTable */}
+      {/* ═══ Items DataTable (filtered by selected workload) ═══ */}
       <DataTable<FailedItemEntry>
-        queryKey="failed-items"
+        queryKey={`failed-items-${selectedWorkload || 'all'}-${showResolved}`}
         endpoint="/failed-items"
         columns={columns}
-        extraParams={showResolved ? {} : { is_resolved: 'false' }}
+        extraParams={{
+          ...(showResolved ? {} : { is_resolved: 'false' }),
+          ...(selectedWorkload ? { workload_type: selectedWorkload } : {}),
+        }}
+        title={selectedWorkload ? `${WORKLOAD_MAP[selectedWorkload]?.label || selectedWorkload} Failures` : 'All Failed Items'}
         searchable
         searchPlaceholder="Search by item name or error..."
         filters={filters}
@@ -335,8 +375,8 @@ export default function FailedItems() {
         exportEndpoint="/export/csv?source=failed_items"
         defaultSortBy="created_at"
         defaultSortOrder="desc"
-        defaultPageSize={50}
-        emptyMessage="No failed items found"
+        defaultPageSize={25}
+        emptyMessage={selectedWorkload ? `No failures for ${WORKLOAD_MAP[selectedWorkload]?.label || selectedWorkload}` : 'No failed items found'}
         rowKey="id"
         refetchInterval={10000}
         actions={(row) => (
@@ -346,19 +386,19 @@ export default function FailedItems() {
                 <button
                   onClick={() => retryMutation.mutate([row.id])}
                   disabled={retryMutation.isPending}
-                  className="text-orange-600 hover:text-orange-800 text-xs font-medium flex items-center gap-1"
-                  title="Retry this item"
+                  className="text-orange-600 hover:text-orange-800 text-xs font-medium"
+                  title="Retry"
                 >
-                  <RotateCcw className="w-3 h-3" />
+                  <RotateCcw className="w-3.5 h-3.5" />
                 </button>
               )}
               <button
                 onClick={() => resolveMutation.mutate([row.id])}
                 disabled={resolveMutation.isPending}
-                className="text-green-600 hover:text-green-800 text-xs font-medium flex items-center gap-1"
-                title="Mark as resolved"
+                className="text-green-600 hover:text-green-800 text-xs font-medium"
+                title="Resolve"
               >
-                <CheckCircle2 className="w-3 h-3" />
+                <CheckCircle2 className="w-3.5 h-3.5" />
               </button>
             </div>
           ) : null

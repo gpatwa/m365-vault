@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Search, RotateCcw, Mail, HardDrive, Globe, FileText, Calendar, User, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { Search, RotateCcw, Mail, HardDrive, Globe, FileText, Calendar, User, Loader2, CheckCircle, XCircle, MessageSquare, KeyRound } from 'lucide-react';
 import { api } from '../api/client';
 import { formatSize, timeAgo } from '../utils/format';
 
@@ -26,11 +26,18 @@ const WORKLOAD_TABS = [
   { key: 'exchange', label: 'Exchange', icon: Mail },
   { key: 'onedrive', label: 'OneDrive', icon: HardDrive },
   { key: 'sharepoint', label: 'SharePoint', icon: Globe },
+  { key: 'teams', label: 'Teams', icon: MessageSquare },
+  { key: 'entra_id', label: 'Entra ID', icon: KeyRound },
 ];
 
 const ITEM_ICONS: Record<string, typeof Mail> = {
   email: Mail, calendar_event: Calendar, contact: User,
   file: FileText, folder: FileText, list_item: FileText,
+  channel_message: MessageSquare, chat_message: MessageSquare,
+  team_channel: MessageSquare, chat: MessageSquare,
+  user: User, group: User, directory_role: KeyRound,
+  conditional_access_policy: KeyRound, app_registration: KeyRound,
+  named_location: Globe, role_assignment: KeyRound,
 };
 
 export default function SelfRestore() {

@@ -27,12 +27,17 @@ async def list_failed_items(
     error_category: str = Query(None),
     is_resolved: bool = Query(None),
     can_retry: bool = Query(None),
+    workload_type: str = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """List failed items with filtering, sorting, and pagination."""
     stmt = select(FailedItem)
 
+    if workload_type:
+        stmt = stmt.join(ProtectedObject, FailedItem.protected_object_id == ProtectedObject.id).where(
+            ProtectedObject.workload_type == workload_type
+        )
     if snapshot_id:
         stmt = stmt.where(FailedItem.snapshot_id == snapshot_id)
     if protected_object_id:
@@ -119,10 +124,52 @@ async def failed_items_summary(
     # Sort by unresolved count descending
     categories.sort(key=lambda x: x["unresolved"], reverse=True)
 
+    # Per-workload breakdown
+    wl_stmt = (
+        select(
+            ProtectedObject.workload_type,
+            func.count(FailedItem.id).label("total"),
+            func.sum(case((FailedItem.is_resolved == False, 1), else_=0)).label("unresolved"),
+            func.sum(case((FailedItem.can_retry == True, 1), else_=0)).label("retriable"),
+        )
+        .join(ProtectedObject, FailedItem.protected_object_id == ProtectedObject.id)
+        .group_by(ProtectedObject.workload_type)
+    )
+    wl_result = await db.execute(wl_stmt)
+    by_workload = {}
+    for row in wl_result.all():
+        wl = row.workload_type.value if hasattr(row.workload_type, 'value') else str(row.workload_type)
+        total = int(row.total or 0)
+        unresolved = int(row.unresolved or 0)
+        retriable = int(row.retriable or 0)
+
+        # Find top error category for this workload
+        top_stmt = (
+            select(FailedItem.error_category, func.count(FailedItem.id).label("cnt"))
+            .join(ProtectedObject, FailedItem.protected_object_id == ProtectedObject.id)
+            .where(ProtectedObject.workload_type == row.workload_type, FailedItem.is_resolved == False)
+            .group_by(FailedItem.error_category)
+            .order_by(desc(func.count(FailedItem.id)))
+            .limit(1)
+        )
+        top_result = await db.execute(top_stmt)
+        top_row = top_result.first()
+        top_cat = top_row.error_category.value if top_row and hasattr(top_row.error_category, 'value') else (str(top_row.error_category) if top_row else None)
+        top_cnt = int(top_row.cnt) if top_row else 0
+
+        by_workload[wl] = {
+            "total": total,
+            "unresolved": unresolved,
+            "retriable": retriable,
+            "top_category": top_cat,
+            "top_category_count": top_cnt,
+        }
+
     return {
         "total_failed": total_failed,
         "total_unresolved": total_unresolved,
         "categories": categories,
+        "by_workload": by_workload,
     }
 
 

@@ -223,6 +223,13 @@ export interface FailedItemsSummary {
   total_failed: number;
   total_unresolved: number;
   categories: FailedItemCategory[];
+  by_workload?: Record<string, {
+    total: number;
+    unresolved: number;
+    retriable: number;
+    top_category: string | null;
+    top_category_count: number;
+  }>;
 }
 
 export interface FailedItemCategory {

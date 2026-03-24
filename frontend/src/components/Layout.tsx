@@ -1,32 +1,88 @@
 import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Mail, HardDrive, Globe, Shield, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search, Command, RotateCcw, BarChart3, Gauge } from 'lucide-react';
+import { LayoutDashboard, Mail, HardDrive, Globe, Shield, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search, Command, RotateCcw, BarChart3, Gauge, ChevronDown } from 'lucide-react';
 import { api } from '../api/client';
 import CommandPalette from './CommandPalette';
 
-const navItems = [
-  { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/exchange', label: 'Exchange', icon: Mail },
-  { path: '/onedrive', label: 'OneDrive', icon: HardDrive },
-  { path: '/sharepoint', label: 'SharePoint', icon: Globe },
-  { path: '/teams', label: 'Teams', icon: MessageSquare },
-  { path: '/entra-id', label: 'Entra ID', icon: KeyRound },
-  { path: '/sla-policies', label: 'SLA Policies', icon: Shield },
-  { path: '/jobs', label: 'Jobs', icon: Activity },
-  { path: '/failed-items', label: 'Failed Items', icon: ShieldAlert },
-  { path: '/tenants', label: 'Tenants', icon: Building2 },
-  { path: '/smart-engine', label: 'Smart Engine', icon: Brain },
-  { path: '/alerts', label: 'Alerts', icon: Bell },
-  { path: '/restore', label: 'Self Restore', icon: RotateCcw },
-  { path: '/reports', label: 'Reports', icon: BarChart3 },
-  { path: '/usage', label: 'Usage & License', icon: Gauge },
-  { path: '/audit', label: 'Audit Log', icon: FileText },
+interface NavItem {
+  path: string;
+  label: string;
+  icon: any;
+}
+
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+  defaultOpen?: boolean;
+}
+
+const navGroups: NavGroup[] = [
+  {
+    label: '',
+    defaultOpen: true,
+    items: [
+      { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: 'Workloads',
+    defaultOpen: true,
+    items: [
+      { path: '/exchange', label: 'Exchange', icon: Mail },
+      { path: '/onedrive', label: 'OneDrive', icon: HardDrive },
+      { path: '/sharepoint', label: 'SharePoint', icon: Globe },
+      { path: '/teams', label: 'Teams', icon: MessageSquare },
+      { path: '/entra-id', label: 'Entra ID', icon: KeyRound },
+    ],
+  },
+  {
+    label: 'Operations',
+    defaultOpen: true,
+    items: [
+      { path: '/jobs', label: 'Jobs', icon: Activity },
+      { path: '/failed-items', label: 'Failed Items', icon: ShieldAlert },
+      { path: '/restore', label: 'Restore', icon: RotateCcw },
+    ],
+  },
+  {
+    label: 'Intelligence',
+    defaultOpen: false,
+    items: [
+      { path: '/smart-engine', label: 'Smart Engine', icon: Brain },
+      { path: '/alerts', label: 'Alerts', icon: Bell },
+      { path: '/reports', label: 'Reports', icon: BarChart3 },
+    ],
+  },
+  {
+    label: 'Administration',
+    defaultOpen: false,
+    items: [
+      { path: '/tenants', label: 'Tenants', icon: Building2 },
+      { path: '/sla-policies', label: 'SLA Policies', icon: Shield },
+      { path: '/usage', label: 'Usage & License', icon: Gauge },
+      { path: '/audit', label: 'Audit Log', icon: FileText },
+    ],
+  },
 ];
 
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [commandOpen, setCommandOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
+    const init: Record<string, boolean> = {};
+    navGroups.forEach(g => { if (g.label) init[g.label] = !g.defaultOpen; });
+    return init;
+  });
+
+  // Auto-expand group if current path is in it
+  useEffect(() => {
+    navGroups.forEach(g => {
+      if (g.label && g.items.some(i => location.pathname === i.path || (i.path !== '/' && location.pathname.startsWith(i.path)))) {
+        setCollapsed(prev => ({ ...prev, [g.label]: false }));
+      }
+    });
+  }, [location.pathname]);
 
   // ⌘K / Ctrl+K to open command palette
   useEffect(() => {
@@ -45,16 +101,20 @@ export default function Layout() {
     navigate('/login');
   };
 
+  const toggleGroup = (label: string) => {
+    setCollapsed(prev => ({ ...prev, [label]: !prev[label] }));
+  };
+
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <aside className="w-64 bg-gray-900 text-white flex flex-col">
-        <div className="p-4 border-b border-gray-700">
+      <aside className="w-56 bg-gray-900 text-white flex flex-col">
+        <div className="px-4 py-3 border-b border-gray-700">
           <div className="flex items-center gap-2">
-            <Shield className="w-8 h-8 text-blue-400" />
+            <Shield className="w-7 h-7 text-blue-400" />
             <div>
-              <h1 className="text-lg font-bold leading-tight">M365 Vault</h1>
-              <p className="text-xs text-gray-400">Data Protection</p>
+              <h1 className="text-base font-bold leading-tight">M365 Vault</h1>
+              <p className="text-[10px] text-gray-500">Data Protection</p>
             </div>
           </div>
         </div>
@@ -62,41 +122,59 @@ export default function Layout() {
         {/* Search trigger */}
         <button
           onClick={() => setCommandOpen(true)}
-          className="mx-3 mt-3 flex items-center gap-2 px-3 py-2 text-sm text-gray-400 bg-gray-800 rounded-lg hover:bg-gray-700 hover:text-gray-200 transition-colors"
+          className="mx-2 mt-2 flex items-center gap-2 px-2.5 py-1.5 text-xs text-gray-400 bg-gray-800 rounded-md hover:bg-gray-700 hover:text-gray-200 transition-colors"
         >
-          <Search className="w-4 h-4" />
+          <Search className="w-3.5 h-3.5" />
           <span className="flex-1 text-left">Search...</span>
-          <kbd className="flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] bg-gray-700 rounded font-mono">
-            <Command className="w-2.5 h-2.5" />K
+          <kbd className="flex items-center gap-0.5 px-1 py-0.5 text-[9px] bg-gray-700 rounded font-mono">
+            <Command className="w-2 h-2" />K
           </kbd>
         </button>
 
-        <nav className="flex-1 p-2 mt-1 space-y-1 overflow-y-auto">
-          {navItems.map(item => {
-            const active = location.pathname === item.path ||
-              (item.path !== '/' && location.pathname.startsWith(item.path));
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  active
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                }`}
-              >
-                <item.icon className="w-5 h-5" />
-                {item.label}
-              </Link>
-            );
-          })}
+        <nav className="flex-1 px-2 mt-2 overflow-y-auto">
+          {navGroups.map((group, gi) => (
+            <div key={gi} className={group.label ? 'mt-2' : ''}>
+              {group.label && (
+                <button
+                  onClick={() => toggleGroup(group.label)}
+                  className="flex items-center justify-between w-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-gray-500 hover:text-gray-300 transition-colors"
+                >
+                  {group.label}
+                  <ChevronDown className={`w-3 h-3 transition-transform ${collapsed[group.label] ? '-rotate-90' : ''}`} />
+                </button>
+              )}
+              {!collapsed[group.label] && (
+                <div className="space-y-0.5">
+                  {group.items.map(item => {
+                    const active = location.pathname === item.path ||
+                      (item.path !== '/' && location.pathname.startsWith(item.path));
+                    return (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
+                          active
+                            ? 'bg-blue-600 text-white'
+                            : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                        }`}
+                      >
+                        <item.icon className="w-4 h-4 flex-shrink-0" />
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ))}
         </nav>
-        <div className="p-3 border-t border-gray-700">
+
+        <div className="p-2 border-t border-gray-700">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-3 py-2 w-full text-sm text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-colors"
+            className="flex items-center gap-2 px-2.5 py-1.5 w-full text-xs text-gray-400 hover:text-white rounded-md hover:bg-gray-800 transition-colors"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-3.5 h-3.5" />
             Sign Out
           </button>
         </div>

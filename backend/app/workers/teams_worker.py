@@ -1,11 +1,23 @@
-"""Microsoft Teams backup worker.
+"""Microsoft Teams backup and restore worker.
 
-Handles backup of Teams data:
-- Team channels and channel messages
-- Channel files (shared documents)
-- Team membership and settings
+Backup strategy:
+- Channel messages: Uses Export API (GET /teams/{id}/channels/getAllMessages) for
+  bulk export in a single call. Falls back to per-channel delta if bulk fails.
+- 1-to-1 / group chats: Uses Export API (GET /users/{id}/chats/getAllMessages)
+  for per-user bulk chat export.
+- Channel files: Standard drive API for file content download.
+- Team settings + members: Standard team API.
 
-Uses Microsoft Graph API with delta queries for incremental message backups.
+Restore strategy:
+- Uses Migration/Import API to recreate teams with original timestamps:
+  1. Create team in migration mode
+  2. Create channels in migration mode
+  3. Import messages with original createdDateTime
+  4. Complete migration to finalize
+- Files restored via drive upload API.
+
+All Export APIs are free (no longer metered as of Aug 2025) and do not
+require the protected API form submission.
 """
 import json
 import logging
@@ -28,7 +40,7 @@ ITEM_BASE_DELAY = 2.0
 
 
 class TeamsWorker:
-    """Worker for Microsoft Teams backup operations."""
+    """Worker for Microsoft Teams backup and restore operations."""
 
     def __init__(
         self,
@@ -49,14 +61,21 @@ class TeamsWorker:
         wrapped_dek: str,
         delta_token: str = None,
     ) -> tuple[int, int, str]:
-        """Backup a Microsoft Team.
+        """Backup a Microsoft Team or user's chats.
 
         Returns (item_count, total_size_bytes, new_delta_token).
-        Protected object ms_object_id = the Team (group) ID.
-        """
-        team_id = protected_object.ms_object_id
 
-        # Parse stored delta tokens (per-channel)
+        Two modes based on metadata:
+        - Team object (default): back up channels, messages, files, settings
+        - User chats (metadata.type == "user_chats"): back up 1-to-1 and group chats
+        """
+        metadata = {}
+        if protected_object.metadata_json:
+            try:
+                metadata = json.loads(protected_object.metadata_json)
+            except (json.JSONDecodeError, TypeError):
+                pass
+
         tokens = {}
         if delta_token:
             try:
@@ -66,19 +85,35 @@ class TeamsWorker:
 
         new_tokens = {}
 
-        # 1. Backup channels and their messages
-        channel_tokens = await self._backup_channels(
-            team_id, protected_object, snapshot, wrapped_dek,
-            channel_tokens=tokens.get("channels", {}),
-        )
-        if channel_tokens:
-            new_tokens["channels"] = channel_tokens
+        if metadata.get("type") == "user_chats":
+            # Per-user chat backup
+            user_id = protected_object.ms_object_id
+            last_backup = tokens.get("last_backup_at")
+            await self._backup_user_chats(
+                user_id, protected_object, snapshot, wrapped_dek,
+                since=last_backup,
+            )
+            new_tokens["last_backup_at"] = datetime.utcnow().isoformat()
+        else:
+            # Team backup
+            team_id = protected_object.ms_object_id
 
-        # 2. Backup channel files
-        await self._backup_channel_files(team_id, protected_object, snapshot, wrapped_dek)
+            # 1. Channel messages via bulk Export API
+            last_backup = tokens.get("last_backup_at")
+            await self._backup_all_channel_messages(
+                team_id, protected_object, snapshot, wrapped_dek,
+                since=last_backup,
+            )
+            new_tokens["last_backup_at"] = datetime.utcnow().isoformat()
 
-        # 3. Backup team settings/metadata
-        await self._backup_team_settings(team_id, protected_object, snapshot, wrapped_dek)
+            # 2. Channel metadata
+            await self._backup_channel_metadata(team_id, protected_object, snapshot, wrapped_dek)
+
+            # 3. Channel files
+            await self._backup_channel_files(team_id, protected_object, snapshot, wrapped_dek)
+
+            # 4. Team settings + members
+            await self._backup_team_settings(team_id, protected_object, snapshot, wrapped_dek)
 
         # Count totals
         result = await self.db.execute(
@@ -90,6 +125,8 @@ class TeamsWorker:
         total_size = row[1] or 0
 
         return item_count, total_size, json.dumps(new_tokens) if new_tokens else None
+
+    # ── Helper: store a single item ──
 
     @retry_async(max_retries=ITEM_MAX_RETRIES, base_delay=ITEM_BASE_DELAY)
     async def _store_item(
@@ -125,37 +162,145 @@ class TeamsWorker:
         )
         self.db.add(item)
 
-    # ── 1. Channels + Messages ──
+    # ═══════════════════════════════════════════════════════
+    # BACKUP — Export APIs
+    # ═══════════════════════════════════════════════════════
 
-    async def _backup_channels(
+    # ── 1. Bulk Channel Messages (Export API) ──
+
+    async def _backup_all_channel_messages(
+        self, team_id: str, protected_object: ProtectedObject,
+        snapshot: Snapshot, wrapped_dek: str, since: str = None,
+    ):
+        """Backup ALL channel messages using bulk Export API.
+
+        Uses GET /teams/{id}/channels/getAllMessages — single call for all channels.
+        Falls back to per-channel queries if bulk fails.
+        """
+        try:
+            params = {"$top": "50"}
+            if since:
+                params["$filter"] = f"lastModifiedDateTime gt {since}"
+
+            messages = await self.graph.get_all_pages(
+                f"/teams/{team_id}/channels/getAllMessages",
+                params=params,
+            )
+
+            count = 0
+            for msg in messages:
+                if msg.get("@removed") or not msg.get("id"):
+                    continue
+
+                try:
+                    msg_id = msg.get("id")
+                    sender = "System"
+                    if msg.get("from") and msg["from"].get("user"):
+                        sender = msg["from"]["user"].get("displayName", "Unknown")
+                    body_preview = (msg.get("body", {}).get("content", "") or "")[:100]
+                    channel_id = msg.get("channelIdentity", {}).get("channelId", "")
+
+                    await self._store_item(
+                        obj=msg,
+                        item_type=ItemType.CHANNEL_MESSAGE,
+                        ms_item_id=msg_id,
+                        name=f"{sender}: {body_preview}" if body_preview else f"Message from {sender}",
+                        path=f"Channels/{channel_id[:12]}",
+                        protected_object=protected_object,
+                        snapshot=snapshot,
+                        wrapped_dek=wrapped_dek,
+                        metadata={
+                            "sender": sender,
+                            "channelId": channel_id,
+                            "createdDateTime": msg.get("createdDateTime"),
+                            "messageType": msg.get("messageType"),
+                            "importance": msg.get("importance"),
+                            "hasAttachments": bool(msg.get("attachments")),
+                        },
+                    )
+                    count += 1
+                except Exception as e:
+                    await record_failed_item(
+                        db=self.db, snapshot_id=snapshot.id,
+                        protected_object_id=protected_object.id, error=e,
+                        ms_item_id=msg.get("id"), item_type_str="channel_message",
+                        item_name=f"Channel message", item_path="Channels",
+                    )
+
+            await self.db.flush()
+            logger.info(f"Backed up {count} channel messages via bulk Export API for team {team_id}")
+
+        except Exception as e:
+            logger.warning(f"Bulk getAllMessages failed for team {team_id}: {e}, falling back to per-channel")
+            await self._backup_channel_messages_fallback(team_id, protected_object, snapshot, wrapped_dek)
+
+    async def _backup_channel_messages_fallback(
         self, team_id: str, protected_object: ProtectedObject,
         snapshot: Snapshot, wrapped_dek: str,
-        channel_tokens: dict = None,
-    ) -> dict:
-        """Backup all channels and their messages for a team."""
-        channel_tokens = channel_tokens or {}
-        new_tokens = {}
+    ):
+        """Fallback: per-channel message backup using delta queries."""
+        try:
+            channels = await self.graph.get_all_pages(
+                f"/teams/{team_id}/channels",
+                params={"$select": "id,displayName"},
+            )
+        except Exception as e:
+            logger.error(f"Failed to list channels for fallback: {e}")
+            return
 
+        for channel in channels:
+            channel_id = channel.get("id")
+            channel_name = channel.get("displayName", "Unknown")
+            try:
+                messages, _ = await self.graph.get_delta(
+                    f"/teams/{team_id}/channels/{channel_id}/messages/delta"
+                )
+                count = 0
+                for msg in messages:
+                    if msg.get("@removed") or not msg.get("id"):
+                        continue
+                    sender = "System"
+                    if msg.get("from") and msg["from"].get("user"):
+                        sender = msg["from"]["user"].get("displayName", "Unknown")
+                    body_preview = (msg.get("body", {}).get("content", "") or "")[:100]
+
+                    await self._store_item(
+                        obj=msg,
+                        item_type=ItemType.CHANNEL_MESSAGE,
+                        ms_item_id=msg["id"],
+                        name=f"{sender}: {body_preview}" if body_preview else f"Message from {sender}",
+                        path=f"Channels/{channel_name}",
+                        protected_object=protected_object,
+                        snapshot=snapshot,
+                        wrapped_dek=wrapped_dek,
+                        metadata={"sender": sender, "channelId": channel_id,
+                                  "createdDateTime": msg.get("createdDateTime")},
+                    )
+                    count += 1
+                logger.info(f"Fallback: backed up {count} messages from '{channel_name}'")
+            except Exception as e:
+                logger.error(f"Fallback failed for channel '{channel_name}': {e}")
+
+        await self.db.flush()
+
+    # ── 2. Channel Metadata ──
+
+    async def _backup_channel_metadata(
+        self, team_id: str, protected_object: ProtectedObject,
+        snapshot: Snapshot, wrapped_dek: str,
+    ):
+        """Backup channel metadata (name, description, type)."""
         try:
             channels = await self.graph.get_all_pages(
                 f"/teams/{team_id}/channels",
                 params={"$select": "id,displayName,description,membershipType,createdDateTime"},
             )
-        except Exception as e:
-            logger.error(f"Failed to list channels for team {team_id}: {e}")
-            return {}
-
-        for channel in channels:
-            channel_id = channel.get("id")
-            channel_name = channel.get("displayName", "Unknown Channel")
-
-            try:
-                # Store channel metadata
+            for channel in channels:
                 await self._store_item(
                     obj=channel,
                     item_type=ItemType.TEAM_CHANNEL,
-                    ms_item_id=f"channel_{channel_id}",
-                    name=channel_name,
+                    ms_item_id=f"channel_{channel['id']}",
+                    name=channel.get("displayName", "Unknown"),
                     path="Channels",
                     protected_object=protected_object,
                     snapshot=snapshot,
@@ -165,89 +310,12 @@ class TeamsWorker:
                         "createdDateTime": channel.get("createdDateTime"),
                     },
                 )
-
-                # Backup messages in this channel
-                existing_token = channel_tokens.get(channel_id)
-                msg_token = await self._backup_channel_messages(
-                    team_id, channel_id, channel_name,
-                    protected_object, snapshot, wrapped_dek,
-                    delta_token=existing_token,
-                )
-                if msg_token:
-                    new_tokens[channel_id] = msg_token
-
-            except Exception as e:
-                logger.error(f"Failed to backup channel {channel_name}: {e}")
-                await record_failed_item(
-                    db=self.db, snapshot_id=snapshot.id,
-                    protected_object_id=protected_object.id, error=e,
-                    ms_item_id=channel_id, item_type_str="team_channel",
-                    item_name=channel_name, item_path="Channels",
-                )
-
-        await self.db.flush()
-        logger.info(f"Backed up {len(channels)} channels for team {team_id}")
-        return new_tokens
-
-    async def _backup_channel_messages(
-        self, team_id: str, channel_id: str, channel_name: str,
-        protected_object: ProtectedObject, snapshot: Snapshot,
-        wrapped_dek: str, delta_token: str = None,
-    ) -> str:
-        """Backup messages in a channel with delta support."""
-        try:
-            msg_path = f"/teams/{team_id}/channels/{channel_id}/messages/delta"
-
-            if delta_token:
-                messages, new_delta = await self.graph.get_delta(
-                    msg_path, delta_token=delta_token
-                )
-            else:
-                messages, new_delta = await self.graph.get_delta(msg_path)
-
-            count = 0
-            for msg in messages:
-                if msg.get("@removed"):
-                    continue
-
-                try:
-                    msg_id = msg.get("id")
-                    sender = msg.get("from", {}).get("user", {}).get("displayName", "Unknown")
-                    body_preview = (msg.get("body", {}).get("content", "") or "")[:100]
-
-                    await self._store_item(
-                        obj=msg,
-                        item_type=ItemType.CHANNEL_MESSAGE,
-                        ms_item_id=msg_id,
-                        name=f"{sender}: {body_preview}" if body_preview else f"Message from {sender}",
-                        path=f"Channels/{channel_name}",
-                        protected_object=protected_object,
-                        snapshot=snapshot,
-                        wrapped_dek=wrapped_dek,
-                        metadata={
-                            "sender": sender,
-                            "createdDateTime": msg.get("createdDateTime"),
-                            "messageType": msg.get("messageType"),
-                            "importance": msg.get("importance"),
-                        },
-                    )
-                    count += 1
-                except Exception as e:
-                    await record_failed_item(
-                        db=self.db, snapshot_id=snapshot.id,
-                        protected_object_id=protected_object.id, error=e,
-                        ms_item_id=msg.get("id"), item_type_str="channel_message",
-                        item_name=f"Message in {channel_name}", item_path=f"Channels/{channel_name}",
-                    )
-
-            logger.info(f"Backed up {count} messages from channel '{channel_name}'")
-            return new_delta
-
+            await self.db.flush()
+            logger.info(f"Backed up {len(channels)} channel metadata for team {team_id}")
         except Exception as e:
-            logger.error(f"Failed to backup messages for channel {channel_name}: {e}")
-            return None
+            logger.error(f"Failed to backup channel metadata: {e}")
 
-    # ── 2. Channel Files ──
+    # ── 3. Channel Files ──
 
     async def _backup_channel_files(
         self, team_id: str, protected_object: ProtectedObject,
@@ -279,7 +347,6 @@ class TeamsWorker:
                     file_name = file_item.get("name", "unknown")
 
                     try:
-                        # Download file content
                         file_data = await self.graph.get_binary(
                             f"/teams/{team_id}/channels/{channel_id}/filesFolder/root:/{file_name}:/content"
                         )
@@ -326,7 +393,7 @@ class TeamsWorker:
 
         await self.db.flush()
 
-    # ── 3. Team Settings ──
+    # ── 4. Team Settings ──
 
     async def _backup_team_settings(
         self, team_id: str, protected_object: ProtectedObject,
@@ -334,13 +401,11 @@ class TeamsWorker:
     ):
         """Backup team settings, members, and metadata."""
         try:
-            # Get team details
             team = await self.graph.get(
                 f"/teams/{team_id}",
                 params={"$select": "id,displayName,description,visibility,memberSettings,messagingSettings,funSettings"},
             )
 
-            # Get members
             members = []
             try:
                 members = await self.graph.get_all_pages(
@@ -354,7 +419,7 @@ class TeamsWorker:
 
             await self._store_item(
                 obj=team_with_members,
-                item_type=ItemType.MEETING,  # Reuse for team metadata
+                item_type=ItemType.MEETING,
                 ms_item_id=f"team_settings_{team_id}",
                 name=f"{team.get('displayName', 'Unknown')} (Settings)",
                 path="Team Settings",
@@ -370,7 +435,106 @@ class TeamsWorker:
         except Exception as e:
             logger.error(f"Failed to backup team settings for {team_id}: {e}")
 
-    # ── Restore Operations ──
+    # ═══════════════════════════════════════════════════════
+    # BACKUP — User Chats (1-to-1 + Group)
+    # ═══════════════════════════════════════════════════════
+
+    async def _backup_user_chats(
+        self, user_id: str, protected_object: ProtectedObject,
+        snapshot: Snapshot, wrapped_dek: str, since: str = None,
+    ):
+        """Backup all 1-to-1 and group chat messages for a user.
+
+        Uses GET /users/{userId}/chats/getAllMessages (Export API).
+        """
+        # 1. Backup chat list (metadata)
+        try:
+            chats = await self.graph.get_all_pages(
+                f"/users/{user_id}/chats",
+                params={"$select": "id,topic,chatType,createdDateTime,lastUpdatedDateTime", "$top": "50"},
+            )
+            for chat in chats:
+                chat_id = chat.get("id")
+                chat_type = chat.get("chatType", "unknown")
+                topic = chat.get("topic") or f"{chat_type} chat"
+
+                await self._store_item(
+                    obj=chat,
+                    item_type=ItemType.CHAT,
+                    ms_item_id=f"chat_{chat_id}",
+                    name=topic,
+                    path=f"Chats/{chat_type}",
+                    protected_object=protected_object,
+                    snapshot=snapshot,
+                    wrapped_dek=wrapped_dek,
+                    metadata={
+                        "chatType": chat_type,
+                        "createdDateTime": chat.get("createdDateTime"),
+                        "lastUpdatedDateTime": chat.get("lastUpdatedDateTime"),
+                    },
+                )
+            logger.info(f"Backed up {len(chats)} chat metadata for user {user_id}")
+        except Exception as e:
+            logger.error(f"Failed to backup chat list for user {user_id}: {e}")
+
+        # 2. Backup all chat messages via bulk Export API
+        try:
+            params = {"$top": "50"}
+            if since:
+                params["$filter"] = f"lastModifiedDateTime gt {since}"
+
+            messages = await self.graph.get_all_pages(
+                f"/users/{user_id}/chats/getAllMessages",
+                params=params,
+            )
+
+            count = 0
+            for msg in messages:
+                if not msg.get("id"):
+                    continue
+
+                try:
+                    msg_id = msg.get("id")
+                    sender = "System"
+                    if msg.get("from") and msg["from"].get("user"):
+                        sender = msg["from"]["user"].get("displayName", "Unknown")
+                    body_preview = (msg.get("body", {}).get("content", "") or "")[:100]
+                    chat_id = msg.get("chatId", "")
+
+                    await self._store_item(
+                        obj=msg,
+                        item_type=ItemType.CHAT_MESSAGE,
+                        ms_item_id=msg_id,
+                        name=f"{sender}: {body_preview}" if body_preview else f"Chat from {sender}",
+                        path=f"Chats/{chat_id[:12]}",
+                        protected_object=protected_object,
+                        snapshot=snapshot,
+                        wrapped_dek=wrapped_dek,
+                        metadata={
+                            "sender": sender,
+                            "chatId": chat_id,
+                            "createdDateTime": msg.get("createdDateTime"),
+                            "messageType": msg.get("messageType"),
+                        },
+                    )
+                    count += 1
+                except Exception as e:
+                    await record_failed_item(
+                        db=self.db, snapshot_id=snapshot.id,
+                        protected_object_id=protected_object.id, error=e,
+                        ms_item_id=msg.get("id"), item_type_str="chat_message",
+                        item_name=f"Chat message", item_path="Chats",
+                    )
+
+            await self.db.flush()
+            logger.info(f"Backed up {count} chat messages via Export API for user {user_id}")
+
+        except Exception as e:
+            logger.error(f"Failed to backup chat messages for user {user_id}: {e}")
+
+    # ═══════════════════════════════════════════════════════
+    # RESTORE — Migration/Import API
+    # ═══════════════════════════════════════════════════════
 
     async def restore_items(
         self,
@@ -380,67 +544,142 @@ class TeamsWorker:
         target_team_id: str = None,
         protected_object: ProtectedObject = None,
     ) -> int:
-        """Restore Teams items by reposting messages to channels.
+        """Restore Teams items using Migration/Import API.
 
-        Supports: channel messages (posted as new messages with [Restored] prefix).
-        Files are restored by re-uploading to the channel's files folder.
+        For channel messages: creates a new channel in migration mode,
+        imports messages with original timestamps, then completes migration.
+
+        For files: re-uploads to channel files folder.
         """
-        from sqlalchemy import select
-        target = target_team_id or protected_object.ms_object_id
+        from sqlalchemy import select as sa_select
+        target = target_team_id or (protected_object.ms_object_id if protected_object else None)
+        if not target:
+            logger.error("No target team ID for restore")
+            return 0
+
         result = await self.db.execute(
-            select(SnapshotItem).where(SnapshotItem.id.in_(item_ids))
+            sa_select(SnapshotItem).where(SnapshotItem.id.in_(item_ids))
         )
         items = result.scalars().all()
+
+        # Separate items by type
+        messages = [i for i in items if i.item_type in (ItemType.CHANNEL_MESSAGE, ItemType.CHAT_MESSAGE)]
+        files = [i for i in items if i.item_type == ItemType.FILE]
+
         restored = 0
 
-        for item in items:
+        # Restore messages via migration mode
+        if messages:
+            restored += await self._restore_messages_via_migration(
+                target, messages, snapshot, wrapped_dek
+            )
+
+        # Restore files via upload
+        for item in files:
             try:
-                data = await self.storage.retrieve_item(item.blob_path, wrapped_dek)
-                obj_data = json.loads(data)
+                file_data = await self.storage.retrieve_item(item.blob_path, wrapped_dek)
+                file_name = item.file_name or item.name
 
-                if item.item_type == ItemType.CHANNEL_MESSAGE:
-                    # Get channel ID from path (Channels/{channel_name})
-                    # Find the channel by listing channels
-                    channel_name = item.path.replace("Channels/", "") if item.path else None
-                    if channel_name:
-                        channels = await self.graph.get_all_pages(
-                            f"/teams/{target}/channels",
-                            params={"$filter": f"displayName eq '{channel_name}'", "$select": "id"},
-                        )
-                        if channels:
-                            channel_id = channels[0]["id"]
-                            body_content = obj_data.get("body", {}).get("content", "")
-                            sender = obj_data.get("from", {}).get("user", {}).get("displayName", "Unknown")
-                            await self.graph.post(
-                                f"/teams/{target}/channels/{channel_id}/messages",
-                                json_data={
-                                    "body": {
-                                        "contentType": "html",
-                                        "content": f"<b>[Restored from backup]</b> Originally from {sender}:<br/>{body_content}",
-                                    }
-                                },
-                            )
-                            restored += 1
-
-                elif item.item_type == ItemType.FILE:
-                    # Re-upload file to channel
-                    file_data = await self.storage.retrieve_item(item.blob_path, wrapped_dek)
-                    file_name = item.file_name or item.name
-                    # Upload to root of channel files
-                    channel_path = item.path.split("/")[1] if item.path and "/" in item.path else "General"
-                    channels = await self.graph.get_all_pages(
-                        f"/teams/{target}/channels",
-                        params={"$filter": f"displayName eq '{channel_path}'", "$select": "id"},
+                # Find General channel for file upload
+                channels = await self.graph.get_all_pages(
+                    f"/teams/{target}/channels",
+                    params={"$select": "id,displayName"},
+                )
+                general = next((c for c in channels if c["displayName"] == "General"), channels[0] if channels else None)
+                if general:
+                    # Get filesFolder drive
+                    folder = await self.graph.get(
+                        f"/teams/{target}/channels/{general['id']}/filesFolder"
                     )
-                    if channels:
-                        channel_id = channels[0]["id"]
+                    drive_id = folder.get("parentReference", {}).get("driveId")
+                    folder_id = folder.get("id")
+                    if drive_id:
                         await self.graph.put(
-                            f"/teams/{target}/channels/{channel_id}/filesFolder/root:/{file_name}:/content",
+                            f"/drives/{drive_id}/items/{folder_id}:/{file_name}:/content",
                             data=file_data,
                         )
                         restored += 1
-
             except Exception as e:
-                logger.error(f"Failed to restore Teams item {item.id}: {e}")
+                logger.error(f"Failed to restore file {item.name}: {e}")
+
+        return restored
+
+    async def _restore_messages_via_migration(
+        self, target_team_id: str, items: list[SnapshotItem],
+        snapshot: Snapshot, wrapped_dek: str,
+    ) -> int:
+        """Restore messages using Teams Migration/Import API.
+
+        Creates a new channel in migration mode, imports messages
+        with original timestamps, then completes migration.
+        """
+        restored = 0
+
+        try:
+            # Create a restore channel in migration mode
+            channel_name = f"Restored_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+            channel_resp = await self.graph.post(
+                f"/teams/{target_team_id}/channels",
+                json_data={
+                    "displayName": channel_name,
+                    "description": f"Restored from backup snapshot {snapshot.id}",
+                    "membershipType": "standard",
+                    "@microsoft.graph.channelCreationMode": "migration",
+                    "createdDateTime": "2020-01-01T00:00:00Z",  # Must be in past for migration
+                },
+            )
+            channel_id = channel_resp.get("id")
+            if not channel_id:
+                logger.error(f"Failed to create migration channel: {channel_resp}")
+                return 0
+
+            logger.info(f"Created migration channel '{channel_name}' ({channel_id})")
+
+            # Import messages with original timestamps
+            for item in items:
+                try:
+                    data = await self.storage.retrieve_item(item.blob_path, wrapped_dek)
+                    msg_data = json.loads(data)
+
+                    sender = "Unknown"
+                    if msg_data.get("from") and msg_data["from"].get("user"):
+                        sender = msg_data["from"]["user"].get("displayName", "Unknown")
+
+                    body = msg_data.get("body", {})
+                    created = msg_data.get("createdDateTime", "2020-01-01T00:00:01Z")
+
+                    import_body = {
+                        "createdDateTime": created,
+                        "from": msg_data.get("from", {
+                            "user": {"id": "00000000-0000-0000-0000-000000000000",
+                                     "displayName": sender, "userIdentityType": "aadUser"}
+                        }),
+                        "body": {
+                            "contentType": body.get("contentType", "html"),
+                            "content": body.get("content", f"[Restored] Message from {sender}"),
+                        },
+                    }
+
+                    await self.graph.post(
+                        f"/teams/{target_team_id}/channels/{channel_id}/messages",
+                        json_data=import_body,
+                    )
+                    restored += 1
+
+                except Exception as e:
+                    logger.error(f"Failed to import message {item.ms_item_id}: {e}")
+
+            # Complete migration
+            try:
+                await self.graph.post(
+                    f"/teams/{target_team_id}/channels/{channel_id}/completeMigration",
+                    json_data={},
+                )
+                logger.info(f"Migration completed for channel '{channel_name}' — {restored} messages imported")
+            except Exception as e:
+                logger.error(f"Failed to complete migration for channel {channel_id}: {e}")
+
+        except Exception as e:
+            logger.error(f"Migration restore failed: {e}")
 
         return restored

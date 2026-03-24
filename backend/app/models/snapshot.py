@@ -63,6 +63,8 @@ class ItemType(str, enum.Enum):
     CHANNEL_MESSAGE = "channel_message"
     TEAM_CHANNEL = "team_channel"
     MEETING = "meeting"
+    CHAT = "chat"                      # Chat metadata (1-to-1 or group)
+    CHAT_ATTACHMENT = "chat_attachment" # File attached to chat message
 
 
 class SnapshotItem(Base):

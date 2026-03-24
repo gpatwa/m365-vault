@@ -304,7 +304,36 @@ class DiscoveryService:
             )
             team_ids.add(group_id)
 
-        logger.info(f"Teams discovery: {len(team_ids)} teams found")
+        # Also discover per-user chat objects for users with Teams license
+        try:
+            users = await graph.get_all_pages("/users", params={
+                "$select": "id,displayName,mail,userPrincipalName",
+                "$top": "999",
+            })
+            chat_count = 0
+            for user in users:
+                user_id = user.get("id")
+                display_name = user.get("displayName", "Unknown")
+                # Check if user has any chats (quick probe)
+                try:
+                    await graph.get(f"/users/{user_id}/chats", params={"$top": "1", "$select": "id"})
+                    await self._upsert_protected_object(
+                        tenant_id=tenant.id,
+                        workload_type=WorkloadType.TEAMS,
+                        ms_object_id=user_id,
+                        display_name=f"{display_name} (Chats)",
+                        email=user.get("mail") or user.get("userPrincipalName"),
+                        metadata={"source": "teams_chat_discovery", "type": "user_chats"},
+                    )
+                    team_ids.add(user_id)
+                    chat_count += 1
+                except Exception:
+                    pass  # User doesn't have Teams/chats access
+            logger.info(f"Teams chat discovery: {chat_count} users with chat access")
+        except Exception as e:
+            logger.warning(f"Teams chat user discovery failed: {e}")
+
+        logger.info(f"Teams discovery: {len(team_ids)} objects ({len(team_ids) - chat_count if 'chat_count' in dir() else 0} teams, {chat_count if 'chat_count' in dir() else 0} chat users)")
         return len(team_ids), team_ids
 
     async def _discover_entra_id(self, tenant: Tenant, graph: GraphClient) -> int:

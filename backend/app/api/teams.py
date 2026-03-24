@@ -16,6 +16,7 @@ router = APIRouter(prefix="/api/teams", tags=["Teams"])
 TEAMS_ITEM_TYPES = [
     ItemType.CHAT_MESSAGE, ItemType.CHANNEL_MESSAGE,
     ItemType.TEAM_CHANNEL, ItemType.MEETING, ItemType.FILE,
+    ItemType.CHAT, ItemType.CHAT_ATTACHMENT,
 ]
 
 
@@ -145,4 +146,106 @@ async def backup_single_team(
         "snapshot_id": snapshot.id,
         "item_count": snapshot.item_count,
         "size_bytes": snapshot.size_bytes,
+    }
+
+
+@router.get("/chats")
+async def list_chat_users(
+    tenant_id: int = Query(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """List users with Teams chat backup (user_chats type)."""
+    result = await db.execute(
+        select(ProtectedObject).where(
+            ProtectedObject.tenant_id == tenant_id,
+            ProtectedObject.workload_type == WorkloadType.TEAMS,
+        ).order_by(ProtectedObject.display_name)
+    )
+    all_objects = result.scalars().all()
+
+    # Separate teams vs chat users
+    teams = []
+    chat_users = []
+    for obj in all_objects:
+        metadata = {}
+        if obj.metadata_json:
+            try:
+                metadata = json.loads(obj.metadata_json)
+            except (json.JSONDecodeError, TypeError):
+                pass
+        entry = {
+            "id": obj.id,
+            "display_name": obj.display_name,
+            "ms_object_id": obj.ms_object_id,
+            "email": obj.email,
+            "status": obj.status.value,
+            "last_backup_at": obj.last_backup_at.isoformat() if obj.last_backup_at else None,
+            "total_items_backed_up": obj.total_items_backed_up,
+            "total_size_bytes": obj.total_size_bytes,
+            "type": metadata.get("type", "team"),
+        }
+        if metadata.get("type") == "user_chats":
+            chat_users.append(entry)
+        else:
+            teams.append(entry)
+
+    return {
+        "teams": {"total": len(teams), "items": teams},
+        "chats": {"total": len(chat_users), "items": chat_users},
+    }
+
+
+@router.get("/chats/{user_object_id}/messages")
+async def list_chat_messages(
+    user_object_id: int,
+    snapshot_id: int = Query(None),
+    search: str = Query(None),
+    page_size: int = Query(50, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Browse backed-up chat messages for a user."""
+    obj = await db.get(ProtectedObject, user_object_id)
+    if not obj:
+        raise HTTPException(status_code=404, detail="User chat object not found")
+
+    # Get latest snapshot if not specified
+    if not snapshot_id:
+        snap_result = await db.execute(
+            select(Snapshot).where(
+                Snapshot.protected_object_id == obj.id,
+                Snapshot.status == SnapshotStatus.COMPLETED,
+            ).order_by(desc(Snapshot.completed_at)).limit(1)
+        )
+        snap = snap_result.scalar_one_or_none()
+        if not snap:
+            return {"total": 0, "items": []}
+        snapshot_id = snap.id
+
+    stmt = select(SnapshotItem).where(
+        SnapshotItem.snapshot_id == snapshot_id,
+        SnapshotItem.item_type.in_([ItemType.CHAT_MESSAGE, ItemType.CHAT]),
+    )
+    if search:
+        stmt = stmt.where(SnapshotItem.name.ilike(f"%{search}%"))
+
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total = (await db.execute(count_stmt)).scalar() or 0
+
+    result = await db.execute(stmt.order_by(SnapshotItem.item_type, SnapshotItem.name).limit(page_size))
+    items = result.scalars().all()
+
+    return {
+        "total": total,
+        "snapshot_id": snapshot_id,
+        "items": [
+            {
+                "id": i.id, "item_type": i.item_type.value,
+                "ms_item_id": i.ms_item_id, "name": i.name,
+                "path": i.path, "size_bytes": i.size_bytes,
+                "metadata": json.loads(i.metadata_json) if i.metadata_json else None,
+            }
+            for i in items
+        ],
     }

@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Mail, RefreshCw, Download, ArrowRight, Loader2, Search } from 'lucide-react';
 import { api } from '../api/client';
 import DataTable, { type Column } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
+import { WorkloadPageLayout, Breadcrumb } from '../components/design-system';
 import { useTenantId } from '../hooks/useTenant';
 import { formatSize, timeAgo } from '../utils/format';
 import type { ProtectedObject, Snapshot, SnapshotItem } from '../types';
@@ -69,8 +70,13 @@ export default function Exchange() {
   if (selectedSnapshot) {
     return (
       <div>
+        <Breadcrumb items={[
+          { label: 'Microsoft 365', path: '/' },
+          { label: 'Exchange', path: '/exchange' },
+          { label: selectedMailbox?.display_name || 'Mailbox' },
+        ]} />
         <button onClick={() => setSelectedSnapshot(null)} className="text-blue-600 hover:underline text-sm mb-4 flex items-center gap-1">
-          &larr; Back to snapshots
+          &larr; Back to {selectedMailbox?.display_name || 'snapshots'}
         </button>
         <h2 className="text-xl font-bold mb-4">
           Browse Snapshot — {selectedSnapshot.started_at?.slice(0, 16)}
@@ -110,8 +116,13 @@ export default function Exchange() {
   if (selectedMailbox) {
     return (
       <div>
+        <Breadcrumb items={[
+          { label: 'Microsoft 365', path: '/' },
+          { label: 'Exchange', path: '/exchange' },
+          { label: selectedMailbox.display_name },
+        ]} />
         <button onClick={() => setSelectedMailbox(null)} className="text-blue-600 hover:underline text-sm mb-4 flex items-center gap-1">
-          &larr; Back to mailboxes
+          &larr; Back to Exchange
         </button>
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -217,29 +228,35 @@ export default function Exchange() {
     },
   ];
 
+  // Compute workload stats from dashboard summary
+  const { data: wlSummary } = useQuery({
+    queryKey: ['dashboard-summary'],
+    queryFn: () => api.get<any>('/dashboard/summary'),
+    staleTime: 30000,
+  });
+
+  const workloadStats = useMemo(() => {
+    const wl = wlSummary?.workloads?.exchange || {};
+    return {
+      protected: wl.protected || 0,
+      total: wl.total || 0,
+      lastBackup: null as string | null, // TODO: from most recent job
+      totalItems: wlSummary?.snapshots?.total || 0,
+      totalSize: (wlSummary?.snapshots?.total_size_gb || 0) * 1024 * 1024 * 1024,
+      successRate: 100,
+    };
+  }, [wlSummary]);
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Exchange</h1>
-          <p className="text-gray-500">Manage and protect Exchange mailboxes</p>
-        </div>
-        <button
-          onClick={() => backupAllMutation.mutate()}
-          disabled={backupAllMutation.isPending}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2 disabled:opacity-50"
-        >
-          {backupAllMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-          {backupAllMutation.isPending ? 'Backing up all...' : 'Backup All Mailboxes'}
-        </button>
-      </div>
-
-      {backupMsg && (
-        <div className={`rounded-lg p-3 mb-4 text-sm ${backupMsg.includes('failed') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-green-50 border border-green-200 text-green-700'}`}>
-          {backupMsg}
-        </div>
-      )}
-
+    <WorkloadPageLayout
+      workloadLabel="Exchange"
+      workloadIcon={Mail}
+      iconColor="text-blue-600"
+      stats={workloadStats}
+      onBackupAll={() => backupAllMutation.mutate()}
+      isBackingUp={backupAllMutation.isPending}
+      statusMessage={backupMsg}
+    >
       {/* Cross-snapshot email search */}
       <div className="mb-6">
         <div className="relative max-w-md">
@@ -313,6 +330,6 @@ export default function Exchange() {
         onRowClick={(row) => setSelectedMailbox(row)}
         rowKey="id"
       />
-    </div>
+    </WorkloadPageLayout>
   );
 }

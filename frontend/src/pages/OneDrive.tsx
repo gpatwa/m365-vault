@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { HardDrive, Search, Folder, FileText, ArrowRight, RefreshCw, Download, Loader2 } from 'lucide-react';
+import { HardDrive, Folder, FileText, ArrowRight, RefreshCw, Download, Loader2 } from 'lucide-react';
 import { api } from '../api/client';
 import DataTable, { type Column } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
@@ -12,7 +12,6 @@ import type { ProtectedObject, Snapshot, SnapshotItem } from '../types';
 export default function OneDrive() {
   const [selectedAccount, setSelectedAccount] = useState<ProtectedObject | null>(null);
   const [selectedSnapshot, setSelectedSnapshot] = useState<Snapshot | null>(null);
-  const [fileSearch, setFileSearch] = useState('');
   const [backupMsg, setBackupMsg] = useState('');
   const tenantId = useTenantId();
   const qc = useQueryClient();
@@ -52,11 +51,6 @@ export default function OneDrive() {
     enabled: !!selectedSnapshot,
   });
 
-  const { data: searchResults } = useQuery({
-    queryKey: ['onedrive-search', fileSearch],
-    queryFn: () => api.get<{ results: any[] }>(`/onedrive/search?tenant_id=${tenantId}&query=${fileSearch}`),
-    enabled: fileSearch.length > 2,
-  });
 
   // ── Snapshot browse view ──
   if (selectedSnapshot) {
@@ -224,51 +218,12 @@ export default function OneDrive() {
       statusMessage={backupMsg}
     >
 
-      {/* Cross-snapshot file search */}
-      <div className="mb-6">
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
-          <input type="text" placeholder="Search files across snapshots..." value={fileSearch} onChange={e => setFileSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
-        </div>
-      </div>
-
-      {searchResults?.results?.length ? (
-        <div className="bg-white rounded-xl border shadow-sm overflow-hidden mb-6">
-          <div className="p-4 border-b bg-purple-50"><h3 className="font-semibold text-purple-800">File Search Results ({searchResults.results.length})</h3></div>
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">File</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Path</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Account</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Size</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Modified</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {searchResults.results.slice(0, 10).map((r: any, i: number) => (
-                <tr key={i} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium">{r.file_name}</td>
-                  <td className="px-4 py-3 text-gray-500 text-xs">{r.path}</td>
-                  <td className="px-4 py-3 text-gray-500">{r.object_name}</td>
-                  <td className="px-4 py-3">{formatSize(r.size_bytes)}</td>
-                  <td className="px-4 py-3 text-gray-500">{r.last_modified?.slice(0, 16)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : null}
-
-      {/* Account list — DataTable */}
+      {/* Account list — DataTable (search via ⌘K) */}
       <DataTable<ProtectedObject>
         queryKey="onedrive-accounts"
         endpoint="/onedrive/accounts"
         columns={columns}
         extraParams={{ tenant_id: tenantId || '' }}
-        searchable
-        searchPlaceholder="Search accounts..."
         filters={[
           {
             key: 'status',

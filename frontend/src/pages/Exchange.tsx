@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Mail, RefreshCw, Download, ArrowRight, Loader2, Search } from 'lucide-react';
+import { Mail, RefreshCw, Download, ArrowRight, Loader2 } from 'lucide-react';
 import { api } from '../api/client';
 import DataTable, { type Column } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
@@ -12,7 +12,6 @@ import type { ProtectedObject, Snapshot, SnapshotItem } from '../types';
 export default function Exchange() {
   const [selectedMailbox, setSelectedMailbox] = useState<ProtectedObject | null>(null);
   const [selectedSnapshot, setSelectedSnapshot] = useState<Snapshot | null>(null);
-  const [emailSearch, setEmailSearch] = useState('');
   const [backupMsg, setBackupMsg] = useState('');
   const tenantId = useTenantId();
   const qc = useQueryClient();
@@ -60,11 +59,6 @@ export default function Exchange() {
     enabled: !!selectedSnapshot,
   });
 
-  const { data: searchResults } = useQuery({
-    queryKey: ['exchange-search', emailSearch],
-    queryFn: () => api.get<{ results: any[] }>(`/exchange/search?tenant_id=${tenantId}&query=${emailSearch}`),
-    enabled: emailSearch.length > 2,
-  });
 
   // ── Snapshot browse view ──
   if (selectedSnapshot) {
@@ -257,59 +251,12 @@ export default function Exchange() {
       isBackingUp={backupAllMutation.isPending}
       statusMessage={backupMsg}
     >
-      {/* Cross-snapshot email search */}
-      <div className="mb-6">
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search emails across all snapshots..."
-            value={emailSearch}
-            onChange={e => setEmailSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-      </div>
-
-      {/* Email search results */}
-      {searchResults?.results?.length ? (
-        <div className="bg-white rounded-xl border shadow-sm overflow-hidden mb-6">
-          <div className="p-4 border-b bg-blue-50">
-            <h3 className="font-semibold text-blue-800">Email Search Results ({searchResults.results.length})</h3>
-          </div>
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Subject</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Sender</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Mailbox</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Date</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Snapshot</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {searchResults.results.slice(0, 10).map((r: any, i: number) => (
-                <tr key={i} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium">{r.subject}</td>
-                  <td className="px-4 py-3 text-gray-500">{r.sender}</td>
-                  <td className="px-4 py-3 text-gray-500">{r.object_name}</td>
-                  <td className="px-4 py-3 text-gray-500">{r.received_at?.slice(0, 16)}</td>
-                  <td className="px-4 py-3 text-gray-500">{r.snapshot_date?.slice(0, 10)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : null}
-
-      {/* Mailbox list — DataTable */}
+      {/* Mailbox list — DataTable (search via ⌘K) */}
       <DataTable<ProtectedObject>
         queryKey="exchange-mailboxes"
         endpoint="/exchange/mailboxes"
         columns={columns}
         extraParams={{ tenant_id: tenantId || '' }}
-        searchable
-        searchPlaceholder="Search mailboxes..."
         filters={[
           {
             key: 'status',

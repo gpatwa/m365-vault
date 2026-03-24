@@ -271,7 +271,6 @@ export default function SharePoint() {
         endpoint="/sharepoint/sites"
         columns={columns}
         extraParams={{ tenant_id: tenantId || '' }}
-        searchable
         searchPlaceholder="Search sites..."
         filters={[
           {

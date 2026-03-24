@@ -49,15 +49,49 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-2xl mb-4">
-            <Shield className="w-8 h-8 text-blue-600" />
+    <div className="min-h-screen bg-gray-900 flex">
+      {/* Left panel — product info */}
+      <div className="hidden lg:flex flex-col justify-center flex-1 px-16 py-12">
+        <div className="max-w-md">
+          <div className="flex items-center gap-2 mb-8">
+            <Shield className="w-8 h-8 text-blue-400" />
+            <span className="text-2xl font-bold text-white">M365 Vault</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">M365 Vault</h1>
-          <p className="text-gray-500 mt-1">
-            {isRegister ? 'Create your admin account' : 'Sign in to your account'}
+          <h2 className="text-3xl font-bold text-white leading-tight mb-4">
+            Enterprise Backup for<br />Microsoft 365
+          </h2>
+          <p className="text-gray-400 mb-8 leading-relaxed">
+            Protect Exchange, OneDrive, SharePoint, Teams, and Entra ID with
+            self-hosted, open-source data protection.
+          </p>
+          <div className="space-y-3">
+            {['5 workloads with automated scheduling', 'AES-256-GCM encryption per tenant', 'Smart Engine with zero AI token cost', 'WORM storage + legal hold', 'Self-service restore portal'].map(f => (
+              <div key={f} className="flex items-center gap-2 text-sm text-gray-300">
+                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full flex-shrink-0" />
+                {f}
+              </div>
+            ))}
+          </div>
+          <div className="mt-10 pt-6 border-t border-gray-800">
+            <a href="/welcome" className="text-sm text-gray-500 hover:text-gray-300 transition-colors">
+              Learn more about M365 Vault →
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Right panel — login form */}
+      <div className="flex items-center justify-center flex-1 lg:flex-none lg:w-[480px] p-6 bg-white lg:rounded-l-3xl">
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8">
+          <div className="lg:hidden inline-flex items-center justify-center w-14 h-14 bg-blue-100 rounded-2xl mb-4">
+            <Shield className="w-7 h-7 text-blue-600" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {isRegister ? 'Create Account' : 'Welcome Back'}
+          </h1>
+          <p className="text-gray-500 mt-1 text-sm">
+            {isRegister ? 'Set up your admin account' : 'Sign in to M365 Vault'}
           </p>
         </div>
 
@@ -134,6 +168,7 @@ export default function Login() {
             {isRegister ? 'Sign In' : 'Register'}
           </button>
         </p>
+      </div>
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { api } from './api/client';
 import Layout from './components/Layout';
+import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Exchange from './pages/Exchange';
@@ -33,14 +34,23 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public routes */}
+        <Route path="/welcome" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/sso/callback" element={<SSOCallback />} />
+        <Route path="/legal" element={<Legal />} />
+
+        {/* Authenticated routes */}
         <Route
           path="/"
           element={
-            <ProtectedRoute>
-              <Layout />
-            </ProtectedRoute>
+            api.getToken() ? (
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            ) : (
+              <Landing />
+            )
           }
         >
           <Route index element={<Dashboard />} />
@@ -61,7 +71,6 @@ export default function App() {
           <Route path="restore" element={<SelfRestore />} />
           <Route path="reports" element={<Reports />} />
           <Route path="usage" element={<Usage />} />
-          <Route path="legal" element={<Legal />} />
         </Route>
       </Routes>
     </BrowserRouter>

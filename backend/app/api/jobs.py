@@ -2,7 +2,7 @@
 import json
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
-from sqlalchemy import select, func, desc, or_
+from sqlalchemy import String, select, func, desc, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -10,6 +10,7 @@ from app.models.backup_job import BackupJob, JobStatus
 from app.models.restore_job import RestoreJob, RestoreStatus
 from app.models.user import User
 from app.services.auth import get_current_user, require_backup_permission, require_restore_permission
+from app.utils.query import ListParams, apply_sorting, apply_pagination
 
 router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
 
@@ -19,12 +20,11 @@ async def list_backup_jobs(
     tenant_id: int = Query(None),
     status: str = Query(None),
     workload_type: str = Query(None),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    params: ListParams = Depends(),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """List backup jobs with filtering."""
+    """List backup jobs with filtering, sorting, search, and pagination."""
     stmt = select(BackupJob)
     if tenant_id:
         stmt = stmt.where(BackupJob.tenant_id == tenant_id)
@@ -32,18 +32,32 @@ async def list_backup_jobs(
         stmt = stmt.where(BackupJob.status == status)
     if workload_type:
         stmt = stmt.where(BackupJob.workload_type == workload_type)
+    if params.search:
+        stmt = stmt.where(
+            or_(
+                BackupJob.workload_type.ilike(f"%{params.search}%"),
+                BackupJob.error_message.ilike(f"%{params.search}%"),
+                BackupJob.status.cast(String).ilike(f"%{params.search}%"),
+            )
+        )
 
     count_stmt = select(func.count()).select_from(stmt.subquery())
     total = (await db.execute(count_stmt)).scalar()
 
-    stmt = stmt.order_by(desc(BackupJob.created_at)).offset((page - 1) * page_size).limit(page_size)
+    # Sort — default to created_at desc
+    stmt = apply_sorting(
+        stmt, BackupJob,
+        params.sort_by or "created_at",
+        params.sort_order if params.sort_by else "desc",
+    )
+    stmt = apply_pagination(stmt, params.page, params.page_size)
     result = await db.execute(stmt)
     jobs = result.scalars().all()
 
     return {
         "total": total,
-        "page": page,
-        "page_size": page_size,
+        "page": params.page,
+        "page_size": params.page_size,
         "items": [
             {
                 "id": j.id,

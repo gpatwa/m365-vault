@@ -10,6 +10,7 @@ from app.models.snapshot import Snapshot, SnapshotItem, SnapshotStatus, ItemType
 from app.models.user import User
 from app.services.auth import get_current_user
 from app.services.backup_engine import BackupEngine
+from app.utils.query import ListParams, apply_sorting, apply_pagination
 
 router = APIRouter(prefix="/api/entra-id", tags=["Entra ID"])
 
@@ -141,13 +142,11 @@ async def list_snapshots(
 async def list_snapshot_items(
     snapshot_id: int,
     item_type: str = Query(None, description="Filter by item type: user, group, conditional_access_policy, etc."),
-    search: str = Query(None),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(50, ge=1, le=200),
+    params: ListParams = Depends(),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Browse items in an Entra ID snapshot."""
+    """Browse items in an Entra ID snapshot with sorting, search, and pagination."""
     # Verify snapshot exists
     snapshot = await db.get(Snapshot, snapshot_id)
     if not snapshot:
@@ -165,23 +164,27 @@ async def list_snapshot_items(
         except ValueError:
             raise HTTPException(status_code=400, detail=f"Invalid item_type: {item_type}")
 
-    if search:
-        stmt = stmt.where(SnapshotItem.name.ilike(f"%{search}%"))
+    if params.search:
+        stmt = stmt.where(SnapshotItem.name.ilike(f"%{params.search}%"))
 
     # Count
     count_stmt = select(func.count()).select_from(stmt.subquery())
     total = (await db.execute(count_stmt)).scalar() or 0
 
-    # Fetch
-    stmt = stmt.order_by(SnapshotItem.item_type, SnapshotItem.name)
-    stmt = stmt.offset((page - 1) * page_size).limit(page_size)
+    # Sort — default to item_type, name
+    if params.sort_by:
+        stmt = apply_sorting(stmt, SnapshotItem, params.sort_by, params.sort_order)
+    else:
+        stmt = stmt.order_by(SnapshotItem.item_type, SnapshotItem.name)
+
+    stmt = apply_pagination(stmt, params.page, params.page_size)
     result = await db.execute(stmt)
     items = result.scalars().all()
 
     return {
         "total": total,
-        "page": page,
-        "page_size": page_size,
+        "page": params.page,
+        "page_size": params.page_size,
         "items": [
             {
                 "id": item.id,

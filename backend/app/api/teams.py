@@ -1,7 +1,7 @@
 """Teams API routes — browse backed-up Teams data."""
 import json
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select, func, desc
+from sqlalchemy import select, func, desc, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -10,6 +10,7 @@ from app.models.snapshot import Snapshot, SnapshotItem, SnapshotStatus, ItemType
 from app.models.user import User
 from app.services.auth import get_current_user
 from app.services.backup_engine import BackupEngine
+from app.utils.query import ListParams, apply_sorting, apply_pagination
 
 router = APIRouter(prefix="/api/teams", tags=["Teams"])
 
@@ -23,20 +24,43 @@ TEAMS_ITEM_TYPES = [
 @router.get("/teams")
 async def list_teams(
     tenant_id: int = Query(...),
+    params: ListParams = Depends(),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """List all protected Teams for a tenant."""
-    result = await db.execute(
-        select(ProtectedObject).where(
-            ProtectedObject.tenant_id == tenant_id,
-            ProtectedObject.workload_type == WorkloadType.TEAMS,
-        ).order_by(ProtectedObject.display_name)
+    """List all protected Teams for a tenant with sorting, search, and pagination."""
+    stmt = select(ProtectedObject).where(
+        ProtectedObject.tenant_id == tenant_id,
+        ProtectedObject.workload_type == WorkloadType.TEAMS,
     )
+
+    if params.search:
+        stmt = stmt.where(
+            or_(
+                ProtectedObject.display_name.ilike(f"%{params.search}%"),
+                ProtectedObject.email.ilike(f"%{params.search}%"),
+            )
+        )
+
+    # Count before pagination
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total = (await db.execute(count_stmt)).scalar() or 0
+
+    # Sort — default to display_name asc
+    stmt = apply_sorting(
+        stmt, ProtectedObject,
+        params.sort_by or "display_name",
+        params.sort_order if params.sort_by else "asc",
+    )
+    stmt = apply_pagination(stmt, params.page, params.page_size)
+
+    result = await db.execute(stmt)
     teams = result.scalars().all()
 
     return {
-        "total": len(teams),
+        "total": total,
+        "page": params.page,
+        "page_size": params.page_size,
         "items": [
             {
                 "id": t.id,

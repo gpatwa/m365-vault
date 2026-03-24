@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Shield, Search, Users, KeyRound, ShieldCheck, AppWindow, MapPin, UserCog, RefreshCw, Loader2 } from 'lucide-react';
+import { Shield, Users, KeyRound, ShieldCheck, AppWindow, MapPin, UserCog, RefreshCw, Loader2 } from 'lucide-react';
 import { api } from '../api/client';
 import { useTenantId } from '../hooks/useTenant';
 import { formatSize, timeAgo } from '../utils/format';
+import DataTable, { type Column, type FilterOption } from '../components/DataTable';
 
 interface EntraSummary {
   protected: boolean;
@@ -37,16 +38,69 @@ const ITEM_TYPE_CONFIG: Record<string, { label: string; icon: typeof Users; colo
   named_location: { label: 'Named Locations', icon: MapPin, color: 'text-indigo-600' },
 };
 
+const itemTypeFilterOptions: FilterOption = {
+  key: 'item_type',
+  label: 'All Types',
+  options: Object.entries(ITEM_TYPE_CONFIG).map(([value, cfg]) => ({
+    value,
+    label: cfg.label,
+  })),
+};
+
+const itemColumns: Column<SnapshotItem>[] = [
+  {
+    key: 'item_type',
+    label: 'Type',
+    sortable: true,
+    render: (row) => {
+      const config = ITEM_TYPE_CONFIG[row.item_type];
+      const Icon = config?.icon || Shield;
+      return (
+        <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${config?.color || 'text-gray-600'}`}>
+          <Icon className="w-3.5 h-3.5" />
+          {config?.label || row.item_type}
+        </span>
+      );
+    },
+  },
+  {
+    key: 'name',
+    label: 'Name',
+    sortable: true,
+    width: 'min-w-[200px]',
+    render: (row) => <span className="font-medium text-gray-900">{row.name}</span>,
+  },
+  {
+    key: 'metadata',
+    label: 'Details',
+    render: (row) => (
+      <span className="text-gray-500 text-xs">
+        {row.metadata && Object.entries(row.metadata)
+          .filter(([, v]) => v !== null && v !== undefined && v !== '')
+          .slice(0, 3)
+          .map(([k, v]) => `${k}: ${v}`)
+          .join(' \u2022 ')}
+      </span>
+    ),
+  },
+  {
+    key: 'size_bytes',
+    label: 'Size',
+    sortable: true,
+    className: 'text-right',
+    render: (row) => <span className="text-gray-500">{formatSize(row.size_bytes)}</span>,
+  },
+];
+
 export default function EntraID() {
   const [selectedType, setSelectedType] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
   const tenantId = useTenantId();
-
   const qc = useQueryClient();
 
   const { data: summary, isLoading } = useQuery({
     queryKey: ['entra-summary', tenantId],
     queryFn: () => api.get<EntraSummary>(`/entra-id/summary?tenant_id=${tenantId}`),
+    enabled: !!tenantId,
   });
 
   const backupMutation = useMutation({
@@ -57,15 +111,7 @@ export default function EntraID() {
     },
   });
 
-  const { data: items, isLoading: loadingItems } = useQuery({
-    queryKey: ['entra-items', summary?.snapshot_id, selectedType, search],
-    queryFn: () => api.get<{ total: number; items: SnapshotItem[] }>(
-      `/entra-id/snapshot/${summary!.snapshot_id}/items?page_size=100${selectedType ? `&item_type=${selectedType}` : ''}${search ? `&search=${search}` : ''}`
-    ),
-    enabled: !!summary?.snapshot_id,
-  });
-
-  if (isLoading) {
+  if (isLoading || !tenantId) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600" />
@@ -83,6 +129,12 @@ export default function EntraID() {
     );
   }
 
+  // Build extra params for DataTable — include item_type from card selection
+  const extraParams: Record<string, string | number> = {};
+  if (selectedType) {
+    extraParams.item_type = selectedType;
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -95,7 +147,7 @@ export default function EntraID() {
             <h1 className="text-2xl font-bold text-gray-900">Entra ID</h1>
             <p className="text-sm text-gray-500">
               {summary.last_backup ? `Last backup ${timeAgo(summary.last_backup)}` : 'No backups yet'}
-              {summary.item_count ? ` • ${summary.item_count} objects • ${formatSize(summary.size_bytes || 0)}` : ''}
+              {summary.item_count ? ` \u2022 ${summary.item_count} objects \u2022 ${formatSize(summary.size_bytes || 0)}` : ''}
             </p>
           </div>
         </div>
@@ -141,72 +193,19 @@ export default function EntraID() {
         })}
       </div>
 
-      {/* Search */}
+      {/* Items DataTable */}
       {summary.snapshot_id && (
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search backed-up objects..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-          />
-        </div>
-      )}
-
-      {/* Items Table */}
-      {summary.snapshot_id && (
-        <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Type</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Name</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Details</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600">Size</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {loadingItems ? (
-                <tr><td colSpan={4} className="text-center py-8 text-gray-400">Loading...</td></tr>
-              ) : items?.items?.length ? (
-                items.items.map((item) => {
-                  const config = ITEM_TYPE_CONFIG[item.item_type];
-                  const Icon = config?.icon || Shield;
-                  return (
-                    <tr key={item.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${config?.color || 'text-gray-600'}`}>
-                          <Icon className="w-3.5 h-3.5" />
-                          {config?.label || item.item_type}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 font-medium text-gray-900">{item.name}</td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">
-                        {item.metadata && Object.entries(item.metadata)
-                          .filter(([, v]) => v !== null && v !== undefined && v !== '')
-                          .slice(0, 3)
-                          .map(([k, v]) => `${k}: ${v}`)
-                          .join(' • ')}
-                      </td>
-                      <td className="px-4 py-3 text-right text-gray-500">{formatSize(item.size_bytes)}</td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr><td colSpan={4} className="text-center py-8 text-gray-400">
-                  {selectedType ? 'No items of this type' : 'No backed-up objects yet'}
-                </td></tr>
-              )}
-            </tbody>
-          </table>
-          {items?.total ? (
-            <div className="px-4 py-2 bg-gray-50 border-t text-xs text-gray-500">
-              Showing {items.items.length} of {items.total} objects
-            </div>
-          ) : null}
-        </div>
+        <DataTable<SnapshotItem>
+          queryKey="entra-items"
+          endpoint={`/entra-id/snapshot/${summary.snapshot_id}/items`}
+          columns={itemColumns}
+          extraParams={extraParams}
+          searchable
+          searchPlaceholder="Search backed-up objects..."
+          filters={[itemTypeFilterOptions]}
+          defaultPageSize={50}
+          emptyMessage={selectedType ? 'No items of this type' : 'No backed-up objects yet'}
+        />
       )}
     </div>
   );

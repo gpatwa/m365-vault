@@ -2,17 +2,121 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle, Loader2, RotateCcw, Briefcase } from 'lucide-react';
 import { api } from '../api/client';
-import { WORKLOAD_KEYS } from '../config/workloads';
+import { WORKLOAD_KEYS, WORKLOAD_MAP } from '../config/workloads';
 import WorkloadSwimlane from '../components/jobs/WorkloadSwimlane';
 import type { WorkloadStats } from '../components/jobs/WorkloadSwimlane';
 import type { BackupJob, RestoreJob, PaginatedResponse, FailedJobsSummary } from '../types';
+import DataTable, { type Column, type FilterOption } from '../components/DataTable';
+import { formatSize, formatDuration, timeAgo } from '../utils/format';
 
 type Workload = string;
 const WORKLOADS = WORKLOAD_KEYS;
 
+// ── DataTable column definitions for "All Jobs" view ──
+
+const statusBadge = (status: string) => {
+  const colors: Record<string, string> = {
+    completed: 'bg-green-100 text-green-700',
+    failed: 'bg-red-100 text-red-700',
+    in_progress: 'bg-blue-100 text-blue-700',
+    queued: 'bg-yellow-100 text-yellow-700',
+    partial: 'bg-orange-100 text-orange-700',
+    cancelled: 'bg-gray-100 text-gray-600',
+  };
+  return (
+    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors[status] || 'bg-gray-100 text-gray-600'}`}>
+      {status.replace('_', ' ')}
+    </span>
+  );
+};
+
+const allJobsColumns: Column<BackupJob>[] = [
+  {
+    key: 'id',
+    label: 'ID',
+    sortable: true,
+    width: 'w-16',
+    render: (row) => <span className="font-mono text-xs text-gray-500">#{row.id}</span>,
+  },
+  {
+    key: 'workload_type',
+    label: 'Workload',
+    sortable: true,
+    render: (row) => {
+      const wl = WORKLOAD_MAP[row.workload_type];
+      if (!wl) return <span>{row.workload_type}</span>;
+      const Icon = wl.icon;
+      return (
+        <div className="flex items-center gap-1.5">
+          <Icon className={`w-3.5 h-3.5 ${wl.iconColor}`} />
+          <span className="font-medium">{wl.label}</span>
+        </div>
+      );
+    },
+  },
+  {
+    key: 'status',
+    label: 'Status',
+    sortable: true,
+    render: (row) => statusBadge(row.status),
+  },
+  {
+    key: 'objects_total',
+    label: 'Objects',
+    sortable: true,
+    render: (row) => (
+      <span className="text-xs">
+        {row.objects_processed}/{row.objects_total}
+        {row.objects_failed > 0 && <span className="text-red-500 ml-1">({row.objects_failed} failed)</span>}
+      </span>
+    ),
+  },
+  {
+    key: 'total_size_bytes',
+    label: 'Size',
+    sortable: true,
+    render: (row) => <span>{formatSize(row.total_size_bytes)}</span>,
+  },
+  {
+    key: 'started_at',
+    label: 'Duration',
+    sortable: true,
+    render: (row) => <span className="text-gray-500">{formatDuration(row.started_at, row.completed_at)}</span>,
+  },
+  {
+    key: 'created_at',
+    label: 'Created',
+    sortable: true,
+    render: (row) => <span className="text-gray-500">{row.started_at ? timeAgo(row.started_at) : '\u2014'}</span>,
+  },
+];
+
+const workloadFilter: FilterOption = {
+  key: 'workload_type',
+  label: 'All Workloads',
+  options: WORKLOADS.map(w => ({
+    value: w,
+    label: WORKLOAD_MAP[w]?.label || w,
+  })),
+};
+
+const statusFilter: FilterOption = {
+  key: 'status',
+  label: 'All Statuses',
+  options: [
+    { value: 'queued', label: 'Queued' },
+    { value: 'in_progress', label: 'In Progress' },
+    { value: 'completed', label: 'Completed' },
+    { value: 'failed', label: 'Failed' },
+    { value: 'partial', label: 'Partial' },
+    { value: 'cancelled', label: 'Cancelled' },
+  ],
+};
+
 export default function Jobs() {
   const [expandedWorkload, setExpandedWorkload] = useState<Workload | null>(null);
   const [retryMsg, setRetryMsg] = useState('');
+  const [activeTab, setActiveTab] = useState<'swimlanes' | 'all'>('swimlanes');
   const qc = useQueryClient();
 
   // Fetch ALL backup jobs (no status filter) for summary stats
@@ -40,9 +144,10 @@ export default function Jobs() {
   const retryJobMutation = useMutation({
     mutationFn: (jobId: number) => api.post(`/jobs/backup/${jobId}/retry`),
     onSuccess: (data: any) => {
-      setRetryMsg(`Retry complete — status: ${data.status}, retries: ${data.retry_count}`);
+      setRetryMsg(`Retry complete \u2014 status: ${data.status}, retries: ${data.retry_count}`);
       qc.invalidateQueries({ queryKey: ['backup-jobs-all'] });
       qc.invalidateQueries({ queryKey: ['failed-jobs-summary'] });
+      qc.invalidateQueries({ queryKey: ['all-backup-jobs'] });
       setTimeout(() => setRetryMsg(''), 5000);
     },
     onError: (err: any) => { setRetryMsg(`Retry failed: ${err.message}`); setTimeout(() => setRetryMsg(''), 5000); },
@@ -51,9 +156,10 @@ export default function Jobs() {
   const retryAllMutation = useMutation({
     mutationFn: () => api.post('/jobs/retry-all-failed'),
     onSuccess: (data: any) => {
-      setRetryMsg(`Retried ${data.retried} jobs — ${data.succeeded} succeeded, ${data.still_failed} still failed`);
+      setRetryMsg(`Retried ${data.retried} jobs \u2014 ${data.succeeded} succeeded, ${data.still_failed} still failed`);
       qc.invalidateQueries({ queryKey: ['backup-jobs-all'] });
       qc.invalidateQueries({ queryKey: ['failed-jobs-summary'] });
+      qc.invalidateQueries({ queryKey: ['all-backup-jobs'] });
       setTimeout(() => setRetryMsg(''), 8000);
     },
     onError: (err: any) => { setRetryMsg(`Retry all failed: ${err.message}`); setTimeout(() => setRetryMsg(''), 5000); },
@@ -68,17 +174,14 @@ export default function Jobs() {
 
     for (const w of WORKLOADS) {
       const wBackup = backupJobs.filter(j => j.workload_type === w);
-      // RestoreJob doesn't have workload_type — show all in each workload for now
       const wRestore = restoreJobs;
 
-      // Find last completed backup time
       const completedJobs = wBackup.filter(j => j.status === 'completed' && j.completed_at);
       const lastBackup = completedJobs.length > 0
         ? completedJobs.reduce((latest, j) =>
             !latest || new Date(j.completed_at!) > new Date(latest) ? j.completed_at! : latest, '' as string)
         : null;
 
-      // Average duration of completed jobs
       let avgDurationSec = 0;
       if (completedJobs.length > 0) {
         const totalSec = completedJobs.reduce((sum, j) => {
@@ -170,31 +273,81 @@ export default function Jobs() {
         </div>
       )}
 
-      {/* Workload Swimlanes */}
-      <div className="space-y-4">
-        {WORKLOADS.map(w => (
-          <WorkloadSwimlane
-            key={w}
-            workload={w}
-            stats={workloadData[w]?.stats ?? { total: 0, completed: 0, failed: 0, in_progress: 0, queued: 0, partial: 0, lastBackup: null, avgDurationSec: 0, totalSize: 0 }}
-            backupJobs={workloadData[w]?.backupJobs ?? []}
-            restoreJobs={workloadData[w]?.restoreJobs ?? []}
-            isExpanded={expandedWorkload === w}
-            onToggle={() => toggleWorkload(w)}
-            loadingBackup={loadingBackup}
-            loadingRestore={loadingRestore}
-            onRetryJob={(id) => retryJobMutation.mutate(id)}
-            isRetrying={retryJobMutation.isPending}
-          />
-        ))}
+      {/* View Tabs */}
+      <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit mb-6">
+        <button
+          onClick={() => setActiveTab('swimlanes')}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            activeTab === 'swimlanes' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          By Workload
+        </button>
+        <button
+          onClick={() => setActiveTab('all')}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            activeTab === 'all' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          All Jobs
+        </button>
       </div>
 
-      {/* Loading state */}
-      {loadingBackup && !allBackupJobs && (
-        <div className="flex items-center justify-center py-12 text-gray-400">
-          <Loader2 className="w-6 h-6 animate-spin mr-2" />
-          Loading jobs...
-        </div>
+      {activeTab === 'swimlanes' ? (
+        <>
+          {/* Workload Swimlanes */}
+          <div className="space-y-4">
+            {WORKLOADS.map(w => (
+              <WorkloadSwimlane
+                key={w}
+                workload={w}
+                stats={workloadData[w]?.stats ?? { total: 0, completed: 0, failed: 0, in_progress: 0, queued: 0, partial: 0, lastBackup: null, avgDurationSec: 0, totalSize: 0 }}
+                backupJobs={workloadData[w]?.backupJobs ?? []}
+                restoreJobs={workloadData[w]?.restoreJobs ?? []}
+                isExpanded={expandedWorkload === w}
+                onToggle={() => toggleWorkload(w)}
+                loadingBackup={loadingBackup}
+                loadingRestore={loadingRestore}
+                onRetryJob={(id) => retryJobMutation.mutate(id)}
+                isRetrying={retryJobMutation.isPending}
+              />
+            ))}
+          </div>
+
+          {/* Loading state */}
+          {loadingBackup && !allBackupJobs && (
+            <div className="flex items-center justify-center py-12 text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" />
+              Loading jobs...
+            </div>
+          )}
+        </>
+      ) : (
+        /* All Jobs DataTable — server-side paginated, sorted, filtered */
+        <DataTable<BackupJob>
+          queryKey="all-backup-jobs"
+          endpoint="/jobs/backup"
+          columns={allJobsColumns}
+          searchable
+          searchPlaceholder="Search jobs by workload, status, error..."
+          filters={[workloadFilter, statusFilter]}
+          defaultSortBy="created_at"
+          defaultSortOrder="desc"
+          defaultPageSize={25}
+          emptyMessage="No backup jobs found"
+          refetchInterval={5000}
+          actions={(row) =>
+            row.status === 'failed' ? (
+              <button
+                onClick={() => retryJobMutation.mutate(row.id)}
+                disabled={retryJobMutation.isPending}
+                className="px-2.5 py-1 border border-orange-200 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-50 flex items-center gap-1"
+              >
+                <RotateCcw className="w-3 h-3" /> Retry
+              </button>
+            ) : null
+          }
+        />
       )}
     </div>
   );

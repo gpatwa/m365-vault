@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Mail, HardDrive, Globe, Shield, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search, Command, RotateCcw, BarChart3, Gauge, ChevronDown } from 'lucide-react';
+import { LayoutDashboard, Mail, HardDrive, Globe, Shield, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, RotateCcw, BarChart3, Gauge, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import CommandPalette from './CommandPalette';
 
@@ -119,18 +119,6 @@ export default function Layout() {
             </div>
           </div>
         </div>
-
-        {/* Search trigger */}
-        <button
-          onClick={() => setCommandOpen(true)}
-          className="mx-2 mt-2 flex items-center gap-2 px-2.5 py-1.5 text-xs text-gray-400 bg-gray-800 rounded-md hover:bg-gray-700 hover:text-gray-200 transition-colors"
-        >
-          <Search className="w-3.5 h-3.5" />
-          <span className="flex-1 text-left">Search...</span>
-          <kbd className="flex items-center gap-0.5 px-1 py-0.5 text-[9px] bg-gray-700 rounded font-mono">
-            <Command className="w-2 h-2" />K
-          </kbd>
-        </button>
 
         <nav className="flex-1 px-2 mt-2 overflow-y-auto">
           {navGroups.map((group, gi) => (

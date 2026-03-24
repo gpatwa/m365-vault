@@ -24,6 +24,7 @@ from app.services.graph_client import GraphClient, GraphAPIError
 from app.services.storage import StorageService
 from app.services.encryption import EncryptionService
 from app.utils.retry import retry_async, record_failed_item
+from app.workers.base_worker import BaseWorker, BackupItem
 
 logger = logging.getLogger(__name__)
 
@@ -31,20 +32,15 @@ ITEM_MAX_RETRIES = 3
 ITEM_BASE_DELAY = 2.0
 
 
-class EntraIDWorker:
+class EntraIDWorker(BaseWorker):
     """Worker for Entra ID directory backup operations."""
 
-    def __init__(
-        self,
-        db: AsyncSession,
-        graph: GraphClient,
-        storage: StorageService,
-        encryption: EncryptionService,
-    ):
-        self.db = db
-        self.graph = graph
-        self.storage = storage
-        self.encryption = encryption
+    def workload_name(self) -> str:
+        return "entra_id"
+
+    async def discover_items(self, protected_object, delta_token=None):
+        """Compatibility: Entra ID uses legacy backup() method directly."""
+        return [], None
 
     async def backup(
         self,

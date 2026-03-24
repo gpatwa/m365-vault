@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+// useNavigate removed — using window.location.href for full reload after login
 import { Shield } from 'lucide-react';
 import { api } from '../api/client';
 
@@ -11,7 +11,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [ssoEnabled, setSsoEnabled] = useState(false);
   const [ssoLoading, setSsoLoading] = useState(false);
-  const navigate = useNavigate();
+
 
   // Check if SSO is enabled
   useEffect(() => {
@@ -42,7 +42,7 @@ export default function Login() {
         await api.register({ username, email, password, role: 'admin' });
       }
       await api.login(username, password);
-      navigate('/');
+      window.location.href = '/';
     } catch (err: any) {
       setError(err.message || 'Authentication failed');
     }

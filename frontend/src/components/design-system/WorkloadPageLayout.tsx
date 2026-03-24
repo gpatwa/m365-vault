@@ -12,6 +12,7 @@ import { RefreshCw, Loader2, type LucideIcon } from 'lucide-react';
 import Breadcrumb, { type BreadcrumbItem } from './Breadcrumb';
 import HeroSummaryBar, { type HeroStat } from './HeroSummaryBar';
 import ActionBanner, { type ActionItem } from './ActionBanner';
+import SearchTrigger from './SearchTrigger';
 
 interface WorkloadPageLayoutProps {
   /** Workload display name (e.g., "Exchange", "SharePoint") */
@@ -126,8 +127,17 @@ export default function WorkloadPageLayout({
 
   return (
     <div>
-      {/* Breadcrumb */}
-      <Breadcrumb items={breadcrumbs} />
+      {/* Breadcrumb + Search */}
+      <Breadcrumb
+        items={breadcrumbs}
+        rightSlot={
+          <SearchTrigger
+            placeholder={`Search ${workloadLabel}...`}
+            workloadFilter={workloadLabel.toLowerCase().replace(' ', '-')}
+            className="w-64"
+          />
+        }
+      />
 
       {/* Page Header */}
       <div className="flex items-center justify-between mb-4">

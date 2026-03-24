@@ -4,6 +4,7 @@ import { Globe, Search, ArrowRight, RefreshCw, Download, Folder, FileText, Loade
 import { api } from '../api/client';
 import DataTable, { type Column } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
+import { Breadcrumb } from '../components/design-system';
 import { useTenantId } from '../hooks/useTenant';
 import { formatSize, timeAgo } from '../utils/format';
 import type { ProtectedObject, Snapshot, SnapshotItem } from '../types';
@@ -61,7 +62,8 @@ export default function SharePoint() {
   if (selectedSnapshot) {
     return (
       <div>
-        <button onClick={() => setSelectedSnapshot(null)} className="text-blue-600 hover:underline text-sm mb-4">&larr; Back</button>
+        <Breadcrumb items={[{ label: 'Microsoft 365', path: '/' }, { label: 'SharePoint', path: '/sharepoint' }, { label: selectedSite?.display_name || 'Site' }]} />
+        <button onClick={() => setSelectedSnapshot(null)} className="text-blue-600 hover:underline text-sm mb-4">&larr; Back to {selectedSite?.display_name || 'snapshots'}</button>
         <h2 className="text-xl font-bold mb-4">Site Content — {selectedSnapshot.started_at?.slice(0, 16)}</h2>
         <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
           <table className="w-full text-sm">
@@ -99,7 +101,8 @@ export default function SharePoint() {
   if (selectedSite) {
     return (
       <div>
-        <button onClick={() => setSelectedSite(null)} className="text-blue-600 hover:underline text-sm mb-4">&larr; Back</button>
+        <Breadcrumb items={[{ label: 'Microsoft 365', path: '/' }, { label: 'SharePoint', path: '/sharepoint' }, { label: selectedSite?.display_name || 'Site' }]} />
+        <button onClick={() => setSelectedSite(null)} className="text-blue-600 hover:underline text-sm mb-4">&larr; Back to SharePoint</button>
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xl font-bold">{selectedSite.display_name}</h2>
@@ -200,6 +203,7 @@ export default function SharePoint() {
 
   return (
     <div>
+      <Breadcrumb items={[{ label: 'Microsoft 365', path: '/' }, { label: 'SharePoint' }]} />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">SharePoint</h1>

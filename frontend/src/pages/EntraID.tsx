@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Shield, Users, KeyRound, ShieldCheck, AppWindow, MapPin, UserCog, RefreshCw, Loader2 } from 'lucide-react';
 import { api } from '../api/client';
+import { Breadcrumb } from '../components/design-system';
 import { useTenantId } from '../hooks/useTenant';
 import { formatSize, timeAgo } from '../utils/format';
 import DataTable, { type Column, type FilterOption } from '../components/DataTable';
@@ -137,6 +138,7 @@ export default function EntraID() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[{ label: 'Microsoft 365', path: '/' }, { label: 'Entra ID' }]} />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { MessageSquare, RefreshCw, Loader2, CheckCircle, Users } from 'lucide-react';
 import { api } from '../api/client';
+import { Breadcrumb } from '../components/design-system';
 import { useTenantId } from '../hooks/useTenant';
 import { formatSize, timeAgo } from '../utils/format';
 import DataTable, { type Column } from '../components/DataTable';
@@ -86,6 +87,7 @@ export default function Teams() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[{ label: 'Microsoft 365', path: '/' }, { label: 'Teams' }]} />
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="p-2 bg-pink-50 rounded-lg">

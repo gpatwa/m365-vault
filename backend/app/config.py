@@ -110,6 +110,18 @@ class Settings(BaseSettings):
     LICENSE_TIER: str = "community"  # community, professional, enterprise
     LICENSE_MAX_USERS: int = 25      # for community tier
 
+    # Dispatcher (Control Plane / Data Plane separation)
+    DISPATCH_MODE: str = "in_process"  # "in_process" | "redis"
+    REDIS_URL: str = "redis://localhost:6379/0"
+    WORKER_CONCURRENCY: int = 3        # Async tasks per worker process
+    ITEM_CONCURRENCY: int = 10         # Items processed in parallel per object
+
+    # Fault Tolerance
+    JOB_TIMEOUT_MINUTES: int = 60           # Stale job detection threshold
+    CIRCUIT_BREAKER_THRESHOLD: float = 0.5  # 50% failure rate triggers circuit
+    CIRCUIT_BREAKER_WINDOW: int = 300       # 5-minute window
+    CIRCUIT_BREAKER_COOLDOWN: int = 900     # 15-minute cooldown
+
     # Alerts
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587

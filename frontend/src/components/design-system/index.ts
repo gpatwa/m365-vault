@@ -4,3 +4,4 @@ export { default as ActionBanner, type ActionItem } from './ActionBanner';
 export { default as PlatformCard, type WorkloadStat } from './PlatformCard';
 export { default as ActivityFeed, type ActivityItem } from './ActivityFeed';
 export { default as WorkloadPageLayout } from './WorkloadPageLayout';
+export { default as SearchTrigger } from './SearchTrigger';

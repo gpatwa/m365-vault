@@ -30,11 +30,27 @@ const QUICK_LINKS = [
   { label: 'Audit Log', path: '/audit', shortcut: 'L' },
 ];
 
-export default function CommandPalette({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export default function CommandPalette({ isOpen, onClose, onOpen }: { isOpen: boolean; onClose: () => void; onOpen?: () => void }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedIdx, setSelectedIdx] = useState(0);
+  const [workloadFilter, setWorkloadFilter] = useState<string | null>(null);
+
+  // Listen for SearchTrigger events
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.workloadFilter) {
+        setWorkloadFilter(detail.workloadFilter);
+      } else {
+        setWorkloadFilter(null);
+      }
+      onOpen?.();
+    };
+    window.addEventListener('open-command-palette', handler);
+    return () => window.removeEventListener('open-command-palette', handler);
+  }, [onOpen]);
   const [recentSearches, setRecentSearches] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem('m365v_recent_searches') || '[]'); } catch { return []; }
   });
@@ -62,8 +78,9 @@ export default function CommandPalette({ isOpen, onClose }: { isOpen: boolean; o
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       try {
+        const filterParam = workloadFilter ? `&workload=${workloadFilter}` : '';
         const data = await api.get<{ items: SearchResult[] }>(
-          `/search?q=${encodeURIComponent(query)}&tenant_id=${tenantId}&limit=20`
+          `/search?q=${encodeURIComponent(query)}&tenant_id=${tenantId}&limit=20${filterParam}`
         );
         setResults(data.items || []);
         setSelectedIdx(0);

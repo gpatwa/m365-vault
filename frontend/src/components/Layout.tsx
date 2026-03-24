@@ -189,7 +189,7 @@ export default function Layout() {
       </main>
 
       {/* Command Palette (⌘K) */}
-      <CommandPalette isOpen={commandOpen} onClose={() => setCommandOpen(false)} />
+      <CommandPalette isOpen={commandOpen} onClose={() => setCommandOpen(false)} onOpen={() => setCommandOpen(true)} />
     </div>
   );
 }

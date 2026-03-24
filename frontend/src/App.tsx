@@ -20,6 +20,7 @@ import Search from './pages/Search';
 import SelfRestore from './pages/SelfRestore';
 import Reports from './pages/Reports';
 import Usage from './pages/Usage';
+import Legal from './pages/Legal';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!api.getToken()) {
@@ -60,6 +61,7 @@ export default function App() {
           <Route path="restore" element={<SelfRestore />} />
           <Route path="reports" element={<Reports />} />
           <Route path="usage" element={<Usage />} />
+          <Route path="legal" element={<Legal />} />
         </Route>
       </Routes>
     </BrowserRouter>

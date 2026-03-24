@@ -40,6 +40,23 @@ async def _run_migrations():
         # v1.2.0: compression/dedup pipeline
         ("snapshot_items", "compressed_size", "INTEGER"),
         ("snapshot_items", "storage_flags", "INTEGER DEFAULT 0"),
+        # v1.3.0: Entra ID + Teams
+        ("tenants", "total_entra_objects", "INTEGER DEFAULT 0"),
+        ("tenants", "total_teams", "INTEGER DEFAULT 0"),
+        # v1.4.0: SSO support
+        ("users", "sso_provider", "VARCHAR(50)"),
+        ("users", "sso_subject_id", "VARCHAR(255)"),
+        # v1.5.0: WORM storage
+        ("sla_policies", "worm_enabled", "INTEGER DEFAULT 0"),
+        ("sla_policies", "legal_hold", "INTEGER DEFAULT 0"),
+        ("snapshots", "locked_until", "TIMESTAMP"),
+        # v1.6.0: Backup validation
+        ("snapshots", "validation_status", "VARCHAR(50)"),
+        ("snapshots", "validated_at", "TIMESTAMP"),
+        # v1.7.0: Cross-tenant restore
+        ("restore_jobs", "target_tenant_id", "INTEGER"),
+        ("restore_jobs", "scan_status", "VARCHAR(50)"),
+        ("restore_jobs", "scan_details", "TEXT"),
     ]
     async with engine.begin() as conn:
         for table, column, col_type in migrations:
@@ -58,6 +75,29 @@ async def _run_migrations():
                 logging.getLogger(__name__).info(
                     f"Migration: added column {table}.{column} ({col_type})"
                 )
+
+
+    # PostgreSQL enum value migrations (safe to re-run)
+    enum_migrations = [
+        # v1.3.0: Entra ID + Teams workloads
+        ("workloadtype", ["ENTRA_ID", "TEAMS"]),
+        # v1.3.0: Entra ID + Teams item types
+        ("itemtype", [
+            "USER", "GROUP", "DIRECTORY_ROLE", "ROLE_ASSIGNMENT",
+            "CONDITIONAL_ACCESS_POLICY", "APP_REGISTRATION", "NAMED_LOCATION",
+            "CHAT_MESSAGE", "CHANNEL_MESSAGE", "TEAM_CHANNEL", "MEETING",
+            "CHAT", "CHAT_ATTACHMENT",
+        ]),
+    ]
+
+    for enum_name, values in enum_migrations:
+        for value in values:
+            try:
+                await conn.execute(
+                    _text(f"ALTER TYPE {enum_name} ADD VALUE IF NOT EXISTS '{value}'")
+                )
+            except Exception:
+                pass  # Enum value already exists or not PostgreSQL
 
 
 def _text(sql: str):

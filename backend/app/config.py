@@ -89,6 +89,9 @@ class Settings(BaseSettings):
     # CORS — comma-separated origins (overridden in production)
     CORS_ORIGINS: str = "http://localhost:5173,http://localhost:5174,http://localhost:3000,http://127.0.0.1:5173"
 
+    # HTTPS
+    FORCE_HTTPS: bool = False  # Set True in production (Azure Container Apps)
+
     # Rate Limiting
     RATE_LIMIT_REQUESTS_PER_MINUTE: int = 120  # 0 = disabled
 

@@ -84,6 +84,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ── HTTPS Redirect (production only) ──
+if settings.FORCE_HTTPS:
+    @app.middleware("http")
+    async def https_redirect(request: Request, call_next):
+        if request.headers.get("x-forwarded-proto") == "http":
+            url = request.url.replace(scheme="https")
+            return JSONResponse(
+                status_code=301,
+                headers={"Location": str(url)},
+                content={"detail": "Redirecting to HTTPS"},
+            )
+        return await call_next(request)
+
+
 # ── Rate Limiting (in-memory, use Redis in production) ──
 _rate_limit_store: dict[str, list[float]] = {}
 RATE_LIMIT_REQUESTS = settings.RATE_LIMIT_REQUESTS_PER_MINUTE
@@ -174,6 +188,7 @@ from app.api.validation import router as validation_router
 from app.api.self_restore import router as self_restore_router
 from app.api.reports import router as reports_router
 from app.api.usage import router as usage_router
+from app.api.status import router as status_router
 
 app.include_router(auth_router)
 app.include_router(tenants_router)
@@ -195,6 +210,7 @@ app.include_router(validation_router)
 app.include_router(self_restore_router)
 app.include_router(reports_router)
 app.include_router(usage_router)
+app.include_router(status_router)
 
 
 @app.get("/")

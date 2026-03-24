@@ -81,19 +81,19 @@ const STEPS = [
   {
     num: '03',
     title: 'Sleep',
-    desc: 'Automated backups run silently. Smart Engine detects anomalies. Self-healing retries failures.',
-    detail: 'Zero-cost anomaly detection, health scoring, email/webhook alerts. You only hear when something needs attention.',
+    desc: 'Automated backups run silently. AI detects anomalies. Self-healing retries failures automatically.',
+    detail: 'Intelligent anomaly detection, predictive health scoring, email/webhook alerts. You only hear when something needs attention.',
     icon: Eye,
     color: 'from-purple-500 to-purple-600',
   },
 ];
 
 const COMPETITORS = [
-  { name: 'Shieldio', price: '$1.50', storage: 'Unlimited', aiCost: '$0', openSource: true, selfHosted: true, workloads: '5+', highlight: true },
-  { name: 'Veeam', price: '$2.63–3.50', storage: 'Unlimited', aiCost: 'N/A', openSource: false, selfHosted: false, workloads: '5' },
-  { name: 'Druva', price: '$2.50–10', storage: 'Tiered', aiCost: 'Included*', openSource: false, selfHosted: false, workloads: '5' },
-  { name: 'Commvault', price: '$1.70–4.50', storage: '5-50 GB cap', aiCost: 'Included*', openSource: false, selfHosted: false, workloads: '4' },
-  { name: 'Microsoft', price: '$0.15/GB', storage: 'Pay-as-you-go', aiCost: 'N/A', openSource: false, selfHosted: false, workloads: '3' },
+  { name: 'Shieldio', price: '$1.50', storage: 'Unlimited', ai: 'Included (all tiers)', openSource: true, selfHosted: true, workloads: '5+', highlight: true },
+  { name: 'Veeam', price: '$2.63–3.50', storage: 'Unlimited', ai: 'None', openSource: false, selfHosted: false, workloads: '5' },
+  { name: 'Druva', price: '$2.50–10', storage: 'Tiered', ai: 'Premium tier only', openSource: false, selfHosted: false, workloads: '5' },
+  { name: 'Commvault', price: '$1.70–4.50', storage: '5-50 GB cap', ai: 'Premium tier only', openSource: false, selfHosted: false, workloads: '4' },
+  { name: 'Microsoft', price: '$0.15/GB', storage: 'Pay-as-you-go', ai: 'None', openSource: false, selfHosted: false, workloads: '3' },
 ];
 
 export default function Landing() {
@@ -147,8 +147,8 @@ export default function Landing() {
           </h1>
 
           <p className={`mt-6 text-lg md:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed transition-all duration-700 delay-700 ${heroReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            Shieldio backs up your Microsoft 365, Google Workspace, and Salesforce data
-            with enterprise-grade encryption. Self-hosted. Open source. Zero AI token costs.
+            AI-powered backup for Microsoft 365, Google Workspace, and Salesforce.
+            Intelligent protection with built-in anomaly detection. Self-hosted. Open source.
           </p>
 
           <div className={`mt-8 flex items-center justify-center gap-4 transition-all duration-700 delay-900 ${heroReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
@@ -174,8 +174,8 @@ export default function Landing() {
             </div>
             <div className="w-px h-8 bg-gray-200" />
             <div>
-              <p className="text-3xl font-bold text-blue-600">$0</p>
-              <p className="text-xs text-gray-400 mt-1">AI Token Cost</p>
+              <p className="text-3xl font-bold text-blue-600">AI</p>
+              <p className="text-xs text-gray-400 mt-1">Built-in Intelligence</p>
             </div>
             <div className="w-px h-8 bg-gray-200" />
             <div>
@@ -302,7 +302,7 @@ export default function Landing() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               { icon: '🔓', title: 'Open Source', desc: 'Full source code on GitHub. No vendor lock-in. Deploy on any cloud, on-premises, or air-gapped.' },
-              { icon: '🧠', title: 'Smart Engine ($0)', desc: 'Anomaly detection, health scoring, self-healing — all pure Python. Competitors charge $5-10/user extra for AI features.' },
+              { icon: '🧠', title: 'AI-Powered Intelligence', desc: 'Anomaly detection that learns your patterns. Predictive health scoring. Self-healing automation. Included free at every tier.' },
               { icon: '🛡️', title: 'Data Sovereignty', desc: 'Your backups never leave your infrastructure. AES-256-GCM with per-tenant keys. GDPR and DORA ready.' },
               { icon: '🔒', title: 'WORM Immutability', desc: 'Write-once backups with retention locks and legal hold. Ransomware can\'t delete what it can\'t modify.' },
               { icon: '🔍', title: 'Global Search (⌘K)', desc: 'Find any email, file, or chat across all workloads in milliseconds. Self-service restore without IT tickets.' },
@@ -338,7 +338,7 @@ export default function Landing() {
                     <th className="text-left py-3 px-4 font-semibold text-gray-900">Vendor</th>
                     <th className="text-center py-3 px-3 font-semibold text-gray-900">Price/user/mo</th>
                     <th className="text-center py-3 px-3 font-semibold text-gray-900">Storage</th>
-                    <th className="text-center py-3 px-3 font-semibold text-gray-900">AI Cost</th>
+                    <th className="text-center py-3 px-3 font-semibold text-gray-900">AI Intelligence</th>
                     <th className="text-center py-3 px-3 font-semibold text-gray-900">Open Source</th>
                     <th className="text-center py-3 px-3 font-semibold text-gray-900">Self-Hosted</th>
                   </tr>
@@ -353,7 +353,7 @@ export default function Landing() {
                       <td className="py-3 px-3 text-center font-medium">{c.price}</td>
                       <td className="py-3 px-3 text-center text-gray-600">{c.storage}</td>
                       <td className="py-3 px-3 text-center">
-                        <span className={c.aiCost === '$0' ? 'text-green-600 font-bold' : 'text-gray-500'}>{c.aiCost}</span>
+                        <span className={c.ai.includes('Included') ? 'text-green-600 font-semibold text-xs' : c.ai === 'None' ? 'text-gray-400 text-xs' : 'text-orange-500 text-xs'}>{c.ai}</span>
                       </td>
                       <td className="py-3 px-3 text-center">
                         {c.openSource ? <Check className="w-4 h-4 text-green-600 mx-auto" /> : <X className="w-4 h-4 text-gray-300 mx-auto" />}
@@ -365,7 +365,7 @@ export default function Landing() {
                   ))}
                 </tbody>
               </table>
-              <p className="text-[10px] text-gray-400 mt-2">* AI features included in higher tiers ($5-10/user). Shieldio Smart Engine is $0 at every tier.</p>
+              <p className="text-[10px] text-gray-400 mt-2">Shieldio includes AI intelligence (anomaly detection, health scoring, self-healing) at every tier. Competitors restrict AI features to premium plans.</p>
             </div>
           </FadeUp>
         </div>

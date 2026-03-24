@@ -225,7 +225,8 @@ export default function DataTable<T extends Record<string, any>>({
     const ep = exportEndpoint || `${endpoint}/export`;
     // Build export URL relative to API
     const base = (window as any).__RUNTIME_CONFIG__?.API_BASE || import.meta.env.VITE_API_BASE || 'http://localhost:8000/api';
-    window.open(`${base}${ep}?${queryString}&format=csv`, '_blank');
+    const separator = ep.includes('?') ? '&' : '?';
+    window.open(`${base}${ep}${separator}${queryString}&format=csv`, '_blank');
   };
 
   const getRowKey = (row: T, index: number): string => {

@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Globe, Search, ArrowRight, RefreshCw, Download, Folder, FileText, Loader2 } from 'lucide-react';
 import { api } from '../api/client';
+import DataTable, { type Column } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
 import { useTenantId } from '../hooks/useTenant';
-import type { ProtectedObject, PaginatedResponse, Snapshot, SnapshotItem } from '../types';
+import { formatSize, timeAgo } from '../utils/format';
+import type { ProtectedObject, Snapshot, SnapshotItem } from '../types';
 
 export default function SharePoint() {
-  const [search, setSearch] = useState('');
   const [selectedSite, setSelectedSite] = useState<ProtectedObject | null>(null);
   const [selectedSnapshot, setSelectedSnapshot] = useState<Snapshot | null>(null);
   const [fileSearch, setFileSearch] = useState('');
@@ -38,11 +39,6 @@ export default function SharePoint() {
     onError: (err: any) => { setBackupMsg(`Backup failed: ${err.message}`); setTimeout(() => setBackupMsg(''), 5000); },
   });
 
-  const { data: sites, isLoading } = useQuery({
-    queryKey: ['sharepoint-sites', search],
-    queryFn: () => api.get<PaginatedResponse<ProtectedObject>>(`/sharepoint/sites?tenant_id=${tenantId}&search=${search}`),
-  });
-
   const { data: snapshots } = useQuery({
     queryKey: ['sharepoint-snapshots', selectedSite?.id],
     queryFn: () => api.get<Snapshot[]>(`/sharepoint/sites/${selectedSite!.id}/snapshots`),
@@ -61,13 +57,7 @@ export default function SharePoint() {
     enabled: fileSearch.length > 2,
   });
 
-  const formatSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
-    if (bytes < 1073741824) return `${(bytes / 1048576).toFixed(1)} MB`;
-    return `${(bytes / 1073741824).toFixed(2)} GB`;
-  };
-
+  // ── Snapshot browse view ──
   if (selectedSnapshot) {
     return (
       <div>
@@ -105,6 +95,7 @@ export default function SharePoint() {
     );
   }
 
+  // ── Site detail / snapshots view ──
   if (selectedSite) {
     return (
       <div>
@@ -165,6 +156,48 @@ export default function SharePoint() {
     );
   }
 
+  // ── Main sites list (DataTable) ──
+  const columns: Column<ProtectedObject>[] = [
+    {
+      key: 'display_name',
+      label: 'Site',
+      sortable: true,
+      render: (row) => (
+        <span className="font-medium flex items-center gap-2">
+          <Globe className="w-4 h-4 text-green-500" />
+          {row.display_name}
+        </span>
+      ),
+    },
+    {
+      key: 'site_url',
+      label: 'URL',
+      sortable: true,
+      render: (row) => <span className="text-gray-500 text-xs">{row.site_url}</span>,
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      sortable: true,
+      render: (row) => <StatusBadge status={row.status} />,
+    },
+    {
+      key: 'last_backup_at',
+      label: 'Last Backup',
+      sortable: true,
+      render: (row) => (
+        <span className="text-gray-500">{row.last_backup_at ? timeAgo(row.last_backup_at) : 'Never'}</span>
+      ),
+    },
+    { key: 'total_items', label: 'Items', sortable: true },
+    {
+      key: 'total_size_bytes',
+      label: 'Size',
+      sortable: true,
+      render: (row) => <span>{formatSize(row.total_size_bytes)}</span>,
+    },
+  ];
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -187,13 +220,10 @@ export default function SharePoint() {
           {backupMsg}
         </div>
       )}
-      <div className="flex gap-4 mb-6">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
-          <input type="text" placeholder="Search sites..." value={search} onChange={e => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
-        </div>
-        <div className="flex-1 relative">
+
+      {/* Cross-site file search */}
+      <div className="mb-6">
+        <div className="relative max-w-md">
           <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
           <input type="text" placeholder="Search files across sites..." value={fileSearch} onChange={e => setFileSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
@@ -226,34 +256,34 @@ export default function SharePoint() {
         </div>
       ) : null}
 
-      <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Site</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">URL</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Status</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Last Backup</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Items</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Size</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {sites?.items?.map(s => (
-              <tr key={s.id} onClick={() => setSelectedSite(s)} className="hover:bg-gray-50 cursor-pointer">
-                <td className="px-4 py-3 font-medium flex items-center gap-2"><Globe className="w-4 h-4 text-green-500" />{s.display_name}</td>
-                <td className="px-4 py-3 text-gray-500 text-xs">{s.site_url}</td>
-                <td className="px-4 py-3"><StatusBadge status={s.status} /></td>
-                <td className="px-4 py-3 text-gray-500">{s.last_backup_at?.slice(0, 16) || 'Never'}</td>
-                <td className="px-4 py-3">{s.total_items}</td>
-                <td className="px-4 py-3">{formatSize(s.total_size_bytes)}</td>
-              </tr>
-            ))}
-            {isLoading && <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">Loading...</td></tr>}
-            {!isLoading && !sites?.items?.length && <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">No sites found.</td></tr>}
-          </tbody>
-        </table>
-      </div>
+      {/* Site list — DataTable */}
+      <DataTable<ProtectedObject>
+        queryKey="sharepoint-sites"
+        endpoint="/sharepoint/sites"
+        columns={columns}
+        extraParams={{ tenant_id: tenantId || '' }}
+        searchable
+        searchPlaceholder="Search sites..."
+        filters={[
+          {
+            key: 'status',
+            label: 'All Statuses',
+            options: [
+              { value: 'protected', label: 'Protected' },
+              { value: 'unprotected', label: 'Unprotected' },
+              { value: 'error', label: 'Error' },
+              { value: 'pending', label: 'Pending' },
+            ],
+          },
+        ]}
+        exportable
+        exportEndpoint="/export/csv?source=sharepoint_sites"
+        defaultSortBy="display_name"
+        defaultSortOrder="asc"
+        emptyMessage="No sites found. Configure a tenant and run discovery first."
+        onRowClick={(row) => setSelectedSite(row)}
+        rowKey="id"
+      />
     </div>
   );
 }

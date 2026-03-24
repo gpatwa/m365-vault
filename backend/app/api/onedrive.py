@@ -14,6 +14,7 @@ from app.models.user import User
 from app.services.auth import get_current_user, require_backup_permission, require_restore_permission
 from app.services.catalog import CatalogService
 from app.services.backup_engine import BackupEngine
+from app.utils.query import ListParams, apply_sorting, apply_pagination
 
 router = APIRouter(prefix="/api/onedrive", tags=["OneDrive"])
 
@@ -21,31 +22,39 @@ router = APIRouter(prefix="/api/onedrive", tags=["OneDrive"])
 @router.get("/accounts")
 async def list_accounts(
     tenant_id: int = Query(...),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
-    search: str = Query(None),
+    params: ListParams = Depends(),
+    status: str = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """List all OneDrive accounts for a tenant."""
+    """List all OneDrive accounts for a tenant with sorting and pagination."""
     stmt = select(ProtectedObject).where(
         ProtectedObject.tenant_id == tenant_id,
         ProtectedObject.workload_type == WorkloadType.ONEDRIVE,
     )
-    if search:
-        stmt = stmt.where(ProtectedObject.display_name.ilike(f"%{search}%"))
+    if params.search:
+        pattern = f"%{params.search}%"
+        stmt = stmt.where(
+            ProtectedObject.display_name.ilike(pattern)
+            | ProtectedObject.email.ilike(pattern)
+        )
+    if status:
+        stmt = stmt.where(ProtectedObject.status == status)
 
     count_stmt = select(func.count()).select_from(stmt.subquery())
     total = (await db.execute(count_stmt)).scalar()
 
-    stmt = stmt.order_by(ProtectedObject.display_name).offset((page - 1) * page_size).limit(page_size)
+    stmt = apply_sorting(stmt, ProtectedObject, params.sort_by, params.sort_order)
+    if not params.sort_by:
+        stmt = stmt.order_by(ProtectedObject.display_name)
+    stmt = apply_pagination(stmt, params.page, params.page_size)
     result = await db.execute(stmt)
     accounts = result.scalars().all()
 
     return {
         "total": total,
-        "page": page,
-        "page_size": page_size,
+        "page": params.page,
+        "page_size": params.page_size,
         "items": [
             {
                 "id": a.id,

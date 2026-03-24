@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Mail, Search, RefreshCw, Download, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, RefreshCw, Download, ArrowRight, Loader2, Search } from 'lucide-react';
 import { api } from '../api/client';
+import DataTable, { type Column } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
 import { useTenantId } from '../hooks/useTenant';
-import type { ProtectedObject, PaginatedResponse, Snapshot, SnapshotItem } from '../types';
+import { formatSize, timeAgo } from '../utils/format';
+import type { ProtectedObject, Snapshot, SnapshotItem } from '../types';
 
 export default function Exchange() {
-  const [search, setSearch] = useState('');
   const [selectedMailbox, setSelectedMailbox] = useState<ProtectedObject | null>(null);
   const [selectedSnapshot, setSelectedSnapshot] = useState<Snapshot | null>(null);
   const [emailSearch, setEmailSearch] = useState('');
@@ -44,13 +45,6 @@ export default function Exchange() {
     },
   });
 
-  const { data: mailboxes, isLoading } = useQuery({
-    queryKey: ['exchange-mailboxes', search],
-    queryFn: () => api.get<PaginatedResponse<ProtectedObject>>(
-      `/exchange/mailboxes?tenant_id=${tenantId}&search=${search}`
-    ),
-  });
-
   const { data: snapshots } = useQuery({
     queryKey: ['exchange-snapshots', selectedMailbox?.id],
     queryFn: () => api.get<Snapshot[]>(`/exchange/mailboxes/${selectedMailbox!.id}/snapshots`),
@@ -71,12 +65,7 @@ export default function Exchange() {
     enabled: emailSearch.length > 2,
   });
 
-  const formatSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / 1048576).toFixed(1)} MB`;
-  };
-
+  // ── Snapshot browse view ──
   if (selectedSnapshot) {
     return (
       <div>
@@ -117,6 +106,7 @@ export default function Exchange() {
     );
   }
 
+  // ── Mailbox detail / snapshots view ──
   if (selectedMailbox) {
     return (
       <div>
@@ -190,6 +180,43 @@ export default function Exchange() {
     );
   }
 
+  // ── Main mailbox list (DataTable) ──
+  const columns: Column<ProtectedObject>[] = [
+    {
+      key: 'display_name',
+      label: 'Mailbox',
+      sortable: true,
+      render: (row) => (
+        <span className="font-medium flex items-center gap-2">
+          <Mail className="w-4 h-4 text-blue-500" />
+          {row.display_name}
+        </span>
+      ),
+    },
+    { key: 'email', label: 'Email', sortable: true },
+    {
+      key: 'status',
+      label: 'Status',
+      sortable: true,
+      render: (row) => <StatusBadge status={row.status} />,
+    },
+    {
+      key: 'last_backup_at',
+      label: 'Last Backup',
+      sortable: true,
+      render: (row) => (
+        <span className="text-gray-500">{row.last_backup_at ? timeAgo(row.last_backup_at) : 'Never'}</span>
+      ),
+    },
+    { key: 'total_items', label: 'Items', sortable: true },
+    {
+      key: 'total_size_bytes',
+      label: 'Size',
+      sortable: true,
+      render: (row) => <span>{formatSize(row.total_size_bytes)}</span>,
+    },
+  ];
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -213,19 +240,9 @@ export default function Exchange() {
         </div>
       )}
 
-      {/* Search */}
-      <div className="flex gap-4 mb-6">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search mailboxes..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-        <div className="relative flex-1">
+      {/* Cross-snapshot email search */}
+      <div className="mb-6">
+        <div className="relative max-w-md">
           <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
           <input
             type="text"
@@ -268,48 +285,34 @@ export default function Exchange() {
         </div>
       ) : null}
 
-      {/* Mailbox list */}
-      <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Mailbox</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Email</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Status</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Last Backup</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Items</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Size</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {mailboxes?.items?.map(m => (
-              <tr
-                key={m.id}
-                onClick={() => setSelectedMailbox(m)}
-                className="hover:bg-gray-50 cursor-pointer"
-              >
-                <td className="px-4 py-3 font-medium flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-blue-500" />
-                  {m.display_name}
-                </td>
-                <td className="px-4 py-3 text-gray-500">{m.email}</td>
-                <td className="px-4 py-3"><StatusBadge status={m.status} /></td>
-                <td className="px-4 py-3 text-gray-500">{m.last_backup_at?.slice(0, 16) || 'Never'}</td>
-                <td className="px-4 py-3">{m.total_items}</td>
-                <td className="px-4 py-3">{formatSize(m.total_size_bytes)}</td>
-              </tr>
-            ))}
-            {isLoading && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">Loading...</td></tr>
-            )}
-            {!isLoading && !mailboxes?.items?.length && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">
-                No mailboxes found. Configure a tenant and run discovery first.
-              </td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      {/* Mailbox list — DataTable */}
+      <DataTable<ProtectedObject>
+        queryKey="exchange-mailboxes"
+        endpoint="/exchange/mailboxes"
+        columns={columns}
+        extraParams={{ tenant_id: tenantId || '' }}
+        searchable
+        searchPlaceholder="Search mailboxes..."
+        filters={[
+          {
+            key: 'status',
+            label: 'All Statuses',
+            options: [
+              { value: 'protected', label: 'Protected' },
+              { value: 'unprotected', label: 'Unprotected' },
+              { value: 'error', label: 'Error' },
+              { value: 'pending', label: 'Pending' },
+            ],
+          },
+        ]}
+        exportable
+        exportEndpoint="/export/csv?source=exchange_mailboxes"
+        defaultSortBy="display_name"
+        defaultSortOrder="asc"
+        emptyMessage="No mailboxes found. Configure a tenant and run discovery first."
+        onRowClick={(row) => setSelectedMailbox(row)}
+        rowKey="id"
+      />
     </div>
   );
 }

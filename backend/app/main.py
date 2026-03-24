@@ -189,6 +189,7 @@ from app.api.self_restore import router as self_restore_router
 from app.api.reports import router as reports_router
 from app.api.usage import router as usage_router
 from app.api.status import router as status_router
+from app.api.export import router as export_router
 
 app.include_router(auth_router)
 app.include_router(tenants_router)
@@ -211,6 +212,7 @@ app.include_router(self_restore_router)
 app.include_router(reports_router)
 app.include_router(usage_router)
 app.include_router(status_router)
+app.include_router(export_router)
 
 
 @app.get("/")

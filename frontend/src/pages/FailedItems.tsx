@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  AlertTriangle, CheckCircle2, RotateCcw, XCircle, Loader2,
+  AlertTriangle, CheckCircle2, RotateCcw, XCircle,
   ChevronDown, ChevronRight, ShieldAlert, Info, Eye, EyeOff,
   Mail, HardDrive, Globe, File, Folder, List, ListOrdered, Library,
 } from 'lucide-react';
 import { api } from '../api/client';
+import DataTable, { type Column, type FilterOption } from '../components/DataTable';
 import type { FailedItemEntry, FailedItemsSummary, FailedItemCategory } from '../types';
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -55,11 +56,8 @@ const ItemTypeIcon = ({ type }: { type: string | null }) => {
 };
 
 export default function FailedItems() {
-  const [categoryFilter, setCategoryFilter] = useState('');
   const [showResolved, setShowResolved] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
-  const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
-  const [page, setPage] = useState(1);
   const [actionMsg, setActionMsg] = useState('');
   const qc = useQueryClient();
 
@@ -70,28 +68,11 @@ export default function FailedItems() {
     refetchInterval: 15000,
   });
 
-  // Fetch items list
-  const { data: itemsData, isLoading: loadingItems } = useQuery({
-    queryKey: ['failed-items', categoryFilter, showResolved, page],
-    queryFn: () => {
-      const params = new URLSearchParams();
-      if (categoryFilter) params.set('error_category', categoryFilter);
-      if (!showResolved) params.set('is_resolved', 'false');
-      params.set('page', String(page));
-      params.set('page_size', '50');
-      return api.get<{ total: number; page: number; page_size: number; items: FailedItemEntry[] }>(
-        `/failed-items?${params.toString()}`
-      );
-    },
-    refetchInterval: 10000,
-  });
-
   // Mutations
   const resolveMutation = useMutation({
     mutationFn: (itemIds: number[]) => api.post('/failed-items/resolve', { item_ids: itemIds }),
     onSuccess: (data: any) => {
       setActionMsg(`Resolved ${data.resolved} items`);
-      setSelectedItems(new Set());
       qc.invalidateQueries({ queryKey: ['failed-items'] });
       qc.invalidateQueries({ queryKey: ['failed-items-summary'] });
       setTimeout(() => setActionMsg(''), 4000);
@@ -104,7 +85,6 @@ export default function FailedItems() {
       api.post(`/failed-items/retry?${itemIds.map(id => `item_ids=${id}`).join('&')}`),
     onSuccess: (data: any) => {
       setActionMsg(`Retried ${data.total_items} items across ${data.objects_retried} objects`);
-      setSelectedItems(new Set());
       qc.invalidateQueries({ queryKey: ['failed-items'] });
       qc.invalidateQueries({ queryKey: ['failed-items-summary'] });
       setTimeout(() => setActionMsg(''), 5000);
@@ -112,23 +92,106 @@ export default function FailedItems() {
     onError: (err: any) => { setActionMsg(`Error: ${err.message}`); setTimeout(() => setActionMsg(''), 5000); },
   });
 
-  const toggleSelect = (id: number) => {
-    const next = new Set(selectedItems);
-    if (next.has(id)) next.delete(id); else next.add(id);
-    setSelectedItems(next);
-  };
+  // Build category filter options from summary
+  const categoryFilterOptions: { value: string; label: string }[] = (summary?.categories || []).map(
+    (cat: FailedItemCategory) => ({
+      value: cat.category,
+      label: `${CATEGORY_ICONS[cat.category] || cat.category} (${cat.unresolved})`,
+    })
+  );
 
-  const selectAll = () => {
-    if (!itemsData?.items) return;
-    const unresolved = itemsData.items.filter(i => !i.is_resolved);
-    if (selectedItems.size === unresolved.length) {
-      setSelectedItems(new Set());
-    } else {
-      setSelectedItems(new Set(unresolved.map(i => i.id)));
-    }
-  };
+  const columns: Column<FailedItemEntry>[] = [
+    {
+      key: 'item_name',
+      label: 'Item',
+      sortable: true,
+      render: (row) => (
+        <div className="flex items-center gap-2">
+          <ItemTypeIcon type={row.item_type} />
+          <span className="font-medium text-gray-900 max-w-[200px] truncate" title={row.item_name || undefined}>
+            {row.item_name || 'Unknown'}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: 'item_type',
+      label: 'Type',
+      sortable: true,
+      render: (row) => (
+        <span className="capitalize text-gray-600 text-xs">
+          {(row.item_type || 'unknown').replace(/_/g, ' ')}
+        </span>
+      ),
+    },
+    {
+      key: 'item_path',
+      label: 'Path',
+      render: (row) => (
+        <span className="text-gray-500 text-xs max-w-[150px] truncate block" title={row.item_path || undefined}>
+          {row.item_path || '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'error_message',
+      label: 'Error',
+      render: (row) => (
+        <div className="max-w-[250px]">
+          <p className="text-xs text-red-600 truncate" title={row.error_message}>
+            {row.error_message}
+          </p>
+          {row.error_code && (
+            <p className="text-xs text-gray-400 mt-0.5">{row.error_code}</p>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'error_category',
+      label: 'Category',
+      sortable: true,
+      render: (row) => (
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${CATEGORY_COLORS[row.error_category] || CATEGORY_COLORS.unknown}`}>
+          {CATEGORY_ICONS[row.error_category] || row.error_category}
+        </span>
+      ),
+    },
+    {
+      key: 'retries_attempted',
+      label: 'Retries',
+      sortable: true,
+      render: (row) => <span className="text-center text-xs text-gray-500">{row.retries_attempted}</span>,
+    },
+    {
+      key: 'is_resolved',
+      label: 'Status',
+      sortable: true,
+      render: (row) => (
+        row.is_resolved ? (
+          <span className="inline-flex items-center gap-1 text-xs text-green-600 font-medium">
+            <CheckCircle2 className="w-3 h-3" /> Resolved
+          </span>
+        ) : row.can_retry ? (
+          <span className="inline-flex items-center gap-1 text-xs text-orange-600 font-medium">
+            <RotateCcw className="w-3 h-3" /> Retriable
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 text-xs text-gray-500 font-medium">
+            <XCircle className="w-3 h-3" /> Permanent
+          </span>
+        )
+      ),
+    },
+  ];
 
-  const totalPages = itemsData ? Math.ceil(itemsData.total / itemsData.page_size) : 0;
+  const filters: FilterOption[] = [
+    {
+      key: 'error_category',
+      label: 'All Categories',
+      options: categoryFilterOptions,
+    },
+  ];
 
   return (
     <div>
@@ -205,16 +268,15 @@ export default function FailedItems() {
         <div className="bg-white rounded-xl border shadow-sm mb-6">
           <div className="px-5 py-4 border-b">
             <h2 className="text-lg font-semibold text-gray-900">Error Categories</h2>
-            <p className="text-sm text-gray-500">Click a category to filter items and see resolution guidance</p>
+            <p className="text-sm text-gray-500">Click a category to see resolution guidance</p>
           </div>
           <div className="divide-y">
             {summary.categories.map((cat: FailedItemCategory) => {
               const isExpanded = expandedCategory === cat.category;
-              const isFiltered = categoryFilter === cat.category;
               return (
                 <div key={cat.category}>
                   <div
-                    className={`flex items-center gap-4 px-5 py-3.5 cursor-pointer hover:bg-gray-50 transition-colors ${isFiltered ? 'bg-blue-50' : ''}`}
+                    className="flex items-center gap-4 px-5 py-3.5 cursor-pointer hover:bg-gray-50 transition-colors"
                     onClick={() => setExpandedCategory(isExpanded ? null : cat.category)}
                   >
                     {isExpanded ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
@@ -239,18 +301,6 @@ export default function FailedItems() {
                         </span>
                       )}
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCategoryFilter(isFiltered ? '' : cat.category);
-                        setPage(1);
-                      }}
-                      className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
-                        isFiltered ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
-                    >
-                      {isFiltered ? 'Clear Filter' : 'Filter'}
-                    </button>
                   </div>
                   {isExpanded && (
                     <div className="px-14 pb-4">
@@ -272,182 +322,48 @@ export default function FailedItems() {
         </div>
       )}
 
-      {/* Bulk actions */}
-      {selectedItems.size > 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 flex items-center gap-4">
-          <span className="text-sm font-medium text-blue-800">{selectedItems.size} items selected</span>
-          <div className="flex gap-2">
-            <button
-              onClick={() => resolveMutation.mutate(Array.from(selectedItems))}
-              disabled={resolveMutation.isPending}
-              className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700 flex items-center gap-1.5 disabled:opacity-50"
-            >
-              {resolveMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
-              Resolve
-            </button>
-            <button
-              onClick={() => retryMutation.mutate(Array.from(selectedItems))}
-              disabled={retryMutation.isPending}
-              className="px-3 py-1.5 bg-orange-600 text-white rounded-lg text-xs font-medium hover:bg-orange-700 flex items-center gap-1.5 disabled:opacity-50"
-            >
-              {retryMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3" />}
-              Retry Selected
-            </button>
-            <button
-              onClick={() => setSelectedItems(new Set())}
-              className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-50"
-            >
-              Clear
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Items table */}
-      <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="px-4 py-3 text-left w-8">
-                <input
-                  type="checkbox"
-                  checked={itemsData?.items && itemsData.items.filter(i => !i.is_resolved).length > 0 && selectedItems.size === itemsData.items.filter(i => !i.is_resolved).length}
-                  onChange={selectAll}
-                  className="rounded border-gray-300"
-                />
-              </th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Item</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Type</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Path</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Error</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Category</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Retries</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Status</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {itemsData?.items?.map((item: FailedItemEntry) => (
-              <tr key={item.id} className={`hover:bg-gray-50 ${item.is_resolved ? 'opacity-60' : ''}`}>
-                <td className="px-4 py-3">
-                  {!item.is_resolved && (
-                    <input
-                      type="checkbox"
-                      checked={selectedItems.has(item.id)}
-                      onChange={() => toggleSelect(item.id)}
-                      className="rounded border-gray-300"
-                    />
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <ItemTypeIcon type={item.item_type} />
-                    <span className="font-medium text-gray-900 max-w-[200px] truncate" title={item.item_name || undefined}>
-                      {item.item_name || 'Unknown'}
-                    </span>
-                  </div>
-                </td>
-                <td className="px-4 py-3 capitalize text-gray-600 text-xs">
-                  {(item.item_type || 'unknown').replace(/_/g, ' ')}
-                </td>
-                <td className="px-4 py-3 text-gray-500 text-xs max-w-[150px] truncate" title={item.item_path || undefined}>
-                  {item.item_path || '—'}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="max-w-[250px]">
-                    <p className="text-xs text-red-600 truncate" title={item.error_message}>
-                      {item.error_message}
-                    </p>
-                    {item.error_code && (
-                      <p className="text-xs text-gray-400 mt-0.5">{item.error_code}</p>
-                    )}
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${CATEGORY_COLORS[item.error_category] || CATEGORY_COLORS.unknown}`}>
-                    {CATEGORY_ICONS[item.error_category] || item.error_category}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-center text-xs text-gray-500">
-                  {item.retries_attempted}
-                </td>
-                <td className="px-4 py-3">
-                  {item.is_resolved ? (
-                    <span className="inline-flex items-center gap-1 text-xs text-green-600 font-medium">
-                      <CheckCircle2 className="w-3 h-3" /> Resolved
-                    </span>
-                  ) : item.can_retry ? (
-                    <span className="inline-flex items-center gap-1 text-xs text-orange-600 font-medium">
-                      <RotateCcw className="w-3 h-3" /> Retriable
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-xs text-gray-500 font-medium">
-                      <XCircle className="w-3 h-3" /> Permanent
-                    </span>
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  {!item.is_resolved && (
-                    <div className="flex items-center gap-2">
-                      {item.can_retry && (
-                        <button
-                          onClick={() => retryMutation.mutate([item.id])}
-                          disabled={retryMutation.isPending}
-                          className="text-orange-600 hover:text-orange-800 text-xs font-medium flex items-center gap-1"
-                          title="Retry this item"
-                        >
-                          <RotateCcw className="w-3 h-3" />
-                        </button>
-                      )}
-                      <button
-                        onClick={() => resolveMutation.mutate([item.id])}
-                        disabled={resolveMutation.isPending}
-                        className="text-green-600 hover:text-green-800 text-xs font-medium flex items-center gap-1"
-                        title="Mark as resolved"
-                      >
-                        <CheckCircle2 className="w-3 h-3" />
-                      </button>
-                    </div>
-                  )}
-                </td>
-              </tr>
-            ))}
-            {loadingItems && (
-              <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400"><Loader2 className="w-5 h-5 animate-spin inline mr-2" />Loading...</td></tr>
-            )}
-            {!loadingItems && (!itemsData?.items || itemsData.items.length === 0) && (
-              <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400">
-                {categoryFilter ? 'No failed items in this category' : 'No failed items found'}
-              </td></tr>
-            )}
-          </tbody>
-        </table>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t bg-gray-50">
-            <p className="text-sm text-gray-500">
-              Showing {((page - 1) * 50) + 1}–{Math.min(page * 50, itemsData?.total || 0)} of {itemsData?.total || 0}
-            </p>
-            <div className="flex gap-1">
+      {/* Failed items table — DataTable */}
+      <DataTable<FailedItemEntry>
+        queryKey="failed-items"
+        endpoint="/failed-items"
+        columns={columns}
+        extraParams={showResolved ? {} : { is_resolved: 'false' }}
+        searchable
+        searchPlaceholder="Search by item name or error..."
+        filters={filters}
+        exportable
+        exportEndpoint="/export/csv?source=failed_items"
+        defaultSortBy="created_at"
+        defaultSortOrder="desc"
+        defaultPageSize={50}
+        emptyMessage="No failed items found"
+        rowKey="id"
+        refetchInterval={10000}
+        actions={(row) => (
+          !row.is_resolved ? (
+            <div className="flex items-center gap-2">
+              {row.can_retry && (
+                <button
+                  onClick={() => retryMutation.mutate([row.id])}
+                  disabled={retryMutation.isPending}
+                  className="text-orange-600 hover:text-orange-800 text-xs font-medium flex items-center gap-1"
+                  title="Retry this item"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                </button>
+              )}
               <button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="px-3 py-1.5 rounded-lg text-sm border bg-white hover:bg-gray-50 disabled:opacity-50"
+                onClick={() => resolveMutation.mutate([row.id])}
+                disabled={resolveMutation.isPending}
+                className="text-green-600 hover:text-green-800 text-xs font-medium flex items-center gap-1"
+                title="Mark as resolved"
               >
-                Prev
-              </button>
-              <button
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="px-3 py-1.5 rounded-lg text-sm border bg-white hover:bg-gray-50 disabled:opacity-50"
-              >
-                Next
+                <CheckCircle2 className="w-3 h-3" />
               </button>
             </div>
-          </div>
+          ) : null
         )}
-      </div>
+      />
     </div>
   );
 }

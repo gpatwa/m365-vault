@@ -14,23 +14,23 @@ from app.models.snapshot import (
 from app.models.protected_object import ProtectedObject
 from app.models.user import User
 from app.services.auth import get_current_user
+from app.utils.query import ListParams, apply_sorting, apply_pagination
 
 router = APIRouter(prefix="/api/failed-items", tags=["Failed Items"])
 
 
 @router.get("")
 async def list_failed_items(
+    params: ListParams = Depends(),
     snapshot_id: int = Query(None),
     protected_object_id: int = Query(None),
     error_category: str = Query(None),
     is_resolved: bool = Query(None),
     can_retry: bool = Query(None),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """List failed items with filtering. Supports filtering by snapshot, object, category, and resolution status."""
+    """List failed items with filtering, sorting, and pagination."""
     stmt = select(FailedItem)
 
     if snapshot_id:
@@ -43,18 +43,27 @@ async def list_failed_items(
         stmt = stmt.where(FailedItem.is_resolved == is_resolved)
     if can_retry is not None:
         stmt = stmt.where(FailedItem.can_retry == can_retry)
+    if params.search:
+        pattern = f"%{params.search}%"
+        stmt = stmt.where(
+            FailedItem.item_name.ilike(pattern)
+            | FailedItem.error_message.ilike(pattern)
+        )
 
     count_stmt = select(func.count()).select_from(stmt.subquery())
     total = (await db.execute(count_stmt)).scalar()
 
-    stmt = stmt.order_by(desc(FailedItem.created_at)).offset((page - 1) * page_size).limit(page_size)
+    stmt = apply_sorting(stmt, FailedItem, params.sort_by, params.sort_order)
+    if not params.sort_by:
+        stmt = stmt.order_by(desc(FailedItem.created_at))
+    stmt = apply_pagination(stmt, params.page, params.page_size)
     result = await db.execute(stmt)
     items = result.scalars().all()
 
     return {
         "total": total,
-        "page": page,
-        "page_size": page_size,
+        "page": params.page,
+        "page_size": params.page_size,
         "items": [_serialize_failed_item(fi) for fi in items],
     }
 

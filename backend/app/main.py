@@ -12,7 +12,8 @@ from fastapi.responses import JSONResponse
 from app.config import settings
 from app.database import init_db
 from app.services.scheduler import start_scheduler, stop_scheduler
-from app.models.dedup import DedupEntry  # noqa: F401 — ensure table is created
+from app.models.dedup import DedupEntry          # noqa: F401 — ensure table is created
+from app.models.worker_queue import WorkerQueueEntry  # noqa: F401 — ensure table is created
 
 # Configure structured JSON logging for production
 if settings.LOG_FORMAT == "json":

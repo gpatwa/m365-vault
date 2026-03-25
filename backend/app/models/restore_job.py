@@ -21,6 +21,7 @@ class RestoreStatus(str, enum.Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     PARTIAL = "partial"
+    DEAD_LETTER = "dead_letter"  # Exceeded max_retries; no further attempts
 
 
 class RestoreJob(Base):
@@ -45,4 +46,6 @@ class RestoreJob(Base):
     total_size_bytes = Column(Integer, default=0)
     error_message = Column(Text, nullable=True)
     item_ids_json = Column(Text, nullable=True)  # JSON array of specific item IDs for item-level
+    retry_count = Column(Integer, default=0)     # Number of times this job has been retried
+    max_retries = Column(Integer, default=3)     # Maximum auto-retries before dead-lettering
     created_at = Column(DateTime, default=datetime.utcnow)

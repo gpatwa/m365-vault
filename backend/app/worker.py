@@ -293,6 +293,8 @@ async def main():
 
     # Initialize DB (creates tables including worker_queue)
     from app.database import init_db
+    from app.models.worker_queue import WorkerQueueEntry  # noqa: F401 — register table
+    from app.models.dedup import DedupEntry               # noqa: F401 — register table
     await init_db()
     logger.info("Database initialized")
 

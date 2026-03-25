@@ -60,6 +60,11 @@ resource "azurerm_container_app" "backend" {
     value = var.storage_connection_string
   }
 
+  secret {
+    name  = "redis-url"
+    value = var.redis_url
+  }
+
   template {
     min_replicas = var.backend_min_replicas
     max_replicas = var.backend_max_replicas
@@ -101,6 +106,14 @@ resource "azurerm_container_app" "backend" {
       env {
         name  = "CORS_ORIGINS"
         value = var.cors_origins != "" ? var.cors_origins : "*"
+      }
+      env {
+        name  = "DISPATCH_MODE"
+        value = "redis"
+      }
+      env {
+        name        = "REDIS_URL"
+        secret_name = "redis-url"
       }
 
       liveness_probe {
@@ -179,6 +192,103 @@ resource "azurerm_container_app" "frontend" {
     traffic_weight {
       latest_revision = true
       percentage      = 100
+    }
+  }
+
+  tags = var.tags
+}
+
+# ── Worker Container App ─────────────────────────────────────────────
+
+resource "azurerm_container_app" "worker" {
+  name                         = "m365vault-worker-${var.environment}"
+  container_app_environment_id = azurerm_container_app_environment.this.id
+  resource_group_name          = var.resource_group_name
+  revision_mode                = "Single"
+
+  registry {
+    server               = var.acr_login_server
+    username             = var.acr_admin_username
+    password_secret_name = "acr-password"
+  }
+
+  secret {
+    name  = "acr-password"
+    value = var.acr_admin_password
+  }
+
+  secret {
+    name  = "database-url"
+    value = var.database_url
+  }
+
+  secret {
+    name  = "secret-key"
+    value = var.app_secret_key
+  }
+
+  secret {
+    name  = "encryption-master-key"
+    value = var.encryption_master_key
+  }
+
+  secret {
+    name  = "azure-storage-connection-string"
+    value = var.storage_connection_string
+  }
+
+  secret {
+    name  = "redis-url"
+    value = var.redis_url
+  }
+
+  template {
+    min_replicas = var.worker_min_replicas
+    max_replicas = var.worker_max_replicas
+
+    container {
+      name    = "worker"
+      image   = "${var.acr_login_server}/m365vault-backend:${var.image_tag}"
+      cpu     = var.worker_cpu
+      memory  = var.worker_memory
+      command = ["python", "-m", "app.worker"]
+
+      env {
+        name        = "DATABASE_URL"
+        secret_name = "database-url"
+      }
+      env {
+        name  = "STORAGE_BACKEND"
+        value = "azure"
+      }
+      env {
+        name        = "AZURE_STORAGE_CONNECTION_STRING"
+        secret_name = "azure-storage-connection-string"
+      }
+      env {
+        name  = "AZURE_STORAGE_CONTAINER"
+        value = var.storage_container_name
+      }
+      env {
+        name        = "SECRET_KEY"
+        secret_name = "secret-key"
+      }
+      env {
+        name        = "ENCRYPTION_MASTER_KEY"
+        secret_name = "encryption-master-key"
+      }
+      env {
+        name  = "DISPATCH_MODE"
+        value = "redis"
+      }
+      env {
+        name        = "REDIS_URL"
+        secret_name = "redis-url"
+      }
+      env {
+        name  = "WORKER_CONCURRENCY"
+        value = "3"
+      }
     }
   }
 

@@ -16,3 +16,14 @@ backend_cpu           = 1.0
 backend_memory        = "2Gi"
 backend_min_replicas  = 2
 backend_max_replicas  = 10
+
+# Worker — production sizing
+worker_cpu            = 1.0
+worker_memory         = "2Gi"
+worker_min_replicas   = 2
+worker_max_replicas   = 6
+
+# Redis — Standard C1 for prod (replicated, ~$75/mo)
+redis_sku             = "Standard"
+redis_capacity        = 1
+redis_family          = "C"

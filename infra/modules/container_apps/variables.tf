@@ -89,6 +89,32 @@ variable "backend_max_replicas" {
   default = 3
 }
 
+variable "redis_url" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+variable "worker_cpu" {
+  type    = number
+  default = 0.5
+}
+
+variable "worker_memory" {
+  type    = string
+  default = "1Gi"
+}
+
+variable "worker_min_replicas" {
+  type    = number
+  default = 1
+}
+
+variable "worker_max_replicas" {
+  type    = number
+  default = 3
+}
+
 variable "tags" {
   type    = map(string)
   default = {}

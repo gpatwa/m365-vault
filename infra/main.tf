@@ -98,6 +98,17 @@ module "keyvault" {
   tags                      = local.tags
 }
 
+module "redis" {
+  source              = "./modules/redis"
+  environment         = var.environment
+  resource_group_name = module.resource_group.name
+  location            = module.resource_group.location
+  capacity            = var.redis_capacity
+  family              = var.redis_family
+  sku_name            = var.redis_sku
+  tags                = local.tags
+}
+
 module "container_apps" {
   source                    = "./modules/container_apps"
   environment               = var.environment
@@ -119,5 +130,10 @@ module "container_apps" {
   backend_min_replicas      = var.backend_min_replicas
   backend_max_replicas      = var.backend_max_replicas
   cors_origins              = var.cors_origins
+  redis_url                 = module.redis.redis_url
+  worker_cpu                = var.worker_cpu
+  worker_memory             = var.worker_memory
+  worker_min_replicas       = var.worker_min_replicas
+  worker_max_replicas       = var.worker_max_replicas
   tags                      = local.tags
 }

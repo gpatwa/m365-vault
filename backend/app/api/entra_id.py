@@ -9,7 +9,8 @@ from app.models.protected_object import ProtectedObject, WorkloadType
 from app.models.snapshot import Snapshot, SnapshotItem, SnapshotStatus, ItemType
 from app.models.user import User
 from app.services.auth import get_current_user
-from app.services.backup_engine import BackupEngine
+from app.interfaces.dispatcher_factory import get_dispatcher
+from app.interfaces.job_message import BackupObjectMessage
 from app.utils.query import ListParams, apply_sorting, apply_pagination
 
 router = APIRouter(prefix="/api/entra-id", tags=["Entra ID"])
@@ -250,14 +251,18 @@ async def backup_entra_id(
     if not obj:
         raise HTTPException(status_code=404, detail="No Entra ID object found for this tenant. Run discovery first.")
 
-    engine = BackupEngine(db)
-    snapshot = await engine.run_backup_for_object(obj)
-    await db.commit()
+    result = await get_dispatcher().dispatch_backup_object(
+        BackupObjectMessage(protected_object_id=obj.id), db=db
+    )
+    if not result.success and result.status != "queued":
+        raise HTTPException(status_code=500, detail=result.error or "Backup failed")
+    if result.status != "queued":
+        await db.commit()
 
     return {
-        "status": "completed",
-        "snapshot_id": snapshot.id,
-        "item_count": snapshot.item_count,
-        "size_bytes": snapshot.size_bytes,
-        "snapshot_status": snapshot.status.value,
+        "status": result.status,
+        "snapshot_id": result.snapshot_id,
+        "item_count": result.item_count,
+        "size_bytes": result.size_bytes,
+        "snapshot_status": result.status,
     }

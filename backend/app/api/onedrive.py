@@ -13,7 +13,8 @@ from app.models.restore_job import RestoreJob, RestoreType, RestoreStatus
 from app.models.user import User
 from app.services.auth import get_current_user, require_backup_permission, require_restore_permission
 from app.services.catalog import CatalogService
-from app.services.backup_engine import BackupEngine
+from app.interfaces.dispatcher_factory import get_dispatcher
+from app.interfaces.job_message import BackupObjectMessage, RestoreJobMessage
 from app.utils.query import ListParams, apply_sorting, apply_pagination
 
 router = APIRouter(prefix="/api/onedrive", tags=["OneDrive"])
@@ -176,13 +177,13 @@ async def restore_account(
     db.add(restore_job)
     await db.flush()
 
-    from app.services.restore_engine import RestoreEngine
-    engine = RestoreEngine(db)
-    await engine.execute_restore(restore_job)
+    result = await get_dispatcher().dispatch_restore(
+        RestoreJobMessage(restore_job_id=restore_job.id), db=db
+    )
 
     return {
         "restore_job_id": restore_job.id,
-        "status": restore_job.status.value,
+        "status": result.status or restore_job.status.value,
         "items_restored": restore_job.items_restored,
     }
 
@@ -198,13 +199,16 @@ async def trigger_backup(
     if not obj:
         raise HTTPException(status_code=404, detail="Account not found")
 
-    engine = BackupEngine(db)
-    snapshot = await engine.run_backup_for_object(obj)
+    result = await get_dispatcher().dispatch_backup_object(
+        BackupObjectMessage(protected_object_id=obj.id), db=db
+    )
+    if not result.success and result.status != "queued":
+        raise HTTPException(status_code=500, detail=result.error or "Backup failed")
     return {
-        "snapshot_id": snapshot.id,
-        "status": snapshot.status.value,
-        "item_count": snapshot.item_count,
-        "size_bytes": snapshot.size_bytes,
+        "snapshot_id": result.snapshot_id,
+        "status": result.status,
+        "item_count": result.item_count,
+        "size_bytes": result.size_bytes,
     }
 
 
@@ -239,8 +243,6 @@ async def trigger_backup_all(
     db.add(job)
     await db.flush()
 
-    engine = BackupEngine(db)
-
     import json as _json
     progress = {"objects": {}, "summary": {"total": len(accounts), "completed": 0, "failed": 0, "in_progress": 0, "pending": len(accounts), "total_items": 0, "total_size_bytes": 0}}
     for obj in accounts:
@@ -248,26 +250,33 @@ async def trigger_backup_all(
     job.progress_details = _json.dumps(progress)
     await db.commit()
 
+    dispatcher = get_dispatcher()
     results = []
     succeeded = 0
     failed = 0
-
-    # Cache object names before the loop (session may be invalidated on error)
-    obj_names = {obj.id: (obj.display_name, obj.email) for obj in accounts}
+    queued_count = 0
 
     for obj in accounts:
-        try:
-            snapshot = await engine.run_backup_for_object(obj, job=job)
-            results.append({"account": obj.display_name, "email": obj.email, "status": "success", "snapshot_id": snapshot.id, "item_count": snapshot.item_count, "size_bytes": snapshot.size_bytes})
+        r = await dispatcher.dispatch_backup_object(
+            BackupObjectMessage(protected_object_id=obj.id, backup_job_id=job.id), db=db
+        )
+        if r.status == "queued":
+            queued_count += 1
+        elif r.success:
+            results.append({"account": obj.display_name, "email": obj.email, "status": "success", "snapshot_id": r.snapshot_id, "item_count": r.item_count, "size_bytes": r.size_bytes})
             succeeded += 1
             job.objects_processed += 1
-        except Exception as e:
-            await db.rollback()
-            name, email = obj_names.get(obj.id, (str(obj.id), ''))
-            results.append({"account": name, "email": email, "status": "failed", "error": str(e)[:500]})
+            await db.commit()
+        else:
+            results.append({"account": obj.display_name, "email": obj.email, "status": "failed", "error": r.error})
             failed += 1
             job.objects_failed += 1
+            await db.commit()
+
+    if queued_count:
+        job.status = JobStatus.QUEUED
         await db.commit()
+        return {"job_id": job.id, "status": "queued", "total": len(accounts)}
 
     job.status = JobStatus.COMPLETED if failed == 0 else (JobStatus.PARTIAL if succeeded > 0 else JobStatus.FAILED)
     job.completed_at = datetime.utcnow()

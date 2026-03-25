@@ -20,6 +20,7 @@ import AlertSettings from './pages/AlertSettings';
 import SmartEngine from './pages/SmartEngine';
 import Search from './pages/Search';
 import SelfRestore from './pages/SelfRestore';
+import Recovery from './pages/Recovery';
 import Reports from './pages/Reports';
 import Usage from './pages/Usage';
 import Legal from './pages/Legal';
@@ -68,6 +69,7 @@ function AppRoutes() {
         <Route path="search" element={<Search />} />
         <Route path="smart-engine" element={<SmartEngine />} />
         <Route path="restore" element={<SelfRestore />} />
+        <Route path="recovery" element={<Recovery />} />
         <Route path="reports" element={<Reports />} />
         <Route path="usage" element={<Usage />} />
         <Route path=":workload/:objectId" element={<ObjectDetail />} />

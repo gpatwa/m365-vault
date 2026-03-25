@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Mail, HardDrive, Globe, Shield, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search, RotateCcw, BarChart3, Gauge, ChevronDown } from 'lucide-react';
+import { LayoutDashboard, Mail, HardDrive, Globe, Shield, ShieldCheck, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search, RotateCcw, BarChart3, Gauge, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import CommandPalette from './CommandPalette';
 
@@ -41,7 +41,8 @@ const navGroups: NavGroup[] = [
     items: [
       { path: '/jobs', label: 'Jobs', icon: Activity },
       { path: '/failed-items', label: 'Failed Items', icon: ShieldAlert },
-      { path: '/restore', label: 'Restore', icon: RotateCcw },
+      { path: '/restore', label: 'Self Restore', icon: RotateCcw },
+      { path: '/recovery', label: 'Recovery', icon: ShieldCheck },
     ],
   },
   {

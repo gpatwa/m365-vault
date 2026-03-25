@@ -2,6 +2,35 @@
 
 All notable changes to Shieldio are documented in this file.
 
+## [2.1.0] - 2026-03-25
+
+### Recovery Dashboard
+- **Recovery Confidence Score** (0-100) — 4 weighted factors: backup freshness, completeness, restore success rate, validation pass rate. Letter grade (A/B/C/D) with actionable recommendations
+- **RPO/RTO Compliance Dashboard** — per-workload compliance tracking, actual vs target RPO, RTO from restore job durations
+- **Recovery Runbooks** — 5 pre-defined playbooks: Ransomware Recovery (8 steps), Accidental Deletion (4 steps), Tenant Migration (5 steps), Compliance/eDiscovery (5 steps), Configuration Drift (4 steps)
+- **Mass Recovery** — one-click restore all workloads to a point in time with dry-run mode
+- **Test Restore** — automated validation that backup data can be decrypted and read without restoring to M365
+- **Recovery Verification** — full tenant-level "did everything come back?" check with 4 verification gates
+
+### Restore Enhancements
+- **RestoreDialog component** — modal UI with restore type selection (full/item-level/cross-user), malware scan notice, confirmation, success/error states. Wired to all 5 workload pages
+- **Teams + Entra ID restore endpoints** — POST /teams/{id}/restore, POST /entra-id/restore
+- **Malware scan before restore** — blocks restore if threats detected, tracks scan_status on RestoreJob
+- **Smart restore status** — 95%+ items = COMPLETED, 50-94% = PARTIAL, <50% = FAILED (previously only COMPLETED/FAILED)
+- **All 5 workloads** now have backup + restore + browse + RestoreDialog
+
+### Entra ID Expanded
+- **12 object types** (up from 7): added Service Principals (165 objects), Administrative Units, OAuth Permission Grants (6), Devices, Custom Domains (1)
+- **Snapshot diff/compare UI** — select two snapshots to see added/removed/changed objects for audit and compliance
+
+### Testing
+- **65 tests** across 7 test files: auth (8), health (5), API (14), Entra ID (7), Teams (6), restore (12), recovery (13)
+- **Release quality gate** — `make release-check` runs 7 gates in ~70s (TypeScript, Python, pytest, coverage, frontend build, Docker build, secret scan, API smoke test)
+
+### API
+- **115 REST API endpoints** (up from 107)
+- 6 new recovery endpoints: confidence, rpo-rto, runbooks, mass-restore, test-restore, verify
+
 ## [2.0.0] - 2026-03-25
 
 ### Rebranded

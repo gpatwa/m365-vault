@@ -4,7 +4,7 @@
 
 Shieldio is an open-source, self-hosted SaaS data protection platform. Currently protects Microsoft 365 workloads with a roadmap to support Google Workspace, Salesforce, and more. Features AI-powered intelligence, immutable storage, and enterprise-grade security — all at zero marginal cost.
 
-> Version 2.0.0 | Python 3.12+ | React 19 | FastAPI | Apache-2.0 License
+> Version 2.1.0 | 115 API routes | 65 tests | Python 3.12+ | React 19 | FastAPI | Apache-2.0
 
 ---
 
@@ -15,7 +15,7 @@ Shieldio is an open-source, self-hosted SaaS data protection platform. Currently
 - **OneDrive for Business** — Files, folders with version tracking
 - **SharePoint Online** — Sites, document libraries, lists, list items
 - **Microsoft Teams** — Channel messages (Export API), files, 1-to-1/group chats, team settings
-- **Entra ID (Azure AD)** — Users, groups, roles, Conditional Access policies, app registrations, named locations
+- **Entra ID (Azure AD)** — 12 object types: users, groups, roles, CA policies, apps, service principals, admin units, OAuth grants, devices, domains. Snapshot diff/compare for configuration drift detection
 
 ### Intelligent Platform
 - **Smart Engine** — Statistical anomaly detection, health scoring (0-100), baseline tracking
@@ -23,6 +23,7 @@ Shieldio is an open-source, self-hosted SaaS data protection platform. Currently
 - **Sensitive Data Scanner** — PII/PHI/PCI regex detection in backup data ($0 vs Purview $5-10/user)
 - **Malware Scanner** — YARA-rule based scanning before restore to prevent ransomware reinfection
 - **Backup Validation** — Automated checksum verification with sampling
+- **Recovery Dashboard** — Confidence score (0-100), RPO/RTO compliance, 5 recovery runbooks, mass recovery, test restore verification
 
 ### Enterprise Security
 - **AES-256-GCM encryption** with per-tenant DEK/KEK key hierarchy

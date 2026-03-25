@@ -18,7 +18,10 @@ export const formatDuration = (start: string | null, end: string | null) => {
 
 export const timeAgo = (dateStr: string | null) => {
   if (!dateStr) return 'Never';
-  const diff = Math.round((Date.now() - new Date(dateStr).getTime()) / 1000);
+  // Ensure UTC parsing — backend stores UTC timestamps without 'Z' suffix
+  const normalized = dateStr.endsWith('Z') ? dateStr : dateStr + 'Z';
+  const diff = Math.round((Date.now() - new Date(normalized).getTime()) / 1000);
+  if (diff < 0) return 'Just now'; // Handle clock skew
   if (diff < 60) return `${diff}s ago`;
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;

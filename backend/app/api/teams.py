@@ -161,6 +161,38 @@ async def backup_all_teams(
     return {"backed_up": len(results), "results": results}
 
 
+@router.get("/teams/{team_id}/snapshots")
+async def list_team_snapshots(
+    team_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """List snapshots for a specific Team/Chat object."""
+    obj = await db.get(ProtectedObject, team_id)
+    if not obj or obj.workload_type != WorkloadType.TEAMS:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    result = await db.execute(
+        select(Snapshot).where(
+            Snapshot.protected_object_id == team_id,
+        ).order_by(desc(Snapshot.started_at))
+    )
+    snapshots = result.scalars().all()
+
+    return [
+        {
+            "id": s.id,
+            "snapshot_type": s.snapshot_type.value,
+            "status": s.status.value,
+            "started_at": s.started_at.isoformat() if s.started_at else None,
+            "completed_at": s.completed_at.isoformat() if s.completed_at else None,
+            "item_count": s.item_count,
+            "size_bytes": s.size_bytes,
+        }
+        for s in snapshots
+    ]
+
+
 @router.post("/teams/{team_id}/backup")
 async def backup_single_team(
     team_id: int,

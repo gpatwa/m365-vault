@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, Loader2, RotateCcw, Briefcase } from 'lucide-react';
+import { AlertTriangle, Loader2, RotateCcw, Briefcase, CheckCircle2, PlayCircle, Clock } from 'lucide-react';
 import { api } from '../api/client';
 import { WORKLOAD_KEYS, WORKLOAD_MAP } from '../config/workloads';
 import WorkloadSwimlane from '../components/jobs/WorkloadSwimlane';
@@ -8,6 +8,9 @@ import type { WorkloadStats } from '../components/jobs/WorkloadSwimlane';
 import type { BackupJob, RestoreJob, PaginatedResponse, FailedJobsSummary } from '../types';
 import DataTable, { type Column, type FilterOption } from '../components/DataTable';
 import { formatSize, formatDuration, timeAgo } from '../utils/format';
+import Breadcrumb from '../components/design-system/Breadcrumb';
+import SearchTrigger from '../components/design-system/SearchTrigger';
+import HeroSummaryBar, { type HeroStat } from '../components/design-system/HeroSummaryBar';
 
 type Workload = string;
 const WORKLOADS = WORKLOAD_KEYS;
@@ -221,6 +224,7 @@ export default function Jobs() {
       completed: all.filter(j => j.status === 'completed').length,
       failed: all.filter(j => j.status === 'failed').length,
       in_progress: all.filter(j => j.status === 'in_progress').length,
+      queued: all.filter(j => j.status === 'queued').length,
     };
   }, [allBackupJobs]);
 
@@ -228,23 +232,66 @@ export default function Jobs() {
     setExpandedWorkload(expandedWorkload === w ? null : w);
   };
 
+  const heroStats: HeroStat[] = [
+    {
+      label: 'Total Jobs',
+      value: totalStats.total,
+      subtitle: 'All workloads',
+      icon: Briefcase,
+      color: 'blue',
+    },
+    {
+      label: 'Completed',
+      value: totalStats.completed,
+      subtitle: totalStats.total > 0 ? `${Math.round(totalStats.completed / totalStats.total * 100)}% success rate` : 'No jobs yet',
+      icon: CheckCircle2,
+      color: 'green',
+    },
+    {
+      label: 'Running',
+      value: totalStats.in_progress + totalStats.queued,
+      subtitle: `${totalStats.in_progress} active, ${totalStats.queued} queued`,
+      icon: PlayCircle,
+      color: totalStats.in_progress > 0 ? 'blue' : 'gray',
+    },
+    {
+      label: 'Failed',
+      value: totalStats.failed,
+      subtitle: failedSummary ? `${failedSummary.ready_now} ready to retry` : 'No failures',
+      icon: AlertTriangle,
+      color: totalStats.failed > 0 ? 'red' : 'gray',
+    },
+  ];
+
   return (
     <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-indigo-50 rounded-lg">
-              <Briefcase className="w-6 h-6 text-indigo-600" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Jobs</h1>
-              <p className="text-gray-500 text-sm">
-                {totalStats.total} total
-                {totalStats.in_progress > 0 && <span className="text-blue-600 ml-2">{totalStats.in_progress} running</span>}
-                {totalStats.failed > 0 && <span className="text-red-600 ml-2">{totalStats.failed} failed</span>}
-              </p>
-            </div>
+      {/* Breadcrumb + Search */}
+      <Breadcrumb
+        items={[
+          { label: 'Microsoft 365', path: '/' },
+          { label: 'Jobs' },
+        ]}
+        rightSlot={
+          <SearchTrigger
+            placeholder="Search jobs..."
+            className="w-64"
+          />
+        }
+      />
+
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-indigo-50">
+            <Briefcase className="w-6 h-6 text-indigo-600" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Jobs</h1>
+            <p className="text-xs text-gray-500">
+              {totalStats.total} total
+              {totalStats.in_progress > 0 && <span className="text-blue-600 ml-2">{totalStats.in_progress} running</span>}
+              {totalStats.failed > 0 && <span className="text-red-600 ml-2">{totalStats.failed} failed</span>}
+            </p>
           </div>
         </div>
         {failedSummary && failedSummary.total_failed > 0 && (
@@ -272,6 +319,9 @@ export default function Jobs() {
           {retryMsg}
         </div>
       )}
+
+      {/* Hero Stats */}
+      <HeroSummaryBar stats={heroStats} />
 
       {/* View Tabs */}
       <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit mb-6">

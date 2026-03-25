@@ -71,3 +71,42 @@ variable "cors_origins" {
   default     = ""
   description = "Comma-separated CORS origins for the backend"
 }
+
+# Worker
+variable "worker_cpu" {
+  type    = number
+  default = 0.5
+}
+
+variable "worker_memory" {
+  type    = string
+  default = "1Gi"
+}
+
+variable "worker_min_replicas" {
+  type    = number
+  default = 1
+}
+
+variable "worker_max_replicas" {
+  type    = number
+  default = 3
+}
+
+# Redis
+variable "redis_capacity" {
+  type        = number
+  default     = 0
+  description = "Redis cache capacity (0=250MB C0, 1=1GB C1, ...)"
+}
+
+variable "redis_family" {
+  type    = string
+  default = "C"
+}
+
+variable "redis_sku" {
+  type        = string
+  default     = "Basic"
+  description = "Redis SKU: Basic (dev), Standard (prod)"
+}

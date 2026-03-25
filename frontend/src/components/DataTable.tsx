@@ -75,6 +75,9 @@ interface DataTableProps<T> {
   actions?: (row: T) => React.ReactNode; // Row action buttons
   headerActions?: React.ReactNode;       // Buttons next to title
 
+  // Query control
+  enabled?: boolean;          // Disable fetching until ready (e.g., tenant_id resolved)
+
   // Refresh
   refetchInterval?: number;   // Auto-refresh interval in ms
 }
@@ -113,6 +116,7 @@ export default function DataTable<T extends Record<string, any>>({
   actions,
   headerActions,
   refetchInterval,
+  enabled = true,
 }: DataTableProps<T>) {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -174,6 +178,7 @@ export default function DataTable<T extends Record<string, any>>({
     queryKey: [queryKey, queryString],
     queryFn: () => api.get<PaginatedResponse<T>>(`${endpoint}?${queryString}`),
     refetchInterval,
+    enabled,
   });
 
   const totalPages = data ? Math.ceil(data.total / pageSize) : 0;

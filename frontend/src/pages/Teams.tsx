@@ -108,7 +108,8 @@ export default function Teams() {
         queryKey="teams"
         endpoint="/teams/teams"
         columns={teamColumns}
-        extraParams={{ tenant_id: tenantId }}
+        extraParams={{ tenant_id: tenantId ?? '' }}
+        enabled={!!tenantId}
         defaultSortBy="display_name"
         defaultSortOrder="asc"
         emptyMessage="No Teams discovered. Run discovery on your tenant from the Settings page."

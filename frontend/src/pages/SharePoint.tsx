@@ -229,7 +229,8 @@ export default function SharePoint() {
         queryKey="sharepoint-sites"
         endpoint="/sharepoint/sites"
         columns={columns}
-        extraParams={{ tenant_id: tenantId || '' }}
+        extraParams={{ tenant_id: tenantId ?? '' }}
+        enabled={!!tenantId}
         searchPlaceholder="Search sites..."
         filters={[
           {

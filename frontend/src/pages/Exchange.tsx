@@ -109,8 +109,6 @@ export default function Exchange() {
 
   // ── Mailbox detail / snapshots view ──
   if (selectedMailbox) {
-    console.log('[Exchange] selectedMailbox:', selectedMailbox);
-    console.log('[Exchange] snapshots:', snapshots);
     return (
       <div>
         <Breadcrumb items={[
@@ -259,7 +257,8 @@ export default function Exchange() {
         queryKey="exchange-mailboxes"
         endpoint="/exchange/mailboxes"
         columns={columns}
-        extraParams={{ tenant_id: tenantId || '' }}
+        extraParams={{ tenant_id: tenantId ?? '' }}
+        enabled={!!tenantId}
         filters={[
           {
             key: 'status',

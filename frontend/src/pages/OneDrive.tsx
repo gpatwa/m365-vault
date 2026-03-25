@@ -224,7 +224,8 @@ export default function OneDrive() {
         queryKey="onedrive-accounts"
         endpoint="/onedrive/accounts"
         columns={columns}
-        extraParams={{ tenant_id: tenantId || '' }}
+        extraParams={{ tenant_id: tenantId ?? '' }}
+        enabled={!!tenantId}
         filters={[
           {
             key: 'status',

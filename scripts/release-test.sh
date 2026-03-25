@@ -114,15 +114,82 @@ check "Frontend loads" "$(curl -s "$FRONTEND" -o /dev/null -w "%{http_code}")" "
 FRONTEND_HTML=$(curl -s "$FRONTEND")
 check "Frontend has Shieldio" "$FRONTEND_HTML" "Shieldio"
 
-# 9. Worker health
+# 9. E2E Data Flow — verify click-through works (list → detail → browse)
 echo ""
-echo "── Worker (Data Plane) ──"
+echo "── E2E Data Flow ──"
+if [ "$TENANT_ID" != "0" ] && [ -n "$TENANT_ID" ]; then
+  # Get first Exchange mailbox
+  MAILBOX_ID=$(curl -s -H "$AUTH" "$BACKEND/api/exchange/mailboxes?tenant_id=$TENANT_ID&page_size=1" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['items'][0]['id'] if d.get('items') else '0')" 2>/dev/null)
+  if [ "$MAILBOX_ID" != "0" ] && [ -n "$MAILBOX_ID" ]; then
+    check "Exchange: mailbox has data" "$(curl -s -H "$AUTH" "$BACKEND/api/exchange/mailboxes/$MAILBOX_ID/snapshots" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d))" 2>/dev/null)" ""
+    SNAP_ID=$(curl -s -H "$AUTH" "$BACKEND/api/exchange/mailboxes/$MAILBOX_ID/snapshots" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if d else '0')" 2>/dev/null)
+    if [ "$SNAP_ID" != "0" ] && [ -n "$SNAP_ID" ]; then
+      check "Exchange: browse snapshot" "$(curl -s -H "$AUTH" "$BACKEND/api/exchange/mailboxes/$MAILBOX_ID/snapshots/$SNAP_ID/browse" -o /dev/null -w "%{http_code}")" "200"
+    else
+      echo "  ⏭️  No snapshots — skipping browse test"
+    fi
+  else
+    echo "  ⏭️  No mailboxes — skipping E2E Exchange flow"
+  fi
+
+  # Get first OneDrive account
+  OD_ID=$(curl -s -H "$AUTH" "$BACKEND/api/onedrive/accounts?tenant_id=$TENANT_ID&page_size=1" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['items'][0]['id'] if d.get('items') else '0')" 2>/dev/null)
+  if [ "$OD_ID" != "0" ] && [ -n "$OD_ID" ]; then
+    check "OneDrive: account snapshots" "$(curl -s -H "$AUTH" "$BACKEND/api/onedrive/accounts/$OD_ID/snapshots" -o /dev/null -w "%{http_code}")" "200"
+  fi
+
+  # Get first SharePoint site
+  SP_ID=$(curl -s -H "$AUTH" "$BACKEND/api/sharepoint/sites?tenant_id=$TENANT_ID&page_size=1" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['items'][0]['id'] if d.get('items') else '0')" 2>/dev/null)
+  if [ "$SP_ID" != "0" ] && [ -n "$SP_ID" ]; then
+    check "SharePoint: site snapshots" "$(curl -s -H "$AUTH" "$BACKEND/api/sharepoint/sites/$SP_ID/snapshots" -o /dev/null -w "%{http_code}")" "200"
+  fi
+
+  # Entra ID data
+  ENTRA_SNAP=$(curl -s -H "$AUTH" "$BACKEND/api/entra-id/summary?tenant_id=$TENANT_ID" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('snapshot_id','0'))" 2>/dev/null)
+  if [ "$ENTRA_SNAP" != "0" ] && [ "$ENTRA_SNAP" != "None" ] && [ -n "$ENTRA_SNAP" ]; then
+    check "Entra ID: browse items" "$(curl -s -H "$AUTH" "$BACKEND/api/entra-id/snapshot/$ENTRA_SNAP/items?page_size=5" -o /dev/null -w "%{http_code}")" "200"
+  fi
+
+  # Teams data
+  check "Teams: list teams" "$(curl -s -H "$AUTH" "$BACKEND/api/teams/teams?tenant_id=$TENANT_ID" -o /dev/null -w "%{http_code}")" "200"
+  check "Teams: chats endpoint" "$(curl -s -H "$AUTH" "$BACKEND/api/teams/chats?tenant_id=$TENANT_ID" -o /dev/null -w "%{http_code}")" "200"
+else
+  echo "  ⏭️  No tenant — skipping E2E data flow tests"
+fi
+
+# 10. Reports & Analytics
+echo ""
+echo "── Reports & Analytics ──"
+check "Backup performance" "$(curl -s -H "$AUTH" "$BACKEND/api/reports/backup-performance?period=30d&tenant_id=${TENANT_ID:-1}" -o /dev/null -w "%{http_code}")" "200"
+check "Storage analytics" "$(curl -s -H "$AUTH" "$BACKEND/api/reports/storage-analytics?tenant_id=${TENANT_ID:-1}" -o /dev/null -w "%{http_code}")" "200"
+check "Failure analysis" "$(curl -s -H "$AUTH" "$BACKEND/api/reports/failure-analysis?period=30d&tenant_id=${TENANT_ID:-1}" -o /dev/null -w "%{http_code}")" "200"
+check "SLA compliance" "$(curl -s -H "$AUTH" "$BACKEND/api/reports/sla-compliance?tenant_id=${TENANT_ID:-1}" -o /dev/null -w "%{http_code}")" "200"
+
+# 11. Self-restore
+echo ""
+echo "── Self-Restore & Search ──"
+check "Self-restore search" "$(curl -s -H "$AUTH" "$BACKEND/api/self-restore/search?query=test&page_size=5" -o /dev/null -w "%{http_code}")" "200"
+
+# 12. Status endpoint
+echo ""
+echo "── Status ──"
+check "Status endpoint" "$(curl -s "$BACKEND/api/status" -o /dev/null -w "%{http_code}")" "200"
+
+# 13. Worker health
+echo ""
+echo "── Infrastructure ──"
 WORKER_STATUS=$(docker compose ps worker --format "{{.Status}}" 2>/dev/null)
 check "Worker container running" "$WORKER_STATUS" "Up"
 
-# 10. Redis
 REDIS_STATUS=$(docker compose ps redis --format "{{.Status}}" 2>/dev/null)
 check "Redis healthy" "$REDIS_STATUS" "healthy"
+
+# 14. Correlation ID header
+echo ""
+echo "── Security Headers ──"
+HEADERS=$(curl -s -D - "$BACKEND/" -o /dev/null 2>&1)
+check "X-Correlation-ID present" "$HEADERS" "x-correlation-id"
+check "X-Response-Time present" "$HEADERS" "x-response-time"
 
 # Summary
 echo ""

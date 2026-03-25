@@ -109,6 +109,8 @@ export default function Exchange() {
 
   // ── Mailbox detail / snapshots view ──
   if (selectedMailbox) {
+    console.log('[Exchange] selectedMailbox:', selectedMailbox);
+    console.log('[Exchange] snapshots:', snapshots);
     return (
       <div>
         <Breadcrumb items={[

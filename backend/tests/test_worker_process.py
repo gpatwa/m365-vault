@@ -42,8 +42,7 @@ class TestProcessBackupMessage:
 
         with patch("app.database.async_session", return_value=mock_session_ctx), \
              patch("app.services.backup_engine.BackupEngine", return_value=mock_engine):
-            raw = json.dumps({"job_type": "backup_object", "protected_object_id": 1})
-            await process_backup_message(raw)
+            await process_backup_message({"job_type": "backup_object", "protected_object_id": 1})
 
     @pytest.mark.asyncio
     async def test_backup_object_logs_error_when_object_not_found(self):
@@ -60,9 +59,9 @@ class TestProcessBackupMessage:
         mock_session_ctx.__aexit__ = AsyncMock(return_value=None)
 
         with patch("app.database.async_session", return_value=mock_session_ctx):
-            raw = json.dumps({"job_type": "backup_object", "protected_object_id": 9999})
-            # Should not raise
-            await process_backup_message(raw)
+            # Should raise ValueError for missing object
+            with pytest.raises(ValueError):
+                await process_backup_message({"job_type": "backup_object", "protected_object_id": 9999})
 
     @pytest.mark.asyncio
     async def test_backup_job_calls_execute_backup_job(self):
@@ -88,8 +87,7 @@ class TestProcessBackupMessage:
 
         with patch("app.database.async_session", return_value=mock_session_ctx), \
              patch("app.services.backup_engine.BackupEngine", return_value=mock_engine):
-            raw = json.dumps({"job_type": "backup_job", "backup_job_id": 42})
-            await process_backup_message(raw)
+            await process_backup_message({"job_type": "backup_job", "backup_job_id": 42})
 
     @pytest.mark.asyncio
     async def test_backup_job_not_found_logs_error(self):
@@ -106,8 +104,8 @@ class TestProcessBackupMessage:
         mock_session_ctx.__aexit__ = AsyncMock(return_value=None)
 
         with patch("app.database.async_session", return_value=mock_session_ctx):
-            raw = json.dumps({"job_type": "backup_job", "backup_job_id": 9999})
-            await process_backup_message(raw)
+            with pytest.raises(ValueError):
+                await process_backup_message({"job_type": "backup_job", "backup_job_id": 9999})
 
     @pytest.mark.asyncio
     async def test_exception_triggers_rollback(self):
@@ -129,10 +127,8 @@ class TestProcessBackupMessage:
 
         with patch("app.database.async_session", return_value=mock_session_ctx), \
              patch("app.services.backup_engine.BackupEngine", return_value=mock_engine):
-            raw = json.dumps({"job_type": "backup_object", "protected_object_id": 1})
-            await process_backup_message(raw)
-
-        mock_db.rollback.assert_called_once()
+            with pytest.raises(RuntimeError, match="Engine crash"):
+                await process_backup_message({"job_type": "backup_object", "protected_object_id": 1})
 
 
 # ── process_restore_message ──
@@ -162,8 +158,7 @@ class TestProcessRestoreMessage:
 
         with patch("app.database.async_session", return_value=mock_session_ctx), \
              patch("app.services.restore_engine.RestoreEngine", return_value=mock_engine):
-            raw = json.dumps({"job_type": "restore", "restore_job_id": 55})
-            await process_restore_message(raw)
+            await process_restore_message({"job_type": "restore", "restore_job_id": 55})
 
     @pytest.mark.asyncio
     async def test_restore_job_not_found_logs_error(self):
@@ -180,8 +175,8 @@ class TestProcessRestoreMessage:
         mock_session_ctx.__aexit__ = AsyncMock(return_value=None)
 
         with patch("app.database.async_session", return_value=mock_session_ctx):
-            raw = json.dumps({"job_type": "restore", "restore_job_id": 9999})
-            await process_restore_message(raw)  # Should not raise
+            with pytest.raises(ValueError):
+                await process_restore_message({"job_type": "restore", "restore_job_id": 9999})
 
     @pytest.mark.asyncio
     async def test_restore_exception_triggers_rollback(self):
@@ -203,10 +198,8 @@ class TestProcessRestoreMessage:
 
         with patch("app.database.async_session", return_value=mock_session_ctx), \
              patch("app.services.restore_engine.RestoreEngine", return_value=mock_engine):
-            raw = json.dumps({"job_type": "restore", "restore_job_id": 55})
-            await process_restore_message(raw)
-
-        mock_db.rollback.assert_called_once()
+            with pytest.raises(RuntimeError, match="Restore crash"):
+                await process_restore_message({"job_type": "restore", "restore_job_id": 55})
 
 
 # ── worker_loop ──

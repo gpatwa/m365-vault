@@ -20,18 +20,21 @@ class BackupObjectMessage(BaseModel):
     job_type: str = JobType.BACKUP_OBJECT
     protected_object_id: int
     backup_job_id: Optional[int] = None
+    queue_entry_id: Optional[int] = None  # Set by RedisDispatcher for durability tracking
 
 
 class BackupJobMessage(BaseModel):
     """Dispatch a full backup job (from scheduler)."""
     job_type: str = JobType.BACKUP_JOB
     backup_job_id: int
+    queue_entry_id: Optional[int] = None  # Set by RedisDispatcher for durability tracking
 
 
 class RestoreJobMessage(BaseModel):
     """Dispatch a restore job."""
     job_type: str = JobType.RESTORE
     restore_job_id: int
+    queue_entry_id: Optional[int] = None  # Set by RedisDispatcher for durability tracking
 
 
 class JobResult(BaseModel):

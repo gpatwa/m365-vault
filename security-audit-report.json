@@ -1,0 +1,28 @@
+{
+  "tool": "Shieldio Security Audit",
+  "version": "2.0",
+  "timestamp": "2026-03-25T23:04:44.212098Z",
+  "summary": {
+    "passed": 6,
+    "warnings": 3,
+    "failed": 1,
+    "total": 10,
+    "posture": "NEEDS_ATTENTION"
+  },
+  "checks": {
+    "python_static_analysis": "pass",
+    "python_dependencies": "pass",
+    "javascript_dependencies": "pass",
+    "secret_detection": "warn",
+    "sql_injection": "fail",
+    "authentication": "pass",
+    "encryption": "pass",
+    "owasp_top_10": "9/9",
+    "immutability": "pass",
+    "infrastructure": "pass"
+  },
+  "findings": [
+    "npm audit: 2 high/critical vulnerabilities",
+    "sql-injection: 1 f-string SQL queries"
+  ]
+}

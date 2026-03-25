@@ -294,6 +294,10 @@ setup: check-prereqs ## Full first-time local setup: install deps + seed data
 	@echo ""
 	@echo "Setup complete! Run 'make dev' to start."
 
+.PHONY: security-scan
+security-scan: ## Run automated security audit (static analysis, dependency scan, OWASP checks)
+	@bash scripts/security-audit.sh
+
 .PHONY: seed-demo
 seed-demo: ## Populate demo data (Acme Corp tenant + 14 days of backup history)
 	docker cp scripts/seed-demo.py $$($(DOCKER_COMPOSE) ps -q backend):/app/seed-demo.py

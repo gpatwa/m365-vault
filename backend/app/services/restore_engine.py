@@ -87,11 +87,15 @@ class RestoreEngine:
             from app.workers.exchange_worker import ExchangeWorker
             from app.workers.onedrive_worker import OneDriveWorker
             from app.workers.sharepoint_worker import SharePointWorker
+            from app.workers.teams_worker import TeamsWorker
+            from app.workers.entra_id_worker import EntraIDWorker
 
             worker_map = {
                 WorkloadType.EXCHANGE: ExchangeWorker,
                 WorkloadType.ONEDRIVE: OneDriveWorker,
                 WorkloadType.SHAREPOINT: SharePointWorker,
+                WorkloadType.TEAMS: TeamsWorker,
+                WorkloadType.ENTRA_ID: EntraIDWorker,
             }
 
             worker_class = worker_map.get(source_obj.workload_type)
@@ -102,6 +106,29 @@ class RestoreEngine:
                 db=self.db, graph=graph,
                 storage=storage_service, encryption=encryption_service,
             )
+
+            # ── Malware scan before restore ──
+            try:
+                from app.services.malware_scanner import malware_scanner
+                item_ids_to_scan = json.loads(restore_job.item_ids_json) if restore_job.item_ids_json else []
+                if item_ids_to_scan:
+                    scan_result = await malware_scanner.scan_items(
+                        self.db, item_ids_to_scan, snapshot.id, wrapped_dek
+                    )
+                    restore_job.scan_status = scan_result.get("status", "skipped")
+                    restore_job.scan_details = json.dumps(scan_result)
+                    if scan_result.get("threats_found", 0) > 0:
+                        restore_job.status = RestoreStatus.FAILED
+                        restore_job.error_message = f"Malware scan blocked restore: {scan_result['threats_found']} threat(s) detected"
+                        restore_job.completed_at = datetime.utcnow()
+                        await self.db.commit()
+                        logger.warning(f"Restore job {restore_job.id} blocked by malware scan")
+                        return restore_job
+                else:
+                    restore_job.scan_status = "clean"
+            except Exception as scan_err:
+                logger.warning(f"Malware scan skipped: {scan_err}")
+                restore_job.scan_status = "skipped"
 
             items_restored = 0
 

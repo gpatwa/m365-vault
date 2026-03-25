@@ -10,8 +10,11 @@ from app.models.snapshot import Snapshot, SnapshotItem, SnapshotStatus, ItemType
 from app.models.user import User
 from app.services.auth import get_current_user
 from app.interfaces.dispatcher_factory import get_dispatcher
-from app.interfaces.job_message import BackupObjectMessage
+from app.interfaces.job_message import BackupObjectMessage, RestoreJobMessage
+from app.models.restore_job import RestoreJob, RestoreType, RestoreStatus
+from app.services.auth import require_restore_permission
 from app.utils.query import ListParams, apply_sorting, apply_pagination
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/teams", tags=["Teams"])
 
@@ -319,4 +322,50 @@ async def list_chat_messages(
             }
             for i in items
         ],
+    }
+
+
+class TeamsRestoreRequest(BaseModel):
+    snapshot_id: int
+    restore_type: str = "full_inplace"
+    item_ids: list[int] = None
+    target_team_id: int = None
+
+
+@router.post("/teams/{team_id}/restore")
+async def restore_team(
+    team_id: int,
+    req: TeamsRestoreRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_restore_permission),
+):
+    """Restore Teams data from a snapshot. Requires ADMIN role."""
+    obj = await db.get(ProtectedObject, team_id)
+    if not obj or obj.workload_type != WorkloadType.TEAMS:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    snapshot = await db.get(Snapshot, req.snapshot_id)
+    if not snapshot or snapshot.status != SnapshotStatus.COMPLETED:
+        raise HTTPException(status_code=404, detail="Valid snapshot not found")
+
+    restore_job = RestoreJob(
+        tenant_id=obj.tenant_id,
+        source_snapshot_id=req.snapshot_id,
+        source_object_id=team_id,
+        restore_type=RestoreType(req.restore_type),
+        target_object_id=req.target_team_id,
+        item_ids_json=json.dumps(req.item_ids) if req.item_ids else None,
+        status=RestoreStatus.QUEUED,
+    )
+    db.add(restore_job)
+    await db.flush()
+
+    result = await get_dispatcher().dispatch_restore(
+        RestoreJobMessage(restore_job_id=restore_job.id), db=db
+    )
+
+    return {
+        "restore_job_id": restore_job.id,
+        "status": result.status or restore_job.status.value,
+        "items_restored": restore_job.items_restored,
     }

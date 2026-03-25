@@ -10,8 +10,11 @@ from app.models.snapshot import Snapshot, SnapshotItem, SnapshotStatus, ItemType
 from app.models.user import User
 from app.services.auth import get_current_user
 from app.interfaces.dispatcher_factory import get_dispatcher
-from app.interfaces.job_message import BackupObjectMessage
+from app.interfaces.job_message import BackupObjectMessage, RestoreJobMessage
+from app.models.restore_job import RestoreJob, RestoreType, RestoreStatus
+from app.services.auth import require_restore_permission
 from app.utils.query import ListParams, apply_sorting, apply_pagination
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/entra-id", tags=["Entra ID"])
 
@@ -347,4 +350,61 @@ async def compare_snapshots(
             for id in removed
         ],
         "changed": changed,
+    }
+
+
+class EntraRestoreRequest(BaseModel):
+    snapshot_id: int
+    restore_type: str = "item_level"
+    item_ids: list[int] = None
+
+
+@router.post("/restore")
+async def restore_entra_id(
+    tenant_id: int = Query(...),
+    req: EntraRestoreRequest = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_restore_permission),
+):
+    """Restore Entra ID objects from a snapshot. Requires ADMIN role.
+
+    Supports: Conditional Access policies, groups, app registrations, named locations.
+    Users and directory roles are read-only and will be skipped.
+    """
+    result = await db.execute(
+        select(ProtectedObject).where(
+            ProtectedObject.tenant_id == tenant_id,
+            ProtectedObject.workload_type == WorkloadType.ENTRA_ID,
+        )
+    )
+    obj = result.scalar_one_or_none()
+    if not obj:
+        raise HTTPException(status_code=404, detail="Entra ID object not found")
+
+    if not req:
+        raise HTTPException(status_code=400, detail="Request body required")
+
+    snapshot = await db.get(Snapshot, req.snapshot_id)
+    if not snapshot or snapshot.status != SnapshotStatus.COMPLETED:
+        raise HTTPException(status_code=404, detail="Valid snapshot not found")
+
+    restore_job = RestoreJob(
+        tenant_id=obj.tenant_id,
+        source_snapshot_id=req.snapshot_id,
+        source_object_id=obj.id,
+        restore_type=RestoreType(req.restore_type),
+        item_ids_json=json.dumps(req.item_ids) if req.item_ids else None,
+        status=RestoreStatus.QUEUED,
+    )
+    db.add(restore_job)
+    await db.flush()
+
+    disp_result = await get_dispatcher().dispatch_restore(
+        RestoreJobMessage(restore_job_id=restore_job.id), db=db
+    )
+
+    return {
+        "restore_job_id": restore_job.id,
+        "status": disp_result.status or restore_job.status.value,
+        "items_restored": restore_job.items_restored,
     }

@@ -76,11 +76,9 @@ services:
       MINIO_USE_SSL: "false"
       SECRET_KEY: docker-dev-secret-change-in-production-32
       ENCRYPTION_MASTER_KEY: docker-dev-32-byte-master-key!!
-      REDIS_URL: redis://redis:6379
+      REDIS_URL: redis://redis:6379/0
       DISPATCH_MODE: redis
       DEBUG: "true"
-      REDIS_URL: redis://redis:6379/0
-      DISPATCH_MODE: in_process
     volumes:
       - ./scripts:/scripts
 

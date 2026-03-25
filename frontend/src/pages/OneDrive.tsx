@@ -54,7 +54,7 @@ export default function OneDrive() {
 
   const { data: statsData } = useQuery({
     queryKey: ['onedrive-stats', tenantId],
-    queryFn: () => api.get<{ total: number; items: ProtectedObject[] }>(`/onedrive/accounts?tenant_id=${tenantId}&page_size=200`),
+    queryFn: () => api.get<{ total: number; items: ProtectedObject[] }>(`/onedrive/accounts?tenant_id=${tenantId}&page_size=100`),
     enabled: !!tenantId,
     staleTime: 15000,
   });

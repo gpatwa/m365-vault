@@ -65,7 +65,7 @@ export default function Exchange() {
   // Workload stats from actual mailbox data (not dashboard summary — it lacks items/size)
   const { data: statsData } = useQuery({
     queryKey: ['exchange-stats', tenantId],
-    queryFn: () => api.get<{ total: number; items: ProtectedObject[] }>(`/exchange/mailboxes?tenant_id=${tenantId}&page_size=200`),
+    queryFn: () => api.get<{ total: number; items: ProtectedObject[] }>(`/exchange/mailboxes?tenant_id=${tenantId}&page_size=100`),
     enabled: !!tenantId,
     staleTime: 15000,
   });

@@ -54,7 +54,7 @@ export default function SharePoint() {
 
   const { data: statsData } = useQuery({
     queryKey: ['sharepoint-stats', tenantId],
-    queryFn: () => api.get<{ total: number; items: ProtectedObject[] }>(`/sharepoint/sites?tenant_id=${tenantId}&page_size=200`),
+    queryFn: () => api.get<{ total: number; items: ProtectedObject[] }>(`/sharepoint/sites?tenant_id=${tenantId}&page_size=100`),
     enabled: !!tenantId,
     staleTime: 15000,
   });

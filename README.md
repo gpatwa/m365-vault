@@ -2,59 +2,68 @@
 
 **SaaS Data Protection Platform — Protect Your Cloud Data**
 
-Shieldio is a self-hosted SaaS data protection platform for Microsoft 365 workloads. It provides automated, SLA-driven backup and granular point-in-time restore for Exchange Online, OneDrive for Business, and SharePoint Online — with AES-256 encryption at rest, role-based access control, and comprehensive audit logging.
+Shieldio is an open-source, self-hosted SaaS data protection platform. Currently protects Microsoft 365 workloads with a roadmap to support Google Workspace, Salesforce, and more. Features AI-powered intelligence, immutable storage, and enterprise-grade security — all at zero marginal cost.
 
-> Version 1.5.0 | Python 3.11+ | React 19 | FastAPI | Apache-2.0 License
+> Version 2.0.0 | Python 3.12+ | React 19 | FastAPI | Apache-2.0 License
 
 ---
 
 ## Key Features
 
-- **Multi-tenant Microsoft 365 protection** across Exchange, OneDrive, and SharePoint workloads
-- **SLA policy-driven scheduling** with configurable backup frequency and retention periods
-- **Point-in-time restore** with four modes: full in-place, item-level, cross-user, and export
-- **Microsoft Graph API integration** with OAuth2 client credentials, rate limiting (429 handling), exponential backoff with jitter, and batch operations
-- **AES-256-GCM envelope encryption** using a two-layer DEK/KEK key scheme for data at rest
-- **Storage efficiency** with zstd compression (70-85% reduction on JSON), SHA-256 content-addressable deduplication, and CDC chunking for large files
-- **Failed item tracking** with 13 error categories and actionable resolution guidance
-- **Automatic retry engine** with exponential backoff for failed backup jobs
-- **Role-based access control** with three roles: Admin, Operator, Viewer
-- **Comprehensive audit logging** with severity levels and full-text search
-- **Workload swimlane dashboard** with per-workload stats, progress bars, and click-to-expand drill-down
-- **Retention management** with automated expired snapshot cleanup
-- **Mass recovery** operations for bulk restore across workloads
-- **50+ REST API endpoints** with auto-generated OpenAPI documentation
+### 5 Workloads Protected
+- **Exchange Online** — Emails, calendar events, contacts, attachments
+- **OneDrive for Business** — Files, folders with version tracking
+- **SharePoint Online** — Sites, document libraries, lists, list items
+- **Microsoft Teams** — Channel messages (Export API), files, 1-to-1/group chats, team settings
+- **Entra ID (Azure AD)** — Users, groups, roles, Conditional Access policies, app registrations, named locations
+
+### Intelligent Platform
+- **Smart Engine** — Statistical anomaly detection, health scoring (0-100), baseline tracking
+- **Self-Healing** — Auto-retry with exponential backoff, error categorization (13 types), intelligent remediation
+- **Sensitive Data Scanner** — PII/PHI/PCI regex detection in backup data ($0 vs Purview $5-10/user)
+- **Malware Scanner** — YARA-rule based scanning before restore to prevent ransomware reinfection
+- **Backup Validation** — Automated checksum verification with sampling
+
+### Enterprise Security
+- **AES-256-GCM encryption** with per-tenant DEK/KEK key hierarchy
+- **WORM immutable storage** with retention locks and legal hold
+- **SSO/MFA** via Entra ID OIDC (MSAL) with auto-provisioning
+- **Rate limiting**, structured JSON logging, correlation IDs
+- **Audit logging** with severity levels and full-text search
+
+### Operations
+- **SLA policy engine** with configurable frequency, retention, and WORM
+- **Tenant lifecycle** — onboard, deactivate, reactivate, purge
+- **Permission auto-provisioning** — Graph API permissions added and consented automatically
+- **Reports & Analytics** — backup performance, storage, failures, SLA compliance, security
+- **Usage & License tracking** — per-tenant usage, tier enforcement, growth trends
+
+### Architecture
+- **Control Plane / Data Plane separation** with BaseWorker framework
+- **Job dispatcher** (in-process or Redis queue) for scalable worker execution
+- **Circuit breaker** for Graph API resilience
+- **Stale job detection** with automatic re-queue
 
 ---
 
 ## Architecture
 
 ```
-                          +-------------------+
-                          |   React Frontend  |
-                          |  (nginx / Vite)   |
-                          +--------+----------+
-                                   |
-                                   | REST API (JWT Auth)
-                                   |
-                          +--------v----------+
-                          |  FastAPI Backend   |
-                          |  (Port 8000)      |
-                          +---+------+----+---+
-                              |      |    |
-              +---------------+      |    +----------------+
-              |                      |                     |
-     +--------v--------+   +--------v--------+   +--------v--------+
-     |   PostgreSQL 16  |   | Microsoft Graph |   | Encrypted Object|
-     |  (SQLAlchemy)    |   | API (MSAL)      |   | Storage (AES)   |
-     +---------+--------+   +-----------------+   | MinIO / Azure   |
-               |                                  +-----------------+
-     +---------v------------------+
-     | Background Jobs            |
-     | - Backup Scheduler (60s)   |
-     | - Retention Cleanup (6h)   |
-     | - Retry Engine (10m)       |
-     +----------------------------+
+Control Plane (API)                    Data Plane (Workers)
+┌─────────────────────────┐           ┌─────────────────────────┐
+│ FastAPI (104 routes)     │           │ BaseWorker Framework    │
+│ Scheduler (SLA checks)   │           │ ├── ExchangeWorker     │
+│ Smart Engine (analytics) │  Redis    │ ├── OneDriveWorker     │
+│ Alert Service            │ ──Queue→  │ ├── SharePointWorker   │
+│ Auth / SSO (OIDC)        │           │ ├── TeamsWorker        │
+│ Reports / Usage          │           │ └── EntraIDWorker      │
+│ Audit Logging            │           │ Storage Pipeline       │
+└──────────┬──────────────┘           │ Encryption Service     │
+           │                           └──────────┬──────────────┘
+     ┌─────┴─────┐                          ┌─────┴─────┐
+     │ PostgreSQL │                          │ Blob Store │
+     │ (metadata) │                          │ (Azure/S3) │
+     └───────────┘                          └───────────┘
 ```
 
 ---
@@ -63,108 +72,41 @@ Shieldio is a self-hosted SaaS data protection platform for Microsoft 365 worklo
 
 | Layer     | Technology |
 |-----------|-----------|
-| Backend   | Python 3.11+, FastAPI 0.115, SQLAlchemy 2.0, aiosqlite, MSAL, APScheduler, cryptography, zstandard |
-| Frontend  | React 19, TypeScript 5.9, TailwindCSS 3.4, Recharts 3.8, TanStack Query 5, React Router 7, Vite 8 |
+| Backend   | Python 3.12, FastAPI, SQLAlchemy 2.0 (async), MSAL, APScheduler, cryptography, zstandard |
+| Frontend  | React 19, TypeScript 5.9, TailwindCSS, Recharts, TanStack Query, React Router, Vite |
 | Database  | PostgreSQL 16 (Docker local / Azure Flexible Server production) |
-| Auth      | JWT (python-jose), bcrypt password hashing |
-| Encryption| AES-256-GCM envelope encryption |
+| Auth      | JWT + refresh tokens, bcrypt, Entra ID OIDC (MSAL) |
+| Encryption| AES-256-GCM envelope encryption (DEK/KEK) |
+| Storage   | Pluggable: Local filesystem, MinIO (S3), Azure Blob Storage |
+| Testing   | pytest (93 unit + integration + chaos), k6 (load), Playwright (E2E) |
+| Infra     | Docker Compose (dev), Azure Container Apps + Terraform (prod), GitHub Actions CI/CD |
 
 ---
 
 ## Quickstart
 
-### Prerequisites
-- Python 3.11+
-- Node.js 18+
-- Azure AD App Registration with application permissions:
-  - `Mail.Read`, `Calendars.Read`, `Contacts.Read` (Exchange)
-  - `Files.Read.All` (OneDrive)
-  - `Sites.Read.All` (SharePoint)
-  - `User.Read.All` (Discovery)
-
-### 1. Clone & Setup Backend
-
-```bash
-git clone <repo-url> && cd m365-data-protection
-
-# Backend
-cd backend
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-### 2. Configure Environment
-
-```bash
-cp .env.example .env
-# Edit .env with your SECRET_KEY and ENCRYPTION_MASTER_KEY
-```
-
-### 3. Start Backend
-
-```bash
-cd backend
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-### 4. Setup & Start Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-### 5. Access the Application
-
-Open [http://localhost:5173](http://localhost:5173) and register your first admin account.
-
 ### Docker Compose (Recommended)
 
-Run the full stack with PostgreSQL + MinIO + Backend + Frontend:
-
 ```bash
+git clone <repo-url> && cd shieldio
 docker compose up -d
 
-# Seed test data
-docker compose exec backend python3 /scripts/simulate_backup_data.py
-
 # Open UI at http://localhost:5173 (login: admin / admin123)
-# MinIO Console at http://localhost:9001 (login: minioadmin / minioadmin)
 ```
 
 ### Make Commands
 
-All common operations are available via `make`:
-
 ```bash
 make help             # Show all available commands
-
-# Local Development
-make dev              # Start full Docker Compose stack (build + run)
-make dev-bg           # Start in background
+make dev              # Start full Docker Compose stack
 make dev-down         # Stop all services
-make dev-clean        # Stop + remove volumes (fresh start)
-make seed             # Seed simulated backup data
-make seed-clean       # Clean DB + storage, then re-seed
-make build            # Build Docker images locally
 
-# Azure Deployment
-make bootstrap        # One-time Azure + GitHub setup (SP, OIDC, tfstate, secrets)
-make tf-plan          # Plan infrastructure changes (ENV=dev|prod)
-make tf-apply         # Apply infrastructure changes
+# Azure
+make bootstrap        # One-time Azure + GitHub setup
 make acr-push         # Build + push Docker images to ACR
-make tf-set-acr-secrets  # Set ACR GitHub secrets from Terraform output
-make deploy-dev       # Trigger dev deployment via GitHub Actions
-make deploy-prod      # Trigger prod deployment (with confirmation)
-make deploy-status    # Show recent CI/CD runs
-
-# Cost Management
-make az-sleep         # Pause all Azure resources (scale to 0 + stop DB)
-make az-wake          # Resume all Azure resources
-make az-status        # Show current Azure resource status
-make az-cleanup       # Full Azure teardown + state reset
+make tf-apply         # Deploy infrastructure
+make az-sleep         # Pause Azure resources ($20/mo sleeping)
+make az-wake          # Resume Azure resources
 ```
 
 ---
@@ -172,32 +114,28 @@ make az-cleanup       # Full Azure teardown + state reset
 ## Project Structure
 
 ```
-m365-data-protection/
+shieldio/
 ├── backend/
 │   ├── app/
-│   │   ├── api/           # 10 API routers (auth, tenants, exchange, etc.)
-│   │   ├── models/        # 9 SQLAlchemy models (incl. dedup index)
-│   │   ├── services/      # 12 business services (incl. compression, dedup)
-│   │   ├── workers/       # 3 workload backup workers
-│   │   ├── utils/         # Retry utilities & error classification
-│   │   ├── config.py      # Application settings
-│   │   ├── database.py    # Async database setup
-│   │   └── main.py        # FastAPI app entry point
-│   └── requirements.txt
+│   │   ├── api/           # 20 API routers (104 routes)
+│   │   ├── models/        # SQLAlchemy models (tenant, object, snapshot, job, health, audit)
+│   │   ├── services/      # Business services (backup, restore, smart engine, alerts, encryption)
+│   │   ├── workers/       # 5 workload workers + BaseWorker framework
+│   │   ├── interfaces/    # Dispatcher (in-process / Redis), circuit breaker
+│   │   └── main.py        # FastAPI app with middleware stack
+│   └── tests/             # 93 tests (unit, integration, chaos)
 ├── frontend/
 │   ├── src/
-│   │   ├── pages/         # 10 page components
-│   │   ├── components/    # Shared UI components (incl. jobs/ swimlanes)
-│   │   ├── api/           # API client
-│   │   ├── hooks/         # Custom React hooks
-│   │   ├── utils/         # Shared utilities (format, etc.)
-│   │   └── types/         # TypeScript type definitions
-│   └── package.json
-├── scripts/               # Simulation, discovery & provisioning scripts
+│   │   ├── pages/         # 20+ page components
+│   │   ├── components/    # Design system, DataTable, CommandPalette
+│   │   ├── config/        # Centralized workload + platform config
+│   │   └── contexts/      # Auth context
+│   └── e2e/               # Playwright E2E tests
+├── scripts/               # Discovery, data creation, DB migration
 ├── infra/                 # Terraform IaC (Azure Container Apps)
 ├── .github/workflows/     # CI/CD (GitHub Actions)
-├── docs/                  # Documentation
-├── .env.example           # Configuration template
+├── docs/                  # Documentation + landing page
+├── k6/                    # Load test scripts
 └── CHANGELOG.md           # Release history
 ```
 
@@ -208,18 +146,23 @@ m365-data-protection/
 | Document | Description |
 |----------|-------------|
 | [Azure Deployment](docs/AZURE_DEPLOYMENT.md) | Deploy to Azure with Terraform + GitHub Actions |
-| [Onboarding Guide](docs/ONBOARDING.md) | Step-by-step tenant setup and first backup |
-| [Tenant Security](docs/TENANT_SECURITY.md) | Credential encryption, data isolation, least-privilege access, RBAC |
-| [API Reference](docs/API_REFERENCE.md) | Complete REST API documentation (50+ endpoints) |
-| [Architecture](docs/ARCHITECTURE.md) | System design, data model, and service architecture |
-| [Compliance Report](docs/COMPLIANCE_REPORT.md) | Security controls, encryption, and regulatory alignment |
-| [Product Roadmap](docs/M365_Vault_Product_Roadmap.docx) | Strategic roadmap, competitive analysis, and pricing |
+| [Architecture](docs/ARCHITECTURE.md) | System design, CP/DP separation, BaseWorker framework |
+| [API Reference](docs/API_REFERENCE.md) | Complete REST API documentation (104 endpoints) |
+| [Onboarding Guide](docs/ONBOARDING.md) | Tenant setup and first backup |
+| [Tenant Security](docs/TENANT_SECURITY.md) | Encryption, isolation, RBAC, WORM |
+| [Compliance Report](docs/COMPLIANCE_REPORT.md) | Security controls and regulatory alignment |
+
+Interactive API docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ---
 
-## API Documentation
+## Roadmap
 
-Interactive API docs are available at [http://localhost:8000/docs](http://localhost:8000/docs) when the backend is running.
+- [x] Phase 1: Enterprise Foundation (Exchange, OneDrive, SharePoint, Teams, Entra ID)
+- [x] Phase 2: Intelligence (Smart Engine, Sensitive Data, Malware Scan, Validation, Self-Restore)
+- [x] Production Readiness (tests, security, logging, CI/CD)
+- [ ] Phase 3: Power Platform, MSP Console, eDiscovery, SIEM, Kubernetes
+- [ ] Phase 4: Google Workspace, Salesforce, NL Search (BYOK)
 
 ---
 

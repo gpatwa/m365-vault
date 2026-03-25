@@ -184,21 +184,24 @@ async def platform_usage(
     )
     active_workloads = [row[0].value for row in wl_result.all()]
 
-    # Cost estimate
-    storage_gb = total_storage / (1024 ** 3)
-    infra_cost = 65 + (storage_gb * 0.02)  # Base $65 + $0.02/GB storage
+    # Subscription estimate based on tier pricing (customer-facing)
+    storage_gb = total_storage / (1024 ** 3) if total_storage > 0 else 0
+    tier = settings.LICENSE_TIER
+    price_per_user = {"community": 0, "professional": 1.50, "enterprise": 3.00}.get(tier, 0)
+    subscription_cost = total_users * price_per_user
 
     return {
         "total_tenants": total_tenants,
         "total_protected_users": total_users,
+        "total_protected_objects": total_users,
         "total_storage_bytes": total_storage,
         "total_storage_gb": round(storage_gb, 2),
         "total_snapshots": total_snapshots,
         "backup_jobs_30d": jobs_30d,
         "active_workloads": active_workloads,
         "workload_count": len(active_workloads),
-        "estimated_monthly_cost": round(infra_cost, 2),
-        "cost_per_user": round(infra_cost / total_users, 2) if total_users > 0 else 0,
+        "estimated_monthly_cost": round(subscription_cost, 2),
+        "cost_per_user": round(price_per_user, 2),
     }
 
 

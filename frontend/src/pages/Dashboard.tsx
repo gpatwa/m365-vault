@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -192,8 +192,58 @@ export default function Dashboard() {
 
   // ── Render ──
 
+  const [dismissedWelcome, setDismissedWelcome] = useState(
+    localStorage.getItem('shieldio_welcome_dismissed') === 'true'
+  );
+
+  const dismissWelcome = () => {
+    setDismissedWelcome(true);
+    localStorage.setItem('shieldio_welcome_dismissed', 'true');
+  };
+
+  const isNewUser = !summary || (summary.total_protected === 0 && summary.tenants === 0);
+
   return (
     <div>
+      {/* Welcome Banner — first-time users */}
+      {!dismissedWelcome && (
+        <div className="mb-6 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <button onClick={dismissWelcome} className="absolute top-4 right-4 text-white/60 hover:text-white text-lg">&times;</button>
+          <div className="relative">
+            <h2 className="text-xl font-bold mb-2">
+              {isNewUser ? '👋 Welcome to Shieldio!' : '🛡️ Your data is protected'}
+            </h2>
+            <p className="text-blue-100 text-sm mb-4 max-w-xl">
+              {isNewUser
+                ? 'Get started by connecting your Microsoft 365 tenant. We\'ll discover your workloads and start protecting your data in minutes.'
+                : `${summary?.total_protected || 0} objects protected across ${Object.keys(summary?.workloads || {}).length} workloads. Your backup health score is ${summary?.total_protected ? 'active' : 'pending'}.`}
+            </p>
+            <div className="flex gap-3">
+              {isNewUser ? (
+                <>
+                  <button onClick={() => navigate('/tenants')} className="px-4 py-2 bg-white text-blue-700 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors">
+                    Connect Tenant →
+                  </button>
+                  <button onClick={() => navigate('/recovery')} className="px-4 py-2 bg-white/10 text-white rounded-lg text-sm font-medium hover:bg-white/20 transition-colors border border-white/20">
+                    Explore Recovery →
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => navigate('/recovery')} className="px-4 py-2 bg-white text-blue-700 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors">
+                    Recovery Dashboard →
+                  </button>
+                  <button onClick={() => navigate('/smart-engine')} className="px-4 py-2 bg-white/10 text-white rounded-lg text-sm font-medium hover:bg-white/20 transition-colors border border-white/20">
+                    Smart Engine →
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Page Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>

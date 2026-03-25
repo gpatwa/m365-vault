@@ -294,6 +294,11 @@ setup: check-prereqs ## Full first-time local setup: install deps + seed data
 	@echo ""
 	@echo "Setup complete! Run 'make dev' to start."
 
+.PHONY: seed-demo
+seed-demo: ## Populate demo data (Acme Corp tenant + 14 days of backup history)
+	docker cp scripts/seed-demo.py $$($(DOCKER_COMPOSE) ps -q backend):/app/seed-demo.py
+	$(DOCKER_COMPOSE) exec backend python3 /app/seed-demo.py
+
 .PHONY: fresh
 fresh: dev-clean seed-clean dev ## Full clean restart: wipe everything + rebuild + start
 

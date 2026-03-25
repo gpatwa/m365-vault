@@ -52,18 +52,23 @@ export default function OneDrive() {
     enabled: !!selectedSnapshot,
   });
 
-  const { data: wlSummary } = useQuery({
-    queryKey: ['dashboard-summary'],
-    queryFn: () => api.get<any>('/dashboard/summary'),
-    staleTime: 30000,
+  const { data: statsData } = useQuery({
+    queryKey: ['onedrive-stats', tenantId],
+    queryFn: () => api.get<{ total: number; items: ProtectedObject[] }>(`/onedrive/accounts?tenant_id=${tenantId}&page_size=200`),
+    enabled: !!tenantId,
+    staleTime: 15000,
   });
   const wlStats = useMemo(() => {
-    const wl = wlSummary?.workloads?.onedrive || {};
+    const items = statsData?.items || [];
+    const protectedCount = items.filter(a => a.status === 'protected').length;
+    const totalItems = items.reduce((sum, a) => sum + (a.total_items || 0), 0);
+    const totalSize = items.reduce((sum, a) => sum + (a.total_size_bytes || 0), 0);
+    const backupTimes = items.map(a => a.last_backup_at).filter(Boolean).sort().reverse();
     return {
-      protected: wl.protected || 0, total: wl.total || 0,
-      lastBackup: null as string | null, totalItems: 0, totalSize: 0, successRate: 100,
+      protected: protectedCount, total: items.length,
+      lastBackup: backupTimes[0] || null, totalItems, totalSize, successRate: 100,
     };
-  }, [wlSummary]);
+  }, [statsData]);
 
   // ── Snapshot browse view ──
   if (selectedSnapshot) {

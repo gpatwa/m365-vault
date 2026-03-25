@@ -62,24 +62,29 @@ export default function Exchange() {
     enabled: !!selectedSnapshot,
   });
 
-  // Workload stats from dashboard summary
-  const { data: wlSummary } = useQuery({
-    queryKey: ['dashboard-summary'],
-    queryFn: () => api.get<any>('/dashboard/summary'),
-    staleTime: 30000,
+  // Workload stats from actual mailbox data (not dashboard summary — it lacks items/size)
+  const { data: statsData } = useQuery({
+    queryKey: ['exchange-stats', tenantId],
+    queryFn: () => api.get<{ total: number; items: ProtectedObject[] }>(`/exchange/mailboxes?tenant_id=${tenantId}&page_size=200`),
+    enabled: !!tenantId,
+    staleTime: 15000,
   });
 
   const workloadStats = useMemo(() => {
-    const wl = wlSummary?.workloads?.exchange || {};
+    const items = statsData?.items || [];
+    const protectedCount = items.filter(m => m.status === 'protected').length;
+    const totalItems = items.reduce((sum, m) => sum + (m.total_items || 0), 0);
+    const totalSize = items.reduce((sum, m) => sum + (m.total_size_bytes || 0), 0);
+    const backupTimes = items.map(m => m.last_backup_at).filter(Boolean).sort().reverse();
     return {
-      protected: wl.protected || 0,
-      total: wl.total || 0,
-      lastBackup: null as string | null,
-      totalItems: wlSummary?.snapshots?.total || 0,
-      totalSize: (wlSummary?.snapshots?.total_size_gb || 0) * 1024 * 1024 * 1024,
+      protected: protectedCount,
+      total: items.length,
+      lastBackup: backupTimes[0] || null,
+      totalItems,
+      totalSize,
       successRate: 100,
     };
-  }, [wlSummary]);
+  }, [statsData]);
 
   // Column definitions (not a hook, but keep here for readability)
   const columns: Column<ProtectedObject>[] = [

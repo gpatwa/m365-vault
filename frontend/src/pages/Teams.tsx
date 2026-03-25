@@ -1,4 +1,5 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MessageSquare, RefreshCw, Loader2, Users } from 'lucide-react';
 import { api } from '../api/client';
 import { WorkloadPageLayout } from '../components/design-system';
@@ -67,6 +68,24 @@ export default function Teams() {
   const tenantId = useTenantId();
   const qc = useQueryClient();
 
+  const { data: wlSummary } = useQuery({
+    queryKey: ['dashboard-summary'],
+    queryFn: () => api.get<any>('/dashboard/summary'),
+    staleTime: 30000,
+  });
+
+  const workloadStats = useMemo(() => {
+    const wl = wlSummary?.workloads?.teams || {};
+    return {
+      protected: wl.protected || 0,
+      total: wl.total || 0,
+      lastBackup: null as string | null,
+      totalItems: 0,
+      totalSize: 0,
+      successRate: 100,
+    };
+  }, [wlSummary]);
+
   const backupMutation = useMutation({
     mutationFn: (teamId?: number) =>
       teamId
@@ -92,12 +111,7 @@ export default function Teams() {
       workloadLabel="Teams"
       workloadIcon={MessageSquare}
       iconColor="text-pink-600"
-      stats={{
-        protected: 0, total: 0,
-        lastBackup: null,
-        totalItems: 0, totalSize: 0,
-        successRate: 100,
-      }}
+      stats={workloadStats}
       onBackupAll={() => backupMutation.mutate(undefined)}
       isBackingUp={backupMutation.isPending}
       statusMessage={backupMutation.isSuccess ? 'Backup completed successfully' : undefined}

@@ -79,8 +79,10 @@ export default function Teams() {
 
   if (!tenantId) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600" />
+      <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+        <MessageSquare className="w-12 h-12 mb-3 text-gray-300" />
+        <p className="text-lg font-medium text-gray-600">No Tenant Connected</p>
+        <p className="text-sm mt-1">Add a Microsoft 365 tenant from the <a href="/tenants" className="text-blue-600 hover:underline">Tenants</a> page to get started.</p>
       </div>
     );
   }

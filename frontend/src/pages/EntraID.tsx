@@ -104,6 +104,16 @@ export default function EntraID() {
     enabled: !!tenantId,
   });
 
+  if (!tenantId) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+        <KeyRound className="w-12 h-12 mb-3 text-gray-300" />
+        <p className="text-lg font-medium text-gray-600">No Tenant Connected</p>
+        <p className="text-sm mt-1">Add a Microsoft 365 tenant from the <a href="/tenants" className="text-blue-600 hover:underline">Tenants</a> page to get started.</p>
+      </div>
+    );
+  }
+
   const backupMutation = useMutation({
     mutationFn: () => api.post(`/entra-id/backup?tenant_id=${tenantId}`),
     onSuccess: () => {

@@ -62,11 +62,12 @@ function formatSize(bytes: number): string {
 
 export default function WorkloadPageLayout({
   workloadLabel, workloadIcon: Icon, iconColor,
-  extraBreadcrumbs = [], stats,
+  extraBreadcrumbs = [], stats: rawStats,
   onBackupAll, isBackingUp, statusMessage,
   children,
 }: WorkloadPageLayoutProps) {
   const navigate = useNavigate();
+  const stats = rawStats || { total: 0, protected: 0, totalItems: 0, totalSize: 0, lastBackup: null, successRate: 0 };
   const pct = stats.total > 0 ? Math.round(stats.protected / stats.total * 100) : 0;
   const unprotected = stats.total - stats.protected;
 

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Shield, Users, KeyRound, ShieldCheck, AppWindow, MapPin, UserCog, Server, Building2, Lock, Laptop, Globe } from 'lucide-react';
+import { Shield, Users, KeyRound, ShieldCheck, AppWindow, MapPin, UserCog, Server, Building2, Lock, Laptop, Globe, Download } from 'lucide-react';
 import { api } from '../api/client';
 import { WorkloadPageLayout } from '../components/design-system';
+import RestoreDialog from '../components/RestoreDialog';
 import { useTenantId } from '../hooks/useTenant';
 import { formatSize } from '../utils/format';
 import DataTable, { type Column, type FilterOption } from '../components/DataTable';
@@ -120,6 +121,7 @@ interface SnapshotInfo {
 export default function EntraID() {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [showDiff, setShowDiff] = useState(false);
+  const [showRestore, setShowRestore] = useState(false);
   const [diffSnapA, setDiffSnapA] = useState<number | null>(null);
   const [diffSnapB, setDiffSnapB] = useState<number | null>(null);
   const tenantId = useTenantId();
@@ -191,6 +193,7 @@ export default function EntraID() {
   }
 
   return (
+    <>
     <WorkloadPageLayout
       workloadLabel="Entra ID"
       workloadIcon={Shield}
@@ -207,6 +210,17 @@ export default function EntraID() {
       isBackingUp={backupMutation.isPending}
       statusMessage={backupMutation.isSuccess ? `Backup completed — ${(backupMutation.data as any)?.item_count || 0} objects backed up` : undefined}
     >
+
+      {/* Restore Button */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => setShowRestore(true)}
+          disabled={!summary.snapshot_id}
+          className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 flex items-center gap-2 disabled:opacity-50"
+        >
+          <Download className="w-4 h-4" /> Restore Entra ID Objects
+        </button>
+      </div>
 
       {/* Object Type Cards — 12 types in responsive grid */}
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-2.5">
@@ -335,5 +349,18 @@ export default function EntraID() {
         />
       )}
     </WorkloadPageLayout>
+
+    {showRestore && summary.snapshot_id && summary.object_id && (
+      <RestoreDialog
+        objectId={summary.object_id}
+        objectName="Entra ID Directory"
+        workload="entra_id"
+        snapshotId={summary.snapshot_id}
+        snapshotDate={summary.last_backup || undefined}
+        itemCount={summary.item_count}
+        onClose={() => setShowRestore(false)}
+      />
+    )}
+    </>
   );
 }

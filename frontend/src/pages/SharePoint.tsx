@@ -8,12 +8,14 @@ import StatusBadge from '../components/StatusBadge';
 import { WorkloadPageLayout, Breadcrumb } from '../components/design-system';
 import { useTenantId } from '../hooks/useTenant';
 import { formatSize, timeAgo } from '../utils/format';
+import RestoreDialog from '../components/RestoreDialog';
 import type { ProtectedObject, Snapshot, SnapshotItem } from '../types';
 
 export default function SharePoint() {
   const [selectedSite, setSelectedSite] = useState<ProtectedObject | null>(null);
   const [selectedSnapshot, setSelectedSnapshot] = useState<Snapshot | null>(null);
   const [backupMsg, setBackupMsg] = useState('');
+  const [showRestore, setShowRestore] = useState(false);
   const tenantId = useTenantId();
   const qc = useQueryClient();
 
@@ -129,7 +131,7 @@ export default function SharePoint() {
               {backupMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               {backupMutation.isPending ? 'Backing up...' : 'Backup'}
             </button>
-            <button className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 flex items-center gap-2"><Download className="w-4 h-4" /> Restore</button>
+            <button onClick={() => setShowRestore(true)} disabled={!snapshots?.length} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 flex items-center gap-2 disabled:opacity-50"><Download className="w-4 h-4" /> Restore</button>
           </div>
         </div>
         {backupMsg && (
@@ -167,6 +169,18 @@ export default function SharePoint() {
             </tbody>
           </table>
         </div>
+
+        {showRestore && snapshots && snapshots.length > 0 && (
+          <RestoreDialog
+            objectId={selectedSite.id}
+            objectName={selectedSite.display_name}
+            workload="sharepoint"
+            snapshotId={snapshots[0].id}
+            snapshotDate={snapshots[0].started_at || undefined}
+            itemCount={snapshots[0].item_count}
+            onClose={() => setShowRestore(false)}
+          />
+        )}
       </div>
     );
   }

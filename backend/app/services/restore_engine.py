@@ -168,13 +168,32 @@ class RestoreEngine:
                     # Store export path info
                     restore_job.target_path = json.dumps([e["filename"] for e in exports])
 
-            # Update job status
+            # Determine expected item count for success calculation
+            expected_items = snapshot.item_count or 0
+            if restore_job.item_ids_json:
+                expected_items = len(json.loads(restore_job.item_ids_json))
+
+            # Update job status with success threshold
             restore_job.items_restored = items_restored
-            restore_job.status = RestoreStatus.COMPLETED
             restore_job.completed_at = datetime.utcnow()
+
+            if expected_items == 0:
+                restore_job.status = RestoreStatus.COMPLETED
+            else:
+                success_rate = (items_restored / expected_items * 100) if expected_items > 0 else 0
+                # Thresholds: 95%+ = COMPLETED, 50-94% = PARTIAL, <50% = FAILED
+                if success_rate >= 95:
+                    restore_job.status = RestoreStatus.COMPLETED
+                elif success_rate >= 50:
+                    restore_job.status = RestoreStatus.PARTIAL
+                    restore_job.error_message = f"Partial restore: {items_restored}/{expected_items} items ({success_rate:.0f}%)"
+                else:
+                    restore_job.status = RestoreStatus.FAILED
+                    restore_job.error_message = f"Restore mostly failed: only {items_restored}/{expected_items} items ({success_rate:.0f}%)"
+
             await self.db.commit()
 
-            logger.info(f"Restore job {restore_job.id} completed: {items_restored} items restored")
+            logger.info(f"Restore job {restore_job.id} {restore_job.status.value}: {items_restored}/{expected_items} items restored")
             return restore_job
 
         except Exception as e:

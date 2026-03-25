@@ -297,10 +297,16 @@ setup: check-prereqs ## Full first-time local setup: install deps + seed data
 .PHONY: fresh
 fresh: dev-clean seed-clean dev ## Full clean restart: wipe everything + rebuild + start
 
-## Release
-release-test: ## Run release gate tests (29 checks) before deploying
+## Release Quality Gates
+.PHONY: release-check
+release-check: ## Full quality gate: types → tests → coverage → build → security → ready?
+	@bash scripts/release-check.sh
+
+.PHONY: release-test
+release-test: ## Run release smoke tests (API checks) against running stack
 	@bash scripts/release-test.sh
 
-release: release-test acr-push ## Full release: test → build → push → deploy
-	@echo "Images pushed. Run: make az-wake && make tf-apply"
+.PHONY: release
+release: release-check acr-push ## Full release: quality gate → build → push
+	@echo "✅ Images pushed. Run: make az-wake to deploy."
 

@@ -1,8 +1,13 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Search, RotateCcw, Mail, HardDrive, Globe, FileText, Calendar, User, Loader2, CheckCircle, XCircle, MessageSquare, KeyRound } from 'lucide-react';
+import {
+  Search, RotateCcw, Mail, HardDrive, Globe, FileText, Calendar, User,
+  Loader2, CheckCircle, XCircle, MessageSquare, KeyRound, DownloadCloud,
+} from 'lucide-react';
 import { api } from '../api/client';
 import { formatSize, timeAgo } from '../utils/format';
+import Breadcrumb from '../components/design-system/Breadcrumb';
+import SearchTrigger from '../components/design-system/SearchTrigger';
 
 interface SearchResult {
   id: number;
@@ -40,6 +45,14 @@ const ITEM_ICONS: Record<string, typeof Mail> = {
   named_location: Globe, role_assignment: KeyRound,
 };
 
+const WORKLOAD_COLORS: Record<string, string> = {
+  exchange: 'text-blue-600',
+  onedrive: 'text-cyan-600',
+  sharepoint: 'text-teal-600',
+  teams: 'text-purple-600',
+  entra_id: 'text-amber-600',
+};
+
 export default function SelfRestore() {
   const [query, setQuery] = useState('');
   const [workload, setWorkload] = useState('');
@@ -73,52 +86,79 @@ export default function SelfRestore() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Restore Items</h1>
-        <p className="text-gray-500 mt-1">Search and restore your deleted or modified items from backup</p>
+    <div>
+      {/* Breadcrumb + Search */}
+      <Breadcrumb
+        items={[
+          { label: 'Microsoft 365', path: '/' },
+          { label: 'Restore' },
+        ]}
+        rightSlot={
+          <SearchTrigger
+            placeholder="Search backups..."
+            className="w-64"
+          />
+        }
+      />
+
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-blue-50">
+            <DownloadCloud className="w-6 h-6 text-blue-600" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Restore Items</h1>
+            <p className="text-xs text-gray-500">Search and restore deleted or modified items from backup</p>
+          </div>
+        </div>
       </div>
 
-      {/* Search Bar */}
-      <form onSubmit={handleSearch} className="flex gap-3">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            placeholder="Search for emails, files, documents..."
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-          />
-        </div>
-        <button type="submit" className="px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700">
-          Search
-        </button>
-      </form>
+      {/* Search Card */}
+      <div className="bg-white rounded-xl border shadow-sm p-5 mb-6">
+        <form onSubmit={handleSearch} className="flex gap-3 mb-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Search for emails, files, documents..."
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            />
+          </div>
+          <button
+            type="submit"
+            className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors"
+          >
+            Search
+          </button>
+        </form>
 
-      {/* Workload Tabs */}
-      <div className="flex gap-2">
-        {WORKLOAD_TABS.map(tab => {
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.key}
-              onClick={() => { setWorkload(tab.key); if (searchQuery) setSearchQuery(searchQuery); }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                workload === tab.key
-                  ? 'bg-blue-100 text-blue-700 ring-1 ring-blue-300'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <Icon className="w-4 h-4" /> {tab.label}
-            </button>
-          );
-        })}
+        {/* Workload Filter Tabs */}
+        <div className="flex flex-wrap gap-2">
+          {WORKLOAD_TABS.map(tab => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => { setWorkload(tab.key); if (searchQuery) setSearchQuery(searchQuery); }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  workload === tab.key
+                    ? 'bg-blue-100 text-blue-700 ring-1 ring-blue-300'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" /> {tab.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Alert Messages */}
       {restoreMsg && (
-        <div className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm ${
+        <div className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm mb-4 ${
           restoreMsg.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
         }`}>
           {restoreMsg.type === 'success' ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
@@ -128,37 +168,44 @@ export default function SelfRestore() {
 
       {/* Results */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-          <span className="ml-2 text-gray-500">Searching...</span>
+        <div className="flex items-center justify-center py-12 bg-white rounded-xl border shadow-sm">
+          <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+          <span className="ml-2 text-sm text-gray-500">Searching...</span>
         </div>
       ) : searchQuery && data ? (
         <div className="bg-white rounded-xl border shadow-sm">
           <div className="px-5 py-3 border-b flex items-center justify-between">
-            <span className="text-sm text-gray-500">
-              {data.total} result{data.total !== 1 ? 's' : ''} for "{searchQuery}"
-            </span>
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900">
+                {data.total} result{data.total !== 1 ? 's' : ''} for "{searchQuery}"
+              </h2>
+              {workload && (
+                <p className="text-xs text-gray-400">Filtered to {WORKLOAD_TABS.find(t => t.key === workload)?.label}</p>
+              )}
+            </div>
           </div>
           {data.items.length === 0 ? (
-            <div className="py-12 text-center text-gray-400">
-              No items found. Try a different search term.
+            <div className="py-12 text-center">
+              <Search className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+              <p className="text-sm text-gray-400">No items found. Try a different search term.</p>
             </div>
           ) : (
             <table className="w-full text-sm">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="text-left px-5 py-2 font-medium text-gray-600">Item</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Workload</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Size</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Backed Up</th>
-                  <th className="text-right px-5 py-2 font-medium text-gray-600">Action</th>
+                  <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
+                  <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider">Workload</th>
+                  <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
+                  <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider">Backed Up</th>
+                  <th className="text-right px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {data.items.map(item => {
                   const Icon = ITEM_ICONS[item.item_type] || FileText;
+                  const wlColor = WORKLOAD_COLORS[item.workload] || 'text-gray-500';
                   return (
-                    <tr key={`${item.snapshot_id}-${item.id}`} className="hover:bg-gray-50">
+                    <tr key={`${item.snapshot_id}-${item.id}`} className="hover:bg-gray-50 transition-colors">
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-3">
                           <Icon className="w-4 h-4 text-gray-400 flex-shrink-0" />
@@ -170,14 +217,16 @@ export default function SelfRestore() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 py-3 capitalize text-gray-500">{item.workload}</td>
-                      <td className="px-3 py-3 text-gray-500">{formatSize(item.size_bytes)}</td>
-                      <td className="px-3 py-3 text-gray-500">{item.backed_up_at ? timeAgo(item.backed_up_at) : '-'}</td>
+                      <td className="px-3 py-3">
+                        <span className={`text-xs font-medium capitalize ${wlColor}`}>{item.workload.replace('_', ' ')}</span>
+                      </td>
+                      <td className="px-3 py-3 text-xs text-gray-500">{formatSize(item.size_bytes)}</td>
+                      <td className="px-3 py-3 text-xs text-gray-500">{item.backed_up_at ? timeAgo(item.backed_up_at) : '—'}</td>
                       <td className="px-5 py-3 text-right">
                         <button
                           onClick={() => restoreMutation.mutate({ snapshotId: item.snapshot_id, itemIds: String(item.id) })}
                           disabled={restoreMutation.isPending}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-100 disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-100 disabled:opacity-50 transition-colors"
                         >
                           <RotateCcw className="w-3 h-3" /> Restore
                         </button>
@@ -190,9 +239,11 @@ export default function SelfRestore() {
           )}
         </div>
       ) : !searchQuery ? (
-        <div className="text-center py-16 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-          <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500">Search for items to restore from backup</p>
+        <div className="text-center py-16 bg-white rounded-xl border shadow-sm">
+          <div className="p-4 bg-blue-50 rounded-2xl w-fit mx-auto mb-4">
+            <Search className="w-10 h-10 text-blue-300" />
+          </div>
+          <p className="text-sm font-medium text-gray-600">Search your backup archive</p>
           <p className="text-xs text-gray-400 mt-1">Try searching for email subjects, file names, or document titles</p>
         </div>
       ) : null}

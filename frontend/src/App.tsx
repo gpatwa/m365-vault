@@ -23,6 +23,7 @@ import SelfRestore from './pages/SelfRestore';
 import Reports from './pages/Reports';
 import Usage from './pages/Usage';
 import Legal from './pages/Legal';
+import ObjectDetail from './pages/ObjectDetail';
 
 const queryClient = new QueryClient();
 
@@ -69,6 +70,7 @@ function AppRoutes() {
         <Route path="restore" element={<SelfRestore />} />
         <Route path="reports" element={<Reports />} />
         <Route path="usage" element={<Usage />} />
+        <Route path=":workload/:objectId" element={<ObjectDetail />} />
       </Route>
     </Routes>
   );

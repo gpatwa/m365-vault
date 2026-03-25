@@ -8,8 +8,8 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { api } from '../api/client';
 import { WORKLOADS } from '../config/workloads';
+import { useTenantId } from '../hooks/useTenant';
 import { HeroSummaryBar, ActionBanner, PlatformCard } from '../components/design-system';
-import SearchTrigger from '../components/design-system/SearchTrigger';
 import type { HeroStat } from '../components/design-system/HeroSummaryBar';
 import type { ActionItem } from '../components/design-system/ActionBanner';
 import type { WorkloadStat } from '../components/design-system/PlatformCard';
@@ -17,7 +17,7 @@ import type { DashboardSummary, ActivityData } from '../types';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const tenantId = 2; // TODO: dynamic tenant selection
+  const tenantId = useTenantId();
 
   // ── Data Fetching ──
 
@@ -194,12 +194,9 @@ export default function Dashboard() {
   return (
     <div>
       {/* Page Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-sm text-gray-500">Shieldio — SaaS Data Protection Overview</p>
-        </div>
-        <SearchTrigger className="w-64" />
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-sm text-gray-500">SaaS Data Protection Overview</p>
       </div>
 
       {/* Row 1: Hero Stats */}

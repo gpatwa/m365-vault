@@ -10,6 +10,9 @@ import { api } from '../api/client';
 import DataTable, { type Column, type FilterOption } from '../components/DataTable';
 import { WORKLOAD_MAP } from '../config/workloads';
 import type { FailedItemEntry, FailedItemsSummary, FailedItemCategory } from '../types';
+import Breadcrumb from '../components/design-system/Breadcrumb';
+import SearchTrigger from '../components/design-system/SearchTrigger';
+import HeroSummaryBar, { type HeroStat } from '../components/design-system/HeroSummaryBar';
 
 const CATEGORY_COLORS: Record<string, string> = {
   permission_denied: 'bg-red-100 text-red-800 border-red-200',
@@ -60,7 +63,6 @@ const ItemTypeIcon = ({ type }: { type: string | null }) => {
   }
 };
 
-// Workload icon for swimlane headers
 const WorkloadIcon = ({ workload }: { workload: string }) => {
   const config = WORKLOAD_MAP[workload];
   if (!config) return <ShieldAlert className="w-5 h-5 text-gray-400" />;
@@ -208,16 +210,63 @@ export default function FailedItems() {
     { key: 'error_category', label: 'All Categories', options: categoryFilterOptions },
   ];
 
+  const heroStats: HeroStat[] = [
+    {
+      label: 'Total Failed',
+      value: summary?.total_failed ?? 0,
+      subtitle: 'Across all workloads',
+      icon: XCircle,
+      color: (summary?.total_failed ?? 0) > 0 ? 'red' : 'gray',
+    },
+    {
+      label: 'Unresolved',
+      value: summary?.total_unresolved ?? 0,
+      subtitle: 'Needs attention',
+      icon: ShieldAlert,
+      color: (summary?.total_unresolved ?? 0) > 0 ? 'red' : 'green',
+    },
+    {
+      label: 'Retriable',
+      value: summary?.categories?.reduce((sum: number, c: FailedItemCategory) => sum + (c.retriable || 0), 0) ?? 0,
+      subtitle: 'Ready to retry',
+      icon: RotateCcw,
+      color: 'amber',
+    },
+    {
+      label: 'Error Types',
+      value: summary?.categories?.length ?? 0,
+      subtitle: 'Distinct categories',
+      icon: Info,
+      color: 'blue',
+    },
+  ];
+
   return (
     <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <ShieldAlert className="w-7 h-7 text-red-500" />
-            Failed Items
-          </h1>
-          <p className="text-sm text-gray-500">Review failures by workload, understand root causes, take action</p>
+      {/* Breadcrumb + Search */}
+      <Breadcrumb
+        items={[
+          { label: 'Microsoft 365', path: '/' },
+          { label: 'Failed Items' },
+        ]}
+        rightSlot={
+          <SearchTrigger
+            placeholder="Search failed items..."
+            className="w-64"
+          />
+        }
+      />
+
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-red-50">
+            <ShieldAlert className="w-6 h-6 text-red-600" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Failed Items</h1>
+            <p className="text-xs text-gray-500">Review failures by workload, understand root causes, take action</p>
+          </div>
         </div>
         <button
           onClick={() => setShowResolved(!showResolved)}
@@ -236,31 +285,17 @@ export default function FailedItems() {
         </div>
       )}
 
-      {/* ═══ Workload Failure Swimlanes ═══ */}
-      {summary && (
-        <div className="grid grid-cols-1 gap-3 mb-6">
-          {/* Summary row */}
-          <div className="flex items-center gap-4 px-4 py-3 bg-white rounded-xl border shadow-sm">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <XCircle className="w-5 h-5 text-red-600" />
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Total Failed</p>
-                <p className="text-xl font-bold">{summary.total_failed}</p>
-              </div>
-            </div>
-            <div className="w-px h-10 bg-gray-200" />
+      {/* Hero Stats */}
+      <HeroSummaryBar stats={heroStats} />
+
+      {/* ═══ Workload Failure Cards ═══ */}
+      {summary && workloadStats.length > 0 && (
+        <div className="bg-white rounded-xl border shadow-sm mb-6">
+          <div className="px-5 py-3 border-b flex items-center justify-between">
             <div>
-              <p className="text-xs text-gray-500">Unresolved</p>
-              <p className="text-xl font-bold text-orange-600">{summary.total_unresolved}</p>
+              <h2 className="text-sm font-semibold text-gray-900">By Workload</h2>
+              <p className="text-xs text-gray-400">Click a workload to filter the table below</p>
             </div>
-            <div className="w-px h-10 bg-gray-200" />
-            <div>
-              <p className="text-xs text-gray-500">Categories</p>
-              <p className="text-xl font-bold">{summary.categories?.length || 0}</p>
-            </div>
-            <div className="flex-1" />
             {selectedWorkload && (
               <button
                 onClick={() => setSelectedWorkload(null)}
@@ -270,9 +305,7 @@ export default function FailedItems() {
               </button>
             )}
           </div>
-
-          {/* Per-workload cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+          <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
             {workloadStats.map(ws => {
               const config = WORKLOAD_MAP[ws.workload];
               const isSelected = selectedWorkload === ws.workload;

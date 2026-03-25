@@ -262,3 +262,41 @@ async def mass_recovery(
             for j in jobs
         ],
     }
+
+
+@router.get("/snapshots")
+async def list_snapshots(
+    protected_object_id: int = Query(...),
+    page_size: int = Query(20, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """List snapshots for a specific protected object (unified across all workloads)."""
+    from app.models.snapshot import Snapshot, SnapshotStatus
+
+    stmt = select(Snapshot).where(Snapshot.protected_object_id == protected_object_id)
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total = (await db.execute(count_stmt)).scalar() or 0
+
+    result = await db.execute(
+        stmt.order_by(desc(Snapshot.started_at)).limit(page_size)
+    )
+    snapshots = result.scalars().all()
+
+    return {
+        "total": total,
+        "items": [
+            {
+                "id": s.id,
+                "snapshot_type": s.snapshot_type.value,
+                "status": s.status.value,
+                "started_at": s.started_at.isoformat() if s.started_at else None,
+                "completed_at": s.completed_at.isoformat() if s.completed_at else None,
+                "item_count": s.item_count,
+                "size_bytes": s.size_bytes,
+                "items_failed": s.items_failed or 0,
+                "items_skipped": s.items_skipped or 0,
+            }
+            for s in snapshots
+        ],
+    }

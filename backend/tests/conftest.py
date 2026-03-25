@@ -9,7 +9,9 @@ from httpx import AsyncClient, ASGITransport
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///./test.db"
 os.environ["SECRET_KEY"] = "test-secret-key-for-testing-only"
 os.environ["STORAGE_BACKEND"] = "local"
-os.environ["STORAGE_LOCAL_PATH"] = "/tmp/m365vault-test-storage"
+os.environ["STORAGE_LOCAL_PATH"] = "/tmp/shieldio-test-storage"
+os.environ["DISPATCH_MODE"] = "in_process"
+os.environ["ENCRYPTION_MASTER_KEY"] = "dGVzdC1tYXN0ZXIta2V5LWZvci10ZXN0aW5nLW9ubHk="
 
 from app.database import Base, engine, async_session
 from app.main import app
@@ -43,7 +45,6 @@ async def client():
 @pytest_asyncio.fixture
 async def auth_client(client: AsyncClient):
     """Authenticated client with admin token."""
-    # Register admin user
     await client.post("/api/auth/register", json={
         "username": "testadmin",
         "email": "admin@test.com",
@@ -51,8 +52,6 @@ async def auth_client(client: AsyncClient):
         "full_name": "Test Admin",
         "role": "admin",
     })
-
-    # Login
     response = await client.post("/api/auth/login", data={
         "username": "testadmin",
         "password": "TestPass123",

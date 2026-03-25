@@ -111,13 +111,31 @@ export default function Layout() {
       {/* Sidebar */}
       <aside className="w-56 bg-gray-900 text-white flex flex-col">
         <div className="px-4 py-3 border-b border-gray-700">
-          <div className="flex items-center gap-2">
-            <Shield className="w-7 h-7 text-blue-400" />
-            <div>
-              <h1 className="text-base font-bold leading-tight">Shieldio</h1>
-              <p className="text-[10px] text-gray-500">Protect Your Cloud Data</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Shield className="w-7 h-7 text-blue-400" />
+              <div>
+                <h1 className="text-base font-bold leading-tight">Shieldio</h1>
+                <p className="text-[10px] text-gray-500">SaaS Data Protection</p>
+              </div>
             </div>
+            <button
+              onClick={() => setCommandOpen(true)}
+              title="Search (⌘K)"
+              className="p-1.5 rounded-lg text-gray-500 hover:text-gray-300 hover:bg-gray-800 transition-colors"
+            >
+              <Search className="w-4 h-4" />
+            </button>
           </div>
+          {/* Search trigger */}
+          <button
+            onClick={() => setCommandOpen(true)}
+            className="mt-2 w-full flex items-center gap-2 px-2.5 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-xs text-gray-500 hover:text-gray-300 hover:border-gray-600 transition-colors"
+          >
+            <Search className="w-3.5 h-3.5" />
+            <span className="flex-1 text-left">Search...</span>
+            <kbd className="px-1 py-0.5 bg-gray-700 rounded text-[9px] text-gray-400 font-mono">⌘K</kbd>
+          </button>
         </div>
 
         <nav className="flex-1 px-2 mt-2 overflow-y-auto">
@@ -171,19 +189,6 @@ export default function Layout() {
 
       {/* Main content */}
       <main className="flex-1 overflow-auto">
-        {/* Sticky search bar */}
-        <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-gray-100 px-6 py-2.5">
-          <button
-            onClick={() => setCommandOpen(true)}
-            className="flex items-center gap-2.5 px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-400 hover:border-gray-300 hover:text-gray-500 hover:shadow-sm transition-all w-full max-w-md"
-          >
-            <Search className="w-4 h-4" />
-            <span className="flex-1 text-left">Search backups, check status, investigate...</span>
-            <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-white border border-gray-200 rounded text-[10px] text-gray-400 font-mono">
-              ⌘K
-            </kbd>
-          </button>
-        </div>
         <div className="p-6">
           <Outlet />
         </div>

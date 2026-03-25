@@ -2,6 +2,83 @@
 
 All notable changes to Shieldio are documented in this file.
 
+## [2.0.0] - 2026-03-25
+
+### Rebranded
+- **M365 Vault renamed to Shieldio** — repositioned as SaaS Data Protection Platform
+- New landing page with story-driven design (problem → solution → proof)
+- Redesigned login page with split-panel layout and SSO button
+- All docs, UI, API responses updated to Shieldio branding
+
+### New Workloads
+- **Microsoft Teams Backup** — channels, messages (Export API), channel files, team settings
+- **Teams Chat Backup** — 1-to-1 and group chats via Export API (per-user backup)
+- **Teams Restore** — Migration/Import API preserves original timestamps and sender identity
+- **Entra ID expanded to 12 object types** — added Service Principals, Admin Units, OAuth Grants, Devices, Domains
+
+### Intelligence & Security
+- **Smart Engine** — health baselines, anomaly detection (z-score), health scoring (0-100)
+- **Self-Healing + Alerts** — auto-retry by error category, email/webhook notifications
+- **WORM Storage** — write-once-read-many with retention locks and legal hold
+- **Malware Scan on Restore** — YARA rule-based scanning before restore
+- **Sensitive Data Discovery** — PII/PHI/PCI regex scanner on backup data
+- **Backup Validation Engine** — automated restore-and-verify with checksum validation
+- **Snapshot Diff/Compare** — compare two Entra ID snapshots to detect configuration drift
+
+### Authentication & Access
+- **SSO/OIDC (Entra ID)** — MSAL-based SSO with auto-provisioning of users on first login
+- **Refresh tokens** — 7-day rotation via POST /auth/refresh
+- **Password policy** — configurable min length, uppercase, digit requirements
+
+### Architecture
+- **Control Plane / Data Plane separation** — Redis dispatcher + standalone worker process
+- **BaseWorker framework** — common worker with parallel processing, retry, checkpointing
+- **Circuit breaker** — Graph API protection (50% failure rate → 15-min cooldown)
+- **Stale job detection** — auto-requeue jobs stuck IN_PROGRESS for >60 minutes
+- **Database connection pooling** — pool_pre_ping, pool_recycle for resilience
+
+### UI & UX
+- **Unified search (Cmd+K)** — intent-aware command palette with category grouping
+- **WorkloadPageLayout** — shared design system with breadcrumbs, hero stats, action banners
+- **DataTable component** — server-side pagination, sorting, filtering, CSV export
+- **Dashboard redesign** — platform-grouped workload cards, health score, license status
+- **Self-Service Restore** — cross-workload search with inline restore actions
+- **Reports & Analytics** — 5-tab reports (performance, storage, failures, compliance, security)
+- **Usage & License tracking** — per-tenant usage, license tier, growth trends
+
+### Production Readiness
+- **Automated test suite** — 40+ pytest tests (auth, health, API, Entra ID, Teams)
+- **Release quality gate** — `make release-check` (7 gates, 10 checks, ~70s)
+- **Rate limiting** — 120 req/min/IP middleware
+- **Structured logging** — JSON format with correlation IDs and response times
+- **Global error handler** — clean JSON errors, no stack trace leaks
+- **Deep health check** — DB + storage connectivity verification
+- **Performance indexes** — 30+ PostgreSQL indexes for scale
+- **Tenant lifecycle** — deactivate/reactivate/purge with cascade cleanup
+- **Permission auto-provisioning** — Graph API permissions managed from product
+
+### API
+- **107 REST API endpoints**
+- Intent-aware search API (GET /search/intent)
+- Snapshot compare API (GET /entra-id/compare)
+- Status page API (GET /status)
+- CSV export API (GET /export)
+- Health score API (GET /health/score)
+
+### Infrastructure
+- **Redis** for job queue dispatch
+- **Worker container** for data plane operations
+- **Docker Compose** with 6 services (backend, frontend, worker, postgres, redis, minio)
+- **Azure Container Apps** deployment via Terraform IaC
+- **GitHub Actions** CI/CD pipeline
+
+### Codebase
+- Backend: 15,000+ lines Python (80 files)
+- Frontend: 8,000+ lines TypeScript
+- Tests: 2,000+ lines
+- API Routes: 107
+- Git commits: 90+
+
 ## [1.5.0] - 2026-03-20
 
 ### Added

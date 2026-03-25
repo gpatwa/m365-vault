@@ -466,7 +466,7 @@ The default database is **SQLite** (`sqlite+aiosqlite`) for development simplici
 For production:
 
 1. Change `DATABASE_URL` to a PostgreSQL async URL:
-   `postgresql+asyncpg://user:pass@host:5432/m365vault`
+   `postgresql+asyncpg://user:pass@host:5432/shieldio`
 2. SQLAlchemy models use standard types compatible with both engines.
 3. Consider adding Alembic for schema migrations in production.
 4. SQLite's single-writer limitation makes it unsuitable for concurrent backup jobs.

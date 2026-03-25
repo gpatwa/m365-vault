@@ -31,7 +31,7 @@ make bootstrap
 | 1 | **Install prerequisites** | Installs `az`, `gh`, `jq`, `terraform` via Homebrew if missing |
 | 2 | **Authenticate Azure** | Opens browser for Azure login (device code flow) |
 | 3 | **Authenticate GitHub** | Opens browser for GitHub login (OAuth web flow) |
-| 4 | **Create service principal** | Creates `sp-m365vault-github` with Contributor role + OIDC |
+| 4 | **Create service principal** | Creates `sp-shieldio-github` with Contributor role + OIDC |
 | 5 | **Create OIDC credentials** | Federated credentials for `main` branch and pull requests |
 | 6 | **Create Terraform state** | Resource group + Storage Account + blob container for remote state |
 | 7 | **Set GitHub secrets** | `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` |
@@ -129,10 +129,10 @@ Remote state is stored in Azure Blob Storage (created by bootstrap):
 
 | Resource | Name |
 |----------|------|
-| Resource Group | `rg-m365vault-tfstate` |
-| Storage Account | `stm365vaulttfstate` |
+| Resource Group | `rg-shieldio-tfstate` |
+| Storage Account | `stshieldiotfstate` |
 | Container | `tfstate` |
-| State File | `m365vault.terraform.tfstate` |
+| State File | `shieldio.terraform.tfstate` |
 
 ## Seed Test Data (Dev)
 
@@ -144,8 +144,8 @@ make seed
 
 # Via Azure Container Apps
 az containerapp exec \
-  --name m365vault-backend-dev \
-  --resource-group rg-m365vault-dev \
+  --name shieldio-backend-dev \
+  --resource-group rg-shieldio-dev \
   --command "python3 /scripts/simulate_backup_data.py"
 ```
 
@@ -185,10 +185,10 @@ For production, ensure:
 make tf-destroy ENV=dev SUBSCRIPTION_ID=<YOUR_SUBSCRIPTION_ID>
 
 # Or delete resource group directly (fastest)
-az group delete --name rg-m365vault-dev --yes --no-wait
+az group delete --name rg-shieldio-dev --yes --no-wait
 
 # Remove tfstate storage (only if decommissioning)
-az group delete --name rg-m365vault-tfstate --yes
+az group delete --name rg-shieldio-tfstate --yes
 ```
 
 ## Quick Reference — All Make Commands

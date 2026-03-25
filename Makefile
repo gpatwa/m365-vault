@@ -296,3 +296,11 @@ setup: check-prereqs ## Full first-time local setup: install deps + seed data
 
 .PHONY: fresh
 fresh: dev-clean seed-clean dev ## Full clean restart: wipe everything + rebuild + start
+
+## Release
+release-test: ## Run release gate tests (29 checks) before deploying
+	@bash scripts/release-test.sh
+
+release: release-test acr-push ## Full release: test → build → push → deploy
+	@echo "Images pushed. Run: make az-wake && make tf-apply"
+

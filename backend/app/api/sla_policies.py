@@ -111,7 +111,8 @@ async def create_sla_policy(
         id=policy.id, name=policy.name, description=policy.description,
         backup_frequency_hours=policy.backup_frequency_hours,
         retention_days=policy.retention_days, priority=policy.priority,
-        is_locked=policy.is_locked, is_active=policy.is_active,
+        is_locked=policy.is_locked, worm_enabled=policy.worm_enabled,
+        legal_hold=policy.legal_hold, is_active=policy.is_active,
         created_at=policy.created_at.isoformat(),
     )
 
@@ -143,7 +144,8 @@ async def update_sla_policy(
         id=policy.id, name=policy.name, description=policy.description,
         backup_frequency_hours=policy.backup_frequency_hours,
         retention_days=policy.retention_days, priority=policy.priority,
-        is_locked=policy.is_locked, is_active=policy.is_active,
+        is_locked=policy.is_locked, worm_enabled=policy.worm_enabled,
+        legal_hold=policy.legal_hold, is_active=policy.is_active,
         created_at=policy.created_at.isoformat(),
     )
 

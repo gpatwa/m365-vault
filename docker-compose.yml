@@ -79,34 +79,8 @@ services:
       REDIS_URL: redis://redis:6379
       DISPATCH_MODE: redis
       DEBUG: "true"
-    volumes:
-      - ./scripts:/scripts
-
-  worker:
-    build: ./backend
-    platform: linux/amd64
-    command: python -m app.worker
-    depends_on:
-      postgres:
-        condition: service_healthy
-      minio-init:
-        condition: service_completed_successfully
-      redis:
-        condition: service_healthy
-    environment:
-      DATABASE_URL: postgresql+asyncpg://m365vault:m365vault_dev@postgres:5432/m365vault
-      STORAGE_BACKEND: minio
-      MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin
-      MINIO_BUCKET: m365vault-backups
-      MINIO_USE_SSL: "false"
-      ENCRYPTION_MASTER_KEY: docker-dev-32-byte-master-key!!
-      REDIS_URL: redis://redis:6379
-      DISPATCH_MODE: redis
-      DEBUG: "true"
-      DISPATCH_MODE: redis
       REDIS_URL: redis://redis:6379/0
+      DISPATCH_MODE: in_process
     volumes:
       - ./scripts:/scripts
 
@@ -117,10 +91,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      minio-init:
-        condition: service_completed_successfully
       redis:
         condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
     environment:
       DATABASE_URL: postgresql+asyncpg://m365vault:m365vault_dev@postgres:5432/m365vault
       STORAGE_BACKEND: minio
@@ -131,8 +105,8 @@ services:
       MINIO_USE_SSL: "false"
       SECRET_KEY: docker-dev-secret-change-in-production-32
       ENCRYPTION_MASTER_KEY: docker-dev-32-byte-master-key!!
-      DISPATCH_MODE: redis
       REDIS_URL: redis://redis:6379/0
+      DISPATCH_MODE: redis
       WORKER_CONCURRENCY: "3"
 
   frontend:

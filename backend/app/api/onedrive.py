@@ -239,6 +239,8 @@ async def trigger_backup_all(
         status=JobStatus.IN_PROGRESS,
         started_at=datetime.utcnow(),
         objects_total=len(accounts),
+        objects_processed=0,
+        objects_failed=0,
     )
     db.add(job)
     await db.flush()

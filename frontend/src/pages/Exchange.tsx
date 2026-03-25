@@ -8,11 +8,13 @@ import StatusBadge from '../components/StatusBadge';
 import { WorkloadPageLayout, Breadcrumb } from '../components/design-system';
 import { useTenantId } from '../hooks/useTenant';
 import { formatSize, timeAgo } from '../utils/format';
+import RestoreDialog from '../components/RestoreDialog';
 import type { ProtectedObject, Snapshot, SnapshotItem } from '../types';
 
 export default function Exchange() {
   const [selectedMailbox, setSelectedMailbox] = useState<ProtectedObject | null>(null);
   const [selectedSnapshot, setSelectedSnapshot] = useState<Snapshot | null>(null);
+  const [showRestore, setShowRestore] = useState(false);
   const [backupMsg, setBackupMsg] = useState('');
   const tenantId = useTenantId();
   const qc = useQueryClient();
@@ -197,7 +199,11 @@ export default function Exchange() {
               {backupMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               {backupMutation.isPending ? 'Backing up...' : 'Backup Now'}
             </button>
-            <button className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 flex items-center gap-2">
+            <button
+              onClick={() => setShowRestore(true)}
+              disabled={!snapshots?.length}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 flex items-center gap-2 disabled:opacity-50"
+            >
               <Download className="w-4 h-4" /> Restore
             </button>
           </div>
@@ -246,6 +252,19 @@ export default function Exchange() {
             </tbody>
           </table>
         </div>
+
+        {/* Restore Dialog */}
+        {showRestore && snapshots && snapshots.length > 0 && (
+          <RestoreDialog
+            objectId={selectedMailbox.id}
+            objectName={selectedMailbox.display_name}
+            workload="exchange"
+            snapshotId={snapshots[0].id}
+            snapshotDate={snapshots[0].started_at || undefined}
+            itemCount={snapshots[0].item_count}
+            onClose={() => setShowRestore(false)}
+          />
+        )}
       </div>
     );
   }

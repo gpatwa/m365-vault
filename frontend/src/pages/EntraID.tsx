@@ -185,8 +185,6 @@ export default function EntraID() {
           endpoint={`/entra-id/snapshot/${summary.snapshot_id}/items`}
           columns={itemColumns}
           extraParams={extraParams}
-          searchable
-          searchPlaceholder="Search backed-up objects..."
           filters={[itemTypeFilterOptions]}
           defaultPageSize={50}
           emptyMessage={selectedType ? 'No items of this type' : 'No backed-up objects yet'}

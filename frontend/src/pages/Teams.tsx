@@ -107,8 +107,6 @@ export default function Teams() {
         endpoint="/teams/teams"
         columns={teamColumns}
         extraParams={{ tenant_id: tenantId }}
-        searchable
-        searchPlaceholder="Search teams..."
         defaultSortBy="display_name"
         defaultSortOrder="asc"
         emptyMessage="No Teams discovered. Run discovery on your tenant from the Settings page."

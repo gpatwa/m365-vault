@@ -25,6 +25,7 @@ import Reports from './pages/Reports';
 import Usage from './pages/Usage';
 import Legal from './pages/Legal';
 import ObjectDetail from './pages/ObjectDetail';
+import SecurityPage from './pages/Security';
 
 const queryClient = new QueryClient();
 
@@ -72,6 +73,7 @@ function AppRoutes() {
         <Route path="recovery" element={<Recovery />} />
         <Route path="reports" element={<Reports />} />
         <Route path="usage" element={<Usage />} />
+        <Route path="security" element={<SecurityPage />} />
         <Route path=":workload/:objectId" element={<ObjectDetail />} />
       </Route>
     </Routes>

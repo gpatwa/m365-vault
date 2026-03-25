@@ -466,6 +466,36 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ═══ SECTION 10: Trust & Security Badges ═══ */}
+      <section className="py-12 px-6 bg-white border-t border-gray-100">
+        <div className="max-w-5xl mx-auto">
+          <p className="text-center text-xs text-gray-400 uppercase tracking-wider font-semibold mb-6">Security & Compliance</p>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            {[
+              { icon: '🔒', label: 'AES-256-GCM', desc: 'Encryption at Rest' },
+              { icon: '🔑', label: 'Per-Tenant Keys', desc: 'Key Isolation' },
+              { icon: '🛡️', label: 'WORM Storage', desc: 'Immutable Backups' },
+              { icon: '✅', label: 'SOC 2 Ready', desc: '16 Controls Mapped' },
+              { icon: '🇪🇺', label: 'GDPR Ready', desc: '8 Articles Mapped' },
+              { icon: '🏥', label: 'HIPAA Ready', desc: '14 Safeguards' },
+              { icon: '🔐', label: 'SSO + MFA', desc: 'Entra ID OIDC' },
+              { icon: '📋', label: 'Audit Trail', desc: 'Full Logging' },
+            ].map(b => (
+              <div key={b.label} className="flex items-center gap-2.5 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl hover:border-gray-300 hover:shadow-sm transition-all">
+                <span className="text-lg">{b.icon}</span>
+                <div>
+                  <div className="text-xs font-semibold text-gray-800">{b.label}</div>
+                  <div className="text-[10px] text-gray-500">{b.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-center text-xs text-gray-400 mt-4">
+            <Link to="/security" className="underline hover:text-gray-600">View full security posture →</Link>
+          </p>
+        </div>
+      </section>
+
       {/* ═══ Footer ═══ */}
       <footer className="py-12 px-6 bg-gray-900 text-gray-400">
         <div className="max-w-5xl mx-auto">

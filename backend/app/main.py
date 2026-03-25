@@ -217,6 +217,9 @@ app.include_router(status_router)
 app.include_router(export_router)
 app.include_router(recovery_router)
 
+from app.api.security import router as security_router
+app.include_router(security_router)
+
 
 @app.get("/")
 async def root():

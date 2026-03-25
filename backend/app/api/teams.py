@@ -9,7 +9,8 @@ from app.models.protected_object import ProtectedObject, WorkloadType
 from app.models.snapshot import Snapshot, SnapshotItem, SnapshotStatus, ItemType
 from app.models.user import User
 from app.services.auth import get_current_user
-from app.services.backup_engine import BackupEngine
+from app.interfaces.dispatcher_factory import get_dispatcher
+from app.interfaces.job_message import BackupObjectMessage
 from app.utils.query import ListParams, apply_sorting, apply_pagination
 
 router = APIRouter(prefix="/api/teams", tags=["Teams"])
@@ -135,18 +136,28 @@ async def backup_all_teams(
     if not teams:
         raise HTTPException(status_code=404, detail="No Teams found for this tenant. Run discovery first.")
 
-    engine = BackupEngine(db)
+    dispatcher = get_dispatcher()
     results = []
-    for team in teams:
-        snapshot = await engine.run_backup_for_object(team)
-        results.append({
-            "team": team.display_name,
-            "snapshot_id": snapshot.id,
-            "item_count": snapshot.item_count,
-            "status": snapshot.status.value,
-        })
-    await db.commit()
+    queued_count = 0
 
+    for team in teams:
+        r = await dispatcher.dispatch_backup_object(
+            BackupObjectMessage(protected_object_id=team.id), db=db
+        )
+        if r.status == "queued":
+            queued_count += 1
+        else:
+            results.append({
+                "team": team.display_name,
+                "snapshot_id": r.snapshot_id,
+                "item_count": r.item_count,
+                "status": r.status,
+            })
+
+    if queued_count:
+        return {"backed_up": queued_count, "status": "queued"}
+
+    await db.commit()
     return {"backed_up": len(results), "results": results}
 
 
@@ -161,15 +172,19 @@ async def backup_single_team(
     if not obj or obj.workload_type != WorkloadType.TEAMS:
         raise HTTPException(status_code=404, detail="Team not found")
 
-    engine = BackupEngine(db)
-    snapshot = await engine.run_backup_for_object(obj)
-    await db.commit()
+    result = await get_dispatcher().dispatch_backup_object(
+        BackupObjectMessage(protected_object_id=obj.id), db=db
+    )
+    if not result.success and result.status != "queued":
+        raise HTTPException(status_code=500, detail=result.error or "Backup failed")
+    if result.status != "queued":
+        await db.commit()
 
     return {
-        "status": "completed",
-        "snapshot_id": snapshot.id,
-        "item_count": snapshot.item_count,
-        "size_bytes": snapshot.size_bytes,
+        "status": result.status,
+        "snapshot_id": result.snapshot_id,
+        "item_count": result.item_count,
+        "size_bytes": result.size_bytes,
     }
 
 

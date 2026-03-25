@@ -67,6 +67,9 @@ async def _run_migrations():
         ("restore_jobs", "target_tenant_id", "INTEGER"),
         ("restore_jobs", "scan_status", "VARCHAR(50)"),
         ("restore_jobs", "scan_details", "TEXT"),
+        # v1.8.0: Dead-letter queue — retry tracking on RestoreJob
+        ("restore_jobs", "retry_count", "INTEGER DEFAULT 0"),
+        ("restore_jobs", "max_retries", "INTEGER DEFAULT 3"),
     ]
     async with engine.begin() as conn:
         for table, column, col_type in migrations:
@@ -99,6 +102,12 @@ async def _run_migrations():
             "CHAT", "CHAT_ATTACHMENT",
         ]),
     ]
+
+    # v1.8.0: dead_letter status for backup and restore jobs
+    enum_migrations.extend([
+        ("jobstatus", ["dead_letter"]),
+        ("restorestatus", ["dead_letter"]),
+    ])
 
     for enum_name, values in enum_migrations:
         for value in values:

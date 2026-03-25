@@ -12,7 +12,8 @@ class JobStatus(str, enum.Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
-    PARTIAL = "partial"  # Some objects succeeded, some failed
+    PARTIAL = "partial"        # Some objects succeeded, some failed
+    DEAD_LETTER = "dead_letter"  # Exceeded max_retries; no further attempts
 
 
 class BackupJob(Base):

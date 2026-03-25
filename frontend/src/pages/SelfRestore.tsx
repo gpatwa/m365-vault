@@ -7,7 +7,6 @@ import {
 import { api } from '../api/client';
 import { formatSize, timeAgo } from '../utils/format';
 import Breadcrumb from '../components/design-system/Breadcrumb';
-import SearchTrigger from '../components/design-system/SearchTrigger';
 
 interface SearchResult {
   id: number;
@@ -93,12 +92,6 @@ export default function SelfRestore() {
           { label: 'Microsoft 365', path: '/' },
           { label: 'Restore' },
         ]}
-        rightSlot={
-          <SearchTrigger
-            placeholder="Search backups..."
-            className="w-64"
-          />
-        }
       />
 
       {/* Page Header */}

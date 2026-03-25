@@ -9,7 +9,6 @@ import type { BackupJob, RestoreJob, PaginatedResponse, FailedJobsSummary } from
 import DataTable, { type Column, type FilterOption } from '../components/DataTable';
 import { formatSize, formatDuration, timeAgo } from '../utils/format';
 import Breadcrumb from '../components/design-system/Breadcrumb';
-import SearchTrigger from '../components/design-system/SearchTrigger';
 import HeroSummaryBar, { type HeroStat } from '../components/design-system/HeroSummaryBar';
 
 type Workload = string;
@@ -271,12 +270,6 @@ export default function Jobs() {
           { label: 'Microsoft 365', path: '/' },
           { label: 'Jobs' },
         ]}
-        rightSlot={
-          <SearchTrigger
-            placeholder="Search jobs..."
-            className="w-64"
-          />
-        }
       />
 
       {/* Page Header */}

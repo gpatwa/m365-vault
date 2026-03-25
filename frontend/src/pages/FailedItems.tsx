@@ -11,7 +11,6 @@ import DataTable, { type Column, type FilterOption } from '../components/DataTab
 import { WORKLOAD_MAP } from '../config/workloads';
 import type { FailedItemEntry, FailedItemsSummary, FailedItemCategory } from '../types';
 import Breadcrumb from '../components/design-system/Breadcrumb';
-import SearchTrigger from '../components/design-system/SearchTrigger';
 import HeroSummaryBar, { type HeroStat } from '../components/design-system/HeroSummaryBar';
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -249,12 +248,6 @@ export default function FailedItems() {
           { label: 'Microsoft 365', path: '/' },
           { label: 'Failed Items' },
         ]}
-        rightSlot={
-          <SearchTrigger
-            placeholder="Search failed items..."
-            className="w-64"
-          />
-        }
       />
 
       {/* Page Header */}

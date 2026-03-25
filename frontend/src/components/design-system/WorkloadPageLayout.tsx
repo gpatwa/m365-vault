@@ -118,7 +118,7 @@ export default function WorkloadPageLayout({
       action: { label: 'Assign SLA', onClick: () => navigate('/sla-policies') },
     });
   }
-  if (!stats.lastBackup) {
+  if (!stats.lastBackup && stats.totalItems === 0 && stats.protected === 0) {
     actions.push({
       icon: 'info',
       message: `No backups yet for ${workloadLabel}. Run your first backup to start protecting data.`,

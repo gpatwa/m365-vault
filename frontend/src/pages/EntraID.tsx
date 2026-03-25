@@ -98,11 +98,23 @@ export default function EntraID() {
   const tenantId = useTenantId();
   const qc = useQueryClient();
 
+  // ═══ ALL HOOKS ABOVE CONDITIONAL RETURNS ═══
+
   const { data: summary, isLoading } = useQuery({
     queryKey: ['entra-summary', tenantId],
     queryFn: () => api.get<EntraSummary>(`/entra-id/summary?tenant_id=${tenantId}`),
     enabled: !!tenantId,
   });
+
+  const backupMutation = useMutation({
+    mutationFn: () => api.post(`/entra-id/backup?tenant_id=${tenantId}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['entra-summary'] });
+      qc.invalidateQueries({ queryKey: ['entra-items'] });
+    },
+  });
+
+  // ═══ CONDITIONAL RETURNS ═══
 
   if (!tenantId) {
     return (
@@ -114,15 +126,7 @@ export default function EntraID() {
     );
   }
 
-  const backupMutation = useMutation({
-    mutationFn: () => api.post(`/entra-id/backup?tenant_id=${tenantId}`),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['entra-summary'] });
-      qc.invalidateQueries({ queryKey: ['entra-items'] });
-    },
-  });
-
-  if (isLoading || !tenantId) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600" />

@@ -185,7 +185,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
       {/* Progress Header */}
       <div className="bg-gray-50 border-b px-6 py-4">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-bold text-gray-900">Connect Microsoft 365 Tenant</h2>
+          <h2 className="text-lg font-bold text-gray-900">Connect SaaS Platform</h2>
           <span className="text-sm text-gray-500">Step {step} of 3</span>
         </div>
         <div className="flex gap-1">
@@ -214,7 +214,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
         {step === 1 && (
           <div>
             <p className="text-gray-600 text-sm mb-4">
-              Enter your Azure AD App Registration credentials to connect your Microsoft 365 tenant.
+              Enter your Azure AD App Registration credentials to connect your SaaS platform.
             </p>
 
             {/* Setup Guide */}
@@ -312,7 +312,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
             {discovering ? (
               <div className="text-center py-12">
                 <Loader2 className="w-10 h-10 animate-spin text-blue-600 mx-auto mb-4" />
-                <p className="text-lg font-medium text-gray-700">Discovering Microsoft 365 workloads...</p>
+                <p className="text-lg font-medium text-gray-700">Discovering workloads...</p>
                 <p className="text-sm text-gray-500 mt-1">Scanning mailboxes, drives, sites, and directory objects</p>
               </div>
             ) : discovery ? (

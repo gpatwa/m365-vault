@@ -8,6 +8,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { api } from '../api/client';
 import { WORKLOADS } from '../config/workloads';
+import { getActivePlatformLabel } from '../config/platforms';
 import { useTenantId } from '../hooks/useTenant';
 import { HeroSummaryBar, ActionBanner, PlatformCard } from '../components/design-system';
 import type { HeroStat } from '../components/design-system/HeroSummaryBar';
@@ -208,7 +209,7 @@ export default function Dashboard() {
       {/* Row 2: Platform Card */}
       <div className="mb-6">
         <PlatformCard
-          name="Microsoft 365"
+          name={getActivePlatformLabel()}
           icon={
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
               <svg className="w-6 h-6" viewBox="0 0 21 21">

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { getActivePlatformLabel } from '../config/platforms';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { HardDrive, Folder, FileText, ArrowRight, RefreshCw, Download, Loader2 } from 'lucide-react';
 import { api } from '../api/client';
@@ -56,7 +57,7 @@ export default function OneDrive() {
   if (selectedSnapshot) {
     return (
       <div>
-        <Breadcrumb items={[{ label: 'Microsoft 365', path: '/' }, { label: 'OneDrive', path: '/onedrive' }, { label: selectedAccount?.display_name || 'Account' }]} />
+        <Breadcrumb items={[{ label: getActivePlatformLabel(), path: '/' }, { label: 'OneDrive', path: '/onedrive' }, { label: selectedAccount?.display_name || 'Account' }]} />
         <button onClick={() => setSelectedSnapshot(null)} className="text-blue-600 hover:underline text-sm mb-4">&larr; Back to {selectedAccount?.display_name || 'snapshots'}</button>
         <h2 className="text-xl font-bold mb-4">Files — {selectedSnapshot.started_at?.slice(0, 16)}</h2>
         <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
@@ -95,7 +96,7 @@ export default function OneDrive() {
   if (selectedAccount) {
     return (
       <div>
-        <Breadcrumb items={[{ label: 'Microsoft 365', path: '/' }, { label: 'OneDrive', path: '/onedrive' }, { label: selectedAccount?.display_name || 'Account' }]} />
+        <Breadcrumb items={[{ label: getActivePlatformLabel(), path: '/' }, { label: 'OneDrive', path: '/onedrive' }, { label: selectedAccount?.display_name || 'Account' }]} />
         <button onClick={() => setSelectedAccount(null)} className="text-blue-600 hover:underline text-sm mb-4">&larr; Back to OneDrive</button>
         <div className="flex items-center justify-between mb-4">
           <div>

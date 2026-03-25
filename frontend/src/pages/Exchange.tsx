@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { getActivePlatformLabel } from '../config/platforms';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Mail, RefreshCw, Download, ArrowRight, Loader2 } from 'lucide-react';
 import { api } from '../api/client';
@@ -65,7 +66,7 @@ export default function Exchange() {
     return (
       <div>
         <Breadcrumb items={[
-          { label: 'Microsoft 365', path: '/' },
+          { label: getActivePlatformLabel(), path: '/' },
           { label: 'Exchange', path: '/exchange' },
           { label: selectedMailbox?.display_name || 'Mailbox' },
         ]} />
@@ -111,7 +112,7 @@ export default function Exchange() {
     return (
       <div>
         <Breadcrumb items={[
-          { label: 'Microsoft 365', path: '/' },
+          { label: getActivePlatformLabel(), path: '/' },
           { label: 'Exchange', path: '/exchange' },
           { label: selectedMailbox.display_name },
         ]} />

@@ -12,6 +12,7 @@ export interface WorkloadConfig {
   key: string;
   label: string;
   description: string;
+  platform: string;    // Platform key (microsoft365, google_workspace, salesforce)
   icon: LucideIcon;
   color: string;       // Tailwind color name (blue, purple, green, amber)
   bgColor: string;     // bg-{color}-50
@@ -27,6 +28,7 @@ export const WORKLOADS: WorkloadConfig[] = [
     key: 'exchange',
     label: 'Exchange',
     description: 'Mailboxes, calendars, contacts',
+    platform: 'microsoft365',
     icon: Mail,
     color: 'blue',
     bgColor: 'bg-blue-50',
@@ -40,6 +42,7 @@ export const WORKLOADS: WorkloadConfig[] = [
     key: 'onedrive',
     label: 'OneDrive',
     description: 'Files and folders',
+    platform: 'microsoft365',
     icon: HardDrive,
     color: 'purple',
     bgColor: 'bg-purple-50',
@@ -53,6 +56,7 @@ export const WORKLOADS: WorkloadConfig[] = [
     key: 'sharepoint',
     label: 'SharePoint',
     description: 'Sites, lists, documents',
+    platform: 'microsoft365',
     icon: Globe,
     color: 'green',
     bgColor: 'bg-green-50',
@@ -66,6 +70,7 @@ export const WORKLOADS: WorkloadConfig[] = [
     key: 'teams',
     label: 'Teams',
     description: 'Channels, messages, files',
+    platform: 'microsoft365',
     icon: MessageSquare,
     color: 'pink',
     bgColor: 'bg-pink-50',
@@ -79,6 +84,7 @@ export const WORKLOADS: WorkloadConfig[] = [
     key: 'entra_id',
     label: 'Entra ID',
     description: 'Users, groups, policies',
+    platform: 'microsoft365',
     icon: KeyRound,
     color: 'amber',
     bgColor: 'bg-amber-50',

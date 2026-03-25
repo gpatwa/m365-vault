@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { getActivePlatformLabel } from '../config/platforms';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle, Loader2, RotateCcw, Briefcase, CheckCircle2, PlayCircle } from 'lucide-react';
 import { api } from '../api/client';
@@ -267,7 +268,7 @@ export default function Jobs() {
       {/* Breadcrumb + Search */}
       <Breadcrumb
         items={[
-          { label: 'Microsoft 365', path: '/' },
+          { label: getActivePlatformLabel(), path: '/' },
           { label: 'Jobs' },
         ]}
       />

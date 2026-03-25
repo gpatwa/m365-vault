@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { getActivePlatformLabel } from '../config/platforms';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import {
   Search, RotateCcw, Mail, HardDrive, Globe, FileText, Calendar, User,
@@ -89,7 +90,7 @@ export default function SelfRestore() {
       {/* Breadcrumb + Search */}
       <Breadcrumb
         items={[
-          { label: 'Microsoft 365', path: '/' },
+          { label: getActivePlatformLabel(), path: '/' },
           { label: 'Restore' },
         ]}
       />

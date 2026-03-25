@@ -9,6 +9,7 @@
  */
 import { useNavigate } from 'react-router-dom';
 import { RefreshCw, Loader2, type LucideIcon } from 'lucide-react';
+import { getActivePlatformLabel } from '../../config/platforms';
 import Breadcrumb, { type BreadcrumbItem } from './Breadcrumb';
 import HeroSummaryBar, { type HeroStat } from './HeroSummaryBar';
 import ActionBanner, { type ActionItem } from './ActionBanner';
@@ -73,7 +74,7 @@ export default function WorkloadPageLayout({
 
   // Build breadcrumb
   const breadcrumbs: BreadcrumbItem[] = [
-    { label: 'Microsoft 365', path: '/' },
+    { label: getActivePlatformLabel(), path: '/' },
     ...(extraBreadcrumbs.length > 0
       ? [{ label: workloadLabel, path: `/${workloadLabel.toLowerCase().replace(' ', '-')}` }, ...extraBreadcrumbs]
       : [{ label: workloadLabel }]

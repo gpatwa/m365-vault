@@ -52,6 +52,18 @@ export default function OneDrive() {
     enabled: !!selectedSnapshot,
   });
 
+  const { data: wlSummary } = useQuery({
+    queryKey: ['dashboard-summary'],
+    queryFn: () => api.get<any>('/dashboard/summary'),
+    staleTime: 30000,
+  });
+  const wlStats = useMemo(() => {
+    const wl = wlSummary?.workloads?.onedrive || {};
+    return {
+      protected: wl.protected || 0, total: wl.total || 0,
+      lastBackup: null as string | null, totalItems: 0, totalSize: 0, successRate: 100,
+    };
+  }, [wlSummary]);
 
   // ── Snapshot browse view ──
   if (selectedSnapshot) {
@@ -194,19 +206,6 @@ export default function OneDrive() {
       render: (row) => <span>{formatSize(row.total_size_bytes)}</span>,
     },
   ];
-
-  const { data: wlSummary } = useQuery({
-    queryKey: ['dashboard-summary'],
-    queryFn: () => api.get<any>('/dashboard/summary'),
-    staleTime: 30000,
-  });
-  const wlStats = useMemo(() => {
-    const wl = wlSummary?.workloads?.onedrive || {};
-    return {
-      protected: wl.protected || 0, total: wl.total || 0,
-      lastBackup: null as string | null, totalItems: 0, totalSize: 0, successRate: 100,
-    };
-  }, [wlSummary]);
 
   return (
     <WorkloadPageLayout

@@ -17,6 +17,8 @@ export default function Exchange() {
   const tenantId = useTenantId();
   const qc = useQueryClient();
 
+  // ═══ ALL HOOKS MUST BE ABOVE ANY CONDITIONAL RETURNS ═══
+
   const backupAllMutation = useMutation({
     mutationFn: () => api.post(`/exchange/backup-all?tenant_id=${tenantId}`),
     onSuccess: (data: any) => {
@@ -60,6 +62,63 @@ export default function Exchange() {
     enabled: !!selectedSnapshot,
   });
 
+  // Workload stats from dashboard summary
+  const { data: wlSummary } = useQuery({
+    queryKey: ['dashboard-summary'],
+    queryFn: () => api.get<any>('/dashboard/summary'),
+    staleTime: 30000,
+  });
+
+  const workloadStats = useMemo(() => {
+    const wl = wlSummary?.workloads?.exchange || {};
+    return {
+      protected: wl.protected || 0,
+      total: wl.total || 0,
+      lastBackup: null as string | null,
+      totalItems: wlSummary?.snapshots?.total || 0,
+      totalSize: (wlSummary?.snapshots?.total_size_gb || 0) * 1024 * 1024 * 1024,
+      successRate: 100,
+    };
+  }, [wlSummary]);
+
+  // Column definitions (not a hook, but keep here for readability)
+  const columns: Column<ProtectedObject>[] = [
+    {
+      key: 'display_name',
+      label: 'Mailbox',
+      sortable: true,
+      render: (row) => (
+        <span className="font-medium flex items-center gap-2">
+          <Mail className="w-4 h-4 text-blue-500" />
+          {row.display_name}
+        </span>
+      ),
+    },
+    { key: 'email', label: 'Email', sortable: true },
+    {
+      key: 'status',
+      label: 'Status',
+      sortable: true,
+      render: (row) => <StatusBadge status={row.status} />,
+    },
+    {
+      key: 'last_backup_at',
+      label: 'Last Backup',
+      sortable: true,
+      render: (row) => (
+        <span className="text-gray-500">{row.last_backup_at ? timeAgo(row.last_backup_at) : 'Never'}</span>
+      ),
+    },
+    { key: 'total_items', label: 'Items', sortable: true },
+    {
+      key: 'total_size_bytes',
+      label: 'Size',
+      sortable: true,
+      render: (row) => <span>{formatSize(row.total_size_bytes)}</span>,
+    },
+  ];
+
+  // ═══ CONDITIONAL RETURNS (after all hooks) ═══
 
   // ── Snapshot browse view ──
   if (selectedSnapshot) {
@@ -186,62 +245,7 @@ export default function Exchange() {
     );
   }
 
-  // ── Main mailbox list (DataTable) ──
-  const columns: Column<ProtectedObject>[] = [
-    {
-      key: 'display_name',
-      label: 'Mailbox',
-      sortable: true,
-      render: (row) => (
-        <span className="font-medium flex items-center gap-2">
-          <Mail className="w-4 h-4 text-blue-500" />
-          {row.display_name}
-        </span>
-      ),
-    },
-    { key: 'email', label: 'Email', sortable: true },
-    {
-      key: 'status',
-      label: 'Status',
-      sortable: true,
-      render: (row) => <StatusBadge status={row.status} />,
-    },
-    {
-      key: 'last_backup_at',
-      label: 'Last Backup',
-      sortable: true,
-      render: (row) => (
-        <span className="text-gray-500">{row.last_backup_at ? timeAgo(row.last_backup_at) : 'Never'}</span>
-      ),
-    },
-    { key: 'total_items', label: 'Items', sortable: true },
-    {
-      key: 'total_size_bytes',
-      label: 'Size',
-      sortable: true,
-      render: (row) => <span>{formatSize(row.total_size_bytes)}</span>,
-    },
-  ];
-
-  // Compute workload stats from dashboard summary
-  const { data: wlSummary } = useQuery({
-    queryKey: ['dashboard-summary'],
-    queryFn: () => api.get<any>('/dashboard/summary'),
-    staleTime: 30000,
-  });
-
-  const workloadStats = useMemo(() => {
-    const wl = wlSummary?.workloads?.exchange || {};
-    return {
-      protected: wl.protected || 0,
-      total: wl.total || 0,
-      lastBackup: null as string | null, // TODO: from most recent job
-      totalItems: wlSummary?.snapshots?.total || 0,
-      totalSize: (wlSummary?.snapshots?.total_size_gb || 0) * 1024 * 1024 * 1024,
-      successRate: 100,
-    };
-  }, [wlSummary]);
-
+  // ── Main mailbox list ──
   return (
     <WorkloadPageLayout
       workloadLabel="Exchange"
@@ -252,7 +256,6 @@ export default function Exchange() {
       isBackingUp={backupAllMutation.isPending}
       statusMessage={backupMsg}
     >
-      {/* Mailbox list — DataTable (search via ⌘K) */}
       <DataTable<ProtectedObject>
         queryKey="exchange-mailboxes"
         endpoint="/exchange/mailboxes"

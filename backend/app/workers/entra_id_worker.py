@@ -83,12 +83,17 @@ class EntraIDWorker(BaseWorker):
         if group_token:
             new_tokens["groups"] = group_token
 
-        # 3-7. Non-delta objects (always full scan — small sets)
+        # 3-12. Non-delta objects (always full scan — small sets)
         await self._backup_directory_roles(protected_object, snapshot, wrapped_dek)
         await self._backup_role_assignments(protected_object, snapshot, wrapped_dek)
         await self._backup_conditional_access(protected_object, snapshot, wrapped_dek)
         await self._backup_applications(protected_object, snapshot, wrapped_dek)
         await self._backup_named_locations(protected_object, snapshot, wrapped_dek)
+        await self._backup_service_principals(protected_object, snapshot, wrapped_dek)
+        await self._backup_administrative_units(protected_object, snapshot, wrapped_dek)
+        await self._backup_oauth_grants(protected_object, snapshot, wrapped_dek)
+        await self._backup_devices(protected_object, snapshot, wrapped_dek)
+        await self._backup_domains(protected_object, snapshot, wrapped_dek)
 
         # Count totals
         result = await self.db.execute(
@@ -547,6 +552,220 @@ class EntraIDWorker(BaseWorker):
 
         except Exception as e:
             logger.error(f"Failed to backup named locations: {e}")
+
+    # ── 8. Service Principals (Enterprise Apps) ──
+
+    async def _backup_service_principals(
+        self, protected_object: ProtectedObject,
+        snapshot: Snapshot, wrapped_dek: str
+    ):
+        """Backup service principals (enterprise applications)."""
+        try:
+            sps = await self.graph.get_all_pages(
+                "/servicePrincipals",
+                params={"$select": "id,appId,displayName,servicePrincipalType,accountEnabled,appRoleAssignmentRequired,tags,loginUrl,logoutUrl,homepage,createdDateTime", "$top": "999"},
+            )
+            count = 0
+            for sp in sps:
+                try:
+                    await self._store_item(
+                        obj=sp,
+                        item_type=ItemType.SERVICE_PRINCIPAL,
+                        ms_item_id=sp["id"],
+                        name=sp.get("displayName", "Unknown Service Principal"),
+                        path="Service Principals",
+                        protected_object=protected_object,
+                        snapshot=snapshot,
+                        wrapped_dek=wrapped_dek,
+                        metadata={
+                            "appId": sp.get("appId"),
+                            "servicePrincipalType": sp.get("servicePrincipalType"),
+                            "accountEnabled": sp.get("accountEnabled"),
+                            "createdDateTime": sp.get("createdDateTime"),
+                        },
+                    )
+                    count += 1
+                except Exception as e:
+                    logger.error(f"Failed to backup service principal {sp.get('id')}: {e}")
+                    await record_failed_item(
+                        db=self.db, snapshot_id=snapshot.id,
+                        protected_object_id=protected_object.id, error=e,
+                        ms_item_id=sp.get("id"), item_type_str="service_principal",
+                        item_name=sp.get("displayName", "Unknown"), item_path="Service Principals",
+                    )
+            await self.db.flush()
+            logger.info(f"Backed up {count} service principals")
+        except Exception as e:
+            logger.error(f"Failed to backup service principals: {e}")
+
+    # ── 9. Administrative Units ──
+
+    async def _backup_administrative_units(
+        self, protected_object: ProtectedObject,
+        snapshot: Snapshot, wrapped_dek: str
+    ):
+        """Backup administrative units with members."""
+        try:
+            units = await self.graph.get_all_pages(
+                "/directory/administrativeUnits",
+                params={"$select": "id,displayName,description,membershipType,membershipRule,visibility"},
+            )
+            count = 0
+            for unit in units:
+                try:
+                    members = []
+                    try:
+                        members = await self.graph.get_all_pages(
+                            f"/directory/administrativeUnits/{unit['id']}/members",
+                            params={"$select": "id,displayName"},
+                        )
+                    except Exception:
+                        pass
+
+                    unit_with_members = {**unit, "_members": members}
+                    await self._store_item(
+                        obj=unit_with_members,
+                        item_type=ItemType.ADMINISTRATIVE_UNIT,
+                        ms_item_id=unit["id"],
+                        name=unit.get("displayName", "Unknown Admin Unit"),
+                        path="Administrative Units",
+                        protected_object=protected_object,
+                        snapshot=snapshot,
+                        wrapped_dek=wrapped_dek,
+                        metadata={
+                            "membershipType": unit.get("membershipType"),
+                            "memberCount": len(members),
+                            "visibility": unit.get("visibility"),
+                        },
+                    )
+                    count += 1
+                except Exception as e:
+                    logger.error(f"Failed to backup admin unit {unit.get('id')}: {e}")
+            await self.db.flush()
+            logger.info(f"Backed up {count} administrative units")
+        except Exception as e:
+            logger.error(f"Failed to backup administrative units: {e}")
+
+    # ── 10. OAuth Permission Grants ──
+
+    async def _backup_oauth_grants(
+        self, protected_object: ProtectedObject,
+        snapshot: Snapshot, wrapped_dek: str
+    ):
+        """Backup OAuth2 permission grants (delegated permissions)."""
+        try:
+            grants = await self.graph.get_all_pages(
+                "/oauth2PermissionGrants",
+                params={"$top": "999"},
+            )
+            count = 0
+            for grant in grants:
+                try:
+                    scope = grant.get("scope", "").strip()
+                    name = f"{grant.get('clientId', '?')[:8]} → {scope[:50]}" if scope else f"Grant {grant.get('id', '?')[:8]}"
+
+                    await self._store_item(
+                        obj=grant,
+                        item_type=ItemType.OAUTH_PERMISSION_GRANT,
+                        ms_item_id=grant["id"],
+                        name=name,
+                        path="OAuth Permission Grants",
+                        protected_object=protected_object,
+                        snapshot=snapshot,
+                        wrapped_dek=wrapped_dek,
+                        metadata={
+                            "clientId": grant.get("clientId"),
+                            "resourceId": grant.get("resourceId"),
+                            "scope": scope,
+                            "consentType": grant.get("consentType"),
+                        },
+                    )
+                    count += 1
+                except Exception as e:
+                    logger.error(f"Failed to backup OAuth grant {grant.get('id')}: {e}")
+            await self.db.flush()
+            logger.info(f"Backed up {count} OAuth permission grants")
+        except Exception as e:
+            logger.error(f"Failed to backup OAuth grants: {e}")
+
+    # ── 11. Devices ──
+
+    async def _backup_devices(
+        self, protected_object: ProtectedObject,
+        snapshot: Snapshot, wrapped_dek: str
+    ):
+        """Backup registered and joined devices."""
+        try:
+            devices = await self.graph.get_all_pages(
+                "/devices",
+                params={"$select": "id,displayName,deviceId,operatingSystem,operatingSystemVersion,trustType,accountEnabled,isManaged,isCompliant,registeredOwners,registeredUsers,createdDateTime", "$top": "999"},
+            )
+            count = 0
+            for device in devices:
+                try:
+                    await self._store_item(
+                        obj=device,
+                        item_type=ItemType.DEVICE,
+                        ms_item_id=device["id"],
+                        name=device.get("displayName", "Unknown Device"),
+                        path="Devices",
+                        protected_object=protected_object,
+                        snapshot=snapshot,
+                        wrapped_dek=wrapped_dek,
+                        metadata={
+                            "operatingSystem": device.get("operatingSystem"),
+                            "trustType": device.get("trustType"),
+                            "accountEnabled": device.get("accountEnabled"),
+                            "isManaged": device.get("isManaged"),
+                            "isCompliant": device.get("isCompliant"),
+                        },
+                    )
+                    count += 1
+                except Exception as e:
+                    logger.error(f"Failed to backup device {device.get('id')}: {e}")
+            await self.db.flush()
+            logger.info(f"Backed up {count} devices")
+        except Exception as e:
+            logger.error(f"Failed to backup devices: {e}")
+
+    # ── 12. Custom Domains ──
+
+    async def _backup_domains(
+        self, protected_object: ProtectedObject,
+        snapshot: Snapshot, wrapped_dek: str
+    ):
+        """Backup verified custom domains."""
+        try:
+            domains = await self.graph.get_all_pages(
+                "/domains",
+                params={"$select": "id,authenticationType,isDefault,isVerified,supportedServices"},
+            )
+            count = 0
+            for domain in domains:
+                try:
+                    await self._store_item(
+                        obj=domain,
+                        item_type=ItemType.DOMAIN,
+                        ms_item_id=domain["id"],
+                        name=domain.get("id", "Unknown Domain"),
+                        path="Domains",
+                        protected_object=protected_object,
+                        snapshot=snapshot,
+                        wrapped_dek=wrapped_dek,
+                        metadata={
+                            "authenticationType": domain.get("authenticationType"),
+                            "isDefault": domain.get("isDefault"),
+                            "isVerified": domain.get("isVerified"),
+                            "supportedServices": domain.get("supportedServices"),
+                        },
+                    )
+                    count += 1
+                except Exception as e:
+                    logger.error(f"Failed to backup domain {domain.get('id')}: {e}")
+            await self.db.flush()
+            logger.info(f"Backed up {count} domains")
+        except Exception as e:
+            logger.error(f"Failed to backup domains: {e}")
 
     # ── Restore Operations ──
 

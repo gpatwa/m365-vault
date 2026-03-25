@@ -20,6 +20,8 @@ ENTRA_ITEM_TYPES = [
     ItemType.USER, ItemType.GROUP, ItemType.DIRECTORY_ROLE,
     ItemType.ROLE_ASSIGNMENT, ItemType.CONDITIONAL_ACCESS_POLICY,
     ItemType.APP_REGISTRATION, ItemType.NAMED_LOCATION,
+    ItemType.SERVICE_PRINCIPAL, ItemType.ADMINISTRATIVE_UNIT,
+    ItemType.OAUTH_PERMISSION_GRANT, ItemType.DEVICE, ItemType.DOMAIN,
 ]
 
 
@@ -265,4 +267,84 @@ async def backup_entra_id(
         "item_count": result.item_count,
         "size_bytes": result.size_bytes,
         "snapshot_status": result.status,
+    }
+
+
+@router.get("/compare")
+async def compare_snapshots(
+    snapshot_a: int = Query(..., description="Older snapshot ID"),
+    snapshot_b: int = Query(..., description="Newer snapshot ID"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Compare two Entra ID snapshots — show added, removed, and changed objects.
+
+    Useful for:
+    - Audit: what changed between two backup points
+    - Incident response: what was modified during a breach
+    - Compliance: verify no unauthorized changes
+    """
+    # Get items from both snapshots
+    items_a_result = await db.execute(
+        select(SnapshotItem).where(
+            SnapshotItem.snapshot_id == snapshot_a,
+            SnapshotItem.item_type.in_(ENTRA_ITEM_TYPES),
+        )
+    )
+    items_b_result = await db.execute(
+        select(SnapshotItem).where(
+            SnapshotItem.snapshot_id == snapshot_b,
+            SnapshotItem.item_type.in_(ENTRA_ITEM_TYPES),
+        )
+    )
+
+    items_a = {i.ms_item_id: i for i in items_a_result.scalars().all()}
+    items_b = {i.ms_item_id: i for i in items_b_result.scalars().all()}
+
+    ids_a = set(items_a.keys())
+    ids_b = set(items_b.keys())
+
+    added = ids_b - ids_a  # In B but not A (new objects)
+    removed = ids_a - ids_b  # In A but not B (deleted objects)
+    common = ids_a & ids_b  # In both
+
+    # Detect changes by comparing content hash
+    changed = []
+    unchanged = 0
+    for item_id in common:
+        a = items_a[item_id]
+        b = items_b[item_id]
+        if a.content_hash != b.content_hash:
+            changed.append({
+                "ms_item_id": item_id,
+                "item_type": b.item_type.value,
+                "name": b.name,
+                "old_size": a.size_bytes,
+                "new_size": b.size_bytes,
+                "old_hash": a.content_hash,
+                "new_hash": b.content_hash,
+            })
+        else:
+            unchanged += 1
+
+    return {
+        "snapshot_a": snapshot_a,
+        "snapshot_b": snapshot_b,
+        "summary": {
+            "added": len(added),
+            "removed": len(removed),
+            "changed": len(changed),
+            "unchanged": unchanged,
+            "total_a": len(items_a),
+            "total_b": len(items_b),
+        },
+        "added": [
+            {"ms_item_id": id, "item_type": items_b[id].item_type.value, "name": items_b[id].name}
+            for id in added
+        ],
+        "removed": [
+            {"ms_item_id": id, "item_type": items_a[id].item_type.value, "name": items_a[id].name}
+            for id in removed
+        ],
+        "changed": changed,
     }

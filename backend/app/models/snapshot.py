@@ -58,6 +58,11 @@ class ItemType(str, enum.Enum):
     CONDITIONAL_ACCESS_POLICY = "conditional_access_policy"
     APP_REGISTRATION = "app_registration"
     NAMED_LOCATION = "named_location"
+    SERVICE_PRINCIPAL = "service_principal"
+    ADMINISTRATIVE_UNIT = "administrative_unit"
+    OAUTH_PERMISSION_GRANT = "oauth_permission_grant"
+    DEVICE = "device"
+    DOMAIN = "domain"
     # Teams object types
     CHAT_MESSAGE = "chat_message"
     CHANNEL_MESSAGE = "channel_message"

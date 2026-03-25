@@ -20,7 +20,7 @@ export default function Exchange() {
   const backupAllMutation = useMutation({
     mutationFn: () => api.post(`/exchange/backup-all?tenant_id=${tenantId}`),
     onSuccess: (data: any) => {
-      setBackupMsg(`Backup All complete! ${data.succeeded}/${data.total} succeeded, ${data.results?.reduce((s: number, r: any) => s + (r.item_count || 0), 0)} total items`);
+      setBackupMsg(`Backup queued! Job #${data.job_id || 'N/A'} — ${data.total || 0} objects scheduled.`);
       qc.invalidateQueries({ queryKey: ['exchange-mailboxes'] });
       qc.invalidateQueries({ queryKey: ['dashboard'] });
       setTimeout(() => setBackupMsg(''), 8000);

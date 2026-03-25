@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, Loader2, RotateCcw, Briefcase, CheckCircle2, PlayCircle, Clock } from 'lucide-react';
+import { AlertTriangle, Loader2, RotateCcw, Briefcase, CheckCircle2, PlayCircle } from 'lucide-react';
 import { api } from '../api/client';
 import { WORKLOAD_KEYS, WORKLOAD_MAP } from '../config/workloads';
 import WorkloadSwimlane from '../components/jobs/WorkloadSwimlane';

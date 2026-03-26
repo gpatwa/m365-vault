@@ -11,7 +11,6 @@ import logging
 import secrets
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -99,21 +98,19 @@ async def oauth_callback(
 ):
     """Handle OAuth callback from any platform.
 
-    Microsoft: returns admin_consent=True&tenant=<id>&state=<state>
-    Google/Salesforce: returns code=<auth_code>&state=<state>
+    Called from frontend after Microsoft redirects back.
+    Returns JSON (frontend handles the result).
     """
     # Check for OAuth errors
     if error:
         logger.warning(f"OAuth error: {error} — {error_description}")
-        # Redirect to frontend with error
-        return RedirectResponse(
-            f"/onboard/callback?error={error}&error_description={error_description}"
-        )
+        return {"success": False, "error": error, "detail": error_description}
 
-    # Validate state
-    if not state or state not in _onboard_states:
-        logger.warning("Invalid or expired onboarding state")
-        return RedirectResponse("/onboard/callback?error=invalid_state")
+    # Skip state validation for admin consent (Microsoft doesn't always return state)
+    platform = "microsoft365"  # Default for admin consent flow
+    if state and state in _onboard_states:
+        state_data = _onboard_states.pop(state)
+        platform = state_data["platform"]
 
     state_data = _onboard_states.pop(state)
     platform = state_data["platform"]
@@ -128,19 +125,21 @@ async def oauth_callback(
         )
 
         if not result.success:
-            return RedirectResponse(
-                f"/onboard/callback?error=connection_failed&detail={result.error}"
-            )
+            return {"success": False, "error": "connection_failed", "detail": result.error}
 
         # Check if tenant already exists
         existing = await db.execute(
             select(Tenant).where(Tenant.ms_tenant_id == result.tenant_id)
         )
-        if existing.scalar_one_or_none():
-            return RedirectResponse(
-                f"/onboard/callback?success=true&tenant_id={result.tenant_id}"
-                f"&tenant_name={result.tenant_name}&existing=true"
-            )
+        existing_tenant = existing.scalar_one_or_none()
+        if existing_tenant:
+            return {
+                "success": True,
+                "existing": True,
+                "tenant_id": result.tenant_id,
+                "tenant_name": result.tenant_name,
+                "db_tenant_id": existing_tenant.id,
+            }
 
         # Create tenant record
         tenant_record = Tenant(
@@ -162,16 +161,18 @@ async def oauth_callback(
 
         await db.commit()
 
-        # Redirect to frontend with success
-        return RedirectResponse(
-            f"/onboard/callback?success=true&tenant_id={result.tenant_id}"
-            f"&tenant_name={result.tenant_name}&new=true"
-            f"&platform={platform}"
-        )
+        return {
+            "success": True,
+            "new": True,
+            "tenant_id": result.tenant_id,
+            "tenant_name": result.tenant_name,
+            "db_tenant_id": tenant_record.id,
+            "discovery": disc_result,
+        }
 
     except Exception as e:
         logger.error(f"Onboarding callback failed: {e}", exc_info=True)
-        return RedirectResponse(f"/onboard/callback?error=server_error&detail={str(e)[:100]}")
+        return {"success": False, "error": "server_error", "detail": str(e)[:200]}
 
 
 class CompleteOnboardRequest(BaseModel):

@@ -157,16 +157,43 @@ export function OnboardCallback() {
   const isNew = searchParams.get('new') === 'true';
   const isExisting = searchParams.get('existing') === 'true';
 
+  const [resultData, setResultData] = useState<any>(null);
+
   useEffect(() => {
     if (success) {
       setStatus('success');
-    } else if (error) {
-      setStatus('error');
-    } else {
-      // Still loading — waiting for redirect
-      setStatus('loading');
+      return;
     }
-  }, [success, error]);
+    if (error) {
+      setStatus('error');
+      return;
+    }
+
+    // Microsoft redirects back with admin_consent=True&tenant=xxx
+    const adminConsent = searchParams.get('admin_consent');
+    const tenant = searchParams.get('tenant');
+    const state = searchParams.get('state');
+
+    if (adminConsent && tenant) {
+      // Forward to backend API to process consent + create tenant + run discovery
+      api.get<any>(`/onboard/callback?admin_consent=${adminConsent}&tenant=${tenant}&state=${state || ''}`)
+        .then((data: any) => {
+          if (data.success) {
+            setResultData(data);
+            setStatus('success');
+          } else {
+            setResultData(data);
+            setStatus('error');
+          }
+        })
+        .catch(() => {
+          setStatus('error');
+        });
+    } else {
+      // No recognizable params — timeout after 5s
+      setTimeout(() => setStatus('error'), 5000);
+    }
+  }, []);
 
   return (
     <div className="max-w-lg mx-auto text-center py-16">
@@ -184,17 +211,19 @@ export function OnboardCallback() {
             <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            {isNew ? 'Connected Successfully!' : 'Already Connected'}
+            {resultData?.new || isNew ? 'Connected Successfully!' : 'Already Connected'}
           </h2>
           <p className="text-gray-500 mb-1">
-            {tenantName && <span className="font-semibold text-gray-700">{tenantName}</span>}
+            {(resultData?.tenant_name || tenantName) && (
+              <span className="font-semibold text-gray-700">{resultData?.tenant_name || tenantName}</span>
+            )}
           </p>
-          {isNew && (
+          {(resultData?.new || isNew) && (
             <p className="text-sm text-green-600 mb-6">
               Discovery complete — your workloads are ready to protect.
             </p>
           )}
-          {isExisting && (
+          {(resultData?.existing || isExisting) && (
             <p className="text-sm text-blue-600 mb-6">
               This tenant is already connected. Go to the dashboard to manage it.
             </p>
@@ -223,8 +252,8 @@ export function OnboardCallback() {
             <XCircle className="w-8 h-8 text-red-600" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Connection Failed</h2>
-          <p className="text-red-600 mb-2">{error || 'Unknown error'}</p>
-          {errorDetail && <p className="text-sm text-gray-500 mb-6">{errorDetail}</p>}
+          <p className="text-red-600 mb-2">{resultData?.error || error || 'Unknown error'}</p>
+          {(resultData?.detail || errorDetail) && <p className="text-sm text-gray-500 mb-6">{resultData?.detail || errorDetail}</p>}
 
           <div className="flex items-center justify-center gap-3">
             <button

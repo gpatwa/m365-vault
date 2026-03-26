@@ -106,6 +106,9 @@ class Settings(BaseSettings):
     # Refresh Tokens
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
+    # Demo Mode
+    DEMO_MODE: bool = False  # Auto-seed demo data on startup if DB is empty
+
     # License
     LICENSE_TIER: str = "community"  # community, professional, enterprise
     LICENSE_MAX_USERS: int = 25      # for community tier

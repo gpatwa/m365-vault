@@ -62,6 +62,29 @@ async def lifespan(app: FastAPI):
     start_scheduler()
     logger.info("Scheduler started")
 
+    # Demo mode: auto-seed data if DB is empty
+    if settings.DEMO_MODE:
+        try:
+            from app.database import async_session as _session
+            from app.models.tenant import Tenant
+            from sqlalchemy import select as _select
+            async with _session() as _db:
+                has_tenants = (await _db.execute(_select(Tenant))).scalar_one_or_none()
+                if not has_tenants:
+                    logger.info("DEMO_MODE: No tenants found, seeding demo data...")
+                    # Import and run seed inline
+                    import importlib.util, sys
+                    spec = importlib.util.spec_from_file_location("seed", "/app/seed-demo.py")
+                    if spec and spec.loader:
+                        mod = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(mod)
+                        await mod.seed()
+                        logger.info("DEMO_MODE: Demo data seeded successfully")
+                else:
+                    logger.info("DEMO_MODE: Data already exists, skipping seed")
+        except Exception as e:
+            logger.warning(f"DEMO_MODE: Failed to seed data: {e}")
+
     yield
 
     # Shutdown

@@ -3,6 +3,8 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Mail, HardDrive, Globe, Shield, ShieldCheck, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search, RotateCcw, BarChart3, Gauge, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import CommandPalette from './CommandPalette';
+import ProductTour from './ProductTour';
+import FeedbackWidget from './FeedbackWidget';
 
 interface NavItem {
   path: string;
@@ -71,6 +73,9 @@ export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [commandOpen, setCommandOpen] = useState(false);
+  const [showTour, setShowTour] = useState(
+    !localStorage.getItem('shieldio_tour_completed')
+  );
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
     navGroups.forEach(g => { if (g.label) init[g.label] = !g.defaultOpen; });
@@ -198,6 +203,12 @@ export default function Layout() {
 
       {/* Command Palette (⌘K) */}
       <CommandPalette isOpen={commandOpen} onClose={() => setCommandOpen(false)} onOpen={() => setCommandOpen(true)} />
+
+      {/* Product Tour (first-time users) */}
+      {showTour && <ProductTour onComplete={() => setShowTour(false)} />}
+
+      {/* Feedback Widget */}
+      <FeedbackWidget />
     </div>
   );
 }

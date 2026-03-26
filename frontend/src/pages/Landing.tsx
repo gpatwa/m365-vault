@@ -264,9 +264,9 @@ export default function Landing() {
           {/* Stats */}
           <div className={`mt-12 flex items-center justify-center gap-12 text-center transition-all duration-700 delay-900 ${heroReady ? 'opacity-100' : 'opacity-0'}`}>
             <div><div className="text-2xl font-bold text-gray-900"><Counter target={5} /></div><div className="text-xs text-gray-500">M365 Workloads</div></div>
-            <div><div className="text-2xl font-bold text-gray-900"><Counter target={10} suffix="min" /></div><div className="text-xs text-gray-500">Recovery Time</div></div>
+            <div><div className="text-2xl font-bold text-gray-900">&lt;<Counter target={9} suffix="ms" /></div><div className="text-xs text-gray-500">API Response (p50)</div></div>
+            <div><div className="text-2xl font-bold text-gray-900"><Counter target={2} suffix=".1x" /></div><div className="text-xs text-gray-500">Compression Ratio</div></div>
             <div><div className="text-2xl font-bold text-gray-900"><Counter target={4} /></div><div className="text-xs text-gray-500">Compliance Frameworks</div></div>
-            <div><div className="text-2xl font-bold text-gray-900"><Counter target={99} suffix="%" /></div><div className="text-xs text-gray-500">Backup Success Rate</div></div>
           </div>
         </div>
       </section>

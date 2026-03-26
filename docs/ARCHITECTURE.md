@@ -40,7 +40,7 @@ graph LR
 **Control Plane vs Data Plane:**
 
 ```mermaid
-graph TB
+graph LR
     subgraph CP[Control Plane]
         A1[REST API]:::control
         A2[Scheduler]:::control
@@ -364,32 +364,17 @@ that checks for a stored JWT token.
 
 ### Encryption Flow (DEK/KEK Envelope Encryption)
 
-```
-                    +------------------+
-                    |  Master Key      |
-                    |  (32-byte, env)  |
-                    +--------+---------+
-                             |
-                             v
-                    +------------------+
-                    |  KEK             |
-                    |  (AES-256-GCM)   |
-                    +--------+---------+
-                             |
-              +--------------+--------------+
-              |                             |
-              v                             v
-   +-------------------+        +-------------------+
-   | Wrap DEK           |        | Encrypt tenant    |
-   | (per snapshot)     |        | client_secret     |
-   +-------------------+        +-------------------+
-              |
-              v
-   +-------------------+
-   | DEK                |
-   | (random 256-bit)   |
-   | encrypts item data |
-   +-------------------+
+```mermaid
+graph TB
+    MK[Master Key - 32 bytes from env]:::master --> KEK[KEK - AES-256-GCM]:::key
+    KEK --> Wrap[Wrap DEK per snapshot]:::process
+    KEK --> EncSec[Encrypt tenant secrets]:::process
+    Wrap --> DEK[DEK - random 256-bit]:::key
+    DEK --> Data[Encrypts item data]:::data
+    classDef master fill:#fce7f3,stroke:#db2777,color:#9d174d
+    classDef key fill:#ede9fe,stroke:#7c3aed,color:#5b21b6
+    classDef process fill:#dcfce7,stroke:#16a34a,color:#166534
+    classDef data fill:#fef3c7,stroke:#d97706,color:#92400e
 ```
 
 1. **Master Key** is loaded from `ENCRYPTION_MASTER_KEY` env var (must be 32 bytes).

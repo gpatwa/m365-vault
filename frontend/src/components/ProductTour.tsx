@@ -1,84 +1,89 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, ArrowRight, ArrowLeft, Shield, LayoutDashboard, Mail, Activity, Brain, ShieldCheck, BarChart3, Search, Building2, Lock, Gauge } from 'lucide-react';
+import { X, ArrowRight, ArrowLeft, Shield, LayoutDashboard, Mail, Activity, Brain, ShieldCheck, BarChart3, Search, Building2, Lock } from 'lucide-react';
 
 const TOUR_STEPS = [
+  // ── Getting Started ──
   {
     title: 'Welcome to Shieldio',
-    description: 'Your SaaS data protection platform. Let us show you around — it only takes 60 seconds.',
+    description: 'Your SaaS data protection platform. This tour walks you through setup, operations, and advanced features — it only takes 90 seconds.',
     icon: Shield,
     color: 'bg-blue-600',
     route: '/',
   },
   {
-    title: 'Dashboard — Your Command Center',
-    description: 'See protection coverage, health score, and backup status across all workloads at a glance. Every metric is clickable for drill-down.',
-    icon: LayoutDashboard,
+    title: 'Step 1: Connect Your Tenant',
+    description: 'Start here — onboard your M365 tenant with a 3-step wizard. Enter credentials, discover workloads, and assign protection policies in minutes.',
+    icon: Building2,
     color: 'bg-indigo-600',
+    route: '/tenants',
+  },
+  {
+    title: 'Step 2: Configure SLA Policies',
+    description: 'Define backup frequency (hourly to daily), retention period (30-365 days), WORM immutability, and legal hold. Assign policies to workloads.',
+    icon: Shield,
+    color: 'bg-indigo-500',
+    route: '/sla-policies',
+  },
+  // ── Daily Operations ──
+  {
+    title: 'Dashboard — Your Command Center',
+    description: 'Once configured, the dashboard shows protection coverage, health score, and backup status across all workloads. Every metric drills down.',
+    icon: LayoutDashboard,
+    color: 'bg-blue-600',
     route: '/',
   },
   {
     title: 'Workload Protection',
-    description: 'Exchange, OneDrive, SharePoint, Teams, and Entra ID — each workload has dedicated backup, restore, and monitoring. Click any workload to explore.',
+    description: 'Exchange, OneDrive, SharePoint, Teams, and Entra ID — each workload shows backup status, item counts, and one-click backup/restore.',
     icon: Mail,
     color: 'bg-purple-600',
     route: '/exchange',
   },
   {
     title: 'Jobs & Monitoring',
-    description: 'Track every backup and restore job in real-time. Failed jobs auto-retry with exponential backoff. Swimlane view groups by workload.',
+    description: 'Track every backup and restore job in real-time. Failed jobs auto-retry with exponential backoff. Swimlane view groups jobs by workload.',
     icon: Activity,
     color: 'bg-green-600',
     route: '/jobs',
   },
+  // ── Recovery & Intelligence ──
   {
-    title: 'Smart Engine',
-    description: 'AI-powered anomaly detection learns your backup patterns and alerts on deviations. Health scoring, baselines, and trend analysis — all at zero cost.',
+    title: 'Self-Restore & Recovery',
+    description: 'Search and restore any item across all workloads. Recovery dashboard shows confidence scoring, RPO/RTO tracking, and automated runbooks.',
+    icon: ShieldCheck,
+    color: 'bg-emerald-600',
+    route: '/recovery',
+  },
+  {
+    title: 'Smart Engine & Alerts',
+    description: 'AI-powered anomaly detection learns your backup patterns. Health scoring, trend analysis, and email/webhook alerts — intelligence included free.',
     icon: Brain,
     color: 'bg-amber-600',
     route: '/smart-engine',
   },
+  // ── Compliance & Governance ──
   {
-    title: 'Recovery Dashboard',
-    description: 'Recovery confidence scoring, RPO/RTO tracking, and automated recovery runbooks. Know your recovery readiness before you need it.',
-    icon: ShieldCheck,
-    color: 'bg-red-600',
-    route: '/recovery',
-  },
-  {
-    title: 'Reports & Security',
-    description: 'Compliance-ready reports, storage analytics, and a security posture page with SOC 2, GDPR, and HIPAA control mapping.',
+    title: 'Reports, Usage & Compliance',
+    description: 'Backup performance, storage analytics, license utilization, and compliance-ready reports. Every admin action logged in the immutable audit trail.',
     icon: BarChart3,
     color: 'bg-teal-600',
     route: '/reports',
   },
   {
-    title: 'Search Everything',
-    description: 'Press ⌘K anywhere to search across all backups. Intent-aware search understands "find deleted emails" or "check OneDrive status".',
-    icon: Search,
-    color: 'bg-pink-600',
-    route: '/',
-  },
-  {
-    title: 'Tenant & SLA Management',
-    description: 'Onboard M365 tenants with a 3-step wizard. Define SLA policies with backup frequency, retention, WORM immutability, and legal hold.',
-    icon: Building2,
-    color: 'bg-slate-600',
-    route: '/tenants',
-  },
-  {
-    title: 'Usage, License & Audit',
-    description: 'Track protected users, storage consumption, and license utilization. Every admin action is logged in the immutable audit trail.',
-    icon: Gauge,
-    color: 'bg-cyan-600',
-    route: '/usage',
-  },
-  {
     title: 'Security Posture',
-    description: 'Security grade, encryption status, compliance readiness (SOC 2, GDPR, HIPAA, DORA). Download the security pack for your procurement review.',
+    description: 'Your security grade, encryption status, and compliance readiness (SOC 2, GDPR, HIPAA, DORA). Download the security pack for procurement.',
     icon: Lock,
     color: 'bg-rose-600',
     route: '/security',
+  },
+  // ── Power Tips ──
+  {
+    title: 'Pro Tip: Search Everything with ⌘K',
+    description: 'Press ⌘K anywhere to search across all backups. Intent-aware: try "find deleted emails", "check OneDrive status", or "show failed jobs".',
+    icon: Search,
+    color: 'bg-pink-600',
+    route: '/',
   },
 ];
 

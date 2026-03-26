@@ -14,33 +14,25 @@ This document describes the security controls, encryption architecture, access c
 
 ## 1. Encryption
 
+**Encryption Pipeline:**
+
 ```mermaid
 graph LR
-    subgraph Source["M365 Tenant"]
-        Data[Raw Data]
-    end
+    A["📧 Raw Data"] --> B["🗜️ zstd Compress"] --> C["#️⃣ SHA-256 Hash"] --> D["🔒 AES-256-GCM"] --> E["📦 Encrypted Blob"]
+    F["🔑 Per-Tenant DEK"] --> D
+    G["🔐 Master KEK"] --> F
+```
 
-    subgraph Pipeline["Shieldio Encryption Pipeline"]
-        Compress[zstd Compress]
-        Hash[SHA-256 Hash]
-        Encrypt[AES-256-GCM Encrypt]
-        DEK[Per-Tenant DEK]
-        KEK[Master KEK]
-    end
+**Key Hierarchy:**
 
-    subgraph Storage["Encrypted Storage"]
-        Blob[(Azure Blob)]
-        KV[(Key Vault)]
-    end
-
-    Data --> Compress --> Hash --> Encrypt --> Blob
-    DEK --> Encrypt
-    KEK --> DEK
-    KEK --> KV
-
-    style Source fill:#dbeafe,stroke:#3b82f6
-    style Pipeline fill:#f0fdf4,stroke:#22c55e
-    style Storage fill:#fef3c7,stroke:#f59e0b
+```mermaid
+graph TB
+    KEK["🔐 Master KEK<br/>(Azure Key Vault)"] --> DEK1["🔑 Tenant A DEK"]
+    KEK --> DEK2["🔑 Tenant B DEK"]
+    KEK --> DEK3["🔑 Tenant C DEK"]
+    DEK1 --> Data1["📦 Tenant A Backups"]
+    DEK2 --> Data2["📦 Tenant B Backups"]
+    DEK3 --> Data3["📦 Tenant C Backups"]
 ```
 
 ### 1.1 Encryption at Rest
@@ -164,28 +156,15 @@ Role enforcement via `require_role()` dependency on every API endpoint.
 
 ### 4.1 Deployment Architecture
 
-```mermaid
-graph TD
-    Internet((Internet)) --> TLS[Azure Front Door<br/>TLS Termination]
-    TLS --> FE[Frontend Container App<br/>React + nginx]
-    TLS --> BE[Backend Container App<br/>FastAPI + Python]
-    BE --> PG[(PostgreSQL<br/>Flexible Server)]
-    BE --> Blob[(Azure Blob<br/>Storage)]
-    BE --> KV[(Azure Key Vault)]
-    BE --> Redis[(Redis)]
-    Redis --> Worker[Worker Container<br/>Backup/Restore]
-    Worker --> PG
-    Worker --> Blob
+**Azure Deployment:**
 
-    style Internet fill:#fce7f3,stroke:#ec4899
-    style TLS fill:#dbeafe,stroke:#3b82f6
-    style FE fill:#dbeafe,stroke:#3b82f6
-    style BE fill:#f0fdf4,stroke:#22c55e
-    style Worker fill:#f0fdf4,stroke:#22c55e
-    style PG fill:#fef3c7,stroke:#f59e0b
-    style Blob fill:#fef3c7,stroke:#f59e0b
-    style KV fill:#fef3c7,stroke:#f59e0b
-    style Redis fill:#fce7f3,stroke:#ec4899
+```mermaid
+graph LR
+    User["🌐 User"] --> FE["Frontend<br/>Container App"]
+    FE --> BE["Backend<br/>Container App"]
+    BE --> PG["🗄️ PostgreSQL"]
+    BE --> Blob["📦 Blob Storage"]
+    BE --> KV["🔐 Key Vault"]
 ```
 
 ```

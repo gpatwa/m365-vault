@@ -7,66 +7,51 @@ Shieldio is a SaaS data protection platform for Microsoft 365 workloads
 the Microsoft Graph API, discovers protectable objects, runs SLA-driven backup schedules,
 stores encrypted point-in-time snapshots, and provides granular restore capabilities.
 
+**High-Level Architecture:**
+
+```mermaid
+graph LR
+    A["🖥️ React Frontend"] --> B["⚡ FastAPI Backend"]
+    B --> C["📊 Microsoft Graph API"]
+    B --> D["🗄️ PostgreSQL"]
+    B --> E["📦 Azure Blob Storage"]
+    B --> F["🔐 Key Vault"]
+```
+
+**Backup Data Flow:**
+
+```mermaid
+graph LR
+    M365["Microsoft 365"] -->|Graph API| Discover["Discover Objects"]
+    Discover --> Schedule["SLA Scheduler"]
+    Schedule --> Worker["Backup Worker"]
+    Worker -->|Compress| Pipe["zstd → SHA-256 → AES-256"]
+    Pipe --> Store["Encrypted Blob Storage"]
+    Store --> Catalog["Snapshot Catalog in PostgreSQL"]
+```
+
+**Control Plane vs Data Plane:**
+
 ```mermaid
 graph TB
-    subgraph Frontend["Frontend (React 19 + Vite)"]
-        UI[Dashboard / Workload Pages]
-        CMD[Command Palette ⌘K]
-        Tour[Product Tour]
+    subgraph CP["Control Plane"]
+        API["REST API"]
+        Sched["Scheduler"]
+        Smart["Smart Engine"]
+        UI["Dashboard"]
     end
 
-    subgraph Backend["Backend (FastAPI + Python)"]
-        API[REST API - 115+ endpoints]
-        Auth[Auth - JWT / SSO / RBAC]
-        Sched[Scheduler - APScheduler]
-
-        subgraph Services
-            Backup[Backup Engine]
-            Restore[Restore Engine]
-            Discovery[Discovery Service]
-            Smart[Smart Engine]
-            Alert[Alert Service]
-        end
-
-        subgraph Workers
-            EX[Exchange Worker]
-            OD[OneDrive Worker]
-            SP[SharePoint Worker]
-            TM[Teams Worker]
-            EN[Entra ID Worker]
-        end
+    subgraph DP["Data Plane"]
+        Worker["Backup Workers"]
+        Encrypt["Encryption"]
+        Storage["Blob Storage"]
     end
 
-    subgraph Storage["Storage Layer"]
-        PG[(PostgreSQL)]
-        Blob[(Azure Blob / MinIO)]
-        KV[(Key Vault)]
-        Redis[(Redis Queue)]
-    end
+    CP -->|Redis Queue| DP
+    DP -->|Results| CP
 
-    subgraph External["External"]
-        Graph[Microsoft Graph API]
-        SMTP[SMTP / Webhook]
-    end
-
-    UI --> API
-    CMD --> API
-    API --> Auth
-    API --> Services
-    Sched --> Backup
-    Services --> Workers
-    Workers --> Graph
-    Backup --> Blob
-    Backup --> PG
-    Smart --> PG
-    Alert --> SMTP
-    Auth --> PG
-    Backup --> KV
-
-    style Frontend fill:#dbeafe,stroke:#3b82f6
-    style Backend fill:#f0fdf4,stroke:#22c55e
-    style Storage fill:#fef3c7,stroke:#f59e0b
-    style External fill:#fce7f3,stroke:#ec4899
+    style CP fill:#dbeafe,stroke:#3b82f6
+    style DP fill:#f0fdf4,stroke:#22c55e
 ```
 
 ```

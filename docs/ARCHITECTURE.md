@@ -7,6 +7,68 @@ Shieldio is a SaaS data protection platform for Microsoft 365 workloads
 the Microsoft Graph API, discovers protectable objects, runs SLA-driven backup schedules,
 stores encrypted point-in-time snapshots, and provides granular restore capabilities.
 
+```mermaid
+graph TB
+    subgraph Frontend["Frontend (React 19 + Vite)"]
+        UI[Dashboard / Workload Pages]
+        CMD[Command Palette ⌘K]
+        Tour[Product Tour]
+    end
+
+    subgraph Backend["Backend (FastAPI + Python)"]
+        API[REST API - 115+ endpoints]
+        Auth[Auth - JWT / SSO / RBAC]
+        Sched[Scheduler - APScheduler]
+
+        subgraph Services
+            Backup[Backup Engine]
+            Restore[Restore Engine]
+            Discovery[Discovery Service]
+            Smart[Smart Engine]
+            Alert[Alert Service]
+        end
+
+        subgraph Workers
+            EX[Exchange Worker]
+            OD[OneDrive Worker]
+            SP[SharePoint Worker]
+            TM[Teams Worker]
+            EN[Entra ID Worker]
+        end
+    end
+
+    subgraph Storage["Storage Layer"]
+        PG[(PostgreSQL)]
+        Blob[(Azure Blob / MinIO)]
+        KV[(Key Vault)]
+        Redis[(Redis Queue)]
+    end
+
+    subgraph External["External"]
+        Graph[Microsoft Graph API]
+        SMTP[SMTP / Webhook]
+    end
+
+    UI --> API
+    CMD --> API
+    API --> Auth
+    API --> Services
+    Sched --> Backup
+    Services --> Workers
+    Workers --> Graph
+    Backup --> Blob
+    Backup --> PG
+    Smart --> PG
+    Alert --> SMTP
+    Auth --> PG
+    Backup --> KV
+
+    style Frontend fill:#dbeafe,stroke:#3b82f6
+    style Backend fill:#f0fdf4,stroke:#22c55e
+    style Storage fill:#fef3c7,stroke:#f59e0b
+    style External fill:#fce7f3,stroke:#ec4899
+```
+
 ```
 +---------------------+       +----------------------------+
 |   React 19 SPA      |       |  Microsoft Graph API       |

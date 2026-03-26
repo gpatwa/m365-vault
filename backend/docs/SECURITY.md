@@ -14,6 +14,35 @@ This document describes the security controls, encryption architecture, access c
 
 ## 1. Encryption
 
+```mermaid
+graph LR
+    subgraph Source["M365 Tenant"]
+        Data[Raw Data]
+    end
+
+    subgraph Pipeline["Shieldio Encryption Pipeline"]
+        Compress[zstd Compress]
+        Hash[SHA-256 Hash]
+        Encrypt[AES-256-GCM Encrypt]
+        DEK[Per-Tenant DEK]
+        KEK[Master KEK]
+    end
+
+    subgraph Storage["Encrypted Storage"]
+        Blob[(Azure Blob)]
+        KV[(Key Vault)]
+    end
+
+    Data --> Compress --> Hash --> Encrypt --> Blob
+    DEK --> Encrypt
+    KEK --> DEK
+    KEK --> KV
+
+    style Source fill:#dbeafe,stroke:#3b82f6
+    style Pipeline fill:#f0fdf4,stroke:#22c55e
+    style Storage fill:#fef3c7,stroke:#f59e0b
+```
+
 ### 1.1 Encryption at Rest
 
 | Layer | Algorithm | Key Management |
@@ -134,6 +163,30 @@ Role enforcement via `require_role()` dependency on every API endpoint.
 ## 4. Infrastructure Security
 
 ### 4.1 Deployment Architecture
+
+```mermaid
+graph TD
+    Internet((Internet)) --> TLS[Azure Front Door<br/>TLS Termination]
+    TLS --> FE[Frontend Container App<br/>React + nginx]
+    TLS --> BE[Backend Container App<br/>FastAPI + Python]
+    BE --> PG[(PostgreSQL<br/>Flexible Server)]
+    BE --> Blob[(Azure Blob<br/>Storage)]
+    BE --> KV[(Azure Key Vault)]
+    BE --> Redis[(Redis)]
+    Redis --> Worker[Worker Container<br/>Backup/Restore]
+    Worker --> PG
+    Worker --> Blob
+
+    style Internet fill:#fce7f3,stroke:#ec4899
+    style TLS fill:#dbeafe,stroke:#3b82f6
+    style FE fill:#dbeafe,stroke:#3b82f6
+    style BE fill:#f0fdf4,stroke:#22c55e
+    style Worker fill:#f0fdf4,stroke:#22c55e
+    style PG fill:#fef3c7,stroke:#f59e0b
+    style Blob fill:#fef3c7,stroke:#f59e0b
+    style KV fill:#fef3c7,stroke:#f59e0b
+    style Redis fill:#fce7f3,stroke:#ec4899
+```
 
 ```
 Internet → Azure Front Door (TLS termination)

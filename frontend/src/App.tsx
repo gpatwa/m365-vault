@@ -29,6 +29,7 @@ import SecurityPage from './pages/Security';
 import Docs from './pages/Docs';
 import DocViewer from './pages/DocViewer';
 import Performance from './pages/Performance';
+import Onboard, { OnboardCallback } from './pages/Onboard';
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,8 @@ function AppRoutes() {
       <Route path="/docs" element={<Docs />} />
       <Route path="/docs/view/:filename" element={<DocViewer />} />
       <Route path="/security" element={<SecurityPage />} />
+      <Route path="/onboard" element={<Onboard />} />
+      <Route path="/onboard/callback" element={<OnboardCallback />} />
 
       {/* Root: Landing for anonymous, Dashboard for authenticated */}
       <Route path="/" element={<RootRoute />}>

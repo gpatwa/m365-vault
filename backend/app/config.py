@@ -113,6 +113,11 @@ class Settings(BaseSettings):
     LICENSE_TIER: str = "community"  # community, professional, enterprise
     LICENSE_MAX_USERS: int = 25      # for community tier
 
+    # Multi-tenant Connector (OAuth onboarding)
+    CONNECTOR_APP_ID: str = ""        # Shieldio Connector multi-tenant app ID
+    CONNECTOR_APP_SECRET: str = ""    # Shieldio Connector app secret
+    CONNECTOR_REDIRECT_URI: str = "http://localhost:5173/onboard/callback"
+
     # Dispatcher (Control Plane / Data Plane separation)
     DISPATCH_MODE: str = "in_process"  # "in_process" | "redis"
     REDIS_URL: str = "redis://localhost:6379/0"

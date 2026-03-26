@@ -78,6 +78,9 @@ services:
       ENCRYPTION_MASTER_KEY: docker-dev-32-byte-master-key!!
       REDIS_URL: redis://redis:6379/0
       DISPATCH_MODE: redis
+      CONNECTOR_APP_ID: ${CONNECTOR_APP_ID:-}
+      CONNECTOR_APP_SECRET: ${CONNECTOR_APP_SECRET:-}
+      CONNECTOR_REDIRECT_URI: ${CONNECTOR_REDIRECT_URI:-http://localhost:5173/onboard/callback}
       DEBUG: "true"
     volumes:
       - ./scripts:/scripts

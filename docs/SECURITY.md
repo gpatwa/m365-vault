@@ -18,24 +18,32 @@ This document describes the security controls, encryption architecture, access c
 
 ```mermaid
 graph LR
-    A[Raw Data] --> B[zstd Compress]
-    B --> C[SHA-256 Hash]
-    C --> D[AES-256-GCM Encrypt]
-    D --> E[(Encrypted Blob)]
-    F[Per-Tenant DEK] --> D
-    G[Master KEK] --> F
+    A[Raw Data]:::source --> B[zstd Compress]:::process
+    B --> C[SHA-256 Hash]:::process
+    C --> D[AES-256-GCM Encrypt]:::secure
+    D --> E[(Encrypted Blob)]:::storage
+    F[Per-Tenant DEK]:::key --> D
+    G[Master KEK]:::key --> F
+    classDef source fill:#dbeafe,stroke:#2563eb,color:#1e40af
+    classDef process fill:#dcfce7,stroke:#16a34a,color:#166534
+    classDef secure fill:#ede9fe,stroke:#7c3aed,color:#5b21b6
+    classDef storage fill:#fef3c7,stroke:#d97706,color:#92400e
+    classDef key fill:#fce7f3,stroke:#db2777,color:#9d174d
 ```
 
 **Key Hierarchy:**
 
 ```mermaid
 graph TB
-    KEK[Master KEK in Key Vault] --> DEK1[Tenant A DEK]
-    KEK --> DEK2[Tenant B DEK]
-    KEK --> DEK3[Tenant C DEK]
-    DEK1 --> Data1[(Tenant A Backups)]
-    DEK2 --> Data2[(Tenant B Backups)]
-    DEK3 --> Data3[(Tenant C Backups)]
+    KEK[Master KEK in Key Vault]:::master --> DEK1[Tenant A DEK]:::key
+    KEK --> DEK2[Tenant B DEK]:::key
+    KEK --> DEK3[Tenant C DEK]:::key
+    DEK1 --> Data1[(Tenant A Backups)]:::data
+    DEK2 --> Data2[(Tenant B Backups)]:::data
+    DEK3 --> Data3[(Tenant C Backups)]:::data
+    classDef master fill:#fce7f3,stroke:#db2777,color:#9d174d
+    classDef key fill:#ede9fe,stroke:#7c3aed,color:#5b21b6
+    classDef data fill:#fef3c7,stroke:#d97706,color:#92400e
 ```
 
 ### 1.1 Encryption at Rest
@@ -163,11 +171,16 @@ Role enforcement via `require_role()` dependency on every API endpoint.
 
 ```mermaid
 graph LR
-    User[User] --> FE[Frontend Container]
-    FE --> BE[Backend Container]
-    BE --> PG[(PostgreSQL)]
-    BE --> Blob[(Blob Storage)]
-    BE --> KV[(Key Vault)]
+    User[User]:::external --> FE[Frontend Container]:::frontend
+    FE --> BE[Backend Container]:::backend
+    BE --> PG[(PostgreSQL)]:::storage
+    BE --> Blob[(Blob Storage)]:::storage
+    BE --> KV[(Key Vault)]:::secure
+    classDef external fill:#f3f4f6,stroke:#6b7280,color:#374151
+    classDef frontend fill:#dbeafe,stroke:#2563eb,color:#1e40af
+    classDef backend fill:#dcfce7,stroke:#16a34a,color:#166534
+    classDef storage fill:#fef3c7,stroke:#d97706,color:#92400e
+    classDef secure fill:#ede9fe,stroke:#7c3aed,color:#5b21b6
 ```
 
 ### 4.2 Network Security

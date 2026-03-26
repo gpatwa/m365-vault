@@ -10,6 +10,9 @@ mermaid.initialize({
   theme: 'neutral',
   securityLevel: 'loose',
   fontFamily: 'Inter, system-ui, sans-serif',
+  fontSize: 14,
+  flowchart: { padding: 20, nodeSpacing: 30, rankSpacing: 50 },
+  er: { fontSize: 14 },
 });
 
 /**
@@ -82,7 +85,7 @@ function renderMarkdown(md: string): string {
 
     if (block.type === 'mermaid') {
       const id = `mermaid-${Date.now()}-${idx}`;
-      return `<div class="my-6 flex justify-center"><pre class="mermaid" id="${id}">${block.content}</pre></div>`;
+      return `<div class="my-8 p-6 bg-gray-50 rounded-xl border border-gray-200 overflow-x-auto"><pre class="mermaid" id="${id}">${block.content}</pre></div>`;
     }
 
     // Regular code block

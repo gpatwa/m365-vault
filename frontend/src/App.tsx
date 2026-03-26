@@ -26,6 +26,7 @@ import Usage from './pages/Usage';
 import Legal from './pages/Legal';
 import ObjectDetail from './pages/ObjectDetail';
 import SecurityPage from './pages/Security';
+import Performance from './pages/Performance';
 
 const queryClient = new QueryClient();
 
@@ -74,6 +75,7 @@ function AppRoutes() {
         <Route path="reports" element={<Reports />} />
         <Route path="usage" element={<Usage />} />
         <Route path="security" element={<SecurityPage />} />
+        <Route path="performance" element={<Performance />} />
         <Route path=":workload/:objectId" element={<ObjectDetail />} />
       </Route>
     </Routes>

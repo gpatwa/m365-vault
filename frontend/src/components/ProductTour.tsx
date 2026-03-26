@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, ArrowRight, ArrowLeft, Shield, LayoutDashboard, Mail, Activity, Brain, ShieldCheck, BarChart3, Search } from 'lucide-react';
+import { X, ArrowRight, ArrowLeft, Shield, LayoutDashboard, Mail, Activity, Brain, ShieldCheck, BarChart3, Search, Building2, Lock, Gauge } from 'lucide-react';
 
 const TOUR_STEPS = [
   {
@@ -58,6 +58,27 @@ const TOUR_STEPS = [
     icon: Search,
     color: 'bg-pink-600',
     route: '/',
+  },
+  {
+    title: 'Tenant & SLA Management',
+    description: 'Onboard M365 tenants with a 3-step wizard. Define SLA policies with backup frequency, retention, WORM immutability, and legal hold.',
+    icon: Building2,
+    color: 'bg-slate-600',
+    route: '/tenants',
+  },
+  {
+    title: 'Usage, License & Audit',
+    description: 'Track protected users, storage consumption, and license utilization. Every admin action is logged in the immutable audit trail.',
+    icon: Gauge,
+    color: 'bg-cyan-600',
+    route: '/usage',
+  },
+  {
+    title: 'Security Posture',
+    description: 'Security grade, encryption status, compliance readiness (SOC 2, GDPR, HIPAA, DORA). Download the security pack for your procurement review.',
+    icon: Lock,
+    color: 'bg-rose-600',
+    route: '/security',
   },
 ];
 

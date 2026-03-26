@@ -155,10 +155,6 @@ export default function Landing() {
             <Link to="/login" className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all hover:shadow-lg hover:shadow-blue-200 flex items-center gap-2">
               Start Free <ArrowRight className="w-4 h-4" />
             </Link>
-            <a href="https://calendly.com" target="_blank" rel="noopener noreferrer"
-              className="px-6 py-3 bg-gray-900 text-white font-medium rounded-xl hover:bg-gray-800 transition-colors flex items-center gap-2">
-              📅 Book a Demo
-            </a>
             <a href="https://github.com/gpatwa/m365-vault" target="_blank" rel="noopener noreferrer"
               className="px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors flex items-center gap-2">
               <Server className="w-4 h-4" /> GitHub

@@ -54,6 +54,7 @@ function AppRoutes() {
       <Route path="/sso/callback" element={<SSOCallback />} />
       <Route path="/legal" element={<Legal />} />
       <Route path="/docs" element={<Docs />} />
+      <Route path="/security" element={<SecurityPage />} />
 
       {/* Root: Landing for anonymous, Dashboard for authenticated */}
       <Route path="/" element={<RootRoute />}>

@@ -381,7 +381,7 @@ export default function Landing() {
               </div>
               <h2 className="text-3xl font-bold">AI-powered protection. Built in.</h2>
               <p className="text-gray-400 mt-2 max-w-xl mx-auto">
-                Anomaly detection, health scoring, self-healing, and sensitive data discovery — built on statistical ML, not expensive LLM APIs.
+                Anomaly detection, health scoring, self-healing, and sensitive data discovery — intelligence included at every tier.
               </p>
             </div>
           </FadeUp>

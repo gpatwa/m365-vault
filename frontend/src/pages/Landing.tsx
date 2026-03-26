@@ -53,50 +53,71 @@ function CyberRecoveryStory() {
   const [phase, setPhase] = useState(0);
   const [autoPlay, setAutoPlay] = useState(true);
 
+  // Continuous loop — cycles through all phases, pauses at end, restarts
   useEffect(() => {
     if (!inView || !autoPlay) return;
-    const timers = [
-      setTimeout(() => setPhase(1), 800),
-      setTimeout(() => setPhase(2), 2800),
-      setTimeout(() => setPhase(3), 5000),
-      setTimeout(() => setPhase(4), 7200),
-      setTimeout(() => setPhase(5), 9400),
-      setTimeout(() => setPhase(6), 11600),
-    ];
-    return () => timers.forEach(clearTimeout);
+    const PHASE_DELAY = 2000; // ms per phase
+    const PAUSE_AT_END = 3000; // pause before restart
+    const TOTAL_CYCLE = 6 * PHASE_DELAY + PAUSE_AT_END;
+
+    const runCycle = () => {
+      setPhase(0);
+      const timers = [
+        setTimeout(() => setPhase(1), 600),
+        setTimeout(() => setPhase(2), PHASE_DELAY * 1),
+        setTimeout(() => setPhase(3), PHASE_DELAY * 2),
+        setTimeout(() => setPhase(4), PHASE_DELAY * 3),
+        setTimeout(() => setPhase(5), PHASE_DELAY * 4),
+        setTimeout(() => setPhase(6), PHASE_DELAY * 5),
+      ];
+      return timers;
+    };
+
+    let timers = runCycle();
+    const interval = setInterval(() => {
+      timers.forEach(clearTimeout);
+      timers = runCycle();
+    }, TOTAL_CYCLE);
+
+    return () => {
+      timers.forEach(clearTimeout);
+      clearInterval(interval);
+    };
   }, [inView, autoPlay]);
 
+  // Cohesive color palette: blue → indigo → rose → amber → blue → blue
+  // Matches landing page blue/indigo brand colors, with rose for the crisis moment
   const PHASES = [
-    { num: 1, label: 'PROTECT', emoji: '🛡️', color: 'from-blue-500 to-blue-600', border: 'border-blue-400', bg: 'bg-blue-950', glow: 'shadow-blue-500/20',
+    { num: 1, label: 'PROTECT', emoji: '🛡️', color: 'from-blue-500 to-blue-600', border: 'border-blue-500/40', bg: 'bg-gray-900', glow: 'shadow-blue-500/10',
       title: 'Daily encrypted backups running',
       detail: 'AES-256-GCM • 5 workloads • WORM immutable',
       visual: '████████████████ 100%',
-      items: ['📧 2,847 emails', '📁 1,203 files', '💬 892 messages', '🔑 188 identity objects'] },
-    { num: 2, label: 'MONITOR', emoji: '🧠', color: 'from-indigo-500 to-indigo-600', border: 'border-indigo-400', bg: 'bg-indigo-950', glow: 'shadow-indigo-500/20',
+      items: ['📧 2,847 emails backed up', '📁 1,203 files secured', '💬 892 messages archived', '🔑 188 identity objects saved'] },
+    { num: 2, label: 'MONITOR', emoji: '🧠', color: 'from-blue-400 to-indigo-500', border: 'border-indigo-500/40', bg: 'bg-gray-900', glow: 'shadow-indigo-500/10',
       title: 'AI learns your normal patterns',
       detail: 'Baselines • Z-score analysis • Trend detection',
       visual: '📊 ▁▂▃▄▅▆▇█▇▆▅▄▃▂▁',
       items: ['Item count: 5,130 ± 42', 'Size: 26.5MB ± 1.2MB', 'Error rate: 1.2% ± 0.3%', 'Duration: 4.2min ± 0.8min'] },
-    { num: 3, label: 'DETECT', emoji: '🚨', color: 'from-red-500 to-red-600', border: 'border-red-400', bg: 'bg-red-950', glow: 'shadow-red-500/30',
+    { num: 3, label: 'DETECT', emoji: '🚨', color: 'from-rose-500 to-red-600', border: 'border-rose-500/50', bg: 'bg-gray-900', glow: 'shadow-rose-500/20',
       title: '⚠️ ANOMALY: 1,847 files renamed to .encrypted',
       detail: 'Z-score: 8.4 • Severity: CRITICAL • Auto-alert sent',
       visual: '🔴 ▁▂▃▄▅▆▇████████████',
-      items: ['OneDrive: 1,847 files changed', 'Extension: .docx → .encrypted', 'Time window: 14 minutes', 'Affected users: 3 accounts'] },
-    { num: 4, label: 'RESPOND', emoji: '⚡', color: 'from-amber-500 to-amber-600', border: 'border-amber-400', bg: 'bg-amber-950', glow: 'shadow-amber-500/20',
+      items: ['OneDrive: 1,847 files changed', 'Extension: .docx → .encrypted', 'Time window: 14 minutes', 'Affected: 3 user accounts'] },
+    { num: 4, label: 'RESPOND', emoji: '⚡', color: 'from-amber-400 to-amber-500', border: 'border-amber-500/40', bg: 'bg-gray-900', glow: 'shadow-amber-500/10',
       title: 'Auto-pause backups • Isolate clean point',
       detail: 'Circuit breaker active • Malware scan queued',
       visual: '🔒 Backup paused → Scanning...',
-      items: ['✅ Last clean: 2h ago (Snapshot #847)', '🔍 Scanning backup for malware', '🛑 New backups paused for 3 accounts', '📧 Alert sent to admin@company.com'] },
-    { num: 5, label: 'RECOVER', emoji: '🔄', color: 'from-green-500 to-green-600', border: 'border-green-400', bg: 'bg-green-950', glow: 'shadow-green-500/20',
+      items: ['✅ Last clean: 2h ago (#847)', '🔍 Scanning backup for malware', '🛑 Backups paused for 3 accounts', '📧 Alert sent to admin'] },
+    { num: 5, label: 'RECOVER', emoji: '🔄', color: 'from-blue-400 to-blue-500', border: 'border-blue-500/40', bg: 'bg-gray-900', glow: 'shadow-blue-500/10',
       title: 'One-click restore from clean snapshot',
       detail: 'Snapshot #847 • 5,130 items • WORM-verified',
       visual: '████████████░░░░ 78%',
       items: ['📧 2,847 emails restored', '📁 1,203 files restored', '💬 892 messages restored', '⏱️ Estimated: 12 minutes'] },
-    { num: 6, label: 'VERIFY', emoji: '✅', color: 'from-emerald-500 to-emerald-600', border: 'border-emerald-400', bg: 'bg-emerald-950', glow: 'shadow-emerald-500/20',
-      title: '100% recovery verified — SHA-256 checksums match',
+    { num: 6, label: 'VERIFY', emoji: '✅', color: 'from-emerald-400 to-green-500', border: 'border-emerald-500/40', bg: 'bg-gray-900', glow: 'shadow-emerald-500/10',
+      title: '100% recovery verified — checksums match',
       detail: 'All 5,130 items validated • Zero data loss',
       visual: '████████████████ 100% ✓',
-      items: ['✅ 5,130/5,130 items verified', '✅ All checksums match', '✅ Backups resumed normally', '✅ Incident report generated'] },
+      items: ['✅ 5,130/5,130 items verified', '✅ All SHA-256 checksums match', '✅ Backups resumed normally', '✅ Incident report generated'] },
   ];
 
   const current = PHASES[phase > 0 ? phase - 1 : 0];
@@ -108,7 +129,7 @@ function CyberRecoveryStory() {
         {/* Timeline line */}
         <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-800 rounded">
           <div
-            className="h-full rounded transition-all duration-1000 bg-gradient-to-r from-blue-500 via-red-500 to-emerald-500"
+            className="h-full rounded transition-all duration-1000 bg-gradient-to-r from-blue-500 via-rose-500 to-emerald-500"
             style={{ width: `${Math.max(((phase) / 6) * 100, 0)}%` }}
           />
         </div>
@@ -312,7 +333,7 @@ export default function Landing() {
       </section>
 
       {/* ═══ SECTION 2: CYBER RECOVERY STORY — Cinematic Animation ═══ */}
-      <section id="how-it-works" className="py-20 px-6 bg-gray-950">
+      <section id="how-it-works" className="py-20 px-6 bg-gradient-to-b from-gray-900 via-gray-900 to-gray-950">
         <div className="max-w-5xl mx-auto">
           <FadeUp>
             <div className="text-center mb-12">

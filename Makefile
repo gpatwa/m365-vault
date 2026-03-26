@@ -294,6 +294,10 @@ setup: check-prereqs ## Full first-time local setup: install deps + seed data
 	@echo ""
 	@echo "Setup complete! Run 'make dev' to start."
 
+.PHONY: benchmark
+benchmark: ## Run performance benchmark suite against local or remote API
+	@python3 scripts/benchmark.py
+
 .PHONY: security-scan
 security-scan: ## Run automated security audit (static analysis, dependency scan, OWASP checks)
 	@bash scripts/security-audit.sh

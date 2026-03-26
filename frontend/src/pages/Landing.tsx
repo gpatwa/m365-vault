@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Shield, Mail, HardDrive, Globe, MessageSquare, KeyRound,
-  AlertTriangle, ArrowRight, Lock, Server, Check, X,
-  Zap, Eye, Brain, ShieldCheck, ChevronRight,
+  AlertTriangle, ArrowRight, Server, Check, X,
+  Eye, Brain, ShieldCheck, ChevronRight,
 } from 'lucide-react';
 
 // ── Scroll animation hook ──
@@ -47,119 +47,159 @@ function Counter({ target, suffix = '' }: { target: number; suffix?: string }) {
   return <span ref={ref}>{count}{suffix}</span>;
 }
 
-// ── Animated Data Flow ──
-function AnimatedFlow() {
-  const { ref, inView } = useInView(0.3);
-  const [step, setStep] = useState(0);
+// ── Cyber Recovery Story — Cinematic 6-Phase Animation ──
+function CyberRecoveryStory() {
+  const { ref, inView } = useInView(0.2);
+  const [phase, setPhase] = useState(0);
+  const [autoPlay, setAutoPlay] = useState(true);
 
   useEffect(() => {
-    if (!inView) return;
+    if (!inView || !autoPlay) return;
     const timers = [
-      setTimeout(() => setStep(1), 500),
-      setTimeout(() => setStep(2), 1500),
-      setTimeout(() => setStep(3), 2500),
+      setTimeout(() => setPhase(1), 800),
+      setTimeout(() => setPhase(2), 2800),
+      setTimeout(() => setPhase(3), 5000),
+      setTimeout(() => setPhase(4), 7200),
+      setTimeout(() => setPhase(5), 9400),
+      setTimeout(() => setPhase(6), 11600),
     ];
     return () => timers.forEach(clearTimeout);
-  }, [inView]);
+  }, [inView, autoPlay]);
+
+  const PHASES = [
+    { num: 1, label: 'PROTECT', emoji: '🛡️', color: 'from-blue-500 to-blue-600', border: 'border-blue-400', bg: 'bg-blue-950', glow: 'shadow-blue-500/20',
+      title: 'Daily encrypted backups running',
+      detail: 'AES-256-GCM • 5 workloads • WORM immutable',
+      visual: '████████████████ 100%',
+      items: ['📧 2,847 emails', '📁 1,203 files', '💬 892 messages', '🔑 188 identity objects'] },
+    { num: 2, label: 'MONITOR', emoji: '🧠', color: 'from-indigo-500 to-indigo-600', border: 'border-indigo-400', bg: 'bg-indigo-950', glow: 'shadow-indigo-500/20',
+      title: 'AI learns your normal patterns',
+      detail: 'Baselines • Z-score analysis • Trend detection',
+      visual: '📊 ▁▂▃▄▅▆▇█▇▆▅▄▃▂▁',
+      items: ['Item count: 5,130 ± 42', 'Size: 26.5MB ± 1.2MB', 'Error rate: 1.2% ± 0.3%', 'Duration: 4.2min ± 0.8min'] },
+    { num: 3, label: 'DETECT', emoji: '🚨', color: 'from-red-500 to-red-600', border: 'border-red-400', bg: 'bg-red-950', glow: 'shadow-red-500/30',
+      title: '⚠️ ANOMALY: 1,847 files renamed to .encrypted',
+      detail: 'Z-score: 8.4 • Severity: CRITICAL • Auto-alert sent',
+      visual: '🔴 ▁▂▃▄▅▆▇████████████',
+      items: ['OneDrive: 1,847 files changed', 'Extension: .docx → .encrypted', 'Time window: 14 minutes', 'Affected users: 3 accounts'] },
+    { num: 4, label: 'RESPOND', emoji: '⚡', color: 'from-amber-500 to-amber-600', border: 'border-amber-400', bg: 'bg-amber-950', glow: 'shadow-amber-500/20',
+      title: 'Auto-pause backups • Isolate clean point',
+      detail: 'Circuit breaker active • Malware scan queued',
+      visual: '🔒 Backup paused → Scanning...',
+      items: ['✅ Last clean: 2h ago (Snapshot #847)', '🔍 Scanning backup for malware', '🛑 New backups paused for 3 accounts', '📧 Alert sent to admin@company.com'] },
+    { num: 5, label: 'RECOVER', emoji: '🔄', color: 'from-green-500 to-green-600', border: 'border-green-400', bg: 'bg-green-950', glow: 'shadow-green-500/20',
+      title: 'One-click restore from clean snapshot',
+      detail: 'Snapshot #847 • 5,130 items • WORM-verified',
+      visual: '████████████░░░░ 78%',
+      items: ['📧 2,847 emails restored', '📁 1,203 files restored', '💬 892 messages restored', '⏱️ Estimated: 12 minutes'] },
+    { num: 6, label: 'VERIFY', emoji: '✅', color: 'from-emerald-500 to-emerald-600', border: 'border-emerald-400', bg: 'bg-emerald-950', glow: 'shadow-emerald-500/20',
+      title: '100% recovery verified — SHA-256 checksums match',
+      detail: 'All 5,130 items validated • Zero data loss',
+      visual: '████████████████ 100% ✓',
+      items: ['✅ 5,130/5,130 items verified', '✅ All checksums match', '✅ Backups resumed normally', '✅ Incident report generated'] },
+  ];
+
+  const current = PHASES[phase > 0 ? phase - 1 : 0];
 
   return (
-    <div ref={ref} className="max-w-4xl mx-auto">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
-        {/* Connecting lines (desktop) */}
-        <div className="hidden md:block absolute top-1/2 left-[33%] w-[34%] h-0.5 -translate-y-1/2">
-          <div className={`h-full bg-gradient-to-r from-blue-400 to-green-400 transition-all duration-1000 ${step >= 2 ? 'w-full' : 'w-0'}`} />
+    <div ref={ref} className="max-w-5xl mx-auto">
+      {/* Phase selector — timeline bar */}
+      <div className="flex items-center justify-between mb-8 relative">
+        {/* Timeline line */}
+        <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-800 rounded">
+          <div
+            className="h-full rounded transition-all duration-1000 bg-gradient-to-r from-blue-500 via-red-500 to-emerald-500"
+            style={{ width: `${Math.max(((phase) / 6) * 100, 0)}%` }}
+          />
         </div>
-        <div className="hidden md:block absolute top-1/2 left-[67%] w-[33%] h-0.5 -translate-y-1/2">
-          <div className={`h-full bg-gradient-to-r from-green-400 to-emerald-400 transition-all duration-1000 ${step >= 3 ? 'w-full' : 'w-0'}`} />
-        </div>
+        {PHASES.map((p) => (
+          <button
+            key={p.num}
+            onClick={() => { setPhase(p.num); setAutoPlay(false); }}
+            className={`relative z-10 flex flex-col items-center gap-1.5 transition-all duration-500 ${phase >= p.num ? 'opacity-100 scale-100' : 'opacity-40 scale-90'}`}
+          >
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all duration-500 ${
+              phase >= p.num
+                ? `bg-gradient-to-br ${p.color} shadow-lg ${p.glow} ring-2 ring-offset-2 ring-offset-gray-900 ${p.border}`
+                : 'bg-gray-800 border border-gray-700'
+            }`}>
+              {phase >= p.num ? p.emoji : <span className="text-xs text-gray-500">{p.num}</span>}
+            </div>
+            <span className={`text-[10px] font-bold tracking-wider transition-colors ${phase >= p.num ? 'text-gray-300' : 'text-gray-600'}`}>
+              {p.label}
+            </span>
+          </button>
+        ))}
+      </div>
 
-        {/* Step 1: Your M365 Data */}
-        <div className={`relative bg-white rounded-2xl border-2 p-6 transition-all duration-700 ${step >= 1 ? 'border-blue-300 shadow-lg shadow-blue-100 opacity-100 translate-y-0' : 'border-gray-200 opacity-40 translate-y-4'}`}>
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-sm font-bold text-blue-600">1</div>
-            <span className="font-semibold text-gray-900">Connect</span>
-          </div>
-          <p className="text-sm text-gray-500 mb-4">Your M365 tenant connects in 60 seconds</p>
-          <div className="flex flex-wrap gap-2">
-            {[
-              { icon: Mail, label: 'Emails', color: 'bg-blue-50 text-blue-600' },
-              { icon: HardDrive, label: 'Files', color: 'bg-purple-50 text-purple-600' },
-              { icon: Globe, label: 'Sites', color: 'bg-green-50 text-green-600' },
-              { icon: MessageSquare, label: 'Chats', color: 'bg-pink-50 text-pink-600' },
-              { icon: KeyRound, label: 'Identity', color: 'bg-amber-50 text-amber-600' },
-            ].map(item => (
-              <div key={item.label} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium ${item.color}`}>
-                <item.icon className="w-3.5 h-3.5" /> {item.label}
+      {/* Active phase detail card */}
+      {phase > 0 && (
+        <div className={`relative rounded-2xl border overflow-hidden transition-all duration-700 ${current.border} ${current.bg} shadow-2xl ${current.glow}`}>
+          {/* Pulsing background glow for DETECT phase */}
+          {phase === 3 && (
+            <div className="absolute inset-0 bg-red-500/5 animate-pulse" />
+          )}
+
+          <div className="relative p-8">
+            {/* Header */}
+            <div className="flex items-center gap-4 mb-6">
+              <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${current.color} flex items-center justify-center text-2xl shadow-lg`}>
+                {current.emoji}
               </div>
-            ))}
-          </div>
-          {/* Animated particles */}
-          {step >= 1 && (
-            <div className="absolute -right-3 top-1/2 -translate-y-1/2 hidden md:flex flex-col gap-1">
-              {[0, 1, 2].map(i => (
-                <div key={i} className="w-2 h-2 bg-blue-400 rounded-full animate-ping" style={{ animationDelay: `${i * 300}ms`, animationDuration: '1.5s' }} />
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-gray-400 tracking-widest">PHASE {current.num}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r ${current.color} text-white`}>
+                    {current.label}
+                  </span>
+                </div>
+                <h3 className="text-xl font-bold text-white mt-1">{current.title}</h3>
+                <p className="text-sm text-gray-400 mt-0.5">{current.detail}</p>
+              </div>
+            </div>
+
+            {/* Progress visualization */}
+            <div className="bg-black/30 rounded-xl p-4 mb-6 font-mono text-sm">
+              <div className="text-gray-500 mb-1">$ shieldio status</div>
+              <div className={`transition-all duration-500 ${phase === 3 ? 'text-red-400' : phase >= 5 ? 'text-green-400' : 'text-blue-400'}`}>
+                {current.visual}
+              </div>
+            </div>
+
+            {/* Detail items grid */}
+            <div className="grid grid-cols-2 gap-3">
+              {current.items.map((item, idx) => (
+                <div
+                  key={idx}
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-sm text-gray-300 transition-all duration-500`}
+                  style={{ transitionDelay: `${idx * 150}ms`, opacity: phase >= current.num ? 1 : 0, transform: phase >= current.num ? 'translateX(0)' : 'translateX(-10px)' }}
+                >
+                  {item}
+                </div>
               ))}
             </div>
-          )}
+          </div>
         </div>
+      )}
 
-        {/* Step 2: Shieldio Engine */}
-        <div className={`relative bg-white rounded-2xl border-2 p-6 transition-all duration-700 delay-500 ${step >= 2 ? 'border-green-300 shadow-lg shadow-green-100 opacity-100 translate-y-0' : 'border-gray-200 opacity-40 translate-y-4'}`}>
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center text-sm font-bold text-green-600">2</div>
-            <span className="font-semibold text-gray-900">Protect</span>
-          </div>
-          <p className="text-sm text-gray-500 mb-4">Shieldio encrypts, compresses, deduplicates</p>
-          <div className="space-y-2">
-            {[
-              { icon: Lock, label: 'AES-256-GCM encrypt', active: step >= 2 },
-              { icon: Zap, label: 'zstd compress (2.9x)', active: step >= 2 },
-              { icon: Eye, label: 'SHA-256 verify', active: step >= 2 },
-              { icon: Brain, label: 'Anomaly baseline', active: step >= 2 },
-            ].map((item, i) => (
-              <div key={item.label} className={`flex items-center gap-2 text-xs transition-all duration-500 ${item.active ? 'text-gray-700 opacity-100' : 'text-gray-300 opacity-50'}`} style={{ transitionDelay: `${i * 200 + 500}ms` }}>
-                <item.icon className="w-3.5 h-3.5 text-green-500" />
-                {item.label}
-              </div>
-            ))}
-          </div>
-          {step >= 2 && (
-            <div className="absolute -right-3 top-1/2 -translate-y-1/2 hidden md:flex flex-col gap-1">
-              {[0, 1, 2].map(i => (
-                <div key={i} className="w-2 h-2 bg-green-400 rounded-full animate-ping" style={{ animationDelay: `${i * 300}ms`, animationDuration: '1.5s' }} />
-              ))}
-            </div>
-          )}
+      {/* Pre-animation state */}
+      {phase === 0 && (
+        <div className="text-center py-12 text-gray-500">
+          <div className="text-4xl mb-3 animate-pulse">🎬</div>
+          <p className="text-sm">Scroll down to watch the story unfold...</p>
         </div>
+      )}
 
-        {/* Step 3: Protected */}
-        <div className={`bg-white rounded-2xl border-2 p-6 transition-all duration-700 delay-1000 ${step >= 3 ? 'border-emerald-300 shadow-lg shadow-emerald-100 opacity-100 translate-y-0' : 'border-gray-200 opacity-40 translate-y-4'}`}>
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center text-sm font-bold text-emerald-600">3</div>
-            <span className="font-semibold text-gray-900">Secure</span>
-          </div>
-          <p className="text-sm text-gray-500 mb-4">Sleep well — your data is protected</p>
-          <div className="space-y-2">
-            {[
-              { icon: ShieldCheck, label: 'WORM immutable', color: 'text-emerald-500' },
-              { icon: Brain, label: 'AI-monitored 24/7', color: 'text-emerald-500' },
-              { icon: Zap, label: 'Self-healing retry', color: 'text-emerald-500' },
-              { icon: AlertTriangle, label: 'Anomaly alerts', color: 'text-emerald-500' },
-            ].map((item, i) => (
-              <div key={item.label} className={`flex items-center gap-2 text-xs transition-all duration-500 ${step >= 3 ? 'text-gray-700 opacity-100' : 'text-gray-300 opacity-50'}`} style={{ transitionDelay: `${i * 200 + 1000}ms` }}>
-                <item.icon className={`w-3.5 h-3.5 ${item.color}`} />
-                {item.label}
-              </div>
-            ))}
-          </div>
-          {step >= 3 && (
-            <div className="absolute top-3 right-3">
-              <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center animate-bounce">
-                <Check className="w-4 h-4 text-white" />
-              </div>
-            </div>
-          )}
-        </div>
+      {/* Auto/Manual toggle */}
+      <div className="flex justify-center mt-6 gap-4">
+        {!autoPlay && (
+          <button
+            onClick={() => { setPhase(0); setAutoPlay(true); }}
+            className="px-4 py-1.5 bg-white/10 text-gray-400 text-xs rounded-lg hover:bg-white/20 hover:text-white transition-colors"
+          >
+            ▶ Replay
+          </button>
+        )}
       </div>
     </div>
   );
@@ -271,16 +311,19 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ═══ SECTION 2: HOW IT WORKS — Animated Flow ═══ */}
-      <section id="how-it-works" className="py-20 px-6 bg-gray-50">
+      {/* ═══ SECTION 2: CYBER RECOVERY STORY — Cinematic Animation ═══ */}
+      <section id="how-it-works" className="py-20 px-6 bg-gray-950">
         <div className="max-w-5xl mx-auto">
           <FadeUp>
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900">Protected in 3 steps</h2>
-              <p className="text-gray-500 mt-2">Watch your data flow from vulnerable to vault-secured</p>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-500/10 text-red-400 rounded-full text-xs font-medium mb-4">
+                <AlertTriangle className="w-3.5 h-3.5" /> Ransomware Scenario
+              </div>
+              <h2 className="text-3xl font-bold text-white">Complete cyber recovery in 6 phases</h2>
+              <p className="text-gray-400 mt-2 max-w-xl mx-auto">Watch how Shieldio detects a ransomware attack and recovers every file — automatically</p>
             </div>
           </FadeUp>
-          <AnimatedFlow />
+          <CyberRecoveryStory />
         </div>
       </section>
 

@@ -5,32 +5,41 @@ import { Shield, ArrowLeft, FileText } from 'lucide-react';
 import { api } from '../api/client';
 import mermaid from 'mermaid';
 
-// Initialize mermaid
 mermaid.initialize({
   startOnLoad: false,
   theme: 'neutral',
   securityLevel: 'loose',
   fontFamily: 'Inter, system-ui, sans-serif',
-  flowchart: { curve: 'basis', padding: 15 },
 });
 
-// Render markdown to HTML with Mermaid support
+/**
+ * Markdown to HTML renderer with Mermaid support.
+ *
+ * Key: Extract ALL code blocks first (mermaid + regular) into placeholders,
+ * then run markdown transforms, then restore code blocks untouched.
+ */
 function renderMarkdown(md: string): string {
-  let html = md
-    // Mermaid code blocks — render as mermaid divs
-    .replace(/```mermaid\n([\s\S]*?)```/g, (_match, code) => {
-      const id = `mermaid-${Math.random().toString(36).slice(2, 8)}`;
-      return `<div class="mermaid-container my-6"><pre class="mermaid" id="${id}">${code.trim()}</pre></div>`;
-    })
-    // Regular code blocks — preserve ASCII diagrams with proper monospace
-    .replace(/```(\w+)?\n([\s\S]*?)```/g, (_match, lang, code) => {
-      const hasBoxChars = /[┌┐└┘├┤┬┴─│═╔╗╚╝╠╣╦╩]/.test(code);
-      if (hasBoxChars) {
-        return `<div class="my-4 bg-gray-900 rounded-xl p-4 overflow-x-auto"><pre class="text-xs text-gray-100 font-mono leading-relaxed whitespace-pre">${code}</pre></div>`;
-      }
-      const langClass = lang ? `language-${lang}` : '';
-      return `<div class="my-4 bg-gray-900 rounded-xl p-4 overflow-x-auto"><pre class="text-sm text-gray-100 font-mono ${langClass}">${code}</pre></div>`;
-    })
+  const placeholders: { type: 'mermaid' | 'code'; content: string; lang?: string }[] = [];
+
+  // 1. Extract mermaid blocks
+  let text = md.replace(/```mermaid\n([\s\S]*?)```/g, (_, code) => {
+    const idx = placeholders.length;
+    placeholders.push({ type: 'mermaid', content: code.trim() });
+    return `\n%%PLACEHOLDER_${idx}%%\n`;
+  });
+
+  // 2. Extract regular code blocks
+  text = text.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+    const idx = placeholders.length;
+    placeholders.push({ type: 'code', content: code, lang: lang || '' });
+    return `\n%%PLACEHOLDER_${idx}%%\n`;
+  });
+
+  // 3. Extract inline code
+  text = text.replace(/`([^`]+)`/g, '<code class="bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded text-xs font-mono">$1</code>');
+
+  // 4. Markdown transforms (safe — no code blocks to corrupt)
+  text = text
     // Headers
     .replace(/^#### (.+)$/gm, '<h4 class="text-base font-semibold text-gray-800 mt-6 mb-2">$1</h4>')
     .replace(/^### (.+)$/gm, '<h3 class="text-lg font-semibold text-gray-800 mt-8 mb-3">$1</h3>')
@@ -40,42 +49,49 @@ function renderMarkdown(md: string): string {
     .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
     .replace(/\*\*(.+?)\*\*/g, '<strong class="text-gray-900">$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    // Inline code
-    .replace(/`([^`]+)`/g, '<code class="bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded text-xs font-mono">$1</code>')
     // Links
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-600 hover:underline" target="_blank" rel="noopener">$1</a>')
-    // Horizontal rule
+    // Horizontal rules
     .replace(/^---$/gm, '<hr class="my-8 border-gray-200" />')
-    // Tables
+    // Tables: convert | rows to HTML
     .replace(/^(\|.+\|)$/gm, (line) => {
-      if (/^\|[\s:-]+\|$/.test(line)) return ''; // Skip separator
+      if (/^\|[\s:-]+\|$/.test(line)) return '';
       const cells = line.split('|').filter(c => c.trim() !== '');
-      // Detect if this is a header row (first table row)
-      const cellHtml = cells.map(c =>
+      return '<tr class="hover:bg-gray-50">' + cells.map(c =>
         `<td class="px-4 py-2.5 text-sm text-gray-700 border-b border-gray-100">${c.trim()}</td>`
-      ).join('');
-      return `<tr class="hover:bg-gray-50">${cellHtml}</tr>`;
+      ).join('') + '</tr>';
     })
-    // Wrap consecutive table rows
+    // Wrap table rows
     .replace(/(<tr[^>]*>.*<\/tr>\n?)+/g, (block) => {
-      // First row becomes header
       const rows = block.trim().split('\n');
-      if (rows.length > 0) {
-        const headerRow = rows[0].replace(/<td/g, '<th').replace(/<\/td>/g, '</th>').replace(/text-gray-700/g, 'text-gray-600 font-medium');
-        const bodyRows = rows.slice(1).join('\n');
-        return `<div class="overflow-x-auto my-6 rounded-xl border border-gray-200"><table class="w-full text-sm"><thead class="bg-gray-50">${headerRow}</thead><tbody>${bodyRows}</tbody></table></div>`;
-      }
-      return block;
+      const header = rows[0]?.replace(/<td/g, '<th').replace(/<\/td>/g, '</th>').replace(/text-gray-700/g, 'text-gray-600 font-medium') || '';
+      const body = rows.slice(1).join('\n');
+      return `<div class="overflow-x-auto my-6 rounded-xl border border-gray-200"><table class="w-full text-sm"><thead class="bg-gray-50">${header}</thead><tbody>${body}</tbody></table></div>`;
     })
-    // Unordered lists
+    // Lists
     .replace(/^- (.+)$/gm, '<li class="text-sm text-gray-700 leading-relaxed">$1</li>')
     .replace(/(<li[^>]*>.*<\/li>\n?)+/g, '<ul class="list-disc ml-5 space-y-1.5 my-3">$&</ul>')
-    // Numbered lists
-    .replace(/^\d+\. (.+)$/gm, '<li class="text-sm text-gray-700 leading-relaxed">$1</li>')
-    // Paragraphs
-    .replace(/^(?!<[a-z/]|$|\s*$)(.+)$/gm, '<p class="text-sm text-gray-700 leading-relaxed my-2">$1</p>');
+    // Paragraphs (lines not already HTML)
+    .replace(/^(?!<[a-z/]|%%|$|\s*$)(.+)$/gm, '<p class="text-sm text-gray-700 leading-relaxed my-2">$1</p>');
 
-  return html;
+  // 5. Restore placeholders
+  text = text.replace(/%%PLACEHOLDER_(\d+)%%/g, (_, idxStr) => {
+    const idx = parseInt(idxStr);
+    const block = placeholders[idx];
+    if (!block) return '';
+
+    if (block.type === 'mermaid') {
+      const id = `mermaid-${Date.now()}-${idx}`;
+      return `<div class="my-6 flex justify-center"><pre class="mermaid" id="${id}">${block.content}</pre></div>`;
+    }
+
+    // Regular code block
+    const hasBoxChars = /[┌┐└┘├┤┬┴─│═╔╗╚╝╠╣╦╩]/.test(block.content);
+    const cls = hasBoxChars ? 'text-xs leading-relaxed whitespace-pre' : 'text-sm';
+    return `<div class="my-4 bg-gray-900 rounded-xl p-4 overflow-x-auto"><pre class="${cls} text-gray-100 font-mono">${block.content}</pre></div>`;
+  });
+
+  return text;
 }
 
 export default function DocViewer() {
@@ -88,12 +104,19 @@ export default function DocViewer() {
     enabled: !!filename,
   });
 
-  // Render mermaid diagrams after content loads
+  // Render mermaid after content loads
   useEffect(() => {
     if (data && contentRef.current) {
       const elements = contentRef.current.querySelectorAll('.mermaid');
       if (elements.length > 0) {
-        mermaid.run({ nodes: elements as any });
+        // Small delay to ensure DOM is ready
+        setTimeout(() => {
+          try {
+            mermaid.run({ nodes: elements as any });
+          } catch (e) {
+            console.error('Mermaid render error:', e);
+          }
+        }, 100);
       }
     }
   }, [data]);
@@ -102,7 +125,6 @@ export default function DocViewer() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Nav */}
       <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-sm border-b border-gray-100">
         <div className="max-w-4xl mx-auto px-6 py-3 flex items-center justify-between">
           <Link to="/welcome" className="flex items-center gap-2">
@@ -134,14 +156,12 @@ export default function DocViewer() {
 
         {data && (
           <>
-            {/* Breadcrumb */}
             <div className="flex items-center gap-2 text-sm text-gray-400 mt-4 mb-6">
               <Link to="/docs" className="hover:text-gray-600">Docs</Link>
               <span>/</span>
               <span className="text-gray-700 flex items-center gap-1"><FileText className="w-3.5 h-3.5" /> {title}</span>
             </div>
 
-            {/* Rendered content */}
             <article
               ref={contentRef}
               className="max-w-none"

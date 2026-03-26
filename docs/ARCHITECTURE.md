@@ -11,47 +11,40 @@ stores encrypted point-in-time snapshots, and provides granular restore capabili
 
 ```mermaid
 graph LR
-    A["🖥️ React Frontend"] --> B["⚡ FastAPI Backend"]
-    B --> C["📊 Microsoft Graph API"]
-    B --> D["🗄️ PostgreSQL"]
-    B --> E["📦 Azure Blob Storage"]
-    B --> F["🔐 Key Vault"]
+    A[React Frontend] --> B[FastAPI Backend]
+    B --> C[Microsoft Graph API]
+    B --> D[(PostgreSQL)]
+    B --> E[(Blob Storage)]
+    B --> F[(Key Vault)]
 ```
 
 **Backup Data Flow:**
 
 ```mermaid
 graph LR
-    M365["Microsoft 365"] -->|Graph API| Discover["Discover Objects"]
-    Discover --> Schedule["SLA Scheduler"]
-    Schedule --> Worker["Backup Worker"]
-    Worker -->|Compress| Pipe["zstd → SHA-256 → AES-256"]
-    Pipe --> Store["Encrypted Blob Storage"]
-    Store --> Catalog["Snapshot Catalog in PostgreSQL"]
+    A[Microsoft 365] -->|Graph API| B[Discover]
+    B --> C[Scheduler]
+    C --> D[Worker]
+    D --> E[Compress + Hash + Encrypt]
+    E --> F[(Encrypted Storage)]
 ```
 
 **Control Plane vs Data Plane:**
 
 ```mermaid
 graph TB
-    subgraph CP["Control Plane"]
-        API["REST API"]
-        Sched["Scheduler"]
-        Smart["Smart Engine"]
-        UI["Dashboard"]
+    subgraph CP[Control Plane]
+        A1[REST API]
+        A2[Scheduler]
+        A3[Smart Engine]
     end
-
-    subgraph DP["Data Plane"]
-        Worker["Backup Workers"]
-        Encrypt["Encryption"]
-        Storage["Blob Storage"]
+    subgraph DP[Data Plane]
+        B1[Backup Workers]
+        B2[Encryption]
+        B3[Blob Storage]
     end
-
     CP -->|Redis Queue| DP
     DP -->|Results| CP
-
-    style CP fill:#dbeafe,stroke:#3b82f6
-    style DP fill:#f0fdf4,stroke:#22c55e
 ```
 
 ```

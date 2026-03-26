@@ -18,21 +18,24 @@ This document describes the security controls, encryption architecture, access c
 
 ```mermaid
 graph LR
-    A["📧 Raw Data"] --> B["🗜️ zstd Compress"] --> C["#️⃣ SHA-256 Hash"] --> D["🔒 AES-256-GCM"] --> E["📦 Encrypted Blob"]
-    F["🔑 Per-Tenant DEK"] --> D
-    G["🔐 Master KEK"] --> F
+    A[Raw Data] --> B[zstd Compress]
+    B --> C[SHA-256 Hash]
+    C --> D[AES-256-GCM Encrypt]
+    D --> E[(Encrypted Blob)]
+    F[Per-Tenant DEK] --> D
+    G[Master KEK] --> F
 ```
 
 **Key Hierarchy:**
 
 ```mermaid
 graph TB
-    KEK["🔐 Master KEK<br/>(Azure Key Vault)"] --> DEK1["🔑 Tenant A DEK"]
-    KEK --> DEK2["🔑 Tenant B DEK"]
-    KEK --> DEK3["🔑 Tenant C DEK"]
-    DEK1 --> Data1["📦 Tenant A Backups"]
-    DEK2 --> Data2["📦 Tenant B Backups"]
-    DEK3 --> Data3["📦 Tenant C Backups"]
+    KEK[Master KEK in Key Vault] --> DEK1[Tenant A DEK]
+    KEK --> DEK2[Tenant B DEK]
+    KEK --> DEK3[Tenant C DEK]
+    DEK1 --> Data1[(Tenant A Backups)]
+    DEK2 --> Data2[(Tenant B Backups)]
+    DEK3 --> Data3[(Tenant C Backups)]
 ```
 
 ### 1.1 Encryption at Rest
@@ -160,11 +163,11 @@ Role enforcement via `require_role()` dependency on every API endpoint.
 
 ```mermaid
 graph LR
-    User["🌐 User"] --> FE["Frontend<br/>Container App"]
-    FE --> BE["Backend<br/>Container App"]
-    BE --> PG["🗄️ PostgreSQL"]
-    BE --> Blob["📦 Blob Storage"]
-    BE --> KV["🔐 Key Vault"]
+    User[User] --> FE[Frontend Container]
+    FE --> BE[Backend Container]
+    BE --> PG[(PostgreSQL)]
+    BE --> Blob[(Blob Storage)]
+    BE --> KV[(Key Vault)]
 ```
 
 ```

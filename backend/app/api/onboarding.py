@@ -112,9 +112,6 @@ async def oauth_callback(
         state_data = _onboard_states.pop(state)
         platform = state_data["platform"]
 
-    state_data = _onboard_states.pop(state)
-    platform = state_data["platform"]
-
     try:
         connector = get_connector(platform)
         result = await connector.handle_callback(

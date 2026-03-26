@@ -170,15 +170,6 @@ graph LR
     BE --> KV[(Key Vault)]
 ```
 
-```
-Internet → Azure Front Door (TLS termination)
-         → Azure Container Apps (backend API)
-         → Azure Container Apps (frontend)
-         → Azure PostgreSQL Flexible Server
-         → Azure Blob Storage
-         → Azure Key Vault
-```
-
 ### 4.2 Network Security
 
 | Control | Implementation |

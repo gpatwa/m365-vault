@@ -11,22 +11,30 @@ stores encrypted point-in-time snapshots, and provides granular restore capabili
 
 ```mermaid
 graph LR
-    A[React Frontend] --> B[FastAPI Backend]
-    B --> C[Microsoft Graph API]
-    B --> D[(PostgreSQL)]
-    B --> E[(Blob Storage)]
-    B --> F[(Key Vault)]
+    A[React Frontend]:::frontend --> B[FastAPI Backend]:::backend
+    B --> C[Microsoft Graph API]:::external
+    B --> D[(PostgreSQL)]:::storage
+    B --> E[(Blob Storage)]:::storage
+    B --> F[(Key Vault)]:::storage
+    classDef frontend fill:#dbeafe,stroke:#2563eb,color:#1e40af
+    classDef backend fill:#dcfce7,stroke:#16a34a,color:#166534
+    classDef storage fill:#fef3c7,stroke:#d97706,color:#92400e
+    classDef external fill:#fce7f3,stroke:#db2777,color:#9d174d
 ```
 
 **Backup Data Flow:**
 
 ```mermaid
 graph LR
-    A[Microsoft 365] -->|Graph API| B[Discover]
-    B --> C[Scheduler]
-    C --> D[Worker]
-    D --> E[Compress + Hash + Encrypt]
-    E --> F[(Encrypted Storage)]
+    A[Microsoft 365]:::source -->|Graph API| B[Discover]:::process
+    B --> C[Scheduler]:::process
+    C --> D[Worker]:::process
+    D --> E[Compress + Hash + Encrypt]:::secure
+    E --> F[(Encrypted Storage)]:::storage
+    classDef source fill:#dbeafe,stroke:#2563eb,color:#1e40af
+    classDef process fill:#dcfce7,stroke:#16a34a,color:#166534
+    classDef secure fill:#ede9fe,stroke:#7c3aed,color:#5b21b6
+    classDef storage fill:#fef3c7,stroke:#d97706,color:#92400e
 ```
 
 **Control Plane vs Data Plane:**
@@ -34,55 +42,19 @@ graph LR
 ```mermaid
 graph TB
     subgraph CP[Control Plane]
-        A1[REST API]
-        A2[Scheduler]
-        A3[Smart Engine]
+        A1[REST API]:::control
+        A2[Scheduler]:::control
+        A3[Smart Engine]:::control
     end
     subgraph DP[Data Plane]
-        B1[Backup Workers]
-        B2[Encryption]
-        B3[Blob Storage]
+        B1[Backup Workers]:::data
+        B2[Encryption]:::data
+        B3[Blob Storage]:::data
     end
     CP -->|Redis Queue| DP
     DP -->|Results| CP
-```
-
-```
-+---------------------+       +----------------------------+
-|   React 19 SPA      |       |  Microsoft Graph API       |
-|   (Vite + TS)       |       |  graph.microsoft.com/v1.0  |
-|   TanStack Query    |       +------------^---------------+
-+--------+------------+                    |
-         | HTTP/JSON                       | OAuth2 Client
-         v                                 | Credentials
-+--------+----------------------------+    |
-|           FastAPI Backend           |    |
-|  +------+  +--------+  +---------+ |    |
-|  | Auth |  | Router |  | Sched.  | |    |
-|  | (JWT)|  | Layer  |  |(APSched)| |    |
-|  +------+  +---+----+  +----+----+ |    |
-|                |             |      |    |
-|  +-------------v-------------v--+   |    |
-|  |       Service Layer          |   |    |
-|  | Backup | Restore | Discovery |---+    |
-|  | Retry  | Catalog | Graph CLI |        |
-|  +-------------+----------------+        |
-|                |                         |
-|  +-------------v----------------+        |
-|  |        Worker Layer          |        |
-|  | Exchange | OneDrive | SP     |        |
-|  +-------------+----------------+        |
-|                |                         |
-|  +------+------v------+                  |
-|  | SQLAlchemy (async)  |                 |
-|  | SQLite / PostgreSQL |                 |
-|  +------+--------------+                 |
-|         |                                |
-|  +------v--------------+                 |
-|  | Encrypted Blob Store|                 |
-|  | AES-256-GCM (local) |                 |
-|  +----------------------+                |
-+------------------------------------------+
+    classDef control fill:#dbeafe,stroke:#2563eb,color:#1e40af
+    classDef data fill:#dcfce7,stroke:#16a34a,color:#166534
 ```
 
 ### Request Lifecycle
@@ -151,69 +123,42 @@ environment variables or a `.env` file. Key settings groups:
 
 Nine models (eight domain tables plus one join) in `backend/app/models/`:
 
-```
-+----------+       +-------------+        +-----------+
-|  User    |       |   Tenant    |        | SLAPolicy |
-|----------|       |-------------|        |-----------|
-| id (PK)  |       | id (PK)     |        | id (PK)   |
-| username |       | name        |        | name      |
-| email    |       | ms_tenant_id|        | freq_hrs  |
-| pass_hash|       | client_id   |        | ret_days  |
-| role     |       | client_sec* |        | priority  |
-| is_active|       | status      |        | is_locked |
-+----------+       +------+------+        +-----+-----+
-     |                    |                      |
-     |  +----------------+|+---------------------+
-     |  |                 ||
-     |  |   +-------------v|------------+
-     |  |   |  ProtectedObject          |
-     |  |   |---------------------------|
-     |  |   | id (PK)                   |
-     |  |   | tenant_id (FK -> Tenant)  |
-     |  |   | sla_policy_id (FK -> SLA) |
-     |  |   | workload_type (enum)      |
-     |  |   | ms_object_id              |
-     |  |   | status (enum)             |
-     |  |   +-------------+-------------+
-     |  |                 |
-     |  |   +-------------v-------------+
-     |  |   |  BackupJob                |     +----------------+
-     |  |   |---------------------------|     |  Snapshot       |
-     |  |   | id (PK)                   |     |----------------|
-     |  |   | tenant_id (FK)            |     | id (PK)        |
-     |  |   | workload_type             |     | prot_obj_id(FK)|
-     |  |   | sla_policy_id (FK)        |     | snapshot_type  |
-     |  |   | status (enum)             |     | status (enum)  |
-     |  |   | retry_count / max_retries |     | delta_token    |
-     |  |   | retry_of_job_id (self-FK) |     | blob_path      |
-     |  |   | failed_object_ids (JSON)  |     | encryption_key |
-     |  |   +---------------------------+     +-------+--------+
-     |  |                                             |
-     |  |                                   +---------+---------+
-     |  |                                   |                   |
-     |  |                            +------v------+   +--------v-------+
-     |  |                            | SnapshotItem|   | FailedItem     |
-     |  |                            |-------------|   |----------------|
-     |  |                            | id (PK)     |   | id (PK)        |
-     |  |                            | snapshot_id |   | snapshot_id(FK)|
-     |  |                            | item_type   |   | prot_obj_id(FK)|
-     |  |                            | ms_item_id  |   | error_category |
-     |  |                            | blob_path   |   | error_message  |
-     |  |                            | subject     |   | resolution_hint|
-     |  |                            | sender      |   | is_resolved    |
-     |  |                            | file_name   |   | can_retry      |
-     |  |                            +-------------+   +----------------+
-     |  |
-     |  |   +-----------------------+
-     +--+-->|  AuditLog             |
-            |-----------------------|
-            | id (PK)               |
-            | user_id (FK -> User)  |
-            | action                |
-            | resource_type/id      |
-            | severity              |
-            | timestamp             |
-            +-----------------------+
+```mermaid
+erDiagram
+    Tenant ||--o{ ProtectedObject : has
+    SLAPolicy ||--o{ ProtectedObject : governs
+    ProtectedObject ||--o{ Snapshot : produces
+    ProtectedObject ||--o{ BackupJob : triggers
+    Snapshot ||--o{ SnapshotItem : contains
+    Snapshot ||--o{ FailedItem : records
+    User ||--o{ AuditLog : generates
+
+    Tenant {
+        int id PK
+        string name
+        string ms_tenant_id
+        string status
+    }
+    ProtectedObject {
+        int id PK
+        int tenant_id FK
+        int sla_policy_id FK
+        enum workload_type
+        string status
+    }
+    Snapshot {
+        int id PK
+        int protected_object_id FK
+        enum snapshot_type
+        enum status
+        int item_count
+    }
+    BackupJob {
+        int id PK
+        int tenant_id FK
+        enum status
+        int retry_count
+    }
 ```
 
 ### Model Details

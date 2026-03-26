@@ -379,7 +379,7 @@ export default function Landing() {
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/10 text-amber-400 rounded-full text-xs font-medium mb-4">
                 <Brain className="w-3.5 h-3.5" /> AI-Powered Intelligence
               </div>
-              <h2 className="text-3xl font-bold">Smart protection. Zero token cost.</h2>
+              <h2 className="text-3xl font-bold">AI-powered protection. Built in.</h2>
               <p className="text-gray-400 mt-2 max-w-xl mx-auto">
                 Anomaly detection, health scoring, self-healing, and sensitive data discovery — built on statistical ML, not expensive LLM APIs.
               </p>
@@ -579,7 +579,7 @@ export default function Landing() {
               <div className="text-xs font-semibold text-gray-300 uppercase tracking-wider mb-3">Resources</div>
               <div className="space-y-2 text-sm">
                 <a href="https://github.com/gpatwa/m365-vault" className="block hover:text-white">GitHub</a>
-                <Link to="/login" className="block hover:text-white">Documentation</Link>
+                <a href="/docs" className="block hover:text-white">Documentation</a>
               </div>
             </div>
             <div>

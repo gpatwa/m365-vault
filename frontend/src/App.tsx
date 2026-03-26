@@ -26,6 +26,7 @@ import Usage from './pages/Usage';
 import Legal from './pages/Legal';
 import ObjectDetail from './pages/ObjectDetail';
 import SecurityPage from './pages/Security';
+import Docs from './pages/Docs';
 import Performance from './pages/Performance';
 
 const queryClient = new QueryClient();
@@ -52,6 +53,7 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/sso/callback" element={<SSOCallback />} />
       <Route path="/legal" element={<Legal />} />
+      <Route path="/docs" element={<Docs />} />
 
       {/* Root: Landing for anonymous, Dashboard for authenticated */}
       <Route path="/" element={<RootRoute />}>

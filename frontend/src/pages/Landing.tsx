@@ -180,7 +180,7 @@ const COMPARE_FEATURES = [
   { feature: 'Self-hosted option', us: true, them: false },
   { feature: 'Per-tenant encryption keys', us: true, them: true },
   { feature: 'AI anomaly detection', us: true, them: true },
-  { feature: 'Zero AI token cost', us: true, them: false },
+  { feature: 'AI intelligence included free', us: true, them: false },
   { feature: 'WORM immutable storage', us: true, them: true },
   { feature: 'Teams chat backup', us: true, them: true },
   { feature: 'Entra ID config backup', us: true, them: false },
@@ -263,10 +263,10 @@ export default function Landing() {
 
           {/* Stats */}
           <div className={`mt-12 flex items-center justify-center gap-12 text-center transition-all duration-700 delay-900 ${heroReady ? 'opacity-100' : 'opacity-0'}`}>
-            <div><div className="text-2xl font-bold text-gray-900"><Counter target={5} /></div><div className="text-xs text-gray-500">Workloads</div></div>
-            <div><div className="text-2xl font-bold text-gray-900"><Counter target={115} suffix="+" /></div><div className="text-xs text-gray-500">API Endpoints</div></div>
-            <div><div className="text-2xl font-bold text-gray-900"><Counter target={15} /></div><div className="text-xs text-gray-500">Security Controls</div></div>
-            <div><div className="text-2xl font-bold text-gray-900">$<Counter target={0} /></div><div className="text-xs text-gray-500">AI Token Cost</div></div>
+            <div><div className="text-2xl font-bold text-gray-900"><Counter target={5} /></div><div className="text-xs text-gray-500">M365 Workloads</div></div>
+            <div><div className="text-2xl font-bold text-gray-900"><Counter target={10} suffix="min" /></div><div className="text-xs text-gray-500">Recovery Time</div></div>
+            <div><div className="text-2xl font-bold text-gray-900"><Counter target={4} /></div><div className="text-xs text-gray-500">Compliance Frameworks</div></div>
+            <div><div className="text-2xl font-bold text-gray-900"><Counter target={99} suffix="%" /></div><div className="text-xs text-gray-500">Backup Success Rate</div></div>
           </div>
         </div>
       </section>
@@ -307,7 +307,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ═══ SECTION 4: INTELLIGENCE — AI-Powered, Zero Cost ═══ */}
+      {/* ═══ SECTION 4: INTELLIGENCE — AI-Powered Protection ═══ */}
       <section className="py-20 px-6 bg-gray-900 text-white">
         <div className="max-w-5xl mx-auto">
           <FadeUp>

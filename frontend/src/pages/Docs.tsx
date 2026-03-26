@@ -56,10 +56,10 @@ export default function Docs() {
             <h2 className="text-lg font-bold">Security Documentation Pack</h2>
             <p className="text-blue-100 text-sm mt-1">Download all security and compliance docs for your procurement review.</p>
           </div>
-          <a href="https://github.com/gpatwa/m365-vault/tree/main/docs" target="_blank" rel="noopener noreferrer"
+          <Link to="/docs/view/SECURITY.md"
             className="px-5 py-2.5 bg-white text-blue-700 font-semibold rounded-lg hover:bg-blue-50 flex items-center gap-2 text-sm transition-colors">
-            <Download className="w-4 h-4" /> Download Pack
-          </a>
+            <Download className="w-4 h-4" /> View Security Pack
+          </Link>
         </div>
 
         {/* Doc Categories */}
@@ -68,11 +68,9 @@ export default function Docs() {
             <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">{cat.category}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {cat.items.map(doc => (
-                <a
+                <Link
                   key={doc.file}
-                  href={`https://github.com/gpatwa/m365-vault/blob/main/docs/${doc.file}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  to={`/docs/view/${doc.file}`}
                   className="group bg-white border border-gray-200 rounded-xl p-5 hover:border-blue-300 hover:shadow-md transition-all"
                 >
                   <div className="flex items-start gap-4">
@@ -91,7 +89,7 @@ export default function Docs() {
                       </div>
                     </div>
                   </div>
-                </a>
+                </Link>
               ))}
             </div>
           </div>

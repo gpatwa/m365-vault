@@ -12,6 +12,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# Copy docs from project root (for inline doc viewer API)
+# Docs are copied during build via Makefile or manually
+RUN mkdir -p /app/docs
+
 EXPOSE 8000
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

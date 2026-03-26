@@ -242,8 +242,10 @@ app.include_router(recovery_router)
 
 from app.api.security import router as security_router
 from app.api.benchmarks import router as benchmarks_router
+from app.api.docs_api import router as docs_api_router
 app.include_router(security_router)
 app.include_router(benchmarks_router)
+app.include_router(docs_api_router)
 
 
 @app.get("/")

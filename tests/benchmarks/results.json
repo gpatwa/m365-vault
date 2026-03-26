@@ -1,0 +1,135 @@
+{
+  "timestamp": "2026-03-26T02:13:20.305036Z",
+  "target": "http://localhost:8000",
+  "version": "1.4.0",
+  "benchmarks": {
+    "health_check": {
+      "status": "healthy",
+      "latency_ms": 4.6
+    },
+    "api_latency": {
+      "Dashboard": {
+        "avg_ms": 16.5,
+        "p50_ms": 10.8,
+        "p95_ms": 40.2,
+        "p99_ms": 40.2
+      },
+      "Jobs List": {
+        "avg_ms": 7.9,
+        "p50_ms": 6.3,
+        "p95_ms": 15.7,
+        "p99_ms": 15.7
+      },
+      "Tenants": {
+        "avg_ms": 5.1,
+        "p50_ms": 4.3,
+        "p95_ms": 9.7,
+        "p99_ms": 9.7
+      },
+      "SLA Policies": {
+        "avg_ms": 6.4,
+        "p50_ms": 5.9,
+        "p95_ms": 8.9,
+        "p99_ms": 8.9
+      },
+      "Health Score": {
+        "avg_ms": 6.7,
+        "p50_ms": 5.8,
+        "p95_ms": 11.3,
+        "p99_ms": 11.3
+      },
+      "Reports": {
+        "avg_ms": 17.6,
+        "p50_ms": 16.4,
+        "p95_ms": 23.2,
+        "p99_ms": 23.2
+      },
+      "Usage": {
+        "avg_ms": 6.3,
+        "p50_ms": 5.9,
+        "p95_ms": 8.3,
+        "p99_ms": 8.3
+      },
+      "Security Posture": {
+        "avg_ms": 5.9,
+        "p50_ms": 5.5,
+        "p95_ms": 7.5,
+        "p99_ms": 7.5
+      },
+      "Failed Items": {
+        "avg_ms": 7.4,
+        "p50_ms": 5.3,
+        "p95_ms": 13.8,
+        "p99_ms": 13.8
+      },
+      "Audit Logs": {
+        "avg_ms": 5.8,
+        "p50_ms": 5.4,
+        "p95_ms": 7.4,
+        "p99_ms": 7.4
+      }
+    },
+    "backup": {
+      "exchange": {
+        "objects": 1,
+        "items": 0,
+        "size_bytes": 0,
+        "duration_sec": 0.08,
+        "items_per_sec": 0.0,
+        "mb_per_sec": 0.0,
+        "status": "success"
+      },
+      "onedrive": {
+        "objects": 1,
+        "items": 0,
+        "size_bytes": 0,
+        "duration_sec": 0.03,
+        "items_per_sec": 0.0,
+        "mb_per_sec": 0.0,
+        "status": "success"
+      },
+      "sharepoint": {
+        "objects": 1,
+        "items": 0,
+        "size_bytes": 0,
+        "duration_sec": 0.02,
+        "items_per_sec": 0.0,
+        "mb_per_sec": 0.0,
+        "status": "success"
+      },
+      "teams": {
+        "objects": 1,
+        "items": 0,
+        "size_bytes": 0,
+        "duration_sec": 0.05,
+        "items_per_sec": 0.0,
+        "mb_per_sec": 0.0,
+        "status": "success"
+      },
+      "entra_id": {
+        "objects": 1,
+        "items": 0,
+        "size_bytes": 0,
+        "duration_sec": 0.01,
+        "items_per_sec": 0.0,
+        "mb_per_sec": 0.0,
+        "status": "success"
+      }
+    },
+    "storage": {
+      "total_size_bytes": 27735660,
+      "compression_ratio": 2.14,
+      "dedup_ratio": null
+    },
+    "success_rate": {
+      "period": "30d",
+      "rate": null,
+      "total_jobs": null
+    },
+    "concurrent": {
+      "5_concurrent_avg_ms": 42.1,
+      "10_concurrent_avg_ms": 79.9,
+      "25_concurrent_avg_ms": 33.9
+    }
+  }
+}

@@ -4,8 +4,10 @@ import { useQuery } from '@tanstack/react-query';
 import {
   Shield, Activity, AlertTriangle, Database, TrendingUp,
   Lock, Eye, FileCheck, CreditCard, Loader2, ArrowRight,
-  Globe, MessageSquare,
+  Globe, MessageSquare, CheckCircle, Circle, ChevronDown, ChevronUp,
+  Link2, Search, ShieldCheck,
 } from 'lucide-react';
+import { useOnboarding, type OnboardingStep } from '../contexts/OnboardingContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { api } from '../api/client';
 import { WORKLOADS } from '../config/workloads';
@@ -16,6 +18,193 @@ import type { HeroStat } from '../components/design-system/HeroSummaryBar';
 import type { ActionItem } from '../components/design-system/ActionBanner';
 import type { WorkloadStat } from '../components/design-system/PlatformCard';
 import type { DashboardSummary, ActivityData } from '../types';
+
+// ═══ Stripe-style Onboarding Checklist ═══
+
+const CHECKLIST_STEPS: {
+  key: OnboardingStep;
+  title: string;
+  description: string;
+  action: string;
+  path: string;
+  icon: any;
+}[] = [
+  {
+    key: 'create_account',
+    title: 'Create your account',
+    description: 'Sign up and set your admin credentials.',
+    action: 'Done',
+    path: '/',
+    icon: CheckCircle,
+  },
+  {
+    key: 'connect_platform',
+    title: 'Connect your SaaS platform',
+    description: 'Link your Microsoft 365 tenant with one-click OAuth.',
+    action: 'Connect',
+    path: '/onboard',
+    icon: Link2,
+  },
+  {
+    key: 'discover_workloads',
+    title: 'Discover your workloads',
+    description: 'We automatically find mailboxes, drives, sites, teams, and identity objects.',
+    action: 'Run Discovery',
+    path: '/tenants',
+    icon: Search,
+  },
+  {
+    key: 'assign_protection',
+    title: 'Assign backup protection',
+    description: 'Choose a backup schedule and protect your data.',
+    action: 'Protect',
+    path: '/sla-policies',
+    icon: Shield,
+  },
+  {
+    key: 'first_backup',
+    title: 'Run your first backup',
+    description: 'Verify everything works by triggering an on-demand backup.',
+    action: 'Backup Now',
+    path: '/exchange',
+    icon: Database,
+  },
+  {
+    key: 'explore_recovery',
+    title: 'Explore recovery capabilities',
+    description: 'Check your recovery dashboard, health score, and restore options.',
+    action: 'Explore',
+    path: '/recovery',
+    icon: ShieldCheck,
+  },
+];
+
+function OnboardingChecklist() {
+  const { steps, completedCount, totalSteps, percentComplete, isComplete, completeStep } = useOnboarding();
+  const navigate = useNavigate();
+  const [expanded, setExpanded] = useState(!isComplete);
+  const [dismissed, setDismissed] = useState(
+    localStorage.getItem('shieldio_checklist_dismissed') === 'true'
+  );
+
+  if (dismissed || (isComplete && !expanded)) return null;
+
+  const handleDismiss = () => {
+    setDismissed(true);
+    localStorage.setItem('shieldio_checklist_dismissed', 'true');
+  };
+
+  return (
+    <div className="mb-6 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      {/* Header — always visible */}
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            {/* Circular progress */}
+            <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
+              <circle cx="18" cy="18" r="15" fill="none" stroke="#e5e7eb" strokeWidth="3" />
+              <circle
+                cx="18" cy="18" r="15" fill="none"
+                stroke={isComplete ? '#22c55e' : '#3b82f6'}
+                strokeWidth="3"
+                strokeDasharray={`${percentComplete} 100`}
+                strokeLinecap="round"
+              />
+            </svg>
+            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-gray-700">
+              {completedCount}/{totalSteps}
+            </span>
+          </div>
+          <div className="text-left">
+            <h3 className="font-semibold text-gray-900 text-sm">
+              {isComplete ? 'Setup complete! 🎉' : 'Getting started with Shieldio'}
+            </h3>
+            <p className="text-xs text-gray-500">
+              {isComplete
+                ? 'Your data is fully protected.'
+                : `${completedCount} of ${totalSteps} steps complete`}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {isComplete && (
+            <button
+              onClick={(e) => { e.stopPropagation(); handleDismiss(); }}
+              className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1"
+            >
+              Dismiss
+            </button>
+          )}
+          {expanded ? (
+            <ChevronUp className="w-4 h-4 text-gray-400" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-gray-400" />
+          )}
+        </div>
+      </button>
+
+      {/* Expanded checklist */}
+      {expanded && (
+        <div className="border-t border-gray-100">
+          {CHECKLIST_STEPS.map((step, i) => {
+            const done = steps[step.key];
+            const isCurrent = !done && CHECKLIST_STEPS.slice(0, i).every(s => steps[s.key]);
+            return (
+              <div
+                key={step.key}
+                className={`flex items-center gap-3 px-4 py-3 border-b border-gray-50 last:border-0 transition-colors ${
+                  isCurrent ? 'bg-blue-50/50' : ''
+                }`}
+              >
+                {/* Status indicator */}
+                <div className="flex-shrink-0">
+                  {done ? (
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                  ) : isCurrent ? (
+                    <div className="w-5 h-5 rounded-full border-2 border-blue-500 bg-blue-100 flex items-center justify-center">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                    </div>
+                  ) : (
+                    <Circle className="w-5 h-5 text-gray-300" />
+                  )}
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className={`text-sm font-medium ${done ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                    {step.title}
+                  </div>
+                  {isCurrent && (
+                    <p className="text-xs text-gray-500 mt-0.5">{step.description}</p>
+                  )}
+                </div>
+
+                {/* Action */}
+                {!done && isCurrent && (
+                  <button
+                    onClick={() => {
+                      if (step.key === 'explore_recovery') completeStep('explore_recovery');
+                      navigate(step.path);
+                    }}
+                    className="flex-shrink-0 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition-colors flex items-center gap-1"
+                  >
+                    {step.action} <ArrowRight className="w-3 h-3" />
+                  </button>
+                )}
+                {done && (
+                  <span className="text-[10px] text-green-600 font-medium flex-shrink-0">Done</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -323,6 +512,9 @@ export default function Dashboard() {
           </button>
         </div>
       )}
+
+      {/* ═══ Stripe-style Onboarding Checklist ═══ */}
+      <OnboardingChecklist />
 
       {/* ═══ STATE 3: Normal operational dashboard ═══ */}
 

@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Shield, Activity, AlertTriangle, Database, TrendingUp,
-  Lock, Eye, FileCheck, CreditCard,
+  Lock, Eye, FileCheck, CreditCard, Loader2, ArrowRight,
+  Globe, MessageSquare,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { api } from '../api/client';
@@ -192,57 +193,138 @@ export default function Dashboard() {
 
   // ── Render ──
 
-  const [dismissedWelcome, setDismissedWelcome] = useState(
-    localStorage.getItem('shieldio_welcome_dismissed') === 'true'
-  );
+  // ── Determine dashboard state ──
+  const noTenants = !summary || summary.tenants === 0;
+  const hasTenantsNoBackups = summary && summary.tenants > 0 && summary.total_protected === 0;
+  const [connecting, setConnecting] = useState(false);
 
-  const dismissWelcome = () => {
-    setDismissedWelcome(true);
-    localStorage.setItem('shieldio_welcome_dismissed', 'true');
+  const handleConnect = async (platform: string) => {
+    setConnecting(true);
+    try {
+      const data: any = await api.get(`/onboard/connect/${platform}`);
+      if (data.auth_url) window.location.href = data.auth_url;
+    } catch (err) {
+      console.error('Connect failed:', err);
+      setConnecting(false);
+    }
   };
 
-  const isNewUser = !summary || (summary.total_protected === 0 && summary.tenants === 0);
+  // ═══ STATE 1: No tenants — Full onboarding experience ═══
+  if (noTenants) {
+    return (
+      <div className="max-w-3xl mx-auto py-4">
+        {/* Hero */}
+        <div className="text-center mb-10">
+          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-blue-200">
+            <Shield className="w-10 h-10 text-white" />
+          </div>
+          <h1 className="text-3xl font-extrabold text-gray-900 mb-3">Welcome to Shieldio</h1>
+          <p className="text-lg text-gray-500 max-w-lg mx-auto">
+            Protect your SaaS data in minutes. Connect your platform, discover workloads, and start backing up automatically.
+          </p>
+        </div>
+
+        {/* Connect platform */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 mb-6">
+          <h2 className="text-lg font-bold text-gray-900 mb-1">Step 1: Connect Your Platform</h2>
+          <p className="text-sm text-gray-500 mb-6">One-click OAuth — no credentials to copy or paste.</p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Microsoft 365 — active */}
+            <button
+              onClick={() => handleConnect('microsoft365')}
+              disabled={connecting}
+              className="relative p-5 rounded-xl border-2 border-blue-200 bg-blue-50 hover:border-blue-400 hover:shadow-md transition-all text-left group"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-white border border-gray-100 flex items-center justify-center shadow-sm">
+                  <svg className="w-6 h-6" viewBox="0 0 21 21"><path d="M0 0h10v10H0z" fill="#f25022"/><path d="M11 0h10v10H11z" fill="#7fba00"/><path d="M0 11h10v10H0z" fill="#00a4ef"/><path d="M11 11h10v10H11z" fill="#ffb900"/></svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-gray-900">Microsoft 365</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">Exchange, OneDrive, SharePoint, Teams, Entra ID</p>
+                  <div className="mt-2 flex items-center gap-1 text-sm font-medium text-blue-600">
+                    {connecting ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Connecting...</>
+                    ) : (
+                      <>Connect <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </button>
+
+            {/* Coming soon platforms */}
+            {[
+              { name: 'Google Workspace', desc: 'Gmail, Drive, Calendar, Chat', icon: Globe, color: 'green' },
+              { name: 'Salesforce', desc: 'Accounts, Contacts, Opportunities', icon: Database, color: 'sky' },
+              { name: 'Slack', desc: 'Channels, Messages, Files', icon: MessageSquare, color: 'purple' },
+            ].map(p => (
+              <div key={p.name} className="p-5 rounded-xl border-2 border-gray-100 bg-gray-50 opacity-60 text-left relative">
+                <span className="absolute top-3 right-3 px-2 py-0.5 bg-gray-200 text-gray-500 text-[9px] font-semibold rounded-full">Coming Soon</span>
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-white border border-gray-100 flex items-center justify-center">
+                    <p.icon className="w-6 h-6 text-gray-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-700">{p.name}</h3>
+                    <p className="text-xs text-gray-400 mt-0.5">{p.desc}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* What happens after connecting */}
+        <div className="bg-gray-50 rounded-2xl border border-gray-200 p-6">
+          <h3 className="font-bold text-gray-900 mb-4">What happens when you connect?</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              { step: '1', title: 'Discover', desc: 'We find all your mailboxes, drives, sites, teams, and identity objects.', icon: Eye, color: 'blue' },
+              { step: '2', title: 'Protect', desc: 'Choose a backup schedule. One click protects everything.', icon: Shield, color: 'green' },
+              { step: '3', title: 'Recover', desc: 'Instant restore if anything is deleted, corrupted, or encrypted.', icon: Activity, color: 'purple' },
+            ].map(s => (
+              <div key={s.step} className="flex items-start gap-3">
+                <div className={`w-8 h-8 rounded-lg bg-${s.color}-100 flex items-center justify-center flex-shrink-0`}>
+                  <s.icon className={`w-4 h-4 text-${s.color}-600`} />
+                </div>
+                <div>
+                  <div className="font-semibold text-gray-900 text-sm">{s.title}</div>
+                  <div className="text-xs text-gray-500 mt-0.5">{s.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <p className="text-center text-xs text-gray-400 mt-6">
+          Shieldio uses OAuth admin consent — your credentials are never stored. Only read-only permissions for backup.
+        </p>
+      </div>
+    );
+  }
+
+  // ═══ STATE 2: Tenants exist but no backups — nudge to protect ═══
+  // (falls through to normal dashboard below, with action banner)
 
   return (
     <div>
-      {/* Welcome Banner — first-time users */}
-      {!dismissedWelcome && (
-        <div className="mb-6 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-          <button onClick={dismissWelcome} className="absolute top-4 right-4 text-white/60 hover:text-white text-lg">&times;</button>
-          <div className="relative">
-            <h2 className="text-xl font-bold mb-2">
-              {isNewUser ? '👋 Welcome to Shieldio!' : '🛡️ Your data is protected'}
-            </h2>
-            <p className="text-blue-100 text-sm mb-4 max-w-xl">
-              {isNewUser
-                ? 'Get started by connecting your Microsoft 365 tenant. We\'ll discover your workloads and start protecting your data in minutes.'
-                : `${summary?.total_protected || 0} objects protected across ${Object.keys(summary?.workloads || {}).length} workloads. Your backup health score is ${summary?.total_protected ? 'active' : 'pending'}.`}
-            </p>
-            <div className="flex gap-3">
-              {isNewUser ? (
-                <>
-                  <button onClick={() => navigate('/tenants')} className="px-4 py-2 bg-white text-blue-700 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors">
-                    Connect Tenant →
-                  </button>
-                  <button onClick={() => navigate('/recovery')} className="px-4 py-2 bg-white/10 text-white rounded-lg text-sm font-medium hover:bg-white/20 transition-colors border border-white/20">
-                    Explore Recovery →
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button onClick={() => navigate('/recovery')} className="px-4 py-2 bg-white text-blue-700 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors">
-                    Recovery Dashboard →
-                  </button>
-                  <button onClick={() => navigate('/smart-engine')} className="px-4 py-2 bg-white/10 text-white rounded-lg text-sm font-medium hover:bg-white/20 transition-colors border border-white/20">
-                    Smart Engine →
-                  </button>
-                </>
-              )}
-            </div>
+      {/* Action banner for unprotected state */}
+      {hasTenantsNoBackups && (
+        <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
+          <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="font-semibold text-amber-800 text-sm">Your data isn't protected yet</p>
+            <p className="text-xs text-amber-600">Assign an SLA policy to start automatic backups.</p>
           </div>
+          <button onClick={() => navigate('/sla-policies')} className="px-3 py-1.5 bg-amber-600 text-white rounded-lg text-xs font-semibold hover:bg-amber-700">
+            Protect Now →
+          </button>
         </div>
       )}
+
+      {/* ═══ STATE 3: Normal operational dashboard ═══ */}
 
       {/* Page Header */}
       <div className="mb-6">

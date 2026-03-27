@@ -77,8 +77,13 @@ async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db),
 ):
-    """Login and get JWT token."""
-    result = await db.execute(select(User).where(User.username == form_data.username))
+    """Login and get JWT token. Accepts username or email."""
+    from sqlalchemy import or_
+    result = await db.execute(
+        select(User).where(
+            or_(User.username == form_data.username, User.email == form_data.username)
+        )
+    )
     user = result.scalar_one_or_none()
 
     if not user or not verify_password(form_data.password, user.password_hash):

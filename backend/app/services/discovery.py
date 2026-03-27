@@ -32,7 +32,17 @@ class DiscoveryService:
             client_secret=client_secret,
         )
 
-    async def discover_all(self, tenant: Tenant) -> dict:
+    async def discover_all(self, tenant: Tenant, workloads: list[str] = None) -> dict:
+        """Run discovery for a tenant. Optionally filter to specific workloads.
+
+        Args:
+            workloads: Optional list like ["exchange", "entra_id"]. None = discover all.
+        """
+        if workloads:
+            return await self._discover_filtered(tenant, set(workloads))
+        return await self._discover_all_workloads(tenant)
+
+    async def _discover_all_workloads(self, tenant: Tenant) -> dict:
         """Run full discovery for a tenant. Returns counts."""
         graph = self._get_graph_client(tenant)
         results = {
@@ -383,6 +393,123 @@ class DiscoveryService:
 
         logger.info(f"Entra ID discovery: {total_objects} directory objects")
         return total_objects
+
+    async def _discover_filtered(self, tenant: Tenant, workloads: set[str]) -> dict:
+        """Discover only specific workloads. Calls individual discovery methods."""
+        graph = self._get_graph_client(tenant)
+        results = {
+            "mailboxes": 0, "onedrives": 0, "sites": 0,
+            "teams": 0, "entra_objects": 0, "removed": 0, "errors": [],
+        }
+
+        # Get users if Exchange or OneDrive requested
+        users = []
+        if "exchange" in workloads or "onedrive" in workloads:
+            try:
+                users = await graph.get_all_pages("/users", params={
+                    "$select": "id,displayName,mail,userPrincipalName",
+                    "$top": "999",
+                })
+            except Exception as e:
+                results["errors"].append(f"User discovery failed: {str(e)}")
+
+        # Exchange
+        if "exchange" in workloads:
+            for user in users:
+                user_id = user.get("id")
+                display_name = user.get("displayName", "Unknown")
+                email = user.get("mail") or user.get("userPrincipalName")
+                if not email:
+                    continue
+                try:
+                    await graph.get(f"/users/{user_id}/mailFolders", params={"$select": "id", "$top": "1"})
+                    await self._upsert_protected_object(
+                        tenant_id=tenant.id, workload_type=WorkloadType.EXCHANGE,
+                        ms_object_id=user_id, display_name=f"{display_name} (Mailbox)",
+                        email=email, user_principal_name=user.get("userPrincipalName"),
+                        metadata={"source": "filtered_discovery"},
+                    )
+                    results["mailboxes"] += 1
+                except Exception:
+                    pass
+            logger.info(f"Filtered discovery: {results['mailboxes']} Exchange mailboxes")
+
+        # OneDrive
+        if "onedrive" in workloads:
+            for user in users:
+                user_id = user.get("id")
+                display_name = user.get("displayName", "Unknown")
+                email = user.get("mail") or user.get("userPrincipalName")
+                if not email:
+                    continue
+                try:
+                    await graph.get(f"/users/{user_id}/drive/root", params={"$select": "id,name"})
+                    await self._upsert_protected_object(
+                        tenant_id=tenant.id, workload_type=WorkloadType.ONEDRIVE,
+                        ms_object_id=user_id, display_name=f"{display_name} (OneDrive)",
+                        email=email, user_principal_name=user.get("userPrincipalName"),
+                        metadata={"source": "filtered_discovery"},
+                    )
+                    results["onedrives"] += 1
+                except Exception:
+                    pass
+            logger.info(f"Filtered discovery: {results['onedrives']} OneDrive accounts")
+
+        # SharePoint
+        if "sharepoint" in workloads:
+            try:
+                sites = await graph.get_all_pages("/sites/getAllSites", params={
+                    "$select": "id,displayName,webUrl,name", "$top": "999",
+                })
+                for site in sites:
+                    web_url = site.get("webUrl", "")
+                    if "/personal/" in web_url or "-admin." in web_url or "-my." in web_url:
+                        continue
+                    await self._upsert_protected_object(
+                        tenant_id=tenant.id, workload_type=WorkloadType.SHAREPOINT,
+                        ms_object_id=site["id"],
+                        display_name=f"{site.get('displayName', 'Unknown')} (SharePoint)",
+                        site_url=web_url, metadata={"source": "filtered_discovery"},
+                    )
+                    results["sites"] += 1
+            except Exception as e:
+                results["errors"].append(f"SharePoint discovery failed: {str(e)}")
+            logger.info(f"Filtered discovery: {results['sites']} SharePoint sites")
+
+        # Teams
+        if "teams" in workloads:
+            try:
+                teams_count, _ = await self._discover_teams(tenant, graph)
+                results["teams"] = teams_count
+            except Exception as e:
+                results["errors"].append(f"Teams discovery failed: {str(e)}")
+
+        # Entra ID
+        if "entra_id" in workloads:
+            try:
+                entra_count = await self._discover_entra_id(tenant, graph)
+                results["entra_objects"] = entra_count
+            except Exception as e:
+                results["errors"].append(f"Entra ID discovery failed: {str(e)}")
+
+        # Update tenant counts for discovered workloads
+        if "exchange" in workloads:
+            tenant.total_mailboxes = results["mailboxes"]
+        if "onedrive" in workloads:
+            tenant.total_onedrives = results["onedrives"]
+        if "sharepoint" in workloads:
+            tenant.total_sites = results["sites"]
+        if "teams" in workloads:
+            tenant.total_teams = results.get("teams", 0)
+        if "entra_id" in workloads:
+            tenant.total_entra_objects = results.get("entra_objects", 0)
+
+        tenant.last_discovery_at = datetime.utcnow()
+        tenant.status = TenantStatus.ACTIVE
+        await self.db.commit()
+
+        logger.info(f"Filtered discovery complete for {tenant.name}: workloads={workloads}, results={results}")
+        return results
 
     async def _upsert_protected_object(
         self,

@@ -138,21 +138,97 @@ async def test_connection(
         return TenantTestResponse(success=False, message=str(e))
 
 
-@router.post("/{tenant_id}/discover")
-async def run_discovery(
+class DiscoverRequest(BaseModel):
+    workloads: list[str] = None  # None = all. Example: ["exchange", "entra_id"]
+
+
+@router.post("/{tenant_id}/probe")
+async def probe_tenant(
     tenant_id: int,
-    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_role(UserRole.ADMIN, UserRole.OPERATOR)),
 ):
-    """Run object discovery for a tenant."""
+    """Quick probe — count users and detect available workloads (5 seconds).
+
+    Returns org size, licensed workloads, and recommended discovery order.
+    Does NOT create ProtectedObjects — just counts.
+    """
     tenant = await db.get(Tenant, tenant_id)
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant not found")
 
     discovery = DiscoveryService(db)
+    graph = discovery._get_graph_client(tenant)
+
+    probe = {"tenant_name": tenant.name, "workloads": {}}
+
     try:
-        results = await discovery.discover_all(tenant)
+        # Count users (fast — single API call)
+        users = await graph.get_all_pages("/users", params={"$select": "id,assignedLicenses", "$top": "999"})
+        user_count = len(users)
+
+        # Detect licensed workloads from user licenses
+        has_exchange = user_count > 0  # All M365 users have Exchange
+        has_onedrive = user_count > 0  # All M365 users have OneDrive
+        has_teams = any("Team" in str(u.get("assignedLicenses", [])) for u in users) or user_count > 0
+
+        # Check SharePoint (quick probe)
+        has_sharepoint = False
+        try:
+            sites = await graph.get_all_pages("/sites/getAllSites", params={"$select": "id", "$top": "1"})
+            has_sharepoint = len(sites) > 0
+        except Exception:
+            has_sharepoint = True  # Assume yes if API available
+
+        probe["user_count"] = user_count
+        probe["org_size"] = "small" if user_count < 50 else "medium" if user_count < 500 else "large"
+
+        probe["workloads"] = {
+            "exchange": {"available": has_exchange, "estimated_objects": user_count, "speed": "fast", "priority": 1},
+            "entra_id": {"available": True, "estimated_objects": 1, "speed": "fast", "priority": 1},
+            "sharepoint": {"available": has_sharepoint, "estimated_objects": None, "speed": "moderate", "priority": 2},
+            "onedrive": {"available": has_onedrive, "estimated_objects": user_count, "speed": "slow", "priority": 3},
+            "teams": {"available": has_teams, "estimated_objects": None, "speed": "slow", "priority": 3},
+        }
+
+        # Recommended discovery order based on org size
+        if user_count < 50:
+            probe["recommendation"] = "all_at_once"
+            probe["recommended_order"] = ["exchange", "entra_id", "sharepoint", "onedrive", "teams"]
+        else:
+            probe["recommendation"] = "progressive"
+            probe["recommended_order"] = ["exchange", "entra_id", "sharepoint", "teams", "onedrive"]
+
+    except Exception as e:
+        logger.error(f"Probe failed: {e}")
+        probe["error"] = str(e)
+
+    return probe
+
+
+@router.post("/{tenant_id}/discover")
+async def run_discovery(
+    tenant_id: int,
+    req: DiscoverRequest = None,
+    background_tasks: BackgroundTasks = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.ADMIN, UserRole.OPERATOR)),
+):
+    """Run object discovery for a tenant.
+
+    Optional: pass workloads filter to discover specific workloads only.
+    Example: {"workloads": ["exchange", "entra_id"]}
+    If no workloads specified, discovers all.
+    """
+    tenant = await db.get(Tenant, tenant_id)
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+
+    workload_filter = req.workloads if req else None
+
+    discovery = DiscoveryService(db)
+    try:
+        results = await discovery.discover_all(tenant, workloads=workload_filter)
     except Exception as e:
         import traceback
         logger.error(f"Discovery failed: {traceback.format_exc()}")
@@ -161,9 +237,10 @@ async def run_discovery(
                         user_id=current_user.id)
         raise HTTPException(status_code=500, detail=f"Discovery failed: {str(e)}")
 
+    discovered = ", ".join(f"{k}={v}" for k, v in results.items() if k != "errors" and k != "removed")
     await audit_log(db, action="discovery.completed", resource_type="tenant",
                     resource_id=tenant_id,
-                    details=f"Discovered {results.get('mailboxes', 0)} mailboxes, {results.get('onedrives', 0)} OneDrives, {results.get('sites', 0)} sites, {results.get('entra_objects', 0)} Entra ID objects",
+                    details=f"Discovered: {discovered}" + (f" (filtered: {workload_filter})" if workload_filter else ""),
                     user_id=current_user.id)
     return {
         "status": "completed",

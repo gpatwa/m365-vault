@@ -26,6 +26,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [isRegister, setIsRegister] = useState(searchParams.get('register') === 'true');
   const [email, setEmail] = useState('');
+  const [fullName, setFullName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [ssoEnabled, setSsoEnabled] = useState(false);
   const [ssoLoading, setSsoLoading] = useState(false);
@@ -56,7 +57,7 @@ export default function Login() {
     setIsLoading(true);
     try {
       if (isRegister) {
-        await api.register({ username, email, password, role: 'admin' });
+        await api.register({ username, email, password, full_name: fullName || undefined, role: 'admin' });
         await authLogin(username, password);
         navigate('/onboard');  // New users → onboarding flow
       } else {
@@ -200,12 +201,21 @@ export default function Login() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Username</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                {isRegister ? 'Work Email' : 'Email or Username'}
+              </label>
               <input
-                type="text"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
-                placeholder="Enter your username"
+                type={isRegister ? 'email' : 'text'}
+                value={isRegister ? email : username}
+                onChange={e => {
+                  if (isRegister) {
+                    setEmail(e.target.value);
+                    setUsername(e.target.value.split('@')[0]); // Auto-generate username from email
+                  } else {
+                    setUsername(e.target.value);
+                  }
+                }}
+                placeholder={isRegister ? 'you@company.com' : 'Email or username'}
                 className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-300 transition-colors"
                 required
                 autoFocus
@@ -214,14 +224,13 @@ export default function Login() {
 
             {isRegister && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
                 <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="admin@company.com"
+                  type="text"
+                  value={fullName}
+                  onChange={e => setFullName(e.target.value)}
+                  placeholder="Your name"
                   className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-300 transition-colors"
-                  required
                 />
               </div>
             )}

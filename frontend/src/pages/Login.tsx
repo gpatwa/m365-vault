@@ -224,7 +224,7 @@ export default function Login() {
 
             {isRegister && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name <span className="text-gray-400 font-normal">(optional)</span></label>
                 <input
                   type="text"
                   value={fullName}

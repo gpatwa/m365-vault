@@ -64,19 +64,27 @@ const CHECKLIST_STEPS: {
   {
     key: 'first_backup',
     title: 'Run your first backup',
-    description: 'Verify everything works by triggering an on-demand backup.',
-    action: 'Backup Now',
-    path: '/exchange',
+    description: 'Pick a workload and verify your first backup works. Exchange is fastest.',
+    action: 'inline', // Special: renders workload picker inline
+    path: '',
     icon: Database,
   },
   {
     key: 'explore_recovery',
     title: 'Explore recovery capabilities',
-    description: 'Check your recovery dashboard, health score, and restore options.',
+    description: 'See your recovery readiness score and simulate a restore.',
     action: 'Explore',
     path: '/recovery',
     icon: ShieldCheck,
   },
+];
+
+const BACKUP_WORKLOADS = [
+  { key: 'exchange', label: 'Exchange', desc: 'Emails, calendar, contacts', icon: '✉️', endpoint: '/exchange/backup-all', fast: true },
+  { key: 'sharepoint', label: 'SharePoint', desc: 'Sites, lists, documents', icon: '🌐', endpoint: '/sharepoint/backup-all', fast: false },
+  { key: 'onedrive', label: 'OneDrive', desc: 'Files and folders', icon: '💾', endpoint: '/onedrive/backup-all', fast: false },
+  { key: 'teams', label: 'Teams', desc: 'Channels, messages, files', icon: '💬', endpoint: '/teams/backup-all', fast: false },
+  { key: 'entra_id', label: 'Entra ID', desc: 'Users, groups, policies', icon: '🔑', endpoint: '/entra-id/backup', fast: true },
 ];
 
 function OnboardingChecklist() {
@@ -86,6 +94,23 @@ function OnboardingChecklist() {
   const [dismissed, setDismissed] = useState(
     localStorage.getItem('shieldio_checklist_dismissed') === 'true'
   );
+  const [backupRunning, setBackupRunning] = useState<Record<string, 'idle' | 'running' | 'done' | 'error'>>({});
+  const tenantId = useTenantId();
+
+  const triggerBackup = async (workload: typeof BACKUP_WORKLOADS[0]) => {
+    if (!tenantId) return;
+    setBackupRunning(prev => ({ ...prev, [workload.key]: 'running' }));
+    try {
+      await api.post(`${workload.endpoint}?tenant_id=${tenantId}`);
+      setBackupRunning(prev => ({ ...prev, [workload.key]: 'done' }));
+      // If any backup succeeded, mark step as done
+      completeStep('first_backup');
+    } catch {
+      setBackupRunning(prev => ({ ...prev, [workload.key]: 'error' }));
+    }
+  };
+
+  const anyBackupDone = Object.values(backupRunning).some(s => s === 'done');
 
   if (dismissed || (isComplete && !expanded)) return null;
 
@@ -177,13 +202,54 @@ function OnboardingChecklist() {
                   <div className={`text-sm font-medium ${done ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
                     {step.title}
                   </div>
-                  {isCurrent && (
+                  {isCurrent && step.key !== 'first_backup' && (
                     <p className="text-xs text-gray-500 mt-0.5">{step.description}</p>
+                  )}
+
+                  {/* Inline workload picker for first_backup step */}
+                  {isCurrent && step.key === 'first_backup' && (
+                    <div className="mt-2">
+                      <p className="text-xs text-gray-500 mb-2">{step.description}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {BACKUP_WORKLOADS.map(wl => {
+                          const status = backupRunning[wl.key] || 'idle';
+                          return (
+                            <button
+                              key={wl.key}
+                              onClick={() => triggerBackup(wl)}
+                              disabled={status === 'running' || status === 'done'}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                status === 'done'
+                                  ? 'bg-green-100 text-green-700 border border-green-200'
+                                  : status === 'running'
+                                  ? 'bg-blue-100 text-blue-700 border border-blue-200 animate-pulse'
+                                  : status === 'error'
+                                  ? 'bg-red-100 text-red-700 border border-red-200 hover:bg-red-200'
+                                  : 'bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200 hover:border-gray-300'
+                              }`}
+                            >
+                              <span>{wl.icon}</span>
+                              <span>{wl.label}</span>
+                              {status === 'running' && <Loader2 className="w-3 h-3 animate-spin" />}
+                              {status === 'done' && <CheckCircle className="w-3 h-3 text-green-600" />}
+                              {wl.fast && status === 'idle' && (
+                                <span className="text-[9px] text-gray-400 ml-0.5">fast</span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {anyBackupDone && (
+                        <p className="text-[10px] text-green-600 mt-1.5 flex items-center gap-1">
+                          <CheckCircle className="w-3 h-3" /> Backup verified — your data is protected!
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
 
-                {/* Action */}
-                {!done && isCurrent && (
+                {/* Action button (for non-inline steps) */}
+                {!done && isCurrent && step.action !== 'inline' && (
                   <button
                     onClick={() => {
                       if (step.key === 'explore_recovery') completeStep('explore_recovery');

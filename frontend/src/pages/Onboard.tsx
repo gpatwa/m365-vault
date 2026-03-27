@@ -144,13 +144,298 @@ export default function Onboard() {
 }
 
 
+/** Cyber Recovery Simulation — immersive walkthrough of a ransomware incident */
+function CyberRecoverySimulation({ tenantName, disc, onComplete, simScene, setSimScene }: {
+  tenantName: string;
+  disc: any;
+  onComplete: () => void;
+  simScene: number;
+  setSimScene: (n: number) => void;
+}) {
+  const mailboxes = disc?.mailboxes || 6;
+
+  const SCENES = [
+    {
+      key: 'normal',
+      title: 'Normal Operations',
+      subtitle: 'Everything is running smoothly...',
+      bg: 'from-green-900 to-green-800',
+      icon: '✅',
+      duration: 3000,
+      content: (
+        <div className="space-y-3">
+          <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
+            <CheckCircle className="w-5 h-5 text-green-400" />
+            <span className="text-green-100">{mailboxes} mailboxes backed up • Last backup: 2 min ago</span>
+          </div>
+          <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
+            <CheckCircle className="w-5 h-5 text-green-400" />
+            <span className="text-green-100">Health Score: 100/100 • All systems normal</span>
+          </div>
+          <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
+            <CheckCircle className="w-5 h-5 text-green-400" />
+            <span className="text-green-100">Smart Engine monitoring • No anomalies detected</span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'incident',
+      title: '⚠️ INCIDENT DETECTED',
+      subtitle: 'Shieldio Smart Engine detected unusual activity',
+      bg: 'from-red-900 to-red-800',
+      icon: '🚨',
+      duration: 4000,
+      content: (
+        <div className="space-y-3">
+          <div className="flex items-center gap-3 bg-red-500/20 border border-red-500/30 rounded-lg p-3 animate-pulse">
+            <XCircle className="w-5 h-5 text-red-400" />
+            <span className="text-red-100 font-medium">1,847 files renamed to .encrypted</span>
+          </div>
+          <div className="flex items-center gap-3 bg-red-500/20 border border-red-500/30 rounded-lg p-3">
+            <XCircle className="w-5 h-5 text-red-400" />
+            <span className="text-red-100">3 mailboxes showing mass deletion</span>
+          </div>
+          <div className="flex items-center gap-3 bg-red-500/20 border border-red-500/30 rounded-lg p-3">
+            <XCircle className="w-5 h-5 text-red-400" />
+            <span className="text-red-100">Entra ID: new admin role assigned to unknown user</span>
+          </div>
+          <div className="mt-2 text-center">
+            <span className="text-red-300 text-sm animate-pulse">⚡ Detected automatically by AI anomaly detection</span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'analysis',
+      title: 'Blast Radius Analysis',
+      subtitle: 'Shieldio mapped exactly what was affected',
+      bg: 'from-amber-900 to-amber-800',
+      icon: '🔍',
+      duration: 4000,
+      content: (
+        <div className="space-y-3">
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-white/10 rounded-lg p-3 text-center">
+              <div className="text-2xl font-bold text-amber-200">3</div>
+              <div className="text-xs text-amber-300">Users Affected</div>
+            </div>
+            <div className="bg-white/10 rounded-lg p-3 text-center">
+              <div className="text-2xl font-bold text-amber-200">1,847</div>
+              <div className="text-xs text-amber-300">Files Encrypted</div>
+            </div>
+            <div className="bg-white/10 rounded-lg p-3 text-center">
+              <div className="text-2xl font-bold text-amber-200">45</div>
+              <div className="text-xs text-amber-300">Emails Deleted</div>
+            </div>
+          </div>
+          <div className="bg-white/10 rounded-lg p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-amber-200 text-sm">First sign of attack:</span>
+              <span className="text-white font-mono text-sm">14 minutes ago</span>
+            </div>
+            <div className="flex items-center justify-between mt-1">
+              <span className="text-amber-200 text-sm">Last clean backup:</span>
+              <span className="text-green-400 font-mono text-sm font-bold">16 minutes ago ✓</span>
+            </div>
+          </div>
+          <div className="text-center text-amber-300 text-sm">
+            We know exactly what happened and when
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'plan',
+      title: 'Recovery Plan',
+      subtitle: 'AI-prioritized based on business criticality',
+      bg: 'from-blue-900 to-blue-800',
+      icon: '🎯',
+      duration: 4000,
+      content: (
+        <div className="space-y-3">
+          <div className="bg-white/10 rounded-lg p-3 border-l-4 border-red-400">
+            <div className="flex items-center gap-2">
+              <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">P1</span>
+              <span className="text-white font-medium text-sm">Restore CEO + CFO mailboxes</span>
+            </div>
+            <span className="text-blue-200 text-xs">Critical executives — restore first</span>
+          </div>
+          <div className="bg-white/10 rounded-lg p-3 border-l-4 border-amber-400">
+            <div className="flex items-center gap-2">
+              <span className="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">P2</span>
+              <span className="text-white font-medium text-sm">Restore 1,847 encrypted OneDrive files</span>
+            </div>
+            <span className="text-blue-200 text-xs">Roll back to last clean snapshot</span>
+          </div>
+          <div className="bg-white/10 rounded-lg p-3 border-l-4 border-blue-400">
+            <div className="flex items-center gap-2">
+              <span className="bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">P3</span>
+              <span className="text-white font-medium text-sm">Revert unauthorized Entra ID changes</span>
+            </div>
+            <span className="text-blue-200 text-xs">Remove rogue admin role assignment</span>
+          </div>
+          <div className="text-center text-blue-300 text-sm">
+            One-click execution • Human approval required
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'recovered',
+      title: '✅ Recovery Complete',
+      subtitle: `${tenantName} is fully restored`,
+      bg: 'from-green-900 to-green-800',
+      icon: '🎉',
+      duration: 5000,
+      content: (
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white/10 rounded-lg p-3 text-center">
+              <div className="text-2xl font-bold text-green-300">1,847</div>
+              <div className="text-xs text-green-200">Files Restored</div>
+            </div>
+            <div className="bg-white/10 rounded-lg p-3 text-center">
+              <div className="text-2xl font-bold text-green-300">45</div>
+              <div className="text-xs text-green-200">Emails Recovered</div>
+            </div>
+            <div className="bg-white/10 rounded-lg p-3 text-center">
+              <div className="text-2xl font-bold text-green-300">8 min</div>
+              <div className="text-xs text-green-200">Recovery Time</div>
+            </div>
+            <div className="bg-white/10 rounded-lg p-3 text-center">
+              <div className="text-2xl font-bold text-green-300">100%</div>
+              <div className="text-xs text-green-200">Verified ✓</div>
+            </div>
+          </div>
+          <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-3 text-center">
+            <span className="text-green-200 text-sm font-medium">
+              Checksum validation confirmed — zero data loss
+            </span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'without',
+      title: 'Without Shieldio...',
+      subtitle: 'What happens without a separate backup',
+      bg: 'from-gray-900 to-gray-800',
+      icon: '💀',
+      duration: 0, // Manual advance
+      content: (
+        <div className="space-y-3">
+          <div className="flex items-center gap-3 bg-red-500/10 rounded-lg p-3">
+            <XCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+            <span className="text-gray-300 text-sm">Microsoft recycle bin: <span className="text-red-400 font-medium">93 days max, then gone forever</span></span>
+          </div>
+          <div className="flex items-center gap-3 bg-red-500/10 rounded-lg p-3">
+            <XCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+            <span className="text-gray-300 text-sm">No anomaly detection: <span className="text-red-400 font-medium">attack runs for hours undetected</span></span>
+          </div>
+          <div className="flex items-center gap-3 bg-red-500/10 rounded-lg p-3">
+            <XCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+            <span className="text-gray-300 text-sm">No point-in-time restore: <span className="text-red-400 font-medium">can't go back to "before"</span></span>
+          </div>
+          <div className="flex items-center gap-3 bg-red-500/10 rounded-lg p-3">
+            <XCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+            <span className="text-gray-300 text-sm">Recovery time: <span className="text-red-400 font-medium">days or weeks, not 8 minutes</span></span>
+          </div>
+          <div className="mt-2 text-center">
+            <span className="text-gray-400 text-sm">This is why you need independent SaaS data protection.</span>
+          </div>
+        </div>
+      ),
+    },
+  ];
+
+  const scene = SCENES[simScene] || SCENES[0];
+  const isLastScene = simScene >= SCENES.length - 1;
+
+  // Auto-advance for timed scenes
+  useEffect(() => {
+    if (scene.duration > 0 && simScene < SCENES.length - 1) {
+      const timer = setTimeout(() => setSimScene(simScene + 1), scene.duration);
+      return () => clearTimeout(timer);
+    }
+  }, [simScene, scene.duration]);
+
+  return (
+    <div>
+      <div className="text-center mb-4">
+        <h2 className="text-xl font-bold text-gray-900">See How Recovery Works</h2>
+        <p className="text-gray-500 text-sm">Watch a simulated ransomware attack and recovery</p>
+      </div>
+
+      {/* Scene progress dots */}
+      <div className="flex items-center justify-center gap-1.5 mb-4">
+        {SCENES.map((s, i) => (
+          <button
+            key={s.key}
+            onClick={() => setSimScene(i)}
+            className={`w-2 h-2 rounded-full transition-all ${
+              i === simScene ? 'w-6 bg-blue-500' :
+              i < simScene ? 'bg-green-500' : 'bg-gray-300'
+            }`}
+          />
+        ))}
+      </div>
+
+      {/* Scene card */}
+      <div className={`bg-gradient-to-br ${scene.bg} rounded-2xl p-6 text-white min-h-[320px] flex flex-col transition-all duration-500`}>
+        <div className="text-center mb-4">
+          <div className="text-3xl mb-2">{scene.icon}</div>
+          <h3 className="text-xl font-bold">{scene.title}</h3>
+          <p className="text-sm opacity-75 mt-1">{scene.subtitle}</p>
+        </div>
+        <div className="flex-1">{scene.content}</div>
+      </div>
+
+      {/* Navigation */}
+      <div className="flex items-center justify-between mt-4">
+        <button
+          onClick={() => setSimScene(Math.max(0, simScene - 1))}
+          disabled={simScene === 0}
+          className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 disabled:opacity-30"
+        >
+          ← Previous
+        </button>
+
+        {isLastScene ? (
+          <button
+            onClick={onComplete}
+            className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
+          >
+            Continue to Dashboard <ArrowRight className="w-4 h-4" />
+          </button>
+        ) : (
+          <button
+            onClick={() => setSimScene(simScene + 1)}
+            className="px-4 py-2 text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+          >
+            {scene.duration > 0 ? 'Skip →' : 'Next →'}
+          </button>
+        )}
+      </div>
+
+      {/* Skip entire simulation */}
+      <div className="text-center mt-2">
+        <button onClick={onComplete} className="text-xs text-gray-400 hover:text-gray-600">
+          Skip simulation → Go to Dashboard
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /** Guided onboarding wizard — flows from OAuth callback through full setup */
 
 const WIZARD_STEPS = [
   { key: 'connect', label: 'Connect', icon: Shield },
   { key: 'discover', label: 'Discover', icon: Globe },
   { key: 'protect', label: 'Protect', icon: Shield },
-  { key: 'backup', label: 'First Backup', icon: Shield },
+  { key: 'backup', label: 'Backup', icon: Shield },
+  { key: 'recovery', label: 'Recovery', icon: Shield },
   { key: 'ready', label: 'Ready', icon: CheckCircle },
 ];
 
@@ -158,7 +443,8 @@ export function OnboardCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const [step, setStep] = useState(0); // 0=connecting, 1=discover, 2=protect, 3=backup, 4=ready
+  const [step, setStep] = useState(0); // 0=connecting, 1=discover, 2=protect, 3=backup, 4=recovery-sim, 5=ready
+  const [simScene, setSimScene] = useState(0); // Recovery simulation scene (0-5)
   const [error, setError] = useState<string | null>(null);
   const [resultData, setResultData] = useState<any>(null);
   const [discoveryResults, setDiscoveryResults] = useState<any>(null);
@@ -606,8 +892,19 @@ export function OnboardCallback() {
         </div>
       )}
 
-      {/* Step 4: Ready! */}
+      {/* Step 4: Cyber Recovery Simulation */}
       {step === 4 && (
+        <CyberRecoverySimulation
+          tenantName={tenantName}
+          disc={disc}
+          onComplete={() => setStep(5)}
+          simScene={simScene}
+          setSimScene={setSimScene}
+        />
+      )}
+
+      {/* Step 5: Ready! */}
+      {step === 5 && (
         <div className="text-center">
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
             <CheckCircle className="w-10 h-10 text-green-600" />

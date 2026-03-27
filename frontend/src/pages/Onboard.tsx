@@ -161,12 +161,19 @@ export function OnboardCallback() {
   const [step, setStep] = useState(0); // 0=connecting, 1=discover, 2=protect, 3=backup, 4=ready
   const [error, setError] = useState<string | null>(null);
   const [resultData, setResultData] = useState<any>(null);
-  const [_discovery, _setDiscovery] = useState<any>(null); // Reserved for future use
+  const [discoveryResults, setDiscoveryResults] = useState<any>(null);
   const [slaPolicies, setSlaPolicies] = useState<any[]>([]);
   const [selectedSla, setSelectedSla] = useState<number | null>(null);
   const [backupStatus, setBackupStatus] = useState<string>('pending');
   const [protecting, setProtecting] = useState(false);
   const [_backingUp, setBackingUp] = useState(false);
+
+  // Workload toggles
+  const [availableWorkloads, setAvailableWorkloads] = useState<any[]>([]);
+  const [selectedWorkloads, setSelectedWorkloads] = useState<Set<string>>(new Set(['exchange', 'entra_id', 'sharepoint']));
+  const [discovering, setDiscovering] = useState(false);
+  const [backupWorkloads, setBackupWorkloads] = useState<Set<string>>(new Set());
+  const [backupProgress, setBackupProgress] = useState<Record<string, string>>({});
 
   // Step 0: Process OAuth callback
   useEffect(() => {
@@ -180,11 +187,22 @@ export function OnboardCallback() {
       return;
     }
 
+    // Load workload metadata
+    api.get<any>('/onboard/workloads').then(data => {
+      setAvailableWorkloads(data.workloads || []);
+      // Pre-select recommended workloads
+      const recommended = (data.workloads || [])
+        .filter((w: any) => w.recommended)
+        .map((w: any) => w.key);
+      setSelectedWorkloads(new Set(recommended));
+    }).catch(() => {});
+
     if (adminConsent && tenant) {
       api.get<any>(`/onboard/callback?admin_consent=${adminConsent}&tenant=${tenant}&state=${state || ''}`)
         .then((data: any) => {
           if (data.success) {
             setResultData(data);
+            if (data.discovery) setDiscoveryResults(data.discovery);
             setStep(1); // Move to discover
             // Load SLA policies
             api.get<any>('/sla-policies/').then(policies => {
@@ -199,6 +217,43 @@ export function OnboardCallback() {
       setTimeout(() => setError('No authorization data received'), 3000);
     }
   }, []);
+
+  // Run selective discovery
+  const handleDiscoverSelected = async () => {
+    if (!resultData?.db_tenant_id || selectedWorkloads.size === 0) return;
+    setDiscovering(true);
+    try {
+      const data: any = await api.post('/onboard/discover', {
+        tenant_id: resultData.db_tenant_id,
+        workloads: Array.from(selectedWorkloads),
+      });
+      if (data.results) {
+        setDiscoveryResults(data.results);
+      }
+    } catch (e: any) {
+      setError(e.message || 'Discovery failed');
+    } finally {
+      setDiscovering(false);
+    }
+  };
+
+  const toggleWorkload = (key: string) => {
+    setSelectedWorkloads(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const toggleBackupWorkload = (key: string) => {
+    setBackupWorkloads(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
 
   // Step 2 → 3: Assign SLA and protect all
   const handleProtect = async () => {
@@ -218,34 +273,39 @@ export function OnboardCallback() {
     }
   };
 
-  // Step 3 → 4: Run first backup
+  // Step 3 → 4: Run first backup (per-workload)
   const handleFirstBackup = async () => {
+    const workloadsToBackup = backupWorkloads.size > 0 ? Array.from(backupWorkloads) : Array.from(selectedWorkloads);
     setBackingUp(true);
     setBackupStatus('running');
-    try {
-      // Trigger backup for each workload
-      const workloads = ['exchange', 'sharepoint', 'entra_id'];
-      for (const wl of workloads) {
-        try {
-          if (wl === 'entra_id') {
-            await api.post(`/entra-id/backup?tenant_id=${resultData.db_tenant_id}`);
-          } else {
-            await api.post(`/${wl}/backup-all?tenant_id=${resultData.db_tenant_id}`);
-          }
-        } catch { /* some may fail, that's ok */ }
+
+    const progress: Record<string, string> = {};
+    workloadsToBackup.forEach(wl => { progress[wl] = 'pending'; });
+    setBackupProgress({...progress});
+
+    for (const wl of workloadsToBackup) {
+      progress[wl] = 'running';
+      setBackupProgress({...progress});
+      try {
+        if (wl === 'entra_id') {
+          await api.post(`/entra-id/backup?tenant_id=${resultData.db_tenant_id}`);
+        } else {
+          await api.post(`/${wl}/backup-all?tenant_id=${resultData.db_tenant_id}`);
+        }
+        progress[wl] = 'done';
+      } catch {
+        progress[wl] = 'failed';
       }
-      setBackupStatus('complete');
-      setStep(4); // Move to ready
-    } catch (e: any) {
-      setBackupStatus('complete'); // Still move forward
-      setStep(4);
-    } finally {
-      setBackingUp(false);
+      setBackupProgress({...progress});
     }
+
+    setBackupStatus('complete');
+    setStep(4);
+    setBackingUp(false);
   };
 
   // Get discovery data from result
-  const disc = resultData?.discovery?.results || resultData?.discovery || _discovery;
+  const disc = discoveryResults || resultData?.discovery?.results || resultData?.discovery;
   const tenantName = resultData?.tenant_name || searchParams.get('tenant_name') || 'Your Organization';
   const totalObjects = disc ? (disc.mailboxes || 0) + (disc.onedrives || 0) + (disc.sites || 0) + (disc.teams || 0) + (disc.entra_objects ? 1 : 0) : 0;
 
@@ -296,7 +356,7 @@ export function OnboardCallback() {
         </div>
       )}
 
-      {/* Step 1: Discovery Results */}
+      {/* Step 1: Discovery — Workload Selection */}
       {step === 1 && (
         <div>
           <div className="text-center mb-6">
@@ -304,30 +364,106 @@ export function OnboardCallback() {
               <CheckCircle className="w-7 h-7 text-green-600" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Connected to {tenantName}</h2>
-            <p className="text-gray-500 mt-1">We discovered {totalObjects} objects to protect across your Microsoft 365 tenant.</p>
+            <p className="text-gray-500 mt-1">
+              {discoveryResults
+                ? `Found ${totalObjects} objects. Select workloads to discover or add more.`
+                : 'Choose which workloads to discover. Fast workloads are pre-selected.'}
+            </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
-            {[
-              { label: 'Exchange Mailboxes', count: disc?.mailboxes || 0, color: 'blue' },
-              { label: 'OneDrive Accounts', count: disc?.onedrives || 0, color: 'purple' },
-              { label: 'SharePoint Sites', count: disc?.sites || 0, color: 'green' },
-              { label: 'Teams', count: disc?.teams || 0, color: 'pink' },
-              { label: 'Entra ID', count: disc?.entra_objects ? 1 : 0, color: 'amber' },
-            ].map(w => (
-              <div key={w.label} className={`p-4 rounded-xl border-2 border-${w.color}-100 bg-${w.color}-50/50`}>
-                <div className={`text-2xl font-bold text-${w.color}-700`}>{w.count}</div>
-                <div className="text-xs text-gray-600 font-medium">{w.label}</div>
-              </div>
-            ))}
+          {/* Workload toggle cards */}
+          <div className="space-y-2 mb-4">
+            {(availableWorkloads.length > 0 ? availableWorkloads : [
+              { key: 'exchange', label: 'Exchange', description: 'Emails, calendar, contacts', speed: 'fast', est_seconds: 2, recommended: true },
+              { key: 'entra_id', label: 'Entra ID', description: 'Users, groups, roles, policies', speed: 'fast', est_seconds: 2, recommended: true },
+              { key: 'sharepoint', label: 'SharePoint', description: 'Sites, documents, lists', speed: 'medium', est_seconds: 5, recommended: true },
+              { key: 'onedrive', label: 'OneDrive', description: 'Personal files and folders', speed: 'medium', est_seconds: 5, recommended: false },
+              { key: 'teams', label: 'Teams', description: 'Channels, messages, chats', speed: 'slow', est_seconds: 10, recommended: false },
+            ]).map((wl: any) => {
+              const isSelected = selectedWorkloads.has(wl.key);
+              const discCount = discoveryResults
+                ? (wl.key === 'exchange' ? discoveryResults.mailboxes :
+                   wl.key === 'onedrive' ? discoveryResults.onedrives :
+                   wl.key === 'sharepoint' ? discoveryResults.sites :
+                   wl.key === 'teams' ? discoveryResults.teams :
+                   wl.key === 'entra_id' ? (discoveryResults.entra_objects ? 1 : 0) : 0)
+                : null;
+
+              return (
+                <button
+                  key={wl.key}
+                  onClick={() => toggleWorkload(wl.key)}
+                  disabled={discovering}
+                  className={`w-full p-3 rounded-xl border-2 text-left transition-all flex items-center gap-3 ${
+                    isSelected
+                      ? 'border-blue-400 bg-blue-50/50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                    isSelected ? 'border-blue-500 bg-blue-500' : 'border-gray-300'
+                  }`}>
+                    {isSelected && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-gray-900 text-sm">{wl.label}</span>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                        wl.speed === 'fast' ? 'bg-green-100 text-green-700' :
+                        wl.speed === 'medium' ? 'bg-amber-100 text-amber-700' :
+                        'bg-gray-100 text-gray-600'
+                      }`}>
+                        {wl.speed === 'fast' ? '⚡ fast' : wl.speed === 'medium' ? '~5s' : '~10s'}
+                      </span>
+                      {wl.recommended && <span className="text-[10px] text-blue-500 font-medium">Recommended</span>}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-0.5">{wl.description}</p>
+                  </div>
+                  {discCount !== null && discCount > 0 && (
+                    <div className="text-right flex-shrink-0">
+                      <div className="text-lg font-bold text-blue-600">{discCount}</div>
+                      <div className="text-[10px] text-gray-400">found</div>
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
-          <button
-            onClick={() => setStep(2)}
-            className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-          >
-            Protect These Workloads <ArrowRight className="w-4 h-4" />
-          </button>
+          {/* Discover / Continue buttons */}
+          <div className="flex gap-3">
+            {!discoveryResults && (
+              <button
+                onClick={handleDiscoverSelected}
+                disabled={discovering || selectedWorkloads.size === 0}
+                className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {discovering ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Discovering {selectedWorkloads.size} workloads...</>
+                ) : (
+                  <>Discover Selected ({selectedWorkloads.size}) <ArrowRight className="w-4 h-4" /></>
+                )}
+              </button>
+            )}
+            {discoveryResults && (
+              <>
+                <button
+                  onClick={handleDiscoverSelected}
+                  disabled={discovering}
+                  className="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors flex items-center gap-2"
+                >
+                  {discovering ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                  Re-discover
+                </button>
+                <button
+                  onClick={() => { setBackupWorkloads(new Set(selectedWorkloads)); setStep(2); }}
+                  className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  Protect {totalObjects} Objects <ArrowRight className="w-4 h-4" />
+                </button>
+              </>
+            )}
+          </div>
         </div>
       )}
 
@@ -392,34 +528,78 @@ export function OnboardCallback() {
         </div>
       )}
 
-      {/* Step 3: First Backup */}
+      {/* Step 3: First Backup — per-workload selection + live progress */}
       {step === 3 && (
-        <div className="text-center">
-          <div className="mb-6">
+        <div>
+          <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Run Your First Backup</h2>
-            <p className="text-gray-500 mt-1">Let's verify everything works by running a backup now.</p>
+            <p className="text-gray-500 mt-1">Select workloads to back up now. Exchange is fastest for a quick verify.</p>
           </div>
 
           {backupStatus === 'pending' && (
-            <button
-              onClick={handleFirstBackup}
-              className="px-8 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors text-lg flex items-center gap-2 mx-auto"
-            >
-              <Shield className="w-5 h-5" /> Start First Backup
-            </button>
+            <>
+              <div className="space-y-2 mb-4">
+                {Array.from(selectedWorkloads).map(wlKey => {
+                  const wl = availableWorkloads.find((w: any) => w.key === wlKey) || { key: wlKey, label: wlKey, speed: '?' };
+                  const isChecked = backupWorkloads.has(wlKey);
+                  return (
+                    <button
+                      key={wlKey}
+                      onClick={() => toggleBackupWorkload(wlKey)}
+                      className={`w-full p-3 rounded-xl border-2 text-left transition-all flex items-center gap-3 ${
+                        isChecked ? 'border-green-400 bg-green-50/50' : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                        isChecked ? 'border-green-500 bg-green-500' : 'border-gray-300'
+                      }`}>
+                        {isChecked && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+                      </div>
+                      <span className="font-medium text-sm text-gray-900">{wl.label}</span>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ml-auto ${
+                        wl.speed === 'fast' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                      }`}>
+                        ~{wl.est_seconds || '?'}s
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                onClick={handleFirstBackup}
+                disabled={backupWorkloads.size === 0 && selectedWorkloads.size === 0}
+                className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <Shield className="w-5 h-5" />
+                Backup {backupWorkloads.size > 0 ? backupWorkloads.size : selectedWorkloads.size} Workload(s) Now
+              </button>
+            </>
           )}
 
           {backupStatus === 'running' && (
-            <div className="py-8">
-              <Loader2 className="w-16 h-16 animate-spin text-blue-500 mx-auto mb-4" />
-              <p className="text-gray-600 font-medium">Backing up your data...</p>
-              <p className="text-gray-400 text-sm mt-1">This may take a few minutes for the first backup.</p>
+            <div className="space-y-2">
+              {Object.entries(backupProgress).map(([wl, status]) => (
+                <div key={wl} className="flex items-center gap-3 p-3 rounded-xl border border-gray-200">
+                  {status === 'pending' && <div className="w-5 h-5 rounded-full border-2 border-gray-300" />}
+                  {status === 'running' && <Loader2 className="w-5 h-5 animate-spin text-blue-500" />}
+                  {status === 'done' && <CheckCircle className="w-5 h-5 text-green-500" />}
+                  {status === 'failed' && <XCircle className="w-5 h-5 text-red-500" />}
+                  <span className="font-medium text-sm capitalize">{wl.replace('_', ' ')}</span>
+                  <span className={`ml-auto text-xs font-medium ${
+                    status === 'done' ? 'text-green-600' :
+                    status === 'running' ? 'text-blue-600' :
+                    status === 'failed' ? 'text-red-600' : 'text-gray-400'
+                  }`}>
+                    {status === 'done' ? 'Complete ✓' : status === 'running' ? 'Backing up...' : status === 'failed' ? 'Failed' : 'Waiting'}
+                  </span>
+                </div>
+              ))}
             </div>
           )}
 
           <button
             onClick={() => setStep(4)}
-            className="mt-6 text-sm text-gray-400 hover:text-gray-600 underline"
+            className="mt-4 w-full text-sm text-gray-400 hover:text-gray-600 text-center"
           >
             Skip — I'll run it later
           </button>

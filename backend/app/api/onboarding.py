@@ -213,6 +213,95 @@ async def complete_onboarding(
     }
 
 
+class DiscoverRequest(BaseModel):
+    tenant_id: int
+    workloads: list[str] = None  # None = all, or ["exchange", "entra_id", ...]
+
+
+@router.post("/discover")
+async def selective_discovery(
+    req: DiscoverRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Run workload-selective discovery.
+
+    If workloads is None, discovers all workloads.
+    If workloads is a list, only discovers the specified workloads.
+
+    Speed guide:
+    - exchange: ~2s (validates mailbox per user)
+    - entra_id: ~2s (counts directory objects)
+    - sharepoint: ~5s (multiple discovery methods)
+    - onedrive: ~5s (checks drive per user)
+    - teams: ~10s (groups filter + per-user chat probe)
+    """
+    tenant = await db.get(Tenant, req.tenant_id)
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+
+    from app.services.discovery import DiscoveryService
+    discovery = DiscoveryService(db)
+    result = await discovery.discover_all(tenant, workloads=req.workloads)
+    await db.commit()
+
+    return {"status": "completed", "results": result}
+
+
+@router.get("/workloads")
+async def list_available_workloads():
+    """List available workloads with metadata for the discovery toggle UI."""
+    return {
+        "workloads": [
+            {
+                "key": "exchange",
+                "label": "Exchange",
+                "description": "Emails, calendar events, contacts",
+                "icon": "mail",
+                "speed": "fast",
+                "est_seconds": 2,
+                "recommended": True,
+            },
+            {
+                "key": "entra_id",
+                "label": "Entra ID",
+                "description": "Users, groups, roles, policies, apps",
+                "icon": "key",
+                "speed": "fast",
+                "est_seconds": 2,
+                "recommended": True,
+            },
+            {
+                "key": "sharepoint",
+                "label": "SharePoint",
+                "description": "Sites, document libraries, lists",
+                "icon": "globe",
+                "speed": "medium",
+                "est_seconds": 5,
+                "recommended": True,
+            },
+            {
+                "key": "onedrive",
+                "label": "OneDrive",
+                "description": "Personal files and folders",
+                "icon": "hard-drive",
+                "speed": "medium",
+                "est_seconds": 5,
+                "recommended": False,
+            },
+            {
+                "key": "teams",
+                "label": "Teams",
+                "description": "Channels, messages, chats, files",
+                "icon": "message-square",
+                "speed": "slow",
+                "est_seconds": 10,
+                "recommended": False,
+            },
+        ]
+    }
+
+
 @router.get("/status/{platform}/{tenant_ms_id}")
 async def check_connection_status(
     platform: str,

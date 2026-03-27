@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Mail, HardDrive, Globe, Shield, ShieldCheck, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search, RotateCcw, BarChart3, Gauge, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useOnboarding } from '../contexts/OnboardingContext';
 import CommandPalette from './CommandPalette';
 import ProductTour from './ProductTour';
 import FeedbackWidget from './FeedbackWidget';
@@ -77,6 +78,29 @@ export default function Layout() {
   const [showTour, setShowTour] = useState(
     !localStorage.getItem('shieldio_tour_completed')
   );
+
+  // Progressive sidebar based on onboarding state
+  let onboarding: any = null;
+  try { onboarding = useOnboarding(); } catch { /* OnboardingProvider not mounted yet */ }
+
+  const visibleGroups = navGroups.map(group => {
+    if (!onboarding || onboarding.isComplete) return group; // Show all when complete
+
+    // Always show Dashboard
+    if (!group.label) return group;
+
+    // Show workloads only after tenant connected
+    if (group.label === 'Workloads' && !onboarding.hasTenants) return { ...group, items: [] };
+
+    // Show operations only after first backup
+    if (group.label === 'Operations' && !onboarding.hasProtectedObjects) return { ...group, items: [] };
+
+    // Show intelligence only after backups exist
+    if (group.label === 'Intelligence' && !onboarding.hasBackups) return { ...group, items: [] };
+
+    return group;
+  }).filter(g => !g.label || g.items.length > 0);
+
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
     navGroups.forEach(g => { if (g.label) init[g.label] = !g.defaultOpen; });
@@ -147,7 +171,7 @@ export default function Layout() {
         </div>
 
         <nav className="flex-1 px-2 mt-2 overflow-y-auto">
-          {navGroups.map((group, gi) => (
+          {visibleGroups.map((group, gi) => (
             <div key={gi} className={group.label ? 'mt-2' : ''}>
               {group.label && (
                 <button

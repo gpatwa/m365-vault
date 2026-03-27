@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { OnboardingProvider } from './contexts/OnboardingContext';
 import { api } from './api/client';
 import Layout from './components/Layout';
 import Landing from './pages/Landing';
@@ -116,9 +117,11 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
+        <OnboardingProvider>
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </OnboardingProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

@@ -280,7 +280,7 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-3">
             <Link to="/login" className="text-sm text-gray-600 hover:text-gray-900">Sign In</Link>
-            <Link to="/login" className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+            <Link to="/login?register=true" className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
               Start Free
             </Link>
           </div>
@@ -313,7 +313,7 @@ export default function Landing() {
 
           {/* CTAs */}
           <div className={`mt-8 flex items-center justify-center gap-4 transition-all duration-700 delay-700 ${heroReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            <Link to="/login" className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all hover:shadow-lg hover:shadow-blue-200 flex items-center gap-2">
+            <Link to="/login?register=true" className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all hover:shadow-lg hover:shadow-blue-200 flex items-center gap-2">
               Start Free <ArrowRight className="w-4 h-4" />
             </Link>
             <a href="https://github.com/gpatwa/m365-vault" target="_blank" rel="noopener noreferrer"

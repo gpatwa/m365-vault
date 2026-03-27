@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Shield, Mail, HardDrive, Globe, MessageSquare, KeyRound, Lock, ArrowRight } from 'lucide-react';
 import { api } from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
@@ -20,10 +20,11 @@ const TRUST_POINTS = [
 ];
 
 export default function Login() {
+  const [searchParams] = useSearchParams();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isRegister, setIsRegister] = useState(false);
+  const [isRegister, setIsRegister] = useState(searchParams.get('register') === 'true');
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [ssoEnabled, setSsoEnabled] = useState(false);

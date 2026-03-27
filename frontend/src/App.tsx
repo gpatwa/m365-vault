@@ -58,8 +58,8 @@ function AppRoutes() {
       <Route path="/docs" element={<Docs />} />
       <Route path="/docs/view/:filename" element={<DocViewer />} />
       <Route path="/security" element={<SecurityPage />} />
-      <Route path="/onboard" element={<Onboard />} />
-      <Route path="/onboard/callback" element={<OnboardCallback />} />
+      <Route path="/onboard" element={<ProtectedRoute><Onboard /></ProtectedRoute>} />
+      <Route path="/onboard/callback" element={<ProtectedRoute><OnboardCallback /></ProtectedRoute>} />
 
       {/* Root: Landing for anonymous, Dashboard for authenticated */}
       <Route path="/" element={<RootRoute />}>

@@ -56,9 +56,12 @@ export default function Login() {
     try {
       if (isRegister) {
         await api.register({ username, email, password, role: 'admin' });
+        await authLogin(username, password);
+        navigate('/onboard');  // New users → onboarding flow
+      } else {
+        await authLogin(username, password);
+        navigate('/');  // Existing users → dashboard
       }
-      await authLogin(username, password);
-      navigate('/');
     } catch (err: any) {
       setError(err.message || 'Authentication failed');
     } finally {

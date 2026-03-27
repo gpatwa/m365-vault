@@ -144,7 +144,7 @@ export default function Onboard() {
 }
 
 
-/** Cyber Recovery Simulation — immersive walkthrough of a ransomware incident */
+/** Interactive Recovery Experience — customer takes real actions with their data */
 function CyberRecoverySimulation({ tenantName, disc, onComplete, simScene, setSimScene }: {
   tenantName: string;
   disc: any;
@@ -152,276 +152,222 @@ function CyberRecoverySimulation({ tenantName, disc, onComplete, simScene, setSi
   simScene: number;
   setSimScene: (n: number) => void;
 }) {
+  const navigate = useNavigate();
   const mailboxes = disc?.mailboxes || 6;
+  const [actionDone, setActionDone] = useState<Record<number, boolean>>({});
 
-  const SCENES = [
+  const markDone = (sceneIdx: number) => {
+    setActionDone(prev => ({ ...prev, [sceneIdx]: true }));
+    // Auto-advance after 1.5s
+    setTimeout(() => setSimScene(sceneIdx + 1), 1500);
+  };
+
+  const STEPS = [
     {
-      key: 'normal',
-      title: 'Normal Operations',
-      subtitle: 'Everything is running smoothly...',
-      bg: 'from-green-900 to-green-800',
-      icon: '✅',
-      duration: 3000,
+      key: 'your_backup',
+      title: 'Your Data is Backed Up',
+      subtitle: `${tenantName} is now protected. Here's what Shieldio can do.`,
+      problem: null,
+      action: { label: 'Explore Your Backups →', route: '/exchange' },
       content: (
         <div className="space-y-3">
-          <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
-            <CheckCircle className="w-5 h-5 text-green-400" />
-            <span className="text-green-100">{mailboxes} mailboxes backed up • Last backup: 2 min ago</span>
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div><div className="text-2xl font-bold text-green-700">{mailboxes}</div><div className="text-xs text-green-600">Mailboxes</div></div>
+              <div><div className="text-2xl font-bold text-green-700">{disc?.sites || 0}</div><div className="text-xs text-green-600">SharePoint Sites</div></div>
+              <div><div className="text-2xl font-bold text-green-700">{disc?.entra_objects ? '188' : '1'}</div><div className="text-xs text-green-600">Entra ID Objects</div></div>
+            </div>
           </div>
-          <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
-            <CheckCircle className="w-5 h-5 text-green-400" />
-            <span className="text-green-100">Health Score: 100/100 • All systems normal</span>
+          <p className="text-sm text-gray-500 text-center">Your first backup captured real data. Let's see what you can do with it.</p>
+        </div>
+      ),
+    },
+    {
+      key: 'find_restore',
+      title: 'Find & Restore Deleted Data',
+      subtitle: 'Someone accidentally deleted an important email. Can you find it?',
+      problem: '📧 An employee deleted the Q4 Budget Review email. With Microsoft 365 alone, once the recycle bin expires — it\'s gone forever.',
+      action: { label: 'Try Search → Find & Restore', route: '/restore' },
+      result: '✅ Found in 0.3 seconds. One click to restore to inbox. Microsoft can\'t do this after 93 days.',
+      content: (
+        <div className="space-y-3">
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+            <p className="text-sm text-amber-800 font-medium">🔍 Try it: Go to Self-Service Restore and search for any backed-up item</p>
           </div>
-          <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
-            <CheckCircle className="w-5 h-5 text-green-400" />
-            <span className="text-green-100">Smart Engine monitoring • No anomalies detected</span>
+          <div className="bg-white border border-gray-200 rounded-xl p-3">
+            <div className="flex items-center gap-2 text-sm"><span className="text-gray-400">M365:</span> <span className="text-red-500 font-medium">Recycle bin expires in 93 days → gone forever</span></div>
+            <div className="flex items-center gap-2 text-sm mt-1"><span className="text-gray-400">Shieldio:</span> <span className="text-green-600 font-medium">Restore from any backup point → 30 seconds</span></div>
           </div>
         </div>
       ),
     },
     {
-      key: 'incident',
-      title: '⚠️ INCIDENT DETECTED',
-      subtitle: 'Shieldio Smart Engine detected unusual activity',
-      bg: 'from-red-900 to-red-800',
-      icon: '🚨',
-      duration: 4000,
+      key: 'smart_engine',
+      title: 'AI-Powered Threat Detection',
+      subtitle: 'What if ransomware encrypted your files right now?',
+      problem: '🚨 Microsoft 365 has NO anomaly detection. Ransomware can run for hours before anyone notices.',
+      action: { label: 'See Smart Engine →', route: '/smart-engine' },
+      result: '✅ Shieldio detects anomalies automatically — mass deletions, encryption spikes, unusual admin changes.',
       content: (
         <div className="space-y-3">
-          <div className="flex items-center gap-3 bg-red-500/20 border border-red-500/30 rounded-lg p-3 animate-pulse">
-            <XCircle className="w-5 h-5 text-red-400" />
-            <span className="text-red-100 font-medium">1,847 files renamed to .encrypted</span>
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+            <p className="text-sm text-red-800 font-medium">⚠️ Scenario: 1,847 files renamed to .encrypted across 3 user accounts</p>
+            <p className="text-xs text-red-600 mt-1">Shieldio Smart Engine detects this pattern in real-time using z-score anomaly detection.</p>
           </div>
-          <div className="flex items-center gap-3 bg-red-500/20 border border-red-500/30 rounded-lg p-3">
-            <XCircle className="w-5 h-5 text-red-400" />
-            <span className="text-red-100">3 mailboxes showing mass deletion</span>
-          </div>
-          <div className="flex items-center gap-3 bg-red-500/20 border border-red-500/30 rounded-lg p-3">
-            <XCircle className="w-5 h-5 text-red-400" />
-            <span className="text-red-100">Entra ID: new admin role assigned to unknown user</span>
-          </div>
-          <div className="mt-2 text-center">
-            <span className="text-red-300 text-sm animate-pulse">⚡ Detected automatically by AI anomaly detection</span>
+          <div className="bg-white border border-gray-200 rounded-xl p-3">
+            <div className="flex items-center gap-2 text-sm"><span className="text-gray-400">M365:</span> <span className="text-red-500 font-medium">No detection. Attack runs until someone notices.</span></div>
+            <div className="flex items-center gap-2 text-sm mt-1"><span className="text-gray-400">Shieldio:</span> <span className="text-green-600 font-medium">Alert fires within minutes. Auto-identifies blast radius.</span></div>
           </div>
         </div>
       ),
     },
     {
-      key: 'analysis',
-      title: 'Blast Radius Analysis',
-      subtitle: 'Shieldio mapped exactly what was affected',
-      bg: 'from-amber-900 to-amber-800',
-      icon: '🔍',
-      duration: 4000,
+      key: 'recovery',
+      title: 'One-Click Recovery',
+      subtitle: 'Recover everything — files, emails, identity config — in minutes.',
+      problem: '💀 Without a separate backup, recovery takes DAYS. Microsoft has no point-in-time restore for OneDrive or Exchange.',
+      action: { label: 'View Recovery Dashboard →', route: '/recovery' },
+      result: '✅ Recovery Plan: restore by priority (executives first), verify with checksums, complete in 8 minutes.',
       content: (
         <div className="space-y-3">
-          <div className="grid grid-cols-3 gap-3">
-            <div className="bg-white/10 rounded-lg p-3 text-center">
-              <div className="text-2xl font-bold text-amber-200">3</div>
-              <div className="text-xs text-amber-300">Users Affected</div>
-            </div>
-            <div className="bg-white/10 rounded-lg p-3 text-center">
-              <div className="text-2xl font-bold text-amber-200">1,847</div>
-              <div className="text-xs text-amber-300">Files Encrypted</div>
-            </div>
-            <div className="bg-white/10 rounded-lg p-3 text-center">
-              <div className="text-2xl font-bold text-amber-200">45</div>
-              <div className="text-xs text-amber-300">Emails Deleted</div>
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <p className="text-sm text-blue-800 font-medium">🎯 Recovery prioritized by business criticality:</p>
+            <div className="mt-2 space-y-1">
+              <div className="flex items-center gap-2"><span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded font-bold">P1</span><span className="text-sm text-blue-700">CEO + CFO mailboxes (critical)</span></div>
+              <div className="flex items-center gap-2"><span className="bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded font-bold">P2</span><span className="text-sm text-blue-700">1,847 encrypted files (rollback)</span></div>
+              <div className="flex items-center gap-2"><span className="bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded font-bold">P3</span><span className="text-sm text-blue-700">Revert rogue Entra ID changes</span></div>
             </div>
           </div>
-          <div className="bg-white/10 rounded-lg p-3">
-            <div className="flex items-center justify-between">
-              <span className="text-amber-200 text-sm">First sign of attack:</span>
-              <span className="text-white font-mono text-sm">14 minutes ago</span>
-            </div>
-            <div className="flex items-center justify-between mt-1">
-              <span className="text-amber-200 text-sm">Last clean backup:</span>
-              <span className="text-green-400 font-mono text-sm font-bold">16 minutes ago ✓</span>
-            </div>
-          </div>
-          <div className="text-center text-amber-300 text-sm">
-            We know exactly what happened and when
+          <div className="bg-white border border-gray-200 rounded-xl p-3">
+            <div className="flex items-center gap-2 text-sm"><span className="text-gray-400">M365:</span> <span className="text-red-500 font-medium">Days to weeks. Manual. No prioritization.</span></div>
+            <div className="flex items-center gap-2 text-sm mt-1"><span className="text-gray-400">Shieldio:</span> <span className="text-green-600 font-medium">8 minutes. Automated. Business-aware priority.</span></div>
           </div>
         </div>
       ),
     },
     {
-      key: 'plan',
-      title: 'Recovery Plan',
-      subtitle: 'AI-prioritized based on business criticality',
-      bg: 'from-blue-900 to-blue-800',
-      icon: '🎯',
-      duration: 4000,
+      key: 'config_drift',
+      title: 'Detect Configuration Changes',
+      subtitle: 'Your Entra ID config changed. What was different?',
+      problem: '🔑 Microsoft doesn\'t back up Conditional Access policies, admin roles, or app registrations. If someone changes them — no undo.',
+      action: { label: 'View Entra ID Snapshots →', route: '/entra-id' },
+      result: '✅ Compare any two points in time. See exactly what was added, removed, or changed. One click to revert.',
       content: (
         <div className="space-y-3">
-          <div className="bg-white/10 rounded-lg p-3 border-l-4 border-red-400">
-            <div className="flex items-center gap-2">
-              <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">P1</span>
-              <span className="text-white font-medium text-sm">Restore CEO + CFO mailboxes</span>
-            </div>
-            <span className="text-blue-200 text-xs">Critical executives — restore first</span>
-          </div>
-          <div className="bg-white/10 rounded-lg p-3 border-l-4 border-amber-400">
-            <div className="flex items-center gap-2">
-              <span className="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">P2</span>
-              <span className="text-white font-medium text-sm">Restore 1,847 encrypted OneDrive files</span>
-            </div>
-            <span className="text-blue-200 text-xs">Roll back to last clean snapshot</span>
-          </div>
-          <div className="bg-white/10 rounded-lg p-3 border-l-4 border-blue-400">
-            <div className="flex items-center gap-2">
-              <span className="bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">P3</span>
-              <span className="text-white font-medium text-sm">Revert unauthorized Entra ID changes</span>
-            </div>
-            <span className="text-blue-200 text-xs">Remove rogue admin role assignment</span>
-          </div>
-          <div className="text-center text-blue-300 text-sm">
-            One-click execution • Human approval required
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: 'recovered',
-      title: '✅ Recovery Complete',
-      subtitle: `${tenantName} is fully restored`,
-      bg: 'from-green-900 to-green-800',
-      icon: '🎉',
-      duration: 5000,
-      content: (
-        <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white/10 rounded-lg p-3 text-center">
-              <div className="text-2xl font-bold text-green-300">1,847</div>
-              <div className="text-xs text-green-200">Files Restored</div>
-            </div>
-            <div className="bg-white/10 rounded-lg p-3 text-center">
-              <div className="text-2xl font-bold text-green-300">45</div>
-              <div className="text-xs text-green-200">Emails Recovered</div>
-            </div>
-            <div className="bg-white/10 rounded-lg p-3 text-center">
-              <div className="text-2xl font-bold text-green-300">8 min</div>
-              <div className="text-xs text-green-200">Recovery Time</div>
-            </div>
-            <div className="bg-white/10 rounded-lg p-3 text-center">
-              <div className="text-2xl font-bold text-green-300">100%</div>
-              <div className="text-xs text-green-200">Verified ✓</div>
+          <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+            <p className="text-sm text-purple-800 font-medium">🔍 Snapshot comparison shows:</p>
+            <div className="mt-2 space-y-1 text-sm text-purple-700">
+              <div className="flex items-center gap-2"><span className="text-green-600">+</span> New admin role assigned to unknown user</div>
+              <div className="flex items-center gap-2"><span className="text-red-600">−</span> MFA Conditional Access policy disabled</div>
+              <div className="flex items-center gap-2"><span className="text-amber-600">~</span> OAuth app permissions expanded</div>
             </div>
           </div>
-          <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-3 text-center">
-            <span className="text-green-200 text-sm font-medium">
-              Checksum validation confirmed — zero data loss
-            </span>
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: 'without',
-      title: 'Without Shieldio...',
-      subtitle: 'What happens without a separate backup',
-      bg: 'from-gray-900 to-gray-800',
-      icon: '💀',
-      duration: 0, // Manual advance
-      content: (
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 bg-red-500/10 rounded-lg p-3">
-            <XCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
-            <span className="text-gray-300 text-sm">Microsoft recycle bin: <span className="text-red-400 font-medium">93 days max, then gone forever</span></span>
-          </div>
-          <div className="flex items-center gap-3 bg-red-500/10 rounded-lg p-3">
-            <XCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
-            <span className="text-gray-300 text-sm">No anomaly detection: <span className="text-red-400 font-medium">attack runs for hours undetected</span></span>
-          </div>
-          <div className="flex items-center gap-3 bg-red-500/10 rounded-lg p-3">
-            <XCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
-            <span className="text-gray-300 text-sm">No point-in-time restore: <span className="text-red-400 font-medium">can't go back to "before"</span></span>
-          </div>
-          <div className="flex items-center gap-3 bg-red-500/10 rounded-lg p-3">
-            <XCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
-            <span className="text-gray-300 text-sm">Recovery time: <span className="text-red-400 font-medium">days or weeks, not 8 minutes</span></span>
-          </div>
-          <div className="mt-2 text-center">
-            <span className="text-gray-400 text-sm">This is why you need independent SaaS data protection.</span>
+          <div className="bg-white border border-gray-200 rounded-xl p-3">
+            <div className="flex items-center gap-2 text-sm"><span className="text-gray-400">M365:</span> <span className="text-red-500 font-medium">No Entra ID backup. No undo. No diff.</span></div>
+            <div className="flex items-center gap-2 text-sm mt-1"><span className="text-gray-400">Shieldio:</span> <span className="text-green-600 font-medium">188 objects backed up. Full diff. One-click revert.</span></div>
           </div>
         </div>
       ),
     },
   ];
 
-  const scene = SCENES[simScene] || SCENES[0];
-  const isLastScene = simScene >= SCENES.length - 1;
-
-  // Auto-advance for timed scenes
-  useEffect(() => {
-    if (scene.duration > 0 && simScene < SCENES.length - 1) {
-      const timer = setTimeout(() => setSimScene(simScene + 1), scene.duration);
-      return () => clearTimeout(timer);
-    }
-  }, [simScene, scene.duration]);
+  const currentStep = STEPS[simScene] || STEPS[0];
+  const isLastStep = simScene >= STEPS.length - 1;
+  const isDone = actionDone[simScene];
 
   return (
     <div>
       <div className="text-center mb-4">
-        <h2 className="text-xl font-bold text-gray-900">See How Recovery Works</h2>
-        <p className="text-gray-500 text-sm">Watch a simulated ransomware attack and recovery</p>
+        <h2 className="text-xl font-bold text-gray-900">Experience Your Protection</h2>
+        <p className="text-gray-500 text-sm">See what Shieldio does — with your real data</p>
       </div>
 
-      {/* Scene progress dots */}
-      <div className="flex items-center justify-center gap-1.5 mb-4">
-        {SCENES.map((s, i) => (
+      {/* Step progress */}
+      <div className="flex items-center justify-center gap-1.5 mb-5">
+        {STEPS.map((s, i) => (
           <button
             key={s.key}
             onClick={() => setSimScene(i)}
-            className={`w-2 h-2 rounded-full transition-all ${
-              i === simScene ? 'w-6 bg-blue-500' :
-              i < simScene ? 'bg-green-500' : 'bg-gray-300'
+            className={`w-2.5 h-2.5 rounded-full transition-all ${
+              i === simScene ? 'w-8 bg-blue-500' :
+              actionDone[i] ? 'bg-green-500' :
+              i < simScene ? 'bg-blue-300' : 'bg-gray-200'
             }`}
           />
         ))}
       </div>
 
-      {/* Scene card */}
-      <div className={`bg-gradient-to-br ${scene.bg} rounded-2xl p-6 text-white min-h-[320px] flex flex-col transition-all duration-500`}>
-        <div className="text-center mb-4">
-          <div className="text-3xl mb-2">{scene.icon}</div>
-          <h3 className="text-xl font-bold">{scene.title}</h3>
-          <p className="text-sm opacity-75 mt-1">{scene.subtitle}</p>
+      {/* Step content */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        {/* Header */}
+        <div className="bg-gray-50 border-b border-gray-200 px-5 py-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-gray-400">Step {simScene + 1} of {STEPS.length}</span>
+            {isDone && <span className="text-xs font-semibold text-green-600 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Done</span>}
+          </div>
+          <h3 className="text-lg font-bold text-gray-900 mt-1">{currentStep.title}</h3>
+          <p className="text-sm text-gray-500">{currentStep.subtitle}</p>
         </div>
-        <div className="flex-1">{scene.content}</div>
+
+        {/* Problem statement */}
+        {currentStep.problem && (
+          <div className="px-5 py-3 bg-red-50 border-b border-red-100">
+            <p className="text-sm text-red-800">{currentStep.problem}</p>
+          </div>
+        )}
+
+        {/* Content */}
+        <div className="px-5 py-4">{currentStep.content}</div>
+
+        {/* Action button */}
+        <div className="px-5 py-4 border-t border-gray-100 bg-gray-50">
+          {!isDone ? (
+            <button
+              onClick={() => {
+                markDone(simScene);
+                navigate(currentStep.action.route);
+              }}
+              className="w-full py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+            >
+              {currentStep.action.label}
+            </button>
+          ) : (
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-2 text-green-600 mb-2">
+                <CheckCircle className="w-5 h-5" />
+                <span className="font-semibold text-sm">{currentStep.result || 'Completed!'}</span>
+              </div>
+              {!isLastStep ? (
+                <button
+                  onClick={() => setSimScene(simScene + 1)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-1 mx-auto"
+                >
+                  Next: {STEPS[simScene + 1]?.title} <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              ) : (
+                <button
+                  onClick={onComplete}
+                  className="px-6 py-2.5 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 flex items-center gap-2 mx-auto"
+                >
+                  Go to Dashboard <ArrowRight className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Navigation */}
-      <div className="flex items-center justify-between mt-4">
+      {/* Navigation + skip */}
+      <div className="flex items-center justify-between mt-3">
         <button
           onClick={() => setSimScene(Math.max(0, simScene - 1))}
           disabled={simScene === 0}
-          className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 disabled:opacity-30"
+          className="text-xs text-gray-400 hover:text-gray-600 disabled:opacity-30"
         >
-          ← Previous
+          ← Back
         </button>
-
-        {isLastScene ? (
-          <button
-            onClick={onComplete}
-            className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
-          >
-            Continue to Dashboard <ArrowRight className="w-4 h-4" />
-          </button>
-        ) : (
-          <button
-            onClick={() => setSimScene(simScene + 1)}
-            className="px-4 py-2 text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
-          >
-            {scene.duration > 0 ? 'Skip →' : 'Next →'}
-          </button>
-        )}
-      </div>
-
-      {/* Skip entire simulation */}
-      <div className="text-center mt-2">
         <button onClick={onComplete} className="text-xs text-gray-400 hover:text-gray-600">
-          Skip simulation → Go to Dashboard
+          Skip → Dashboard
         </button>
       </div>
     </div>

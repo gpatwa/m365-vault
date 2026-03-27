@@ -58,12 +58,9 @@ export default function Login() {
     try {
       if (isRegister) {
         await api.register({ username, email, password, full_name: fullName || undefined, role: 'admin' });
-        await authLogin(username, password);
-        navigate('/onboard');  // New users → onboarding flow
-      } else {
-        await authLogin(username, password);
-        navigate('/');  // Existing users → dashboard
       }
+      await authLogin(username, password);
+      navigate('/');  // SmartHome handles routing: no tenants → /onboard, has tenants → dashboard
     } catch (err: any) {
       setError(err.message || 'Authentication failed');
     } finally {

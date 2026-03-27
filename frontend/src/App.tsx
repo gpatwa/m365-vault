@@ -1,6 +1,8 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { api } from './api/client';
 import Layout from './components/Layout';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
@@ -41,10 +43,30 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function RootRoute() {
   const { isAuthenticated } = useAuth();
-  if (isAuthenticated) {
-    return <ProtectedRoute><Layout /></ProtectedRoute>;
-  }
-  return <Landing />;
+  if (!isAuthenticated) return <Landing />;
+  return <ProtectedRoute><Layout /></ProtectedRoute>;
+}
+
+/** Smart redirect: checks user state and routes to the right experience */
+function SmartHome() {
+  const navigate = useNavigate();
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    // Check if user has any tenants
+    api.get<any[]>('/tenants/')
+      .then(tenants => {
+        if (!tenants || tenants.length === 0) {
+          navigate('/onboard', { replace: true });  // No tenants → onboarding
+        } else {
+          setChecked(true);  // Has tenants → show dashboard
+        }
+      })
+      .catch(() => setChecked(true));  // Fallback to dashboard
+  }, []);
+
+  if (!checked) return null;  // Brief loading while checking
+  return <Dashboard />;
 }
 
 function AppRoutes() {
@@ -63,7 +85,7 @@ function AppRoutes() {
 
       {/* Root: Landing for anonymous, Dashboard for authenticated */}
       <Route path="/" element={<RootRoute />}>
-        <Route index element={<Dashboard />} />
+        <Route index element={<SmartHome />} />
         <Route path="exchange" element={<Exchange />} />
         <Route path="onedrive" element={<OneDrive />} />
         <Route path="sharepoint" element={<SharePoint />} />

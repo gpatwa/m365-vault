@@ -32,6 +32,7 @@ import SecurityPage from './pages/Security';
 import Docs from './pages/Docs';
 import DocViewer from './pages/DocViewer';
 import Performance from './pages/Performance';
+import OrgContext from './pages/OrgContext';
 import Onboard, { OnboardCallback } from './pages/Onboard';
 
 const queryClient = new QueryClient();
@@ -80,7 +81,6 @@ function AppRoutes() {
       <Route path="/legal" element={<Legal />} />
       <Route path="/docs" element={<Docs />} />
       <Route path="/docs/view/:filename" element={<DocViewer />} />
-      <Route path="/security" element={<SecurityPage />} />
       <Route path="/onboard" element={<ProtectedRoute><Onboard /></ProtectedRoute>} />
       <Route path="/onboard/callback" element={<ProtectedRoute><OnboardCallback /></ProtectedRoute>} />
 
@@ -107,6 +107,7 @@ function AppRoutes() {
         <Route path="usage" element={<Usage />} />
         <Route path="security" element={<SecurityPage />} />
         <Route path="performance" element={<Performance />} />
+        <Route path="org-context" element={<OrgContext />} />
         <Route path=":workload/:objectId" element={<ObjectDetail />} />
       </Route>
     </Routes>

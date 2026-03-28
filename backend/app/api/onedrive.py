@@ -67,6 +67,8 @@ async def list_accounts(
                 "last_backup_status": a.last_backup_status,
                 "total_items": a.total_items_backed_up,
                 "total_size_bytes": a.total_size_bytes,
+                "criticality_score": a.criticality_score,
+                "criticality_tier": a.criticality_tier,
             }
             for a in accounts
         ],

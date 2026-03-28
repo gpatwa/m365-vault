@@ -162,6 +162,11 @@ Interactive API docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 - [x] Phase 1: Enterprise Foundation (Exchange, OneDrive, SharePoint, Teams, Entra ID)
 - [x] Phase 2: Intelligence (Smart Engine, Sensitive Data, Malware Scan, Validation, Self-Restore)
 - [x] Production Readiness (tests, security, logging, CI/CD)
+- [x] Phase 2.5A: Org Context Layer — Smart Backup (auto-detected criticality, VIP groups, 4-factor scoring)
+- [x] Phase 2.5B: Org Context Layer — Smart Recovery (pre-computed MVB plans, criticality-weighted confidence)
+- [ ] Phase 2.5C: Threat-Informed Recovery (OCSF ingestion, clean point detection, SIEM integration)
+- [ ] Phase 2.5D: Agentic Recovery (Claude multi-stage verification, NL plan adjustment)
+- [ ] Phase 2.5E: Cleanroom Recovery (isolated restore to scratch tenant, scan, validate, promote)
 - [ ] Phase 3: Power Platform, MSP Console, eDiscovery, SIEM, Kubernetes
 - [ ] Phase 4: Google Workspace, Salesforce, NL Search (BYOK)
 

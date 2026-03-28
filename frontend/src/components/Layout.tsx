@@ -53,6 +53,7 @@ const navGroups: NavGroup[] = [
     defaultOpen: false,
     items: [
       { path: '/smart-engine', label: 'Smart Engine', icon: Brain },
+      { path: '/org-context', label: 'Org Context', icon: Shield },
       { path: '/alerts', label: 'Alerts', icon: Bell },
       { path: '/reports', label: 'Reports', icon: BarChart3 },
     ],

@@ -23,6 +23,7 @@ from app.models.protected_object import ProtectedObject, WorkloadType, Protectio
 from app.models.restore_job import RestoreJob, RestoreType, RestoreStatus
 from app.models.snapshot import Snapshot, SnapshotStatus, SnapshotItem
 from app.models.sla_policy import SLAPolicy
+from app.models.tenant import Tenant
 from app.models.user import User
 from app.services.auth import get_current_user, require_restore_permission
 from app.interfaces.dispatcher_factory import get_dispatcher
@@ -449,7 +450,15 @@ async def mass_restore(
                 "snapshot_date": snapshot.completed_at.isoformat() if snapshot.completed_at else None,
                 "item_count": snapshot.item_count,
                 "size_bytes": snapshot.size_bytes,
+                "criticality_score": obj.criticality_score or 50,
+                "criticality_tier": obj.criticality_tier or "medium",
             })
+
+    # Sort by criticality: entra_id first (identity), then by score descending
+    restore_plan.sort(key=lambda x: (
+        0 if x["workload"] == "entra_id" else 1,  # Identity first
+        -x["criticality_score"],  # Then by score descending
+    ))
 
     if req.dry_run:
         return {
@@ -783,5 +792,252 @@ async def verify_recovery(
             "total_items_backed_up": sum(o.total_items_backed_up or 0 for o in objects),
             "total_size_bytes": sum(o.total_size_bytes or 0 for o in objects),
             "total_restores": total_restores,
+        },
+    }
+
+
+# ═══════════════════════════════════════════════════════
+# 7. MVB Recovery Plan — Pre-computed, criticality-ordered
+# ═══════════════════════════════════════════════════════
+
+@router.get("/mvb-plan")
+async def get_mvb_plan(
+    tenant_id: int = Query(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get the current pre-computed MVB recovery plan for a tenant."""
+    from app.models.org_context import RecoveryPlan
+    import json as _json
+
+    result = await db.execute(
+        select(RecoveryPlan).where(
+            RecoveryPlan.tenant_id == tenant_id,
+            RecoveryPlan.plan_type == "mvb",
+        ).order_by(desc(RecoveryPlan.computed_at)).limit(1)
+    )
+    plan = result.scalar_one_or_none()
+
+    if not plan:
+        return {
+            "status": "no_plan",
+            "message": "No MVB plan computed yet. Click 'Generate Plan' or wait for scheduled refresh.",
+        }
+
+    # Check staleness
+    is_stale = plan.stale_after and datetime.utcnow() > plan.stale_after
+
+    return {
+        "status": "stale" if is_stale else plan.status,
+        "plan_id": plan.id,
+        "name": plan.name,
+        "plan_type": plan.plan_type,
+        "mvb_user_count": plan.mvb_user_count,
+        "mvb_object_count": plan.mvb_object_count,
+        "total_object_count": plan.total_object_count,
+        "total_items": plan.total_items,
+        "total_size_bytes": plan.total_size_bytes,
+        "estimated_minutes": plan.estimated_minutes,
+        "phases": _json.loads(plan.phases_json) if plan.phases_json else [],
+        "reasoning": plan.reasoning,
+        "computed_at": plan.computed_at.isoformat() if plan.computed_at else None,
+        "is_stale": is_stale,
+    }
+
+
+@router.post("/mvb-plan/generate")
+async def generate_mvb_plan(
+    tenant_id: int = Query(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_restore_permission),
+):
+    """Generate (or refresh) the MVB recovery plan for a tenant."""
+    from app.services.mvb_plan_generator import MVBPlanGenerator
+
+    tenant = await db.get(Tenant, tenant_id)
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+
+    generator = MVBPlanGenerator(db)
+    plan = await generator.generate_plan(tenant)
+    await db.commit()
+
+    import json as _json
+    return {
+        "status": "generated",
+        "plan_id": plan.id,
+        "mvb_user_count": plan.mvb_user_count,
+        "mvb_object_count": plan.mvb_object_count,
+        "total_object_count": plan.total_object_count,
+        "phases_count": len(_json.loads(plan.phases_json)) if plan.phases_json else 0,
+        "estimated_minutes": plan.estimated_minutes,
+        "reasoning": plan.reasoning,
+    }
+
+
+# ═══════════════════════════════════════════════════════
+# 8. Criticality-Weighted Confidence Score (v2)
+# ═══════════════════════════════════════════════════════
+
+@router.get("/confidence/v2")
+async def get_confidence_v2(
+    tenant_id: int = Query(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Recovery Confidence Score v2 — weighted by criticality.
+
+    Critical users matter more. A tenant with 100% backup coverage on
+    low-priority users but missing the CEO scores lower than one with
+    the CEO protected but missing some interns.
+    """
+    from app.models.org_context import UserContext
+
+    since_7d = datetime.utcnow() - timedelta(days=7)
+
+    # Get all protected objects with criticality
+    objects = (await db.execute(
+        select(ProtectedObject).where(
+            ProtectedObject.tenant_id == tenant_id,
+            ProtectedObject.status == ProtectionStatus.PROTECTED,
+        )
+    )).scalars().all()
+
+    total_objects = (await db.execute(
+        select(func.count()).where(ProtectedObject.tenant_id == tenant_id)
+    )).scalar() or 0
+
+    if not objects:
+        return _build_confidence_response(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+
+    # Weight each object by criticality
+    # critical=4x, high=2x, medium=1x, low=0.5x
+    TIER_WEIGHTS = {"critical": 4.0, "high": 2.0, "medium": 1.0, "low": 0.5}
+    total_weight = sum(TIER_WEIGHTS.get(o.criticality_tier or "medium", 1.0) for o in objects)
+
+    # Weighted freshness — are critical users backed up recently?
+    fresh_weight = sum(
+        TIER_WEIGHTS.get(o.criticality_tier or "medium", 1.0)
+        for o in objects
+        if o.last_backup_at and o.last_backup_at >= since_7d
+    )
+    freshness_score = (fresh_weight / total_weight * 100) if total_weight > 0 else 0
+
+    # Weighted completeness — are critical users protected?
+    total_all_weight = total_weight + sum(
+        TIER_WEIGHTS.get("medium", 1.0)
+        for _ in range(max(0, total_objects - len(objects)))
+    )
+    completeness_score = (total_weight / total_all_weight * 100) if total_all_weight > 0 else 0
+
+    # MVB coverage — what % of critical+high users are protected?
+    critical_high_total = (await db.execute(
+        select(func.count()).where(
+            UserContext.tenant_id == tenant_id,
+            UserContext.criticality_tier.in_(["critical", "high"]),
+        )
+    )).scalar() or 0
+
+    critical_high_protected = (await db.execute(
+        select(func.count()).where(
+            UserContext.tenant_id == tenant_id,
+            UserContext.criticality_tier.in_(["critical", "high"]),
+            UserContext.protected_object_id.isnot(None),
+        )
+    )).scalar() or 0
+
+    mvb_coverage = (critical_high_protected / critical_high_total * 100) if critical_high_total > 0 else 100
+
+    # Restore success (same as v1)
+    total_restores = (await db.execute(
+        select(func.count()).where(
+            RestoreJob.tenant_id == tenant_id,
+            RestoreJob.completed_at >= datetime.utcnow() - timedelta(days=30),
+        )
+    )).scalar() or 0
+
+    successful_restores = (await db.execute(
+        select(func.count()).where(
+            RestoreJob.tenant_id == tenant_id,
+            RestoreJob.status == RestoreStatus.COMPLETED,
+            RestoreJob.completed_at >= datetime.utcnow() - timedelta(days=30),
+        )
+    )).scalar() or 0
+
+    restore_score = (successful_restores / total_restores * 100) if total_restores > 0 else 50
+
+    # Validation (same as v1)
+    validated = (await db.execute(
+        select(func.count()).where(
+            Snapshot.protected_object_id.in_([o.id for o in objects]),
+            Snapshot.validation_status == "passed",
+        )
+    )).scalar() or 0
+
+    total_snaps = (await db.execute(
+        select(func.count()).where(
+            Snapshot.protected_object_id.in_([o.id for o in objects]),
+            Snapshot.status == SnapshotStatus.COMPLETED,
+        )
+    )).scalar() or 0
+
+    validation_score = (validated / total_snaps * 100) if total_snaps > 0 else 30
+
+    return _build_confidence_response(
+        freshness_score, completeness_score, restore_score, validation_score,
+        mvb_coverage, len(objects), total_objects, critical_high_total,
+        critical_high_protected, total_restores, successful_restores,
+    )
+
+
+def _build_confidence_response(
+    freshness, completeness, restore, validation,
+    mvb_coverage, protected_count, total_count, critical_total,
+    critical_protected, total_restores, successful_restores,
+):
+    # Weighted: freshness 25%, completeness 20%, MVB coverage 20%, restore 20%, validation 15%
+    confidence = round(
+        freshness * 0.25 +
+        completeness * 0.20 +
+        mvb_coverage * 0.20 +
+        restore * 0.20 +
+        validation * 0.15
+    )
+
+    if confidence >= 90:
+        grade, label, color = "A", "Excellent", "green"
+    elif confidence >= 70:
+        grade, label, color = "B", "Good", "blue"
+    elif confidence >= 50:
+        grade, label, color = "C", "Fair", "amber"
+    else:
+        grade, label, color = "D", "At Risk", "red"
+
+    return {
+        "score": min(confidence, 100),
+        "grade": grade,
+        "label": label,
+        "color": color,
+        "factors": {
+            "freshness": {
+                "score": round(freshness, 1), "weight": 25,
+                "detail": "Criticality-weighted backup freshness (critical users count 4x)",
+            },
+            "completeness": {
+                "score": round(completeness, 1), "weight": 20,
+                "detail": f"{protected_count}/{total_count} objects protected (weighted by criticality)",
+            },
+            "mvb_coverage": {
+                "score": round(mvb_coverage, 1), "weight": 20,
+                "detail": f"{critical_protected}/{critical_total} critical+high users protected",
+            },
+            "restore_success": {
+                "score": round(restore, 1), "weight": 20,
+                "detail": f"{successful_restores}/{total_restores} restores succeeded (30d)" if total_restores > 0 else "No restores attempted yet",
+            },
+            "validation": {
+                "score": round(validation, 1), "weight": 15,
+                "detail": "Snapshot validation pass rate",
+            },
         },
     }

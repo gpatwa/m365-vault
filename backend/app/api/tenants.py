@@ -338,7 +338,7 @@ async def delete_tenant(
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant not found")
 
-    if not confirm or confirm != tenant.name:
+    if not confirm or confirm.strip() != tenant.name.strip():
         raise HTTPException(
             status_code=400,
             detail=f"Confirmation required. Add ?confirm={tenant.name} to permanently delete this tenant and ALL data."

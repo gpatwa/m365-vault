@@ -215,6 +215,7 @@ from app.api.usage import router as usage_router
 from app.api.status import router as status_router
 from app.api.export import router as export_router
 from app.api.recovery import router as recovery_router
+from app.api.org_context import router as org_context_router
 
 app.include_router(auth_router)
 app.include_router(tenants_router)
@@ -248,6 +249,7 @@ app.include_router(onboarding_router)
 app.include_router(security_router)
 app.include_router(benchmarks_router)
 app.include_router(docs_api_router)
+app.include_router(org_context_router)
 
 
 @app.get("/")

@@ -40,5 +40,7 @@ class ProtectedObject(Base):
     total_items_backed_up = Column(Integer, default=0)
     total_size_bytes = Column(Integer, default=0)
     metadata_json = Column(Text, nullable=True)  # Extra metadata as JSON
+    criticality_score = Column(Integer, default=50)  # 0-100, from Org Context Layer
+    criticality_tier = Column(String(20), default="medium")  # critical/high/medium/low
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

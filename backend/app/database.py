@@ -70,6 +70,9 @@ async def _run_migrations():
         # v1.8.0: Dead-letter queue — retry tracking on RestoreJob
         ("restore_jobs", "retry_count", "INTEGER DEFAULT 0"),
         ("restore_jobs", "max_retries", "INTEGER DEFAULT 3"),
+        # v2.2.0: Organizational Context Layer — criticality scoring
+        ("protected_objects", "criticality_score", "INTEGER DEFAULT 50"),
+        ("protected_objects", "criticality_tier", "VARCHAR(20) DEFAULT 'medium'"),
     ]
     async with engine.begin() as conn:
         for table, column, col_type in migrations:

@@ -74,6 +74,8 @@ async def list_teams(
                 "last_backup_at": t.last_backup_at.isoformat() if t.last_backup_at else None,
                 "total_items_backed_up": t.total_items_backed_up,
                 "total_size_bytes": t.total_size_bytes,
+                "criticality_score": t.criticality_score,
+                "criticality_tier": t.criticality_tier,
             }
             for t in teams
         ],

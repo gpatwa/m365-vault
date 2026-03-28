@@ -5,6 +5,7 @@ import { Mail, RefreshCw, Download, ArrowRight, Loader2 } from 'lucide-react';
 import { api } from '../api/client';
 import DataTable, { type Column } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
+import CriticalityBadge from '../components/CriticalityBadge';
 import { WorkloadPageLayout, Breadcrumb } from '../components/design-system';
 import { useTenantId } from '../hooks/useTenant';
 import { formatSize, timeAgo } from '../utils/format';
@@ -115,6 +116,12 @@ export default function Exchange() {
       render: (row) => (
         <span className="text-gray-500">{row.last_backup_at ? timeAgo(row.last_backup_at) : 'Never'}</span>
       ),
+    },
+    {
+      key: 'criticality_tier',
+      label: 'Criticality',
+      sortable: true,
+      render: (row) => row.criticality_tier ? <CriticalityBadge tier={row.criticality_tier} score={row.criticality_score} /> : <span className="text-gray-300">—</span>,
     },
     { key: 'total_items', label: 'Items', sortable: true },
     {

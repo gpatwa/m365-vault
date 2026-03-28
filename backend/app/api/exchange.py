@@ -69,6 +69,8 @@ async def list_mailboxes(
                 "last_backup_status": m.last_backup_status,
                 "total_items": m.total_items_backed_up,
                 "total_size_bytes": m.total_size_bytes,
+                "criticality_score": m.criticality_score,
+                "criticality_tier": m.criticality_tier,
             }
             for m in mailboxes
         ],

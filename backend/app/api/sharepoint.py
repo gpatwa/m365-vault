@@ -67,6 +67,8 @@ async def list_sites(
                 "last_backup_status": s.last_backup_status,
                 "total_items": s.total_items_backed_up,
                 "total_size_bytes": s.total_size_bytes,
+                "criticality_score": s.criticality_score,
+                "criticality_tier": s.criticality_tier,
             }
             for s in sites
         ],

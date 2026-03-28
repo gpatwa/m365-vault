@@ -8,6 +8,7 @@ import { formatSize, timeAgo } from '../utils/format';
 import { getActivePlatformLabel } from '../config/platforms';
 import DataTable, { type Column } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
+import CriticalityBadge from '../components/CriticalityBadge';
 import RestoreDialog from '../components/RestoreDialog';
 import type { Snapshot } from '../types';
 
@@ -127,6 +128,12 @@ export default function Teams() {
       label: 'Status',
       sortable: true,
       render: (row) => <StatusBadge status={row.status} />,
+    },
+    {
+      key: 'criticality_tier',
+      label: 'Criticality',
+      sortable: true,
+      render: (row: any) => row.criticality_tier ? <CriticalityBadge tier={row.criticality_tier} score={row.criticality_score} /> : <span className="text-gray-300">—</span>,
     },
     { key: 'total_items_backed_up', label: 'Items', sortable: true },
     {

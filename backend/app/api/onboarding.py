@@ -140,7 +140,7 @@ async def oauth_callback(
 
         # Create tenant record
         tenant_record = Tenant(
-            name=result.tenant_name or f"Tenant {result.tenant_id[:8]}",
+            name=(result.tenant_name or f"Tenant {result.tenant_id[:8]}").strip(),
             ms_tenant_id=result.tenant_id,
             client_id=result.credentials["client_id"],
             client_secret_encrypted=encryption_service.encrypt_string(

@@ -313,6 +313,88 @@ async def apply_worm_locks():
             await db.rollback()
 
 
+async def refresh_mvb_plans():
+    """Refresh pre-computed MVB recovery plans for all active tenants."""
+    from app.services.mvb_plan_generator import MVBPlanGenerator
+
+    async with async_session() as db:
+        try:
+            result = await db.execute(
+                select(Tenant).where(Tenant.status == TenantStatus.ACTIVE)
+            )
+            tenants = result.scalars().all()
+
+            for tenant in tenants:
+                try:
+                    generator = MVBPlanGenerator(db)
+                    plan = await generator.generate_plan(tenant)
+                    await db.commit()
+                    logger.info(f"MVB plan refreshed for tenant {tenant.name}: {plan.total_object_count} objects, {plan.estimated_minutes} min est.")
+                except Exception as e:
+                    logger.error(f"MVB plan refresh failed for tenant {tenant.name}: {e}")
+                    await db.rollback()
+        except Exception as e:
+            logger.error(f"MVB plan refresh scheduler error: {e}")
+
+
+async def collect_org_context():
+    """Collect organizational context (hierarchy, departments) from Graph for all tenants."""
+    from app.services.context_collector import ContextCollectorService
+    from app.services.criticality_scorer import CriticalityScorer
+
+    async with async_session() as db:
+        try:
+            result = await db.execute(
+                select(Tenant).where(Tenant.status == TenantStatus.ACTIVE)
+            )
+            tenants = result.scalars().all()
+
+            for tenant in tenants:
+                try:
+                    collector = ContextCollectorService(db)
+                    await collector.collect_all(tenant)
+
+                    scorer = CriticalityScorer(db)
+                    await scorer.score_all(tenant.id)
+
+                    logger.info(f"Org context collected for tenant {tenant.name}")
+                except Exception as e:
+                    logger.error(f"Org context collection failed for tenant {tenant.name}: {e}")
+                    await db.rollback()
+        except Exception as e:
+            logger.error(f"Org context scheduler error: {e}")
+
+
+async def collect_security_signals():
+    """Collect privileged roles and security signals (runs more frequently than full sync)."""
+    from app.services.context_collector import ContextCollectorService
+    from app.services.criticality_scorer import CriticalityScorer
+
+    async with async_session() as db:
+        try:
+            result = await db.execute(
+                select(Tenant).where(Tenant.status == TenantStatus.ACTIVE)
+            )
+            tenants = result.scalars().all()
+
+            for tenant in tenants:
+                try:
+                    collector = ContextCollectorService(db)
+                    graph = collector._get_graph_client(tenant)
+                    await collector._collect_privileged_roles(tenant, graph)
+                    await db.commit()
+
+                    scorer = CriticalityScorer(db)
+                    await scorer.score_all(tenant.id)
+
+                    logger.info(f"Security signals updated for tenant {tenant.name}")
+                except Exception as e:
+                    logger.warning(f"Security signal collection failed for tenant {tenant.name}: {e}")
+                    await db.rollback()
+        except Exception as e:
+            logger.error(f"Security signal scheduler error: {e}")
+
+
 def start_scheduler():
     """Start the background scheduler."""
     scheduler.add_job(
@@ -357,8 +439,29 @@ def start_scheduler():
         name="Detect and reset stale IN_PROGRESS jobs",
         replace_existing=True,
     )
+    scheduler.add_job(
+        refresh_mvb_plans,
+        IntervalTrigger(hours=6),
+        id="mvb_plan_refresh",
+        name="Refresh pre-computed MVB recovery plans",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        collect_org_context,
+        IntervalTrigger(hours=24),
+        id="org_context_collector",
+        name="Collect org context from Microsoft Graph",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        collect_security_signals,
+        IntervalTrigger(hours=6),
+        id="security_signal_collector",
+        name="Collect privileged roles and security signals",
+        replace_existing=True,
+    )
     scheduler.start()
-    logger.info("Scheduler started (backup, retry, smart engine, WORM, stale detector)")
+    logger.info("Scheduler started (backup, retry, smart engine, WORM, stale detector, org context)")
 
 
 def stop_scheduler():

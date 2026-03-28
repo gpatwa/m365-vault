@@ -145,230 +145,462 @@ export default function Onboard() {
 
 
 /** Interactive Recovery Experience — customer takes real actions with their data */
-function CyberRecoverySimulation({ tenantName, disc, onComplete, simScene, setSimScene }: {
+const fmtBytes = (b: number) => {
+  if (!b) return '0 B';
+  const u = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(b) / Math.log(1024));
+  return `${(b / Math.pow(1024, i)).toFixed(i ? 1 : 0)} ${u[i]}`;
+};
+
+const fmtTimeAgo = (iso: string) => {
+  if (!iso) return '';
+  const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+  return `${Math.floor(s / 86400)}d ago`;
+};
+
+const WORKLOAD_LABELS: Record<string, string> = {
+  exchange: 'Mailboxes', onedrive: 'OneDrive', sharepoint: 'SharePoint',
+  teams: 'Teams', entra_id: 'Entra ID',
+};
+
+const ENTRA_TYPE_LABELS: Record<string, { label: string; critical?: boolean }> = {
+  user: { label: 'Users' }, group: { label: 'Groups' },
+  directory_role: { label: 'Admin Roles', critical: true },
+  conditional_access_policy: { label: 'Conditional Access Policies', critical: true },
+  app_registration: { label: 'App Registrations', critical: true },
+  service_principal: { label: 'Service Principals' },
+  oauth2_permission_grant: { label: 'OAuth Permissions', critical: true },
+};
+
+const GapRow = ({ m365, shieldio }: { m365: string; shieldio: string }) => (
+  <div className="bg-white border border-gray-200 rounded-xl p-3 space-y-1">
+    <div className="flex items-center gap-2 text-sm"><span className="text-gray-400 w-16 flex-shrink-0">M365:</span> <span className="text-red-500 font-medium">{m365}</span></div>
+    <div className="flex items-center gap-2 text-sm"><span className="text-gray-400 w-16 flex-shrink-0">Shieldio:</span> <span className="text-green-600 font-medium">{shieldio}</span></div>
+  </div>
+);
+
+const Shimmer = () => (
+  <div className="space-y-3 animate-pulse">
+    <div className="h-20 bg-gray-100 rounded-xl" />
+    <div className="h-4 bg-gray-100 rounded w-3/4 mx-auto" />
+    <div className="h-16 bg-gray-100 rounded-xl" />
+  </div>
+);
+
+/** Animated counter: counts from 0 to target over duration */
+function useCountUp(target: number, active: boolean, duration = 1500) {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    if (!active || target <= 0) { setValue(target); return; }
+    setValue(0);
+    const start = Date.now();
+    const tick = () => {
+      const elapsed = Date.now() - start;
+      if (elapsed >= duration) { setValue(target); return; }
+      setValue(Math.round((elapsed / duration) * target));
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, [target, active, duration]);
+  return value;
+}
+
+function CyberRecoverySimulation({ tenantName, tenantId, disc, onComplete, simScene, setSimScene }: {
   tenantName: string;
+  tenantId: number;
   disc: any;
   onComplete: () => void;
   simScene: number;
   setSimScene: (n: number) => void;
 }) {
   const navigate = useNavigate();
-  const mailboxes = disc?.mailboxes || 6;
-  const [actionDone, setActionDone] = useState<Record<number, boolean>>({});
+  const [loading, setLoading] = useState(true);
+  const [sceneLoading, setSceneLoading] = useState(false);
 
-  const markDone = (sceneIdx: number) => {
-    setActionDone(prev => ({ ...prev, [sceneIdx]: true }));
-    // Auto-advance after 1.5s
-    setTimeout(() => setSimScene(sceneIdx + 1), 1500);
+  // Batch data (fetched on mount)
+  const [summary, setSummary] = useState<any>(null);
+  const [confidence, setConfidence] = useState<any>(null);
+  const [entraSummary, setEntraSummary] = useState<any>(null);
+
+  // Interactive state per scene
+  const [engaged, setEngaged] = useState<Record<number, boolean>>({});
+  const [attackPhase, setAttackPhase] = useState<'idle' | 'attacking' | 'detected' | 'resolved'>('idle');
+  const [scoreRevealed, setScoreRevealed] = useState(false);
+  const [recoveryPlan, setRecoveryPlan] = useState<any>(null);
+  const [planVisible, setPlanVisible] = useState(0); // items revealed so far
+
+  const markEngaged = (scene: number) => setEngaged(prev => ({ ...prev, [scene]: true }));
+
+  // Batch-fetch on mount
+  useEffect(() => {
+    if (!tenantId) { setLoading(false); return; }
+    Promise.allSettled([
+      api.get(`/dashboard/summary?tenant_id=${tenantId}`),
+      api.get(`/recovery/confidence?tenant_id=${tenantId}`),
+      api.get(`/entra-id/summary?tenant_id=${tenantId}`),
+    ]).then(([sumR, confR, entraR]) => {
+      if (sumR.status === 'fulfilled') setSummary(sumR.value);
+      if (confR.status === 'fulfilled') setConfidence(confR.value);
+      if (entraR.status === 'fulfilled') setEntraSummary(entraR.value);
+    }).finally(() => setLoading(false));
+  }, [tenantId]);
+
+  // Scene 0: auto-engage after mount animation
+  useEffect(() => {
+    if (simScene === 0 && !loading && !engaged[0]) {
+      const t = setTimeout(() => markEngaged(0), 2000);
+      return () => clearTimeout(t);
+    }
+  }, [simScene, loading]);
+
+  // Scene 2: auto-reveal score animation
+  useEffect(() => {
+    if (simScene === 2 && !scoreRevealed && confidence) {
+      const t = setTimeout(() => { setScoreRevealed(true); markEngaged(2); }, 2000);
+      return () => clearTimeout(t);
+    }
+  }, [simScene, confidence]);
+
+  // Derived data
+  const workloads = summary?.workloads || {};
+  const totalItems = summary?.snapshots?.total_items || Object.values(workloads).reduce((s: number, w: any) => s + (w?.total || 0), 0);
+  const totalStorage = summary?.storage?.total_bytes || 0;
+  const snapshotCount = summary?.snapshots?.total || 0;
+  const entra = entraSummary || {};
+  const conf = confidence || {};
+  const entraTotal = Object.values(entra.counts || {}).reduce((s: number, c: any) => s + (c as number), 0);
+
+  // Scene 0 count-up values
+  const countUpActive = simScene === 0 && !loading;
+  const animItems = useCountUp(totalItems as number, countUpActive);
+  const animSnaps = useCountUp(snapshotCount, countUpActive);
+  // Scene 2 (confidence) count-up
+  const animScore = useCountUp(conf.score || 0, scoreRevealed || simScene === 2);
+
+  // Scene 1: attack simulation
+  const runAttackSim = () => {
+    setAttackPhase('attacking');
+    setTimeout(() => setAttackPhase('detected'), 1500);
+    setTimeout(() => { setAttackPhase('resolved'); markEngaged(1); }, 3000);
   };
 
-  const STEPS = [
-    {
-      key: 'your_backup',
-      title: 'Your Data is Backed Up',
-      subtitle: `${tenantName} is now protected. Here's what Shieldio can do.`,
-      problem: null,
-      action: { label: 'Explore Your Backups →', route: '/exchange' },
-      content: (
-        <div className="space-y-3">
-          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-            <div className="grid grid-cols-3 gap-3 text-center">
-              <div><div className="text-2xl font-bold text-green-700">{mailboxes}</div><div className="text-xs text-green-600">Mailboxes</div></div>
-              <div><div className="text-2xl font-bold text-green-700">{disc?.sites || 0}</div><div className="text-xs text-green-600">SharePoint Sites</div></div>
-              <div><div className="text-2xl font-bold text-green-700">{disc?.entra_objects ? '188' : '1'}</div><div className="text-xs text-green-600">Entra ID Objects</div></div>
+  // Scene 4: generate plan on demand
+  const generatePlan = () => {
+    setSceneLoading(true);
+    setPlanVisible(0);
+    api.post<any>('/recovery/mass-restore', { tenant_id: tenantId, dry_run: true })
+      .then(r => {
+        setRecoveryPlan(r);
+        // Stagger reveal items
+        const items = r.plan || [];
+        items.forEach((_: any, i: number) => {
+          setTimeout(() => setPlanVisible(i + 1), (i + 1) * 200);
+        });
+        setTimeout(() => markEngaged(3), items.length * 200 + 500);
+      })
+      .catch(() => { setRecoveryPlan({ plan: [] }); markEngaged(3); })
+      .finally(() => setSceneLoading(false));
+  };
+
+  const STEP_COUNT = 4;
+  const isLastStep = simScene >= STEP_COUNT - 1;
+  const canAdvance = engaged[simScene];
+
+  // ────── Scene renderers ──────
+
+  const renderScene0 = () => loading ? <Shimmer /> : (
+    <div className="space-y-3">
+      <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {Object.entries(workloads).map(([k, v]: [string, any], i) => (
+            <div key={k} className="text-center transition-all duration-700" style={{ opacity: countUpActive ? 1 : 0, transitionDelay: `${i * 150}ms` }}>
+              <div className="text-2xl font-bold text-green-700">{v?.total || 0}</div>
+              <div className="text-xs text-green-600">{WORKLOAD_LABELS[k] || k}</div>
             </div>
-          </div>
-          <p className="text-sm text-gray-500 text-center">Your first backup captured real data. Let's see what you can do with it.</p>
-        </div>
-      ),
-    },
-    {
-      key: 'find_restore',
-      title: 'Find & Restore Deleted Data',
-      subtitle: 'Someone accidentally deleted an important email. Can you find it?',
-      problem: '📧 An employee deleted the Q4 Budget Review email. With Microsoft 365 alone, once the recycle bin expires — it\'s gone forever.',
-      action: { label: 'Try Search → Find & Restore', route: '/restore' },
-      result: '✅ Found in 0.3 seconds. One click to restore to inbox. Microsoft can\'t do this after 93 days.',
-      content: (
-        <div className="space-y-3">
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-            <p className="text-sm text-amber-800 font-medium">🔍 Try it: Go to Self-Service Restore and search for any backed-up item</p>
-          </div>
-          <div className="bg-white border border-gray-200 rounded-xl p-3">
-            <div className="flex items-center gap-2 text-sm"><span className="text-gray-400">M365:</span> <span className="text-red-500 font-medium">Recycle bin expires in 93 days → gone forever</span></div>
-            <div className="flex items-center gap-2 text-sm mt-1"><span className="text-gray-400">Shieldio:</span> <span className="text-green-600 font-medium">Restore from any backup point → 30 seconds</span></div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: 'smart_engine',
-      title: 'AI-Powered Threat Detection',
-      subtitle: 'What if ransomware encrypted your files right now?',
-      problem: '🚨 Microsoft 365 has NO anomaly detection. Ransomware can run for hours before anyone notices.',
-      action: { label: 'See Smart Engine →', route: '/smart-engine' },
-      result: '✅ Shieldio detects anomalies automatically — mass deletions, encryption spikes, unusual admin changes.',
-      content: (
-        <div className="space-y-3">
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-            <p className="text-sm text-red-800 font-medium">⚠️ Scenario: 1,847 files renamed to .encrypted across 3 user accounts</p>
-            <p className="text-xs text-red-600 mt-1">Shieldio Smart Engine detects this pattern in real-time using z-score anomaly detection.</p>
-          </div>
-          <div className="bg-white border border-gray-200 rounded-xl p-3">
-            <div className="flex items-center gap-2 text-sm"><span className="text-gray-400">M365:</span> <span className="text-red-500 font-medium">No detection. Attack runs until someone notices.</span></div>
-            <div className="flex items-center gap-2 text-sm mt-1"><span className="text-gray-400">Shieldio:</span> <span className="text-green-600 font-medium">Alert fires within minutes. Auto-identifies blast radius.</span></div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: 'recovery',
-      title: 'One-Click Recovery',
-      subtitle: 'Recover everything — files, emails, identity config — in minutes.',
-      problem: '💀 Without a separate backup, recovery takes DAYS. Microsoft has no point-in-time restore for OneDrive or Exchange.',
-      action: { label: 'View Recovery Dashboard →', route: '/recovery' },
-      result: '✅ Recovery Plan: restore by priority (executives first), verify with checksums, complete in 8 minutes.',
-      content: (
-        <div className="space-y-3">
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-            <p className="text-sm text-blue-800 font-medium">🎯 Recovery prioritized by business criticality:</p>
-            <div className="mt-2 space-y-1">
-              <div className="flex items-center gap-2"><span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded font-bold">P1</span><span className="text-sm text-blue-700">CEO + CFO mailboxes (critical)</span></div>
-              <div className="flex items-center gap-2"><span className="bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded font-bold">P2</span><span className="text-sm text-blue-700">1,847 encrypted files (rollback)</span></div>
-              <div className="flex items-center gap-2"><span className="bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded font-bold">P3</span><span className="text-sm text-blue-700">Revert rogue Entra ID changes</span></div>
+          ))}
+          {snapshotCount > 0 && (
+            <div className="text-center transition-all duration-700" style={{ opacity: countUpActive ? 1 : 0, transitionDelay: `${Object.keys(workloads).length * 150}ms` }}>
+              <div className="text-2xl font-bold text-green-700">{animSnaps}</div>
+              <div className="text-xs text-green-600">Snapshots</div>
             </div>
-          </div>
-          <div className="bg-white border border-gray-200 rounded-xl p-3">
-            <div className="flex items-center gap-2 text-sm"><span className="text-gray-400">M365:</span> <span className="text-red-500 font-medium">Days to weeks. Manual. No prioritization.</span></div>
-            <div className="flex items-center gap-2 text-sm mt-1"><span className="text-gray-400">Shieldio:</span> <span className="text-green-600 font-medium">8 minutes. Automated. Business-aware priority.</span></div>
-          </div>
+          )}
+          {totalStorage > 0 && (
+            <div className="text-center transition-all duration-700" style={{ opacity: countUpActive ? 1 : 0, transitionDelay: `${(Object.keys(workloads).length + 1) * 150}ms` }}>
+              <div className="text-2xl font-bold text-green-700">{fmtBytes(totalStorage)}</div>
+              <div className="text-xs text-green-600">Protected</div>
+            </div>
+          )}
         </div>
-      ),
-    },
-    {
-      key: 'config_drift',
-      title: 'Detect Configuration Changes',
-      subtitle: 'Your Entra ID config changed. What was different?',
-      problem: '🔑 Microsoft doesn\'t back up Conditional Access policies, admin roles, or app registrations. If someone changes them — no undo.',
-      action: { label: 'View Entra ID Snapshots →', route: '/entra-id' },
-      result: '✅ Compare any two points in time. See exactly what was added, removed, or changed. One click to revert.',
-      content: (
-        <div className="space-y-3">
+        <div className="text-center mt-3 pt-3 border-t border-green-200">
+          <span className="text-lg font-bold text-green-800">{animItems}</span>
+          <span className="text-sm text-green-600 ml-1">total items backed up</span>
+        </div>
+      </div>
+      <GapRow m365="93-day recycle bin. No point-in-time backup." shieldio={`${totalItems} items with unlimited point-in-time restore`} />
+    </div>
+  );
+
+  const renderScene1 = () => loading ? <Shimmer /> : (
+    <div className="space-y-3">
+      {entra.protected ? (
+        <>
           <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
-            <p className="text-sm text-purple-800 font-medium">🔍 Snapshot comparison shows:</p>
-            <div className="mt-2 space-y-1 text-sm text-purple-700">
-              <div className="flex items-center gap-2"><span className="text-green-600">+</span> New admin role assigned to unknown user</div>
-              <div className="flex items-center gap-2"><span className="text-red-600">−</span> MFA Conditional Access policy disabled</div>
-              <div className="flex items-center gap-2"><span className="text-amber-600">~</span> OAuth app permissions expanded</div>
+            <p className="text-xs font-semibold text-purple-500 uppercase mb-2">Your Entra ID Backup</p>
+            <div className="space-y-1.5">
+              {Object.entries(entra.counts || {}).map(([type, count]: [string, any]) => {
+                const meta = ENTRA_TYPE_LABELS[type] || { label: type };
+                const isUnderAttack = attackPhase !== 'idle' && meta.critical;
+                return (
+                  <div key={type} className={`flex items-center justify-between text-sm px-2 py-1 rounded transition-all duration-500 ${
+                    isUnderAttack && attackPhase === 'attacking' ? 'bg-red-100 ring-1 ring-red-400' :
+                    isUnderAttack && attackPhase === 'resolved' ? 'bg-green-100 ring-1 ring-green-400' : ''
+                  }`}>
+                    <span className="text-purple-700">{meta.label}</span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="font-bold text-purple-800">{count}</span>
+                      {meta.critical && <span className="text-[10px] px-1.5 py-0.5 bg-red-100 text-red-700 rounded font-semibold">CRITICAL</span>}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
-          <div className="bg-white border border-gray-200 rounded-xl p-3">
-            <div className="flex items-center gap-2 text-sm"><span className="text-gray-400">M365:</span> <span className="text-red-500 font-medium">No Entra ID backup. No undo. No diff.</span></div>
-            <div className="flex items-center gap-2 text-sm mt-1"><span className="text-gray-400">Shieldio:</span> <span className="text-green-600 font-medium">188 objects backed up. Full diff. One-click revert.</span></div>
+          {/* Attack simulation */}
+          {attackPhase === 'idle' && (
+            <button onClick={runAttackSim}
+              className="w-full py-2.5 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors flex items-center justify-center gap-2 text-sm">
+              Simulate Identity Attack
+            </button>
+          )}
+          {attackPhase === 'attacking' && (
+            <div className="bg-red-50 border border-red-300 rounded-xl p-3 animate-pulse">
+              <p className="text-sm text-red-800 font-medium">An attacker disabled your MFA policy and granted themselves Global Admin...</p>
+            </div>
+          )}
+          {(attackPhase === 'detected' || attackPhase === 'resolved') && (
+            <div className="space-y-2">
+              <div className="bg-red-50 border border-red-300 rounded-xl p-3">
+                <p className="text-sm text-red-800 font-medium">Attack: MFA policy disabled + rogue Global Admin granted</p>
+              </div>
+              <div className={`bg-green-50 border border-green-300 rounded-xl p-3 transition-all duration-500 ${attackPhase === 'detected' ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+                <p className="text-sm text-green-800 font-medium">Shieldio: Detected. One-click revert available{entra.last_backup ? ` from snapshot ${fmtTimeAgo(entra.last_backup)}` : ''}.</p>
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <p className="text-sm text-amber-800 font-medium">Entra ID not yet backed up</p>
+          <p className="text-xs text-amber-600 mt-1">{disc?.entra_objects ? `${disc.entra_objects} objects discovered` : 'Enable Entra ID workload'} — back it up to protect admin roles, MFA policies, and OAuth permissions.</p>
+        </div>
+      )}
+      <GapRow m365="No Entra ID backup. No undo for disabled MFA or rogue admin grants."
+        shieldio={entra.protected ? `${entraTotal} identity objects backed up with snapshot history` : 'Full Entra ID backup with point-in-time restore'} />
+    </div>
+  );
+
+  const renderScene2 = () => loading ? <Shimmer /> : (
+    <div className="space-y-3">
+      <div className="bg-white border border-gray-200 rounded-xl p-4">
+        <div className="flex items-center gap-5">
+          <div className="relative w-20 h-20 flex-shrink-0">
+            <svg viewBox="0 0 80 80" className="w-20 h-20 -rotate-90">
+              <circle cx="40" cy="40" r="35" fill="none" stroke="#e5e7eb" strokeWidth="6" />
+              <circle cx="40" cy="40" r="35" fill="none"
+                stroke={conf.color === 'green' ? '#16a34a' : conf.color === 'blue' ? '#2563eb' : conf.color === 'amber' ? '#d97706' : '#dc2626'}
+                strokeWidth="6" strokeLinecap="round"
+                strokeDasharray={scoreRevealed ? `${(conf.score || 0) / 100 * 220} 220` : '0 220'}
+                style={{ transition: 'stroke-dasharray 1.5s ease-out' }}
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-xl font-bold">{animScore}</span>
+              <span className="text-[10px] text-gray-400">/ 100</span>
+            </div>
+          </div>
+          <div className="flex-1">
+            <div className={`flex items-center gap-2 mb-2 transition-opacity duration-1000 ${scoreRevealed ? 'opacity-100' : 'opacity-0'}`}>
+              <span className={`text-lg font-bold ${conf.color === 'green' ? 'text-green-600' : conf.color === 'blue' ? 'text-blue-600' : conf.color === 'amber' ? 'text-amber-600' : 'text-red-600'}`}>
+                Grade {conf.grade || '—'}
+              </span>
+              <span className="text-sm text-gray-500">{conf.label}</span>
+            </div>
+            {conf.factors && Object.entries(conf.factors).map(([key, f]: [string, any], i) => (
+              <div key={key} className="mb-1">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-gray-500 capitalize">{key.replace('_', ' ')}</span>
+                  <span className="font-medium">{Math.round(f.score)}%</span>
+                </div>
+                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full"
+                    style={{
+                      width: scoreRevealed ? `${f.score}%` : '0%',
+                      background: f.score >= 80 ? '#16a34a' : f.score >= 50 ? '#d97706' : '#dc2626',
+                      transition: `width 1s ease-out ${i * 300}ms`,
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-      ),
-    },
+        {conf.recommendations?.length > 0 && scoreRevealed && (
+          <div className="mt-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg animate-pulse">
+            <p className="text-xs text-amber-800"><span className="font-semibold">Recommendation:</span> {conf.recommendations[0].action}</p>
+          </div>
+        )}
+      </div>
+      <GapRow m365="Zero recoverability metrics. No way to know if backups actually work."
+        shieldio="Continuous confidence scoring across freshness, completeness, and validation" />
+    </div>
+  );
+
+  const renderScene3 = () => (
+    <div className="space-y-3">
+      {!recoveryPlan ? (
+        <div className="text-center py-6">
+          <p className="text-sm text-gray-500 mb-4">Generate a full recovery plan from your backed-up data — no data is modified.</p>
+          <button onClick={generatePlan} disabled={sceneLoading}
+            className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2 mx-auto text-sm">
+            {sceneLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</> : 'Generate Recovery Plan'}
+          </button>
+        </div>
+      ) : recoveryPlan.plan?.length > 0 ? (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-semibold text-blue-500 uppercase">Recovery Plan Generated</p>
+            <span className="text-xs text-blue-600 font-medium">
+              {Math.min(planVisible, recoveryPlan.plan.length)} / {recoveryPlan.plan.length} objects
+            </span>
+          </div>
+          {Object.entries(
+            recoveryPlan.plan.slice(0, planVisible).reduce((acc: any, item: any) => {
+              const wl = item.workload || 'unknown';
+              if (!acc[wl]) acc[wl] = [];
+              acc[wl].push(item);
+              return acc;
+            }, {} as Record<string, any[]>)
+          ).map(([wl, items]: [string, any]) => (
+            <div key={wl} className="mb-2">
+              <div className="flex items-center gap-2 mb-1">
+                <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold text-white ${
+                  wl === 'entra_id' ? 'bg-red-500' : wl === 'exchange' ? 'bg-amber-500' : 'bg-blue-500'
+                }`}>
+                  {wl === 'entra_id' ? 'P1' : wl === 'exchange' ? 'P2' : 'P3'}
+                </span>
+                <span className="text-sm font-medium text-blue-800">{WORKLOAD_LABELS[wl] || wl}</span>
+                <span className="text-xs text-blue-500">{items.length} objects</span>
+              </div>
+              {items.slice(0, 3).map((item: any) => (
+                <div key={item.object_id} className="text-xs text-blue-600 ml-8 truncate">
+                  {item.object_name} — {item.item_count} items {item.size_bytes ? `(${fmtBytes(item.size_bytes)})` : ''}
+                </div>
+              ))}
+              {items.length > 3 && <div className="text-xs text-blue-400 ml-8">+{items.length - 3} more</div>}
+            </div>
+          ))}
+          {planVisible >= recoveryPlan.plan.length && (
+            <div className="mt-3 pt-3 border-t border-blue-200 text-center">
+              <p className="text-sm font-semibold text-blue-800">
+                Total: {recoveryPlan.plan.length} objects, {fmtBytes(recoveryPlan.plan.reduce((s: number, p: any) => s + (p.size_bytes || 0), 0))} recoverable
+              </p>
+              <button disabled className="mt-2 px-4 py-2 bg-gray-200 text-gray-500 rounded-lg text-xs cursor-not-allowed" title="Available from Recovery Dashboard">
+                Execute Recovery (available in Recovery Dashboard)
+              </button>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
+          <p className="text-sm text-blue-800 font-medium">No protected objects found for recovery plan</p>
+        </div>
+      )}
+      <GapRow m365="Manually restore each mailbox, OneDrive, SharePoint site. Days to weeks."
+        shieldio="One click. Priority-ordered. Identity first, then data. Minutes." />
+    </div>
+  );
+
+  const scenes = [
+    { key: 'overview', title: 'Your Backup at a Glance', subtitle: `${tenantName} — here's what Shieldio captured.`, problem: null as string | null, explore: { label: 'Explore backups', route: '/exchange' }, render: renderScene0 },
+    { key: 'identity', title: 'Step 1: Secure Identity First', subtitle: 'Identity is the FIRST thing to restore in a cyber attack.', problem: 'If attackers have admin access, restoring data is pointless — they\'ll re-compromise everything.', explore: { label: 'Open Entra ID', route: '/entra-id' }, render: renderScene1 },
+    { key: 'confidence', title: 'Step 2: Prove You Can Recover', subtitle: 'Know if you can actually recover — before you need to.', problem: null as string | null, explore: { label: 'Open Recovery Dashboard', route: '/recovery' }, render: renderScene2 },
+    { key: 'mass_recovery', title: 'Step 3: One-Click Recovery', subtitle: 'Generate a full recovery plan from your real backups.', problem: 'Without Shieldio, recovery means restoring each mailbox, OneDrive, and site one by one. Days to weeks.', explore: { label: 'Open Recovery Dashboard', route: '/recovery' }, render: renderScene3 },
   ];
 
-  const currentStep = STEPS[simScene] || STEPS[0];
-  const isLastStep = simScene >= STEPS.length - 1;
-  const isDone = actionDone[simScene];
+  const scene = scenes[simScene] || scenes[0];
 
   return (
     <div>
       <div className="text-center mb-4">
-        <h2 className="text-xl font-bold text-gray-900">Experience Your Protection</h2>
-        <p className="text-gray-500 text-sm">See what Shieldio does — with your real data</p>
+        <h2 className="text-xl font-bold text-gray-900">Your Cyber Recovery Playbook</h2>
+        <p className="text-gray-500 text-sm">Try each step with your real data</p>
       </div>
 
       {/* Step progress */}
       <div className="flex items-center justify-center gap-1.5 mb-5">
-        {STEPS.map((s, i) => (
-          <button
-            key={s.key}
-            onClick={() => setSimScene(i)}
+        {scenes.map((s, i) => (
+          <button key={s.key} onClick={() => setSimScene(i)}
             className={`w-2.5 h-2.5 rounded-full transition-all ${
-              i === simScene ? 'w-8 bg-blue-500' :
-              actionDone[i] ? 'bg-green-500' :
-              i < simScene ? 'bg-blue-300' : 'bg-gray-200'
-            }`}
-          />
+              i === simScene ? 'w-8 bg-blue-500' : engaged[i] ? 'bg-green-500' : i < simScene ? 'bg-blue-300' : 'bg-gray-200'
+            }`} />
         ))}
       </div>
 
       {/* Step content */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        {/* Header */}
         <div className="bg-gray-50 border-b border-gray-200 px-5 py-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-gray-400">Step {simScene + 1} of {STEPS.length}</span>
-            {isDone && <span className="text-xs font-semibold text-green-600 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Done</span>}
+            <span className="text-xs font-semibold text-gray-400">Step {simScene + 1} of {STEP_COUNT}</span>
+            {engaged[simScene] && <span className="text-xs font-semibold text-green-600 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Done</span>}
           </div>
-          <h3 className="text-lg font-bold text-gray-900 mt-1">{currentStep.title}</h3>
-          <p className="text-sm text-gray-500">{currentStep.subtitle}</p>
+          <h3 className="text-lg font-bold text-gray-900 mt-1">{scene.title}</h3>
+          <p className="text-sm text-gray-500">{scene.subtitle}</p>
         </div>
 
-        {/* Problem statement */}
-        {currentStep.problem && (
+        {scene.problem && (
           <div className="px-5 py-3 bg-red-50 border-b border-red-100">
-            <p className="text-sm text-red-800">{currentStep.problem}</p>
+            <p className="text-sm text-red-800">{scene.problem}</p>
           </div>
         )}
 
-        {/* Content */}
-        <div className="px-5 py-4">{currentStep.content}</div>
+        <div className="px-5 py-4">{scene.render()}</div>
 
-        {/* Action button */}
+        {/* Footer: Next + Explore link */}
         <div className="px-5 py-4 border-t border-gray-100 bg-gray-50">
-          {!isDone ? (
-            <button
-              onClick={() => {
-                markDone(simScene);
-                navigate(currentStep.action.route);
-              }}
-              className="w-full py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-            >
-              {currentStep.action.label}
+          <div className="flex items-center justify-between">
+            {!isLastStep ? (
+              <button onClick={() => setSimScene(simScene + 1)} disabled={!canAdvance}
+                className={`px-5 py-2.5 rounded-xl font-semibold text-sm flex items-center gap-1.5 transition-all ${
+                  canAdvance ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                }`}>
+                Next <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <button onClick={onComplete} disabled={!canAdvance}
+                className={`px-5 py-2.5 rounded-xl font-semibold text-sm flex items-center gap-2 transition-all ${
+                  canAdvance ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                }`}>
+                Go to Dashboard <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
+            <button onClick={() => navigate(scene.explore.route)}
+              className="text-xs text-blue-500 hover:text-blue-700 hover:underline">
+              {scene.explore.label} →
             </button>
-          ) : (
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-2 text-green-600 mb-2">
-                <CheckCircle className="w-5 h-5" />
-                <span className="font-semibold text-sm">{currentStep.result || 'Completed!'}</span>
-              </div>
-              {!isLastStep ? (
-                <button
-                  onClick={() => setSimScene(simScene + 1)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-1 mx-auto"
-                >
-                  Next: {STEPS[simScene + 1]?.title} <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              ) : (
-                <button
-                  onClick={onComplete}
-                  className="px-6 py-2.5 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 flex items-center gap-2 mx-auto"
-                >
-                  Go to Dashboard <ArrowRight className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          )}
+          </div>
+          {!canAdvance && simScene === 1 && <p className="text-[11px] text-gray-400 mt-1.5">Click "Simulate Identity Attack" above to continue</p>}
+          {!canAdvance && simScene === 3 && <p className="text-[11px] text-gray-400 mt-1.5">Click "Generate Recovery Plan" above to continue</p>}
         </div>
       </div>
 
       {/* Navigation + skip */}
       <div className="flex items-center justify-between mt-3">
-        <button
-          onClick={() => setSimScene(Math.max(0, simScene - 1))}
-          disabled={simScene === 0}
-          className="text-xs text-gray-400 hover:text-gray-600 disabled:opacity-30"
-        >
-          ← Back
-        </button>
-        <button onClick={onComplete} className="text-xs text-gray-400 hover:text-gray-600">
-          Skip → Dashboard
-        </button>
+        <button onClick={() => setSimScene(Math.max(0, simScene - 1))} disabled={simScene === 0}
+          className="text-xs text-gray-400 hover:text-gray-600 disabled:opacity-30">← Back</button>
+        <button onClick={onComplete} className="text-xs text-gray-400 hover:text-gray-600">Skip → Dashboard</button>
       </div>
     </div>
   );
@@ -842,6 +1074,7 @@ export function OnboardCallback() {
       {step === 4 && (
         <CyberRecoverySimulation
           tenantName={tenantName}
+          tenantId={resultData?.db_tenant_id}
           disc={disc}
           onComplete={() => setStep(5)}
           simScene={simScene}

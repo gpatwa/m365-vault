@@ -54,6 +54,8 @@ export interface ProtectedObject {
   last_backup_status: string | null;
   total_items: number;
   total_size_bytes: number;
+  criticality_score?: number;
+  criticality_tier?: string;
 }
 
 export interface Snapshot {

@@ -2,6 +2,46 @@
 
 All notable changes to Shieldio are documented in this file.
 
+## [2.2.0] - 2026-03-28
+
+### Organizational Context Layer — Phase 1A ("Smart Backup")
+- **Auto-detected criticality scoring** — syncs user hierarchy, departments, privileged roles, and manager chains from Microsoft Graph to compute 0-100 criticality scores for every protected object
+- **4-factor weighted scoring** — User Importance (40%), Data Sensitivity (30%), Activity Level (20%), Business Dependency (10%). Tier thresholds: critical (>=80), high (>=60), medium (>=40), low (<40)
+- **4 new database tables** — `user_contexts`, `site_contexts`, `vip_groups`, `vip_group_members`
+- **Org Context admin page** — Intelligence > Org Context with hero stats (tier counts), top critical users, Users/Sites/VIP Groups tabs with search, filter, sort
+- **Criticality badges on all workload pages** — Exchange, OneDrive, SharePoint, Teams tables show tier badge with score
+- **VIP Group management** — admin-defined critical user groups with configurable criticality boost
+- **10 new API endpoints** — summary, users list, sites list, sync trigger, VIP group CRUD (5 endpoints)
+- **Scheduled context collection** — daily full sync + 6-hour privileged role refresh
+- **OCSF-ready** — `threat_exposure_score` field on user/site context for future SIEM integration
+- **Medallion-ready** — `raw_graph_data` (Bronze) and `signals` (Silver) JSON fields for audit trail
+- **Graceful degradation** — optional Graph permissions (AuditLog.Read.All, Reports.Read.All) degrade to lower signal fidelity, never failure
+- **16 new tests** — criticality scorer (7 tests), API endpoints (8 tests), workload integration (1 test)
+
+### Interactive Onboarding Recovery Playbook
+- **4-scene NIST-aligned cyber recovery playbook** — replaces static onboarding demo with interactive, data-driven experience
+- **Scene 0: Backup Overview** — animated count-up of real workload numbers from dashboard API
+- **Scene 1: Secure Identity First** — "Simulate Identity Attack" button with animated red/green attack/response sequence using real Entra ID data
+- **Scene 2: Recovery Confidence** — animated score gauge and staggered factor bars from recovery/confidence API
+- **Scene 3: One-Click Recovery** — on-demand "Generate Recovery Plan" with staggered plan reveal from mass-restore dry-run API
+- **Gated progression** — Next button disabled until user completes inline interaction per scene
+- **Real data throughout** — all scenes pull from actual backup data via dashboard, recovery, and entra-id APIs
+
+### Organizational Context Layer — Phase 1B ("Smart Recovery")
+- **Pre-computed MVB Recovery Plans** — auto-generates 4-phase NIST-ordered recovery plans: Identity Controls (immediate) → MVB critical users (critical) → High-priority data (high) → Full recovery (normal)
+- **RecoveryPlan model** — `recovery_plans` table stores phased plans with object summaries, reasoning, estimated recovery times, and staleness tracking
+- **MVBPlanGenerator service** — computes Minimum Viable Business set from criticality scores, generates plans with per-phase object counts, sizes, and reasoning
+- **Criticality-ordered mass restore** — `POST /recovery/mass-restore` now sorts: identity first, then by criticality score descending
+- **Confidence Score v2** — 5 criticality-weighted factors: freshness 25% (critical users 4x), completeness 20%, MVB coverage 20%, restore success 20%, validation 15%
+- **3 new API endpoints** — `GET /recovery/mvb-plan`, `POST /recovery/mvb-plan/generate`, `GET /recovery/confidence/v2`
+- **Scheduled plan refresh** — MVB plans auto-refresh every 6 hours
+- **23 new tests** — MVB generator (11), mass restore ordering (2), API endpoints (5), confidence v2 (4), E2E integration (2)
+
+### Bug Fixes
+- **Security page sidebar missing** — removed duplicate top-level `/security` route that bypassed Layout wrapper
+- **Tenant purge with trailing spaces** — trim whitespace on tenant name creation and purge confirmation
+- **Onboarding blank page crash** — fixed React hooks called inside render functions and `.map()` loops (Rules of Hooks violation)
+
 ## [2.1.0] - 2026-03-25
 
 ### Recovery Dashboard

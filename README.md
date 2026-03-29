@@ -4,7 +4,7 @@
 
 Shieldio is an open-source, self-hosted SaaS data protection platform. Currently protects Microsoft 365 workloads with a roadmap to support Google Workspace, Salesforce, and more. Features AI-powered intelligence, immutable storage, and enterprise-grade security — all at zero marginal cost.
 
-> Version 2.1.0 | 115 API routes | 65 tests | Python 3.12+ | React 19 | FastAPI | Apache-2.0
+> Version 2.3.0 | 152 API routes | 320 tests | Python 3.12+ | React 19 | FastAPI | Apache-2.0
 
 ---
 
@@ -19,17 +19,27 @@ Shieldio is an open-source, self-hosted SaaS data protection platform. Currently
 
 ### Intelligent Platform
 - **Smart Engine** — Statistical anomaly detection, health scoring (0-100), baseline tracking
+- **Org Context** — Auto-detected organizational hierarchy, VIP groups, criticality scoring from Graph API
+- **MVB Recovery Plans** — Pre-computed 4-phase NIST-ordered recovery plans with criticality-weighted confidence
 - **Self-Healing** — Auto-retry with exponential backoff, error categorization (13 types), intelligent remediation
 - **Sensitive Data Scanner** — PII/PHI/PCI regex detection in backup data ($0 vs Purview $5-10/user)
-- **Malware Scanner** — YARA-rule based scanning before restore to prevent ransomware reinfection
 - **Backup Validation** — Automated checksum verification with sampling
-- **Recovery Dashboard** — Confidence score (0-100), RPO/RTO compliance, 5 recovery runbooks, mass recovery, test restore verification
+- **Recovery Dashboard** — Confidence score (0-100), RPO/RTO compliance, 5 recovery runbooks, mass recovery
+
+### Production Resilience
+- **Error code system** — 30+ structured error codes (E1xxx-E7xxx) with actionable fix suggestions
+- **Circuit breaker** — Per-tenant Graph API circuit breaker with auto-recovery
+- **Pre-flight validation** — Checks Graph API, storage, and database before starting operations
+- **Idempotency** — X-Idempotency-Key header support for safe mutation retries
+- **Correlation tracing** — X-Correlation-ID flows through frontend, backend, and Graph API calls
+- **Toast notifications + ErrorBoundary** — User-facing error handling with copy-able correlation IDs
 
 ### Enterprise Security
-- **AES-256-GCM encryption** with per-tenant DEK/KEK key hierarchy
+- **AES-256-GCM encryption** with per-snapshot DEK/KEK key hierarchy
 - **WORM immutable storage** with retention locks and legal hold
 - **SSO/MFA** via Entra ID OIDC (MSAL) with auto-provisioning
-- **Rate limiting**, structured JSON logging, correlation IDs
+- **Tiered rate limiting** — auth (20/min), onboarding (60/min), API (600/min)
+- **Structured JSON logging** with correlation IDs and request tracing
 - **Audit logging** with severity levels and full-text search
 
 ### Operations
@@ -52,7 +62,7 @@ Shieldio is an open-source, self-hosted SaaS data protection platform. Currently
 ```
 Control Plane (API)                    Data Plane (Workers)
 ┌─────────────────────────┐           ┌─────────────────────────┐
-│ FastAPI (104 routes)     │           │ BaseWorker Framework    │
+│ FastAPI (152 routes)     │           │ BaseWorker Framework    │
 │ Scheduler (SLA checks)   │           │ ├── ExchangeWorker     │
 │ Smart Engine (analytics) │  Redis    │ ├── OneDriveWorker     │
 │ Alert Service            │ ──Queue→  │ ├── SharePointWorker   │
@@ -79,7 +89,7 @@ Control Plane (API)                    Data Plane (Workers)
 | Auth      | JWT + refresh tokens, bcrypt, Entra ID OIDC (MSAL) |
 | Encryption| AES-256-GCM envelope encryption (DEK/KEK) |
 | Storage   | Pluggable: Local filesystem, MinIO (S3), Azure Blob Storage |
-| Testing   | pytest (93 unit + integration + chaos), k6 (load), Playwright (E2E) |
+| Testing   | pytest (320 unit + integration + chaos), k6 (load), Playwright (E2E) |
 | Infra     | Docker Compose (dev), Azure Container Apps + Terraform (prod), GitHub Actions CI/CD |
 
 ---
@@ -118,13 +128,14 @@ make az-wake          # Resume Azure resources
 shieldio/
 ├── backend/
 │   ├── app/
-│   │   ├── api/           # 20 API routers (104 routes)
-│   │   ├── models/        # SQLAlchemy models (tenant, object, snapshot, job, health, audit)
-│   │   ├── services/      # Business services (backup, restore, smart engine, alerts, encryption)
+│   │   ├── api/           # 31 API routers (152 routes)
+│   │   ├── models/        # 13 SQLAlchemy models (tenant, object, snapshot, job, health, org_context, audit)
+│   │   ├── services/      # 31 business services (backup, restore, resilience, circuit breaker, smart engine, encryption)
 │   │   ├── workers/       # 5 workload workers + BaseWorker framework
-│   │   ├── interfaces/    # Dispatcher (in-process / Redis), circuit breaker
+│   │   ├── interfaces/    # Dispatcher (in-process / Redis)
+│   │   ├── errors.py      # Structured error codes (E1xxx-E7xxx)
 │   │   └── main.py        # FastAPI app with middleware stack
-│   └── tests/             # 93 tests (unit, integration, chaos)
+│   └── tests/             # 320 tests (unit, integration, chaos)
 ├── frontend/
 │   ├── src/
 │   │   ├── pages/         # 20+ page components
@@ -148,7 +159,9 @@ shieldio/
 |----------|-------------|
 | [Azure Deployment](docs/AZURE_DEPLOYMENT.md) | Deploy to Azure with Terraform + GitHub Actions |
 | [Architecture](docs/ARCHITECTURE.md) | System design, CP/DP separation, BaseWorker framework |
-| [API Reference](docs/API_REFERENCE.md) | Complete REST API documentation (104 endpoints) |
+| [API Reference](docs/API_REFERENCE.md) | Complete REST API documentation (152 endpoints) |
+| [Cost Analysis](docs/COST_MARGIN_ANALYSIS.md) | Pricing tiers, infrastructure costs, margin analysis |
+| [Production Resilience](docs/PRODUCTION_RESILIENCE_DESIGN.md) | Error codes, circuit breaker, pre-flight, idempotency |
 | [Onboarding Guide](docs/ONBOARDING.md) | Tenant setup and first backup |
 | [Tenant Security](docs/TENANT_SECURITY.md) | Encryption, isolation, RBAC, WORM |
 | [Compliance Report](docs/COMPLIANCE_REPORT.md) | Security controls and regulatory alignment |
@@ -160,11 +173,14 @@ Interactive API docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 ## Roadmap
 
 - [x] Phase 1: Enterprise Foundation (Exchange, OneDrive, SharePoint, Teams, Entra ID)
-- [x] Phase 2: Intelligence (Smart Engine, Sensitive Data, Malware Scan, Validation, Self-Restore)
+- [x] Phase 2: Intelligence (Smart Engine, Sensitive Data, Validation, Self-Restore)
 - [x] Production Readiness (tests, security, logging, CI/CD)
 - [x] Phase 2.5A: Org Context Layer — Smart Backup (auto-detected criticality, VIP groups, 4-factor scoring)
 - [x] Phase 2.5B: Org Context Layer — Smart Recovery (pre-computed MVB plans, criticality-weighted confidence)
-- [ ] Production Resilience: Structured logging, error codes, correlation tracing, pre-flight checks
+- [x] Production Resilience Week 1: Error codes (E1xxx-E7xxx), structured logging, correlation tracing, toast/ErrorBoundary
+- [x] Production Resilience Week 2: Circuit breaker, pre-flight checks, idempotency keys, diagnostics endpoints
+- [x] Option B Pricing: 4-tier competitive pricing (Free/$1.50/$3.00/$5.00)
+- [ ] Production Resilience Week 3-4: Deployment health gate, automated rollback, status page
 - [ ] Phase 2.5C: Threat-Informed Recovery (OCSF ingestion, clean point detection, SIEM integration)
 - [ ] Phase 2.5D: Agentic Recovery (Claude multi-stage verification, NL plan adjustment)
 - [ ] Phase 2.5E: Cleanroom Recovery (isolated restore to scratch tenant, scan, validate, promote)

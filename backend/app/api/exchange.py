@@ -7,12 +7,15 @@ from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
+from app.errors import ShieldioError, BACKUP_NO_OBJECTS, BACKUP_ALREADY_RUNNING
 from app.models.protected_object import ProtectedObject, WorkloadType, ProtectionStatus
 from app.models.snapshot import Snapshot, SnapshotItem, SnapshotStatus, ItemType
 from app.models.restore_job import RestoreJob, RestoreType, RestoreStatus
 from app.models.user import User
 from app.services.auth import get_current_user, require_backup_permission, require_restore_permission
 from app.services.catalog import CatalogService
+from app.services.resilience import idempotency_store
+from app.api.dependencies import run_backup_preflight, get_idempotency_key
 from app.interfaces.dispatcher_factory import get_dispatcher
 from app.interfaces.job_message import BackupObjectMessage, RestoreJobMessage
 from app.utils.query import ListParams, apply_sorting, apply_pagination
@@ -223,8 +226,19 @@ async def trigger_backup_all(
     tenant_id: int = Query(..., description="Tenant ID to backup"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_backup_permission),
+    idempotency_key: str | None = Depends(get_idempotency_key),
 ):
-    """Trigger backup for ALL Exchange mailboxes in a tenant. Requires ADMIN or OPERATOR role."""
+    """Trigger backup for ALL Exchange mailboxes in a tenant. Requires ADMIN or OPERATOR role.
+
+    Supports X-Idempotency-Key header — retries with the same key return cached result.
+    Runs pre-flight checks on Graph API, storage, and database before starting.
+    """
+    # Idempotency: return cached result on retry
+    if idempotency_key:
+        cached = idempotency_store.get(current_user.id, idempotency_key)
+        if cached is not None:
+            return cached
+
     from app.models.backup_job import BackupJob, JobStatus
 
     result = await db.execute(
@@ -237,7 +251,7 @@ async def trigger_backup_all(
     mailboxes = result.scalars().all()
 
     if not mailboxes:
-        raise HTTPException(status_code=404, detail="No Exchange mailboxes found")
+        raise ShieldioError(BACKUP_NO_OBJECTS, detail="No Exchange mailboxes found for this tenant")
 
     # Create a BackupJob for tracking
     job = BackupJob(
@@ -304,7 +318,10 @@ async def trigger_backup_all(
         # Redis mode: workers handle execution and update job progress
         job.status = JobStatus.QUEUED
         await db.commit()
-        return {"job_id": job.id, "status": "queued", "total": len(mailboxes)}
+        response = {"job_id": job.id, "status": "queued", "total": len(mailboxes)}
+        if idempotency_key:
+            idempotency_store.set(current_user.id, idempotency_key, response)
+        return response
 
     # In-process mode: finalize job now
     if failed == 0:
@@ -316,10 +333,13 @@ async def trigger_backup_all(
     job.completed_at = datetime.utcnow()
     await db.commit()
 
-    return {
+    response = {
         "total": len(mailboxes),
         "succeeded": succeeded,
         "failed": failed,
         "job_id": job.id,
         "results": results,
     }
+    if idempotency_key:
+        idempotency_store.set(current_user.id, idempotency_key, response)
+    return response

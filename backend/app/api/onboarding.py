@@ -17,6 +17,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.database import get_db
+from app.errors import (
+    ShieldioError, CONNECTOR_NOT_CONFIGURED, CONNECTOR_SECRET_INVALID,
+    CONNECTOR_GRAPH_UNREACHABLE, CONNECTOR_TENANT_NOT_FOUND,
+    VALIDATION_RESOURCE_NOT_FOUND,
+)
 from app.models.tenant import Tenant, TenantStatus
 from app.models.user import User
 from app.services.auth import get_current_user
@@ -47,6 +52,7 @@ async def connector_health():
     if not app_id or not app_secret:
         return {
             "healthy": False,
+            "error_code": "E1001",
             "error": "Connector app credentials not configured",
             "action": "Set CONNECTOR_APP_ID and CONNECTOR_APP_SECRET environment variables",
         }
@@ -68,6 +74,7 @@ async def connector_health():
             if "AADSTS7000215" in error_desc:
                 return {
                     "healthy": False,
+                    "error_code": "E1002",
                     "error": "Invalid client secret",
                     "action": "Regenerate the client secret in Azure AD and update CONNECTOR_APP_SECRET",
                 }
@@ -115,11 +122,11 @@ async def start_connection(
     try:
         connector = get_connector(platform)
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise ShieldioError(VALIDATION_RESOURCE_NOT_FOUND, detail=str(e))
 
     info = connector.info()
     if not info.available:
-        raise HTTPException(status_code=400, detail=f"{info.display_name} is not yet available")
+        raise ShieldioError(CONNECTOR_NOT_CONFIGURED, detail=f"{info.display_name} is not yet available")
 
     # Pre-flight check: verify connector secret works BEFORE sending user to Microsoft
     if platform == "microsoft365":
@@ -128,8 +135,8 @@ async def start_connection(
         check = await health.check_connector_secret()
         if not check.healthy:
             logger.error(f"Pre-flight connector check failed: {check.detail}")
-            raise HTTPException(
-                status_code=503,
+            raise ShieldioError(
+                CONNECTOR_SECRET_INVALID,
                 detail=f"Shieldio connector is not properly configured. {check.fix}",
             )
 
@@ -253,7 +260,7 @@ async def complete_onboarding(
     """Finalize onboarding: assign SLA policy, activate tenant, start first backup."""
     tenant = await db.get(Tenant, req.tenant_id)
     if not tenant:
-        raise HTTPException(status_code=404, detail="Tenant not found")
+        raise ShieldioError(CONNECTOR_TENANT_NOT_FOUND, detail="Tenant not found in database")
 
     # Assign SLA policy if requested
     if req.protect_all and req.sla_policy_id:
@@ -304,7 +311,7 @@ async def selective_discovery(
     """
     tenant = await db.get(Tenant, req.tenant_id)
     if not tenant:
-        raise HTTPException(status_code=404, detail="Tenant not found")
+        raise ShieldioError(CONNECTOR_TENANT_NOT_FOUND, detail="Tenant not found in database")
 
     from app.services.discovery import DiscoveryService
     discovery = DiscoveryService(db)
@@ -381,7 +388,7 @@ async def check_connection_status(
     )
     tenant = result.scalar_one_or_none()
     if not tenant:
-        raise HTTPException(status_code=404, detail="Tenant not found")
+        raise ShieldioError(CONNECTOR_TENANT_NOT_FOUND, detail="Tenant not found in database")
 
     try:
         connector = get_connector(platform)

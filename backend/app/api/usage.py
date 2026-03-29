@@ -17,34 +17,54 @@ from app.services.auth import get_current_user
 
 router = APIRouter(prefix="/api/usage", tags=["Usage & License"])
 
-# License tier limits
+# License tier limits — Option B pricing (2026-03-29)
+# Optimized for competitive positioning against Veeam ($2/user) and Microsoft native ($0.15/GB)
 LICENSE_TIERS = {
     "community": {
         "label": "Community (Free)",
+        "price_per_user": 0,
         "max_protected_objects": 25,
         "max_tenants": 1,
         "max_workloads": 3,
+        "retention_days": 30,
         "features": ["exchange", "onedrive", "sharepoint"],
         "smart_engine": "basic",
         "support": "community",
     },
     "professional": {
         "label": "Professional ($1.50/user/mo)",
+        "price_per_user": 1.50,
         "max_protected_objects": None,  # unlimited
         "max_tenants": 10,
         "max_workloads": 5,
+        "retention_days": 90,
         "features": ["exchange", "onedrive", "sharepoint", "teams", "entra_id"],
         "smart_engine": "full",
         "support": "email",
     },
+    "business": {
+        "label": "Business ($3.00/user/mo)",
+        "price_per_user": 3.00,
+        "max_protected_objects": None,
+        "max_tenants": None,  # unlimited
+        "max_workloads": None,
+        "retention_days": 365,
+        "features": ["exchange", "onedrive", "sharepoint", "teams", "entra_id"],
+        "smart_engine": "full",
+        "includes": ["org_context", "mvb_plans", "criticality_scoring"],
+        "support": "priority",
+    },
     "enterprise": {
-        "label": "Enterprise ($3.00/user/mo)",
+        "label": "Enterprise ($5.00/user/mo)",
+        "price_per_user": 5.00,
         "max_protected_objects": None,
         "max_tenants": None,
         "max_workloads": None,
+        "retention_days": 365,
         "features": ["exchange", "onedrive", "sharepoint", "teams", "entra_id", "power_platform"],
         "smart_engine": "full_custom",
-        "support": "priority",
+        "includes": ["org_context", "mvb_plans", "criticality_scoring", "agentic_recovery", "worm", "ediscovery", "cleanroom"],
+        "support": "dedicated",
     },
 }
 
@@ -187,7 +207,8 @@ async def platform_usage(
     # Subscription estimate based on tier pricing (customer-facing)
     storage_gb = total_storage / (1024 ** 3) if total_storage > 0 else 0
     tier = settings.LICENSE_TIER
-    price_per_user = {"community": 0, "professional": 1.50, "enterprise": 3.00}.get(tier, 0)
+    tier_def = LICENSE_TIERS.get(tier, LICENSE_TIERS["community"])
+    price_per_user = tier_def.get("price_per_user", 0)
     subscription_cost = total_users * price_per_user
 
     return {
@@ -267,10 +288,14 @@ async def license_status(
         "approaching": wl_pct >= 80 if max_wl else False,
     })
 
+    # Determine next tier for upgrade messaging
+    upgrade_path = {"community": "Professional", "professional": "Business", "business": "Enterprise"}
+    next_tier = upgrade_path.get(tier_name, "Enterprise")
+
     alerts = []
     for d in dimensions:
         if d["exceeded"]:
-            alerts.append({"level": "error", "message": f"{d['name']}: {d['current']} exceeds {d['limit']} limit. Upgrade to Professional."})
+            alerts.append({"level": "error", "message": f"{d['name']}: {d['current']} exceeds {d['limit']} limit. Upgrade to {next_tier}."})
         elif d["approaching"]:
             alerts.append({"level": "warning", "message": f"{d['name']}: {d['current']}/{d['limit']} ({d['usage_percent']}%). Approaching limit."})
 

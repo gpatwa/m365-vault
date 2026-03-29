@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     # App
     APP_NAME: str = "Shieldio"
-    APP_VERSION: str = "1.4.0"
+    APP_VERSION: str = "2.3.0"
     DEBUG: bool = True
     SECRET_KEY: str = "change-me-in-production-use-openssl-rand-hex-32"
     ALGORITHM: str = "HS256"
@@ -109,8 +109,8 @@ class Settings(BaseSettings):
     # Demo Mode
     DEMO_MODE: bool = False  # Auto-seed demo data on startup if DB is empty
 
-    # License
-    LICENSE_TIER: str = "community"  # community, professional, enterprise
+    # License — Option B pricing: community (free), professional ($1.50), business ($3), enterprise ($5)
+    LICENSE_TIER: str = "community"  # community, professional, business, enterprise
     LICENSE_MAX_USERS: int = 25      # for community tier
 
     # Multi-tenant Connector (OAuth onboarding)
@@ -152,9 +152,6 @@ class Settings(BaseSettings):
     # Backup Validation
     BACKUP_VALIDATION_ENABLED: bool = True
     VALIDATION_SAMPLE_PERCENT: int = 10
-
-    # License
-    LICENSE_TIER: str = "community"  # community, professional, enterprise
 
     # SSO / OIDC
     SSO_ENABLED: bool = False

@@ -359,13 +359,37 @@ For common issues, auto-detect and auto-fix:
 
 ## 4. Priority Implementation Order
 
-| Week | Deliverable | Impact |
-|------|-------------|--------|
-| **Week 1** | Structured logging + error codes + correlation IDs | Debug any issue in 30s |
-| **Week 2** | Pre-flight checks + circuit breakers + retry standardization | No single-failure user errors |
-| **Week 3** | Deployment health gate + automated rollback | Zero-downtime deploys |
-| **Week 4** | Frontend error boundary + status page + admin diagnostics UI | Professional user experience |
-| **Ongoing** | Alerting, chaos testing, feature flags, canary deploys | Operational maturity |
+| Week | Deliverable | Impact | Status |
+|------|-------------|--------|--------|
+| **Week 1** | Structured logging + error codes + correlation IDs | Debug any issue in 30s | **DONE** (2026-03-29) |
+| **Week 2** | Pre-flight checks + circuit breakers + idempotency | No single-failure user errors | **DONE** (2026-03-29) |
+| **Week 3** | Deployment health gate + automated rollback | Zero-downtime deploys | TODO |
+| **Week 4** | Status page + admin diagnostics UI | Professional user experience | TODO |
+| **Ongoing** | Alerting, chaos testing, feature flags, canary deploys | Operational maturity | TODO |
+
+### What's Implemented (as of 2026-03-29)
+
+**Phase A (Observability Foundation) — COMPLETE:**
+- A1. Structured JSON logging with enhanced formatter (service, correlation_id, user_id, duration_ms)
+- A2. Error code system: `backend/app/errors.py` with 30+ codes (E1xxx-E7xxx), `ShieldioError` exception class
+- A3. Correlation ID middleware: auto-generates `X-Correlation-ID`, logs with every request, returns in response
+
+**Phase B (Resilient External Calls) — COMPLETE:**
+- B1. Pre-flight validation: `preflight_graph_api()`, `preflight_storage()`, `preflight_database()`
+- B2. Circuit breaker: Integrated into `GraphClient._request()`, per-tenant state, alerts on open
+- B3. Retry with exponential backoff: Already in GraphClient, standardized via `retry_async` decorator
+- B4. Idempotency keys: `IdempotencyStore` with `X-Idempotency-Key` header on backup-all endpoints
+
+**Phase D (UX Resilience) — PARTIAL:**
+- D1. Frontend `ErrorBoundary` with correlation ID and copy button
+- D2. `ToastProvider` with success/error/warning/info notifications
+- D3. Offline/degraded mode — NOT DONE
+- D4. Status page — NOT DONE
+
+**Phase E (Operational Tooling) — PARTIAL:**
+- E1. Diagnostics endpoints: `/circuit-breaker`, `/resilience`, `/health`, `/graph-metrics`, `/performance`
+- E2. Alerting — alert service exists, full rules engine NOT DONE
+- E3. Stale job detection — DONE (scheduler)
 
 ---
 

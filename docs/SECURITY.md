@@ -1,6 +1,6 @@
 # Shieldio Security Architecture
 
-**Version:** 2.0 | **Last Updated:** March 2026 | **Classification:** Public
+**Version:** 2.3 | **Last Updated:** March 2026 | **Classification:** Public
 
 ---
 
@@ -146,12 +146,10 @@ Role enforcement via `require_role()` dependency on every API endpoint.
 - Zero cost (pure Python pattern matching)
 - Results accessible via `/api/sensitive-data/results`
 
-### 3.3 Malware Scanning
+### 3.3 Malware Scanning (Roadmap)
 
-- YARA rule-based scanning before restore operations
-- Blocks restore of suspicious content
-- Scan status recorded on restore jobs (`scan_status: clean|blocked|skipped`)
-- Prevents ransomware reinfection from backup data
+> **Status:** Planned for Phase 2.5C. Not yet implemented.
+> Design: YARA rule-based scanning before restore operations with clean point detection.
 
 ### 3.4 Backup Validation
 
@@ -189,7 +187,7 @@ graph LR
 |---------|---------------|
 | **TLS termination** | Azure Container Apps ingress |
 | **CORS** | Configurable origins (`CORS_ORIGINS` env var) |
-| **Rate limiting** | 120 requests/minute per IP (configurable) |
+| **Tiered rate limiting** | Auth: 20/min, Registration: 10/min, Onboarding: 60/min, API: 600/min (configurable via `RATE_LIMIT_REQUESTS_PER_MINUTE`) |
 | **DDoS protection** | Azure platform-level DDoS protection |
 | **Firewall** | PostgreSQL firewall rules (IP allowlist) |
 
@@ -229,14 +227,41 @@ graph LR
 - Sensitive fields stripped from API responses (e.g., password hashes)
 - Client secret values never returned in API responses
 
-### 5.3 Request Security
+### 5.3 Structured Error Codes
+
+Every API error returns a standardized JSON response with an error code, human-readable message, actionable fix, and correlation ID:
+
+```json
+{
+  "error": {
+    "code": "E1002",
+    "message": "The connector app secret is invalid or expired",
+    "detail": "Azure AD rejected the client secret for app d5c6ca1d...",
+    "fix": "Regenerate the client secret in Azure Portal",
+    "correlation_id": "abc123"
+  }
+}
+```
+
+Error code ranges: E1xxx (Connector), E2xxx (Auth), E3xxx (Backup), E4xxx (Recovery), E5xxx (Infrastructure), E6xxx (Validation), E7xxx (Rate Limiting).
+
+### 5.4 Request Security
 
 | Header | Purpose |
 |--------|---------|
-| `X-Correlation-ID` | Request tracing (auto-generated or passed through) |
+| `X-Correlation-ID` | Request tracing — auto-generated per request, propagated through Graph API calls, returned in response |
+| `X-Idempotency-Key` | Safe mutation retries — backup-all endpoints cache results keyed by this header |
 | `X-Response-Time` | Performance monitoring |
 | `Authorization: Bearer` | JWT authentication |
 | `Retry-After` | Rate limit backoff guidance |
+| `X-RateLimit-Limit` | Current rate limit tier |
+| `X-RateLimit-Remaining` | Remaining requests in window |
+
+### 5.5 Session Management
+
+- JWT tokens stored in `sessionStorage` (not `localStorage`) to prevent cross-tab leakage
+- Auto-logout on 401 response (expired token)
+- Legacy `localStorage` tokens automatically migrated to `sessionStorage`
 
 ### 5.4 Security Headers (Production)
 
@@ -261,12 +286,29 @@ graph LR
 | **Backup failure alerts** | Email + webhook notifications |
 | **Audit logging** | All admin actions logged with user ID, IP, timestamp |
 
-### 6.2 Incident Response
+### 6.2 Circuit Breaker
+
+Per-tenant circuit breaker for Graph API resilience (`backend/app/services/circuit_breaker.py`):
+
+| Parameter | Value |
+|-----------|-------|
+| Failure threshold | 50% failure rate |
+| Evaluation window | 5 minutes (300s) |
+| Cooldown period | 15 minutes (900s) |
+| Minimum calls before evaluation | 10 |
+| States | CLOSED (normal) -> OPEN (failing, reject fast) -> HALF-OPEN (testing recovery) |
+
+When the circuit opens, all Graph API requests for that tenant fail fast with error code `CIRCUIT_BREAKER_OPEN` (HTTP 503). An alert is fired to the alert service.
+
+Status visible at: `GET /api/diagnostics/circuit-breaker`
+
+### 6.3 Incident Response
 
 | Detection | Automated Response |
 |-----------|-------------------|
 | Backup failure | Auto-retry with exponential backoff (5/15/45 min) |
-| Graph API throttling | Circuit breaker (pause tenant after >50% failure rate) |
+| Graph API throttling | Auto-reduce concurrency by 50%, circuit breaker opens after >50% failure rate |
+| Pre-flight check failure | Operation blocked before starting, user sees structured error with fix |
 | Anomalous data changes | Smart Engine alert + investigation flag |
 | Stale backup jobs | Automatic re-queue after 60-minute timeout |
 | Storage failure | Partial job status + retry on next cycle |

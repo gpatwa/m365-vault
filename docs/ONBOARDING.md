@@ -73,66 +73,59 @@ Then log in at [http://localhost:5173](http://localhost:5173).
 
 ---
 
-## Step 2: Register Your M365 Tenant
+## Step 2: Connect Your M365 Tenant (OAuth Flow)
 
-Navigate to **Settings** in the sidebar, or use the API:
+Shieldio uses a multi-tenant OAuth connector app. Navigate to **Settings** or the **Onboarding** page, or use the API:
+
+### 2a. Check connector health (pre-flight)
 
 ```bash
-curl -X POST http://localhost:8000/api/tenants/ \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Contoso Corp",
-    "ms_tenant_id": "your-azure-tenant-id",
-    "client_id": "your-app-client-id",
-    "client_secret": "your-app-client-secret"
-  }'
+curl http://localhost:8000/api/onboard/connector-health \
+  -H "Authorization: Bearer $TOKEN"
 ```
+
+If unhealthy, configure `CONNECTOR_APP_ID` and `CONNECTOR_APP_SECRET` environment variables.
+
+### 2b. Start OAuth connection
+
+```bash
+curl http://localhost:8000/api/onboard/connect/microsoft365 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+This returns an `auth_url` — redirect the user to Microsoft for admin consent. A pre-flight check validates the connector secret works **before** sending the user to Microsoft.
+
+### 2c. Handle callback
+
+After Microsoft redirects back, the callback is handled at:
+
+```
+GET /api/onboard/callback?admin_consent=True&tenant={tenant_id}&state={state}
+```
+
+This automatically:
+- Creates the tenant record with encrypted credentials
+- Runs initial discovery
+- Returns discovered object counts
 
 > The client secret is encrypted with AES-256-GCM before storage.
 
 ---
 
-## Step 3: Test Connection
+## Step 3: Workload-Selective Discovery
 
-Verify that Shieldio can authenticate with your tenant:
-
-```bash
-curl -X POST http://localhost:8000/api/tenants/{tenant_id}/test \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-**Expected response:**
-```json
-{
-  "success": true,
-  "message": "Connection successful",
-  "user_count": 25
-}
-```
-
-If the test fails, verify:
-- Tenant ID, Client ID, and Client Secret are correct
-- Admin consent has been granted for all permissions
-- The App Registration is not expired
-
----
-
-## Step 4: Discover M365 Objects
-
-Run auto-discovery to find all mailboxes, OneDrive accounts, and SharePoint sites:
+Run discovery for specific workloads (or all):
 
 ```bash
-curl -X POST http://localhost:8000/api/tenants/{tenant_id}/discover \
-  -H "Authorization: Bearer $TOKEN"
+curl -X POST http://localhost:8000/api/onboard/discover \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"tenant_id": 1, "workloads": ["exchange", "entra_id", "sharepoint"]}'
 ```
 
-This populates the system with:
-- **Exchange mailboxes** for each licensed user
-- **OneDrive accounts** for each user with OneDrive provisioned
-- **SharePoint sites** across the tenant
+Available workloads: `exchange` (~2s), `entra_id` (~2s), `sharepoint` (~5s), `onedrive` (~5s), `teams` (~10s).
 
-Check the discovered objects in the Dashboard, Exchange, OneDrive, and SharePoint pages.
+Omit `workloads` to discover all. Check discovered objects in Dashboard, Exchange, OneDrive, SharePoint, Teams, and Entra ID pages.
 
 ---
 

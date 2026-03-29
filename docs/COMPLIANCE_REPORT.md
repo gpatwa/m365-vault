@@ -1,7 +1,7 @@
 # Shieldio — Compliance & Security Report
 
-**Product:** Shieldio v1.1.0
-**Report Date:** 2026-03-16
+**Product:** Shieldio v2.3.0
+**Report Date:** 2026-03-29
 **Classification:** Internal — Confidential
 **Prepared By:** Security & Compliance Engineering
 
@@ -11,7 +11,7 @@
 
 Shieldio is a data protection platform for Microsoft 365 workloads. It provides automated backup, encrypted storage, and policy-driven retention for Exchange Online mailboxes, SharePoint Online document libraries, and associated collaboration data.
 
-This report documents the security controls implemented in version 1.1.0, assesses their alignment with GDPR, SOC 2 Type II, and HIPAA regulatory frameworks, and identifies gaps that must be addressed before production deployment.
+This report documents the security controls implemented in version 2.3.0, assesses their alignment with GDPR, SOC 2 Type II, and HIPAA regulatory frameworks, and identifies gaps that must be addressed before production deployment.
 
 Key findings:
 
@@ -271,7 +271,7 @@ The following items must be addressed for production hardening:
 | 4 | No multi-factor authentication (MFA) | High — single-factor JWT auth is insufficient for administrative access | Add TOTP or WebAuthn as a second factor for admin and operator roles | P1 |
 | 5 | JWT algorithm is HS256 (symmetric) | Medium — secret key compromise allows token forgery | Migrate to RS256 (asymmetric) to separate signing and verification | P1 |
 | 6 | Token expiration defaults to 24 hours | Medium — long-lived tokens increase session hijacking window | Reduce to 30-60 minutes; implement refresh token rotation | P1 |
-| 7 | No failed-login lockout or brute-force protection | Medium — accounts vulnerable to credential stuffing | Implement progressive lockout after N failed attempts; add rate limiting on `/api/auth/login` | P1 |
+| 7 | No failed-login lockout | Medium — accounts vulnerable to credential stuffing | Implement progressive lockout after N failed attempts. (Rate limiting on `/api/auth/login` is now 20/min) | P1 |
 | 8 | No automated alerting on critical audit events | Medium — security events may go unnoticed | Integrate with SIEM or notification pipeline for `critical` and `error` severity events | P2 |
 | 9 | No automated backup recovery validation | Medium — restore integrity is unverified | Implement periodic restore-and-verify jobs with checksum validation | P2 |
 | 10 | No TLS configuration for the application server itself | Medium — internal API traffic may be unencrypted | Deploy behind a TLS-terminating reverse proxy or configure TLS certificates directly | P1 |

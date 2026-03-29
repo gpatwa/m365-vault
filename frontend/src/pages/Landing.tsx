@@ -250,9 +250,10 @@ const COMPARE_FEATURES = [
 
 // ── Pricing tiers ──
 const PRICING = [
-  { name: 'Community', price: 'Free', period: 'forever', desc: 'Up to 25 users', features: ['3 workloads', 'Basic Smart Engine', 'Community support'], cta: 'Start Free', primary: false },
-  { name: 'Professional', price: '$1.50', period: '/user/mo', desc: 'Unlimited users', features: ['5 workloads + Teams', 'Full Smart Engine', 'SSO + MFA', 'Email support'], cta: 'Start Trial', primary: true },
-  { name: 'Enterprise', price: '$3.00', period: '/user/mo', desc: 'Unlimited everything', features: ['All workloads', 'Custom rules', 'MSP console', 'Priority support'], cta: 'Contact Sales', primary: false },
+  { name: 'Community', price: 'Free', period: 'forever', desc: 'Up to 25 objects', features: ['Exchange + OneDrive + SharePoint', 'Basic Smart Engine', '30-day retention', 'Community support'], cta: 'Start Free', primary: false },
+  { name: 'Professional', price: '$1.50', period: '/user/mo', desc: 'Unlimited users', features: ['All 5 workloads + Teams', 'Full Smart Engine', '90-day retention', 'SSO + email support'], cta: 'Start Trial', primary: true },
+  { name: 'Business', price: '$3.00', period: '/user/mo', desc: 'Unlimited tenants', features: ['Org Context + MVB Plans', 'Criticality scoring', '1-year retention', 'Priority support'], cta: 'Start Trial', primary: false },
+  { name: 'Enterprise', price: '$5.00', period: '/user/mo', desc: 'Unlimited everything', features: ['Agentic Recovery', 'WORM + eDiscovery', 'Cleanroom Recovery', 'Dedicated support'], cta: 'Contact Sales', primary: false },
 ];
 
 // ═══════════════════════════════════════════════════════

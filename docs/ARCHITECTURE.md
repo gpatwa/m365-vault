@@ -83,20 +83,39 @@ The backend is a **FastAPI** application (`backend/app/main.py`) using Python's
 
 ### Router Registration
 
-Ten API routers are mounted on the app:
+31 API routers are mounted on the app (152 endpoints total):
 
 | Router          | Prefix             | Purpose                        |
 |-----------------|--------------------|---------------------------------|
-| `auth`          | `/api/auth`        | Login, register, user mgmt     |
-| `tenants`       | `/api/tenants`     | Tenant CRUD and discovery       |
+| `auth`          | `/api/auth`        | Login, register, SSO/OIDC, user mgmt |
+| `tenants`       | `/api/tenants`     | Tenant CRUD and connection testing |
 | `sla_policies`  | `/api/sla`         | SLA policy management           |
 | `exchange`      | `/api/exchange`    | Exchange backup/restore/search  |
 | `onedrive`      | `/api/onedrive`    | OneDrive backup/restore/search  |
 | `sharepoint`    | `/api/sharepoint`  | SharePoint backup/restore       |
+| `teams`         | `/api/teams`       | Teams backup/restore/search     |
+| `entra_id`      | `/api/entra-id`    | Entra ID config backup          |
 | `jobs`          | `/api/jobs`        | Backup job monitoring + retry   |
 | `dashboard`     | `/api/dashboard`   | Aggregated stats and metrics    |
 | `audit`         | `/api/audit`       | Audit log queries               |
 | `failed_items`  | `/api/failed-items`| Failed item tracking/resolution |
+| `onboarding`    | `/api/onboard`     | OAuth connector flow, discovery |
+| `diagnostics`   | `/api/diagnostics` | System health, Graph metrics, circuit breaker, resilience |
+| `org_context`   | `/api/org-context` | Organizational context + criticality |
+| `recovery`      | `/api/recovery`    | MVB plans, confidence scoring   |
+| `usage`         | `/api/usage`       | License tracking, platform metrics |
+| `alerts`        | `/api/alerts`      | Alert configuration             |
+| `health`        | `/api/health`      | Health scoring, anomalies, baselines |
+| `search`        | `/api/search`      | Cross-workload search           |
+| `sensitive_data` | `/api/sensitive-data` | PII/PHI/PCI scan results     |
+| `validation`    | `/api/validation`  | Backup validation               |
+| `self_restore`  | `/api/self-restore` | User self-service restore      |
+| `reports`       | `/api/reports`     | Reports and analytics           |
+| `status`        | `/api/status`      | System status                   |
+| `export`        | `/api/export`      | Data export                     |
+| `security`      | `/api/security`    | Security dashboard              |
+| `benchmarks`    | `/api/benchmarks`  | Performance benchmarks          |
+| `docs_api`      | `/api/docs`        | Documentation API               |
 
 ### Dependency Injection
 
@@ -121,7 +140,7 @@ environment variables or a `.env` file. Key settings groups:
 
 ## 3. Data Model
 
-Nine models (eight domain tables plus one join) in `backend/app/models/`:
+13 models in `backend/app/models/`:
 
 ```mermaid
 erDiagram
@@ -174,10 +193,14 @@ erDiagram
 | **SnapshotItem**  | `snapshot_items`     | Individual item within a snapshot (email, file, calendar event, contact, list, list item). |
 | **FailedItem**    | `failed_items`       | Items that failed during backup with categorized errors and resolution hints. |
 | **AuditLog**      | `audit_logs`         | Immutable record of every significant operation (backup, restore, config change). |
+| **RestoreJob**    | `restore_jobs`       | Tracks restore operations with type, status, source/target info. |
+| **DedupEntry**    | `dedup_entries`      | Content-addressable deduplication metadata (SHA-256 hash, ref count). |
+| **WorkerQueueEntry** | `worker_queue`    | Task queue entries for distributed job dispatch. |
+| **OrgContext** (4 models) | `user_contexts`, `site_contexts`, `vip_groups`, `recovery_plans` | Organizational context — auto-detected hierarchy, criticality scoring, MVB plans. |
 
 ### Key Enumerations
 
-- **WorkloadType:** `exchange`, `onedrive`, `sharepoint`
+- **WorkloadType:** `exchange`, `onedrive`, `sharepoint`, `teams`, `entra_id`
 - **ProtectionStatus:** `protected`, `unprotected`, `paused`, `error`
 - **JobStatus:** `queued`, `in_progress`, `completed`, `failed`, `cancelled`, `partial`
 - **SnapshotType:** `full`, `incremental`
@@ -188,7 +211,7 @@ erDiagram
 
 ## 4. Service Layer
 
-Ten services in `backend/app/services/`:
+31 services in `backend/app/services/`. Key services:
 
 ### 4.1 AuthService (`auth.py`)
 - Password hashing via **bcrypt**.
@@ -272,7 +295,7 @@ Ten services in `backend/app/services/`:
 
 ## 5. Background Workers
 
-Three workload-specific workers in `backend/app/workers/`. Each worker implements both
+Five workload-specific workers in `backend/app/workers/`. Each worker implements both
 backup and restore logic and follows the same constructor pattern, receiving `db`,
 `graph`, `storage`, and `encryption` dependencies.
 
@@ -322,6 +345,44 @@ Each job opens its own `async_session` and handles errors independently to avoid
 cascading failures.
 
 
+## 6.5 Resilience Layer
+
+Implemented in Production Resilience Week 1-2:
+
+### Error Code System (`backend/app/errors.py`)
+- 30+ structured error codes across 7 ranges (E1xxx-E7xxx)
+- `ShieldioError` exception class caught by global handler in `main.py`
+- Every error response includes `code`, `message`, `detail`, `fix`, and `correlation_id`
+
+### Circuit Breaker (`backend/app/services/circuit_breaker.py`)
+- Per-tenant Graph API circuit breaker (CLOSED -> OPEN -> HALF-OPEN)
+- Integrated into `GraphClient._request()` — checks before every call, records success/failure
+- Fires alerts when circuit opens
+
+### Pre-flight Validation (`backend/app/services/resilience.py`)
+- `preflight_graph_api()` — validates credentials + lightweight Graph API probe
+- `preflight_storage()` — verifies storage backend
+- `preflight_database()` — verifies DB connectivity
+- `preflight_backup()` — runs all three in parallel before backup operations
+
+### Idempotency Store (`backend/app/services/resilience.py`)
+- In-memory cache keyed by (user_id, X-Idempotency-Key)
+- Backup-all endpoints return cached results on retry
+- TTL-based expiry (1 hour default)
+
+### Middleware Stack (`backend/app/main.py`)
+1. CORS middleware (configurable origins)
+2. HTTPS redirect (production only, `FORCE_HTTPS=true`)
+3. Tiered rate limiting (auth: 20/min, onboard: 60/min, API: 600/min)
+4. Correlation ID middleware (auto-generates `X-Correlation-ID`)
+5. Global exception handlers (ShieldioError, RequestValidationError, unhandled)
+
+### Shared API Dependencies (`backend/app/api/dependencies.py`)
+- `run_backup_preflight` — FastAPI dependency for pre-flight checks
+- `get_idempotency_key` — extracts X-Idempotency-Key header
+- `get_tenant_with_credentials` — resolves tenant with credential validation
+
+
 ## 7. Frontend Architecture
 
 ### Technology Stack
@@ -329,33 +390,59 @@ cascading failures.
 - **TanStack Query** (React Query) for server state management, caching, and automatic refetching.
 - **Tailwind CSS** for styling.
 - **Lucide React** for iconography.
-- **React Router v6** for client-side routing.
+- **React Router v7** for client-side routing.
 
 ### Page Structure
 
 The app uses a sidebar layout (`components/Layout.tsx`) with an `<Outlet />` for
-nested routes. All authenticated routes are wrapped in a `ProtectedRoute` guard
-that checks for a stored JWT token.
+nested routes. All authenticated routes are wrapped in a `ProtectedRoute` guard.
+A `SmartHome` component checks tenant state and routes to onboarding or dashboard.
 
 | Route             | Page Component  | Purpose                              |
 |-------------------|-----------------|---------------------------------------|
-| `/`               | `Dashboard`     | Aggregated backup stats and metrics   |
+| `/`               | `SmartHome`     | Auto-routes to dashboard or onboarding |
+| `/welcome`        | `Landing`       | Public landing page with pricing      |
+| `/login`          | `Login`         | Authentication                        |
+| `/onboard`        | `Onboard`       | Interactive onboarding wizard         |
 | `/exchange`       | `Exchange`      | Exchange mailbox management + search  |
 | `/onedrive`       | `OneDrive`      | OneDrive account management + search  |
 | `/sharepoint`     | `SharePoint`    | SharePoint site management            |
+| `/teams`          | `Teams`         | Teams channels + chat backup          |
+| `/entra-id`       | `EntraID`       | Entra ID config backup/compare        |
 | `/sla-policies`   | `SLAPolicies`   | SLA policy CRUD                       |
 | `/jobs`           | `Jobs`          | Backup job monitoring with progress   |
 | `/failed-items`   | `FailedItems`   | Failed item tracking and resolution   |
 | `/settings`       | `Settings`      | Tenant configuration                  |
 | `/audit`          | `AuditLog`      | Audit log viewer                      |
-| `/login`          | `Login`         | Authentication (unauthenticated)      |
+| `/recovery`       | `Recovery`      | Recovery dashboard + MVB plans        |
+| `/org-context`    | `OrgContext`    | Organizational context + criticality  |
+| `/usage`          | `Usage`         | Usage metrics + license status        |
+| `/security`       | `Security`      | Security dashboard                    |
+| `/performance`    | `Performance`   | Performance benchmarks                |
+| `/reports`        | `Reports`       | Analytics + reports                   |
+| `/search`         | `Search`        | Cross-workload search                 |
+| `/restore`        | `SelfRestore`   | Self-service restore                  |
+
+### Key Components
+
+| Component | Purpose |
+|-----------|---------|
+| `Toast.tsx` | Toast notification system (success/error/warning/info) with correlation IDs |
+| `ErrorBoundary.tsx` | Global React error boundary with copy-able error details |
+| `Layout.tsx` | Sidebar navigation with collapsible sections |
+| `CriticalityBadge.tsx` | Visual criticality tier indicator |
+| `CommandPalette.tsx` | Global search/command palette |
+| `OnboardingWizard.tsx` | Multi-step onboarding flow |
+| `RestoreDialog.tsx` | Restore operation dialog |
 
 ### State Management
 
 - **Server state:** TanStack Query manages all API data with automatic background
   refetching, cache invalidation on mutations, and optimistic updates.
-- **Auth state:** JWT token stored in the API client singleton (`api.getToken()` /
-  `api.clearToken()`), checked by `ProtectedRoute` on every navigation.
+- **Auth state:** JWT token stored in `sessionStorage` via the API client singleton
+  (`api.getToken()` / `api.clearToken()`), checked by `ProtectedRoute`.
+- **Error handling:** `ApiError` class parses structured backend errors (code, message, fix, correlationId).
+  `ToastProvider` wraps the app for non-intrusive notifications. `ErrorBoundary` catches React crashes.
 - **No global client state store** (no Redux/Zustand) -- component-local state and
   TanStack Query cover all needs.
 

@@ -23,7 +23,7 @@ Maps Shieldio security controls to SOC 2, GDPR, and HIPAA requirements.
 | **CC7.2** | Incident detection | Anomaly detection, circuit breaker, stale job detector | ✅ |
 | **CC7.3** | Incident response | Self-healing retry, alert service, audit trail | ✅ |
 | **CC8.1** | Change management | GitHub PRs, CI tests, release quality gate | ✅ |
-| **CC9.1** | Risk mitigation | WORM storage, legal hold, malware scanning | ✅ |
+| **CC9.1** | Risk mitigation | WORM storage, legal hold | ✅ (malware scanning: planned) |
 
 ---
 
@@ -68,7 +68,7 @@ Maps Shieldio security controls to SOC 2, GDPR, and HIPAA requirements.
 | Article | Requirement | Shieldio Control | Status |
 |---------|------------|-----------------|--------|
 | **Art. 6** | ICT risk management | Smart Engine risk assessment, anomaly detection | ✅ |
-| **Art. 9** | Protection and prevention | WORM storage, malware scanning, encryption | ✅ |
+| **Art. 9** | Protection and prevention | WORM storage, encryption, pre-flight validation | ✅ (malware scanning: planned) |
 | **Art. 10** | Detection | Anomaly detection, circuit breaker, health monitoring | ✅ |
 | **Art. 11** | Response and recovery | Self-healing retry, mass recovery, recovery confidence scoring | ✅ |
 | **Art. 12** | Backup policies | Configurable SLA policies, retention, WORM | ✅ |

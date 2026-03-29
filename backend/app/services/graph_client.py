@@ -217,6 +217,10 @@ class GraphClient:
             client_credential=client_secret,
         )
 
+        # Circuit breaker integration
+        from app.services.circuit_breaker import circuit_breaker
+        self._circuit_breaker = circuit_breaker
+
         # Throttle tracking
         self._request_count = 0
         self._throttle_count = 0
@@ -280,12 +284,23 @@ class GraphClient:
         data: bytes = None,
         retry_count: int = 0,
     ) -> httpx.Response:
-        """Make an HTTP request with throttling and retry logic.
+        """Make an HTTP request with throttling, retry logic, and circuit breaker.
 
         Enforces read-only mode for backup clients — blocks POST/PUT/PATCH/DELETE.
         """
         # Enforce least-privilege: block writes on read-only clients
         self._ensure_write_allowed(method, url)
+
+        # Circuit breaker: fail fast if the tenant's API is in bad state
+        if self._circuit_breaker.is_open(self.tenant_id):
+            cb_status = self._circuit_breaker.get_status(self.tenant_id)
+            raise GraphAPIError(
+                503,
+                f"Circuit breaker OPEN for tenant {self.tenant_id}. "
+                f"API failing at {cb_status['failure_rate']:.0%} rate. "
+                f"Retry in {cb_status['cooldown_remaining']}s.",
+                "CIRCUIT_BREAKER_OPEN",
+            )
 
         async with self._semaphore:
             token = await self._get_token()
@@ -342,6 +357,7 @@ class GraphClient:
                         )
 
                         if retry_count >= settings.GRAPH_MAX_RETRIES:
+                            self._circuit_breaker.record_failure(self.tenant_id)
                             raise GraphAPIError(429, "Max retries exceeded due to throttling")
 
                         # Exponential backoff with jitter
@@ -358,7 +374,8 @@ class GraphClient:
                             method, url, headers, params, json_data, data, retry_count + 1
                         )
 
-                    # Success — clear throttle counter and consider restoring concurrency
+                    # Success — record for circuit breaker, clear throttle counter
+                    self._circuit_breaker.record_success(self.tenant_id)
                     self._consecutive_throttles = 0
                     self._auto_restore_concurrency()
 
@@ -375,6 +392,7 @@ class GraphClient:
 
                     # Handle client errors
                     if response.status_code >= 400:
+                        self._circuit_breaker.record_failure(self.tenant_id)
                         try:
                             error_body = response.json()
                             error_msg = error_body.get("error", {}).get("message", response.text)
@@ -400,6 +418,7 @@ class GraphClient:
                         return await self._request(
                             method, url, headers, params, json_data, data, retry_count + 1
                         )
+                    self._circuit_breaker.record_failure(self.tenant_id)
                     raise GraphAPIError(408, "Request timed out after max retries")
 
     def _auto_reduce_concurrency(self):

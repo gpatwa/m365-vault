@@ -1,97 +1,115 @@
-# Shieldio — Cost, Margin, Profit & Operations Analysis
+# Shieldio — Cost, Margin & Pricing Analysis
 
-**Date: 2026-03-28 | Version 2.2.0**
+**Date: 2026-03-29 | Version 2.3.0 | Pricing: Option B**
 
 ---
 
-## 1. Azure Infrastructure Costs (Monthly)
+## 1. Pricing Model (Option B — Competitive)
 
-### Per-Tier Breakdown
+### SaaS Pricing Tiers
 
-| Component | Small (Dev/Demo) | Medium (10 tenants) | Large (50+ tenants) |
-|-----------|-----------------|---------------------|---------------------|
-| **Container Apps** (backend + worker + frontend) | $30 | $76 | $207 |
-| **PostgreSQL** (Flexible Server) | $26 | $198 | $432 |
-| **Redis Cache** | $16 | $75 | $200 |
-| **Azure Blob Storage** (backup data) | $2 | $6 | $40 |
-| **Container Registry** | $5 | $10 | $50 |
-| **Log Analytics** | $10 | $35 | $120 |
-| **Key Vault** | ~$0 | ~$0 | ~$0 |
-| **Networking/Egress** | ~$0 | ~$5 | ~$50 |
-| **Total Infrastructure** | **~$89/mo** | **~$405/mo** | **~$1,100/mo** |
+| Tier | Price/user/mo | Retention | Key Differentiator | Target |
+|------|--------------|-----------|-------------------|--------|
+| **Community** | Free | 30 days | 25 objects, 3 workloads | Developers, POC |
+| **Professional** | $1.50 | 90 days | All 5 workloads, Full Smart Engine | SMB (10-500 users) |
+| **Business** | $3.00 | 1 year | Org Context, MVB Plans, Criticality Scoring | Mid-Market (100-1,000) |
+| **Enterprise** | $5.00 | 1 year | Agentic Recovery, WORM, eDiscovery, Cleanroom | Enterprise (500+) |
+
+### Competitive Positioning
+
+| Vendor | Price/user/mo | vs Shieldio |
+|--------|--------------|-------------|
+| **Microsoft Native M365 Backup** | ~$0.75/user (est.) | Cheaper, but no intelligence/MVB/recovery orchestration |
+| **Veeam Data Cloud** | $2.00 (reseller) | Shieldio Professional beats at $1.50 |
+| **AvePoint** | $3-5 | Shieldio Business matches at $3.00 with more intelligence |
+| **Druva** | $4-7 | Shieldio Enterprise undercuts at $5.00 |
+| **Commvault Cloud** | $4-6 | Shieldio Business/Enterprise cheaper with more automation |
+| **Rubrik M365** | $6-10 | Shieldio Enterprise at $5.00 is 50% less |
+
+**Why we win:** Auto-detected MVB recovery plans, org context, criticality scoring, and agentic recovery at 50-70% of Rubrik/Druva pricing. Intelligence is the moat, not storage.
+
+---
+
+## 2. Azure Infrastructure Costs
+
+### Current Costs (Pay-as-you-go)
+
+| Component | Dev/Demo | Small Prod (5 tenants) | Medium Prod (50 tenants) |
+|-----------|---------|----------------------|------------------------|
+| Container Apps (backend + worker + frontend) | $30 | $30 | $76 |
+| PostgreSQL Flexible Server | $26 | $198 | $432 |
+| Redis Cache | $16 | $75 | $200 |
+| Azure Blob Storage | $2 | $2 | $6 |
+| Container Registry | $5 | $10 | $50 |
+| Log Analytics | $10 | $35 | $120 |
+| Key Vault | ~$0 | ~$0 | ~$0 |
+| Networking/Egress | ~$0 | ~$5 | ~$50 |
+| **Total** | **$89** | **$355** | **$934** |
+
+### Optimized Costs (Applied Savings)
+
+| Optimization | Dev | Small Prod | Medium Prod |
+|-------------|-----|-----------|-------------|
+| PostgreSQL: Neon Serverless or stop-on-idle | $26 → $0-15 | $198 → $40 | $432 → $150 |
+| Redis: In-process dispatch (single instance) | $16 → $0 | $75 → $0 | $200 → $52 (reserved) |
+| Container Apps: Scale-to-zero + savings plan | $30 → $10 | $30 → $25 | $76 → $65 |
+| Log Analytics: 7-day retention (dev) | $10 → $2 | $35 → $35 | $120 → $120 |
+| ACR: Purge old images | $5 → $3 | $10 → $5 | $50 → $50 |
+| **Optimized Total** | **$20-35** | **$110** | **$445** |
+| **Savings** | **60-78%** | **69%** | **52%** |
 
 ### Cost-Saving Levers
 
 | Lever | Savings | Notes |
 |-------|---------|-------|
-| Reserved Instances (1yr) | 30-40% on compute | PostgreSQL + Container Apps |
-| `make az-sleep` for dev | ~$60/mo | Scales to 0, stops DB |
-| Compression + CDC | 40-60% less storage | Already implemented (zstd + CDC) |
-| Auto-scaling (min replicas) | Variable | Backend: 1-10 replicas, scales with load |
-| Log retention tuning | $10-50/mo | 30d → 7d for non-prod |
+| **Neon Serverless PostgreSQL** | 65-92% on DB | Scale-to-zero, $0.35/GB storage, Azure native |
+| **In-process dispatch** | $16-75/mo | Already built (`DISPATCH_MODE=in_process`) |
+| **Reserved Instances (1yr)** | 30-40% on compute | PostgreSQL + Redis + Container Apps |
+| **Scale-to-zero** | $25-45/mo | Frontend + worker min_replicas=0 |
+| **`make az-sleep`** | ~$60/mo for dev | Scales to 0, stops DB |
+| **Log retention tuning** | $8-28/mo | 30d → 7d for non-prod |
+| **Compression + CDC** | 40-60% less storage | Already implemented (zstd + CDC dedup) |
 
 ---
 
-## 2. Pricing Model & Revenue
+## 3. Margin Analysis (Option B Pricing + Optimized Infrastructure)
 
-### SaaS Pricing (Per-User/Month)
-
-| Tier | Price/user/mo | Includes | Target Segment |
-|------|--------------|----------|----------------|
-| **Starter** | $3/user | Exchange + OneDrive backup, 30-day retention | SMB (10-100 users) |
-| **Business** | $5/user | All 5 workloads, 90-day retention, Smart Engine | Mid-Market (100-500 users) |
-| **Enterprise** | $8/user | All workloads + Org Context + MVB + WORM + eDiscovery | Enterprise (500+ users) |
-
-### Competitive Pricing Context
-
-| Vendor | Price/user/mo | Notes |
-|--------|--------------|-------|
-| **Veeam M365** | $2.50-4.50 | Per-user, basic backup only |
-| **Druva M365** | $4-7 | Cloud-native, per-user |
-| **Rubrik M365** | $6-10 | Enterprise, includes MVB (when GA) |
-| **Commvault M365** | $5-8 | Cleanroom recovery extra |
-| **AvePoint** | $3-5 | Per-user, compliance focused |
-| **Shieldio** | $3-8 | Competitive with auto-detected MVB differentiator |
-
----
-
-## 3. Margin Analysis
-
-### Small Customer (50 users, Business tier)
+### Small Customer (50 users, Professional $1.50)
 
 | Line Item | Monthly |
 |-----------|---------|
-| Revenue (50 × $5) | $250 |
-| Infrastructure (shared dev) | $89 |
-| **Gross Margin** | **$161 (64%)** |
+| Revenue (50 x $1.50) | $75 |
+| Infrastructure (optimized dev) | $35 |
+| **Gross Margin** | **$40 (53%)** |
 
-### Medium Customer (200 users, Business tier)
-
-| Line Item | Monthly |
-|-----------|---------|
-| Revenue (200 × $5) | $1,000 |
-| Infrastructure (dedicated medium) | $405 |
-| **Gross Margin** | **$595 (60%)** |
-
-### Enterprise Customer (1,000 users, Enterprise tier)
+### Mid-Market Customer (200 users, Business $3.00)
 
 | Line Item | Monthly |
 |-----------|---------|
-| Revenue (1,000 × $8) | $8,000 |
-| Infrastructure (large, dedicated) | $1,100 |
-| **Gross Margin** | **$6,900 (86%)** |
+| Revenue (200 x $3.00) | $600 |
+| Infrastructure (optimized small prod) | $110 |
+| **Gross Margin** | **$490 (82%)** |
 
-### Multi-Tenant (10 customers, avg 100 users, Business tier)
+### Enterprise Customer (1,000 users, Enterprise $5.00)
 
 | Line Item | Monthly |
 |-----------|---------|
-| Revenue (1,000 users × $5) | $5,000 |
-| Infrastructure (shared medium) | $405 |
+| Revenue (1,000 x $5.00) | $5,000 |
+| Infrastructure (optimized medium prod) | $445 |
+| **Gross Margin** | **$4,555 (91%)** |
+
+### Multi-Tenant (10 customers, avg 100 users, Business $3.00)
+
+| Line Item | Monthly |
+|-----------|---------|
+| Revenue (1,000 users x $3.00) | $3,000 |
+| Infrastructure (shared medium, optimized) | $445 |
 | Support staff (0.5 FTE) | $3,000 |
-| **Net Margin** | **$1,595 (32%)** |
+| **Net Margin** | **-$445 (-15%)** |
+| **At 20 customers (2,000 users)** | **$2,555 (43%)** |
 
 ### Key Insight
-**SaaS margins improve dramatically with scale.** At 10+ tenants on shared infrastructure, infrastructure cost per user drops below $0.50/user/mo while revenue stays $3-8/user/mo. The 60-86% gross margin is in line with top SaaS companies.
+At Option B pricing, **breakeven on multi-tenant with support staff is ~13 customers** (1,300 users at Business tier). Below that, infrastructure costs are negligible — it's the support FTE that drives the breakeven. At 20+ customers on shared infrastructure, net margins exceed 40%.
 
 ---
 
@@ -99,70 +117,65 @@
 
 | Metric | Value | Industry Benchmark |
 |--------|-------|--------------------|
-| **CAC (Customer Acquisition Cost)** | TBD (currently $0 — founder-led sales) | $500-2,000 for SMB SaaS |
-| **ARPU (Avg Revenue Per User)** | $5/mo ($60/yr) | $48-96/yr for M365 backup |
-| **LTV (Lifetime Value)** | $180 (3yr × $60/yr) | Assumes 3-year retention |
-| **LTV:CAC Ratio** | >3:1 target | Healthy SaaS benchmark |
-| **Payback Period** | <12 months target | Based on subscription revenue |
-| **Gross Margin** | 60-86% | Best-in-class SaaS: 70-80% |
+| **ARPU (Professional)** | $1.50/mo ($18/yr) | $48-96/yr for M365 backup |
+| **ARPU (Business)** | $3.00/mo ($36/yr) | Competitive with AvePoint |
+| **ARPU (Enterprise)** | $5.00/mo ($60/yr) | 50% below Rubrik |
+| **Infrastructure/user (at scale)** | ~$0.45/user/mo | Optimized medium tier |
+| **Gross Margin** | 53-91% | Best-in-class SaaS: 70-80% |
+| **LTV (3yr, Business)** | $108 | Conservative |
+| **LTV:CAC Target** | >3:1 | $36 max CAC per user |
 
 ---
 
-## 5. Operational Considerations
+## 5. Pricing vs Competitors — Feature Matrix
 
-### Day-to-Day Operations
+| Feature | Microsoft Native | Veeam | AvePoint | Shieldio Pro ($1.50) | Shieldio Biz ($3) | Shieldio Ent ($5) |
+|---------|-----------------|-------|----------|---------------------|-------------------|-------------------|
+| Exchange backup | Yes | Yes | Yes | Yes | Yes | Yes |
+| OneDrive backup | Yes | Yes | Yes | Yes | Yes | Yes |
+| SharePoint backup | Yes | Yes | Yes | Yes | Yes | Yes |
+| Teams backup | Yes | Yes | Yes | Yes | Yes | Yes |
+| Entra ID config backup | No | No | No | Yes | Yes | Yes |
+| Smart anomaly detection | No | Basic | No | Yes | Yes | Yes |
+| Org Context (auto-detected) | No | No | No | No | Yes | Yes |
+| MVB Recovery Plans | No | No | No | No | Yes | Yes |
+| Criticality scoring | No | No | No | No | Yes | Yes |
+| Agentic Recovery | No | No | No | No | No | Yes |
+| WORM immutable storage | No | Yes | Yes | No | No | Yes |
+| eDiscovery | No | No | Yes | No | No | Yes |
+| Cleanroom Recovery | No | No | No | No | No | Yes |
 
-| Responsibility | Effort | Notes |
-|----------------|--------|-------|
-| Infrastructure monitoring | Low | Azure Monitor + Log Analytics handles alerts |
-| Backup job monitoring | Low | Smart Engine auto-detects anomalies, sends alerts |
-| Customer onboarding | 15-30 min | Self-service OAuth + guided wizard |
-| Support tickets | 1-2 hrs/week at scale | Most issues are M365 API throttling (auto-retried) |
-| Security patches | Monthly | Docker base image updates |
-| Database maintenance | Minimal | Azure handles backups, scaling |
+---
 
-### Scaling Strategy
+## 6. Operational Scaling
 
-| Phase | Users | Infrastructure | Team |
-|-------|-------|----------------|------|
-| **Demo/POC** (now) | 1-5 tenants | Small ($89/mo) | Founder |
-| **Early Customers** | 5-20 tenants | Medium ($405/mo) | Founder + 1 support |
-| **Growth** | 20-100 tenants | Large ($1,100/mo) | 2-3 people (eng + support) |
-| **Scale** | 100+ tenants | Multi-region ($3-5K/mo) | 5-8 people |
+| Phase | Customers | Users | Monthly Revenue | Infrastructure | Margin |
+|-------|-----------|-------|-----------------|----------------|--------|
+| **Demo/POC** | 1-3 | <100 | Free | $35/mo | N/A |
+| **Early** | 3-10 | 100-500 | $150-1,500 | $110/mo | 27-93% |
+| **Growth** | 10-50 | 500-5,000 | $1,500-15,000 | $445/mo | 70-97% |
+| **Scale** | 50-200 | 5,000-50,000 | $15,000-150,000 | $1,500-5,000/mo | 90-97% |
 
 ### Risk Factors
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| Microsoft Graph API throttling | Backup delays | Exponential backoff + circuit breaker (built) |
-| Azure outage | Service down | Multi-region deployment (Phase 3 roadmap) |
-| Data breach | Critical | AES-256 encryption, per-tenant DEKs (built) |
-| M365 API changes | Feature breakage | Version pinning, delta token fallback (built) |
-| Competitor pricing war | Margin pressure | Differentiate on MVB + agentic recovery |
+| Veeam drops to $1/user | Margin squeeze on Professional | Free tier captures leads, differentiate on intelligence |
+| Microsoft enhances native backup | Baseline protection commoditized | Pivot messaging to recovery intelligence, not backup |
+| Azure cost increases | Margin reduction | Neon Serverless + reserved instances hedge |
+| Graph API throttling at scale | Backup delays | Circuit breaker + exponential backoff (built) |
+| Competitor pricing war | Race to bottom | Intelligence features (MVB, Org Context) have no peer |
 
 ---
 
-## 6. Go-to-Market for Prospect Demo
+## 7. Implementation Priority for Cost Optimization
 
-### Demo Infrastructure
-
-| Resource | Purpose | Monthly Cost |
-|----------|---------|-------------|
-| Azure Container Apps (dev tier) | Backend + Frontend | $30 |
-| PostgreSQL (burstable) | Metadata | $26 |
-| Redis (Basic) | Task queue | $16 |
-| Blob Storage | Demo backup data | $2 |
-| ACR + monitoring | Images + logs | $15 |
-| **Total Demo Infra** | | **~$89/mo** |
-
-### Demo Flow (10 minutes)
-1. **Connect** — OAuth to prospect's M365 tenant (2 min)
-2. **Discover** — Auto-discover mailboxes, sites, teams (1 min)
-3. **Protect** — Assign SLA policy, one-click (30 sec)
-4. **Backup** — Run first backup, see live progress (2 min)
-5. **Recovery Playbook** — Interactive 4-scene demo with their real data (3 min)
-6. **Org Context** — Show auto-detected criticality scores (1 min)
-7. **MVB Plan** — Generate recovery plan showing their CEO/CFO first (30 sec)
-
-### What Makes the Demo Win
-- "We just backed up your CEO's mailbox. If ransomware hit right now, she'd be restored in 5 minutes. Rubrik can't even tell you who your CEO is without you typing it in."
+| # | Action | Monthly Savings | Effort |
+|---|--------|-----------------|--------|
+| 1 | Dev: in-process dispatch (drop Redis) | $16 | Config change |
+| 2 | Dev: scale-to-zero (frontend + worker) | $25 | Terraform |
+| 3 | Dev: 7-day log retention | $8 | Terraform |
+| 4 | Small prod: drop Redis (in-process) | $75 | Config change |
+| 5 | Evaluate Neon Serverless (POC) | $150-180 | 1-2 days |
+| 6 | Prod: 1yr reserved instances | $100+ | Procurement |
+| 7 | Aggressive scale-to-zero (all envs) | $25-45 | Terraform |

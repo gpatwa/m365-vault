@@ -12,6 +12,28 @@ const API_BASE =
   ? `${window.__RUNTIME_CONFIG__.API_BASE}/api`
   : import.meta.env.VITE_API_BASE || 'http://localhost:8000/api';
 
+/**
+ * Structured API error with error code, message, fix suggestion, and correlation ID.
+ * Matches the backend Shieldio error response format.
+ */
+export class ApiError extends Error {
+  code: string;
+  detail: string;
+  fix: string;
+  correlationId: string;
+  status: number;
+
+  constructor(opts: { code?: string; message: string; detail?: string; fix?: string; correlationId?: string; status: number }) {
+    super(opts.message);
+    this.name = 'ApiError';
+    this.code = opts.code || '';
+    this.detail = opts.detail || opts.message;
+    this.fix = opts.fix || '';
+    this.correlationId = opts.correlationId || '';
+    this.status = opts.status;
+  }
+}
+
 class ApiClient {
   private token: string | null = null;
 
@@ -55,12 +77,21 @@ class ApiClient {
     if (res.status === 401) {
       this.clearToken();
       window.location.href = '/login';
-      throw new Error('Unauthorized');
+      throw new ApiError({ message: 'Unauthorized', status: 401 });
     }
 
     if (!res.ok) {
-      const error = await res.json().catch(() => ({ detail: res.statusText }));
-      throw new Error(error.detail || `HTTP ${res.status}`);
+      const body = await res.json().catch(() => ({}));
+      // Parse structured error (new format) or legacy format
+      const err = body.error || {};
+      throw new ApiError({
+        code: err.code || '',
+        message: err.message || body.detail || `HTTP ${res.status}`,
+        detail: err.detail || body.detail || res.statusText,
+        fix: err.fix || '',
+        correlationId: err.correlation_id || res.headers.get('X-Correlation-ID') || '',
+        status: res.status,
+      });
     }
 
     return res.json();
@@ -81,7 +112,17 @@ class ApiClient {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: formData,
     });
-    if (!res.ok) throw new Error('Invalid credentials');
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      const err = body.error || {};
+      throw new ApiError({
+        code: err.code || 'E2001',
+        message: err.message || 'Invalid credentials',
+        fix: err.fix || 'Check your username and password',
+        correlationId: err.correlation_id || '',
+        status: res.status,
+      });
+    }
     const data = await res.json();
     this.setToken(data.access_token);
     return data;

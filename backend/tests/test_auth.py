@@ -18,8 +18,11 @@ async def test_register_weak_password(client: AsyncClient):
     response = await client.post("/api/auth/register", json={
         "username": "weakuser", "email": "weak@test.com", "password": "short",
     })
-    assert response.status_code == 400
-    assert "Password" in response.json()["detail"]
+    assert response.status_code == 422
+    body = response.json()
+    # Structured error format: {"error": {"code": ..., "detail": ...}}
+    detail = body.get("error", {}).get("detail", body.get("detail", ""))
+    assert "Password" in detail
 
 
 @pytest.mark.asyncio

@@ -1,6 +1,6 @@
 # Shieldio — Tenant Security Guide
 
-**Product:** Shieldio v1.1.0
+**Product:** Shieldio v2.3.0
 **Classification:** Internal — Confidential
 **Audience:** Administrators, Security Engineers, Compliance Officers
 
@@ -14,7 +14,7 @@ Each Microsoft 365 tenant connected to Shieldio represents a trust boundary. Thi
 
 - **Credential encryption at rest** — Azure AD client secrets are AES-256-GCM encrypted before database storage
 - **Least-privilege Graph API access** — Backup operations use read-only scopes; restore operations use read-write scopes
-- **Tenant data isolation** — Each tenant's backup data is stored in a separate directory tree with per-snapshot encryption keys
+- **Tenant data isolation** — Each tenant's backup data is stored in a separate directory tree with per-**snapshot** encryption keys (unique DEK per snapshot, not per tenant)
 - **Role-based access control** — Only ADMIN users can register tenants and perform restore operations
 
 ---

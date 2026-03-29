@@ -355,3 +355,83 @@ async def show_environment(
         "encryption_key_set": bool(settings.ENCRYPTION_MASTER_KEY),
         "debug": getattr(settings, "DEBUG", False),
     }
+
+
+@router.get("/circuit-breaker")
+async def circuit_breaker_status(
+    current_user: User = Depends(require_backup_permission),
+    db: AsyncSession = Depends(get_db),
+):
+    """Show circuit breaker state for all known tenants.
+
+    Returns per-tenant state (open/closed), failure rate, and cooldown remaining.
+    """
+    from app.services.circuit_breaker import circuit_breaker
+    from app.models.tenant import Tenant
+    from sqlalchemy import select
+
+    result = await db.execute(select(Tenant))
+    tenants = result.scalars().all()
+
+    statuses = {}
+    for tenant in tenants:
+        status = circuit_breaker.get_status(tenant.ms_tenant_id or str(tenant.id))
+        statuses[tenant.name] = {
+            "tenant_id": tenant.id,
+            "ms_tenant_id": tenant.ms_tenant_id,
+            **status,
+        }
+
+    open_count = sum(1 for s in statuses.values() if s["state"] == "open")
+    return {
+        "summary": {
+            "total_tenants": len(statuses),
+            "circuits_open": open_count,
+            "circuits_closed": len(statuses) - open_count,
+        },
+        "tenants": statuses,
+        "config": {
+            "failure_threshold": circuit_breaker.threshold,
+            "window_seconds": circuit_breaker.window,
+            "cooldown_seconds": circuit_breaker.cooldown,
+            "min_calls": circuit_breaker.min_calls,
+        },
+    }
+
+
+@router.get("/resilience")
+async def resilience_overview(
+    current_user: User = Depends(require_backup_permission),
+):
+    """Overview of all resilience mechanisms and their current state."""
+    from app.services.circuit_breaker import circuit_breaker
+    from app.services.resilience import idempotency_store
+    from app.config import settings
+
+    return {
+        "circuit_breaker": {
+            "enabled": True,
+            "threshold": circuit_breaker.threshold,
+            "window_seconds": circuit_breaker.window,
+            "cooldown_seconds": circuit_breaker.cooldown,
+        },
+        "retry": {
+            "graph_max_retries": settings.GRAPH_MAX_RETRIES,
+            "graph_retry_base_delay": settings.GRAPH_RETRY_BASE_DELAY,
+        },
+        "idempotency": {
+            "enabled": True,
+            "cache_size": len(idempotency_store._store),
+            "default_ttl_seconds": idempotency_store._default_ttl,
+        },
+        "rate_limiting": {
+            "default_rpm": settings.RATE_LIMIT_REQUESTS_PER_MINUTE,
+            "auth_rpm": 20,
+            "onboard_rpm": 60,
+        },
+        "concurrency": {
+            "graph_max_concurrent": settings.GRAPH_MAX_CONCURRENT_REQUESTS,
+            "worker_concurrency": settings.WORKER_CONCURRENCY,
+            "item_concurrency": settings.ITEM_CONCURRENCY,
+        },
+    }

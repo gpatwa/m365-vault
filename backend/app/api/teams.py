@@ -5,10 +5,13 @@ from sqlalchemy import select, func, desc, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
+from app.errors import ShieldioError, BACKUP_NO_OBJECTS
 from app.models.protected_object import ProtectedObject, WorkloadType
 from app.models.snapshot import Snapshot, SnapshotItem, SnapshotStatus, ItemType
 from app.models.user import User
 from app.services.auth import get_current_user
+from app.services.resilience import idempotency_store
+from app.api.dependencies import get_idempotency_key
 from app.interfaces.dispatcher_factory import get_dispatcher
 from app.interfaces.job_message import BackupObjectMessage, RestoreJobMessage
 from app.models.restore_job import RestoreJob, RestoreType, RestoreStatus

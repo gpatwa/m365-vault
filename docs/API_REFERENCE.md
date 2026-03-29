@@ -62,13 +62,37 @@ Response shape:
 | `403` | Insufficient role / retention-locked resource |
 | `404` | Resource not found |
 | `422` | Request body validation failure (FastAPI) |
+| `429` | Rate limit exceeded |
 | `500` | Internal server error |
+| `503` | Service unavailable (circuit breaker open, dependency down) |
 
-Error body:
+Error body (structured format):
 
 ```json
-{ "detail": "Human-readable error message" }
+{
+  "error": {
+    "code": "E2001",
+    "message": "Invalid username or password",
+    "detail": "Credentials did not match any active account",
+    "fix": "Check your credentials and try again",
+    "correlation_id": "a1b2c3d4"
+  }
+}
 ```
+
+Error code ranges: `E1xxx` (Connector), `E2xxx` (Auth), `E3xxx` (Backup), `E4xxx` (Recovery), `E5xxx` (Infrastructure), `E6xxx` (Validation), `E7xxx` (Rate Limiting).
+
+### Request Headers
+
+| Header | Direction | Description |
+|--------|-----------|-------------|
+| `Authorization: Bearer <token>` | Request | JWT authentication |
+| `X-Correlation-ID` | Both | Request tracing ID (auto-generated if not sent) |
+| `X-Idempotency-Key` | Request | Safe retry for mutations (backup-all endpoints) |
+| `X-Response-Time` | Response | Request duration |
+| `X-RateLimit-Limit` | Response | Rate limit for current tier |
+| `X-RateLimit-Remaining` | Response | Remaining requests in window |
+| `Retry-After` | Response | Seconds to wait on 429 |
 
 ---
 
@@ -690,3 +714,69 @@ Prefix: `/api/failed-items`
   ]
 }
 ```
+
+---
+
+## Diagnostics
+
+Prefix: `/api/diagnostics` | Requires: Admin or Operator role
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/diagnostics/health` | Full system health check (DB, storage, connector, encryption) |
+| GET | `/api/diagnostics/connector-test` | Test M365 connector secret against Azure AD |
+| GET | `/api/diagnostics/msal-test` | Direct MSAL token acquisition test |
+| GET | `/api/diagnostics/graph-metrics` | Graph API call metrics per tenant/workload |
+| GET | `/api/diagnostics/performance` | Backup throughput, restore duration, snapshot stats |
+| GET | `/api/diagnostics/circuit-breaker` | Per-tenant circuit breaker state (open/closed/cooldown) |
+| GET | `/api/diagnostics/resilience` | Overview of all resilience mechanisms |
+| GET | `/api/diagnostics/env` | Non-sensitive environment configuration |
+
+---
+
+## Usage & License
+
+Prefix: `/api/usage` | Requires: Authenticated user
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/usage/tenant/{tenant_id}` | Per-tenant usage metrics (objects, storage, jobs, workloads) |
+| GET | `/api/usage/platform` | Platform-wide summary with estimated monthly cost |
+| GET | `/api/usage/license` | Current license tier, usage vs limits, alerts |
+| GET | `/api/usage/trends` | Usage trends over time (30d/90d) |
+
+---
+
+## Onboarding
+
+Prefix: `/api/onboard` | Requires: Authenticated user
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/onboard/connector-health` | Check connector app configuration health |
+| GET | `/api/onboard/platforms` | List available SaaS platforms for connection |
+| GET | `/api/onboard/workloads` | List available workloads with metadata |
+| GET | `/api/onboard/connect/{platform}` | Start OAuth connection flow (returns auth URL) |
+| GET | `/api/onboard/callback` | Handle OAuth callback from Microsoft |
+| POST | `/api/onboard/complete` | Finalize onboarding (assign SLA, activate tenant) |
+| POST | `/api/onboard/discover` | Run workload-selective discovery |
+| GET | `/api/onboard/status/{platform}/{tenant_ms_id}` | Check connection health |
+
+---
+
+## Org Context
+
+Prefix: `/api/org-context` | Requires: Authenticated user
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/org-context/tenant/{tenant_id}` | Full organizational context (hierarchy, VIP groups, criticality) |
+
+## Recovery
+
+Prefix: `/api/recovery` | Requires: Authenticated user
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/recovery/mvb-plan/{tenant_id}` | Get MVB recovery plan for a tenant |
+| GET | `/api/recovery/confidence/v2/{tenant_id}` | Criticality-weighted recovery confidence score |

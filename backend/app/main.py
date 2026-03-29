@@ -6,11 +6,13 @@ import uuid
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, Response
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.database import init_db
+from app.errors import ShieldioError, RATE_LIMIT_EXCEEDED
 from app.services.scheduler import start_scheduler, stop_scheduler
 from app.models.dedup import DedupEntry          # noqa: F401 — ensure table is created
 from app.models.worker_queue import WorkerQueueEntry  # noqa: F401 — ensure table is created
@@ -22,13 +24,16 @@ if settings.LOG_FORMAT == "json":
             log_data = {
                 "timestamp": self.formatTime(record),
                 "level": record.levelname,
+                "service": "backend",
                 "logger": record.name,
                 "message": record.getMessage(),
             }
             if record.exc_info:
                 log_data["exception"] = self.formatException(record.exc_info)
-            if hasattr(record, "correlation_id"):
-                log_data["correlation_id"] = record.correlation_id
+            # Attach optional context fields
+            for attr in ("correlation_id", "user_id", "tenant_id", "error_code", "action", "duration_ms"):
+                if hasattr(record, attr):
+                    log_data[attr] = getattr(record, attr)
             return json.dumps(log_data)
 
     handler = logging.StreamHandler()
@@ -176,16 +181,20 @@ async def rate_limit_middleware(request: Request, call_next):
     if len(_rate_limit_store[bucket]) >= limit:
         remaining = 0
         reset_at = int(_rate_limit_store[bucket][0] + window)
+        retry_after = max(1, reset_at - int(now))
         return JSONResponse(
             status_code=429,
             content={
-                "detail": "Rate limit exceeded. Please slow down.",
-                "limit": limit,
-                "window": f"{window}s",
-                "retry_after": max(1, reset_at - int(now)),
+                "error": {
+                    "code": "E7001",
+                    "message": "Rate limit exceeded",
+                    "detail": f"Limit is {limit} requests per {window}s. Try again in {retry_after}s.",
+                    "fix": "Slow down your request rate and try again",
+                    "retry_after": retry_after,
+                },
             },
             headers={
-                "Retry-After": str(max(1, reset_at - int(now))),
+                "Retry-After": str(retry_after),
                 "X-RateLimit-Limit": str(limit),
                 "X-RateLimit-Remaining": "0",
                 "X-RateLimit-Reset": str(reset_at),
@@ -217,14 +226,43 @@ async def correlation_id_middleware(request: Request, call_next):
 
     # Log request (skip noisy health checks)
     if not request.url.path.startswith("/health"):
+        extra = {"correlation_id": correlation_id, "duration_ms": duration_ms}
         logger.info(
-            f"{request.method} {request.url.path} → {response.status_code} ({duration_ms}ms) [cid={correlation_id}]"
+            f"{request.method} {request.url.path} → {response.status_code} ({duration_ms}ms) [cid={correlation_id}]",
+            extra=extra,
         )
 
     return response
 
 
-# ── Global Error Handler ──
+# ── Global Error Handlers ──
+
+@app.exception_handler(ShieldioError)
+async def shieldio_error_handler(request: Request, exc: ShieldioError):
+    """Handle structured Shieldio errors — returns standardized error JSON."""
+    return exc.error_def.response(request=request, detail=exc.detail, extra=exc.extra)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_error_handler(request: Request, exc: RequestValidationError):
+    """Pydantic / FastAPI validation errors — return structured format."""
+    correlation_id = getattr(request.state, "correlation_id", "unknown")
+    errors = exc.errors()
+    detail = "; ".join(f"{e['loc'][-1]}: {e['msg']}" for e in errors) if errors else str(exc)
+    return JSONResponse(
+        status_code=422,
+        content={
+            "error": {
+                "code": "E6001",
+                "message": "Invalid input data",
+                "detail": detail,
+                "fix": "Check the request body and try again",
+                "correlation_id": correlation_id,
+            }
+        },
+    )
+
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     """Catch unhandled exceptions — return clean JSON, never leak stack traces."""
@@ -233,8 +271,13 @@ async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
         status_code=500,
         content={
-            "detail": "Internal server error",
-            "correlation_id": correlation_id,
+            "error": {
+                "code": "E5000",
+                "message": "Internal server error",
+                "detail": "An unexpected error occurred. Our team has been notified.",
+                "fix": "If the problem persists, contact support with the correlation ID",
+                "correlation_id": correlation_id,
+            }
         },
     )
 

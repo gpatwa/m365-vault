@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Shield, Globe, MessageSquare, CheckCircle, XCircle, Loader2, ArrowRight } from 'lucide-react';
+import { Shield, Globe, MessageSquare, CheckCircle, XCircle, Loader2, ArrowRight, LogOut } from 'lucide-react';
 import { api } from '../api/client';
+import { useAuth } from '../contexts/AuthContext';
 
 const PLATFORM_ICONS: Record<string, any> = {
   microsoft365: Shield,
@@ -27,6 +28,7 @@ interface Platform {
 }
 
 export default function Onboard() {
+  const { logout } = useAuth();
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState<string | null>(null);
@@ -61,6 +63,13 @@ export default function Onboard() {
 
   return (
     <div className="max-w-3xl mx-auto">
+      {/* Sign out link */}
+      <div className="flex justify-end mb-4">
+        <button onClick={() => { logout(); window.location.href = '/'; }}
+          className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 transition-colors">
+          <LogOut className="w-4 h-4" /> Sign Out
+        </button>
+      </div>
       <div className="text-center mb-10">
         <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-2xl mb-4">
           <Shield className="w-8 h-8 text-blue-600" />
@@ -775,15 +784,34 @@ export function OnboardCallback() {
 
   // Error state
   if (error) {
+    const isConfigError = error.includes('configuration') || error.includes('credentials');
+    const isConsentError = error.includes('consent') || error.includes('Administrator');
+    const isPropagation = error.includes('processing') || error.includes('wait');
+
     return (
       <div className="max-w-lg mx-auto text-center py-16">
-        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <XCircle className="w-8 h-8 text-red-600" />
+        <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
+          isConfigError ? 'bg-amber-100' : 'bg-red-100'
+        }`}>
+          <XCircle className={`w-8 h-8 ${isConfigError ? 'text-amber-600' : 'text-red-600'}`} />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Connection Failed</h2>
-        <p className="text-red-600 mb-6">{error}</p>
-        <div className="flex items-center justify-center gap-3">
-          <button onClick={() => navigate('/onboard')} className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700">Try Again</button>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          {isPropagation ? 'Almost There' : isConfigError ? 'Setup Required' : 'Connection Failed'}
+        </h2>
+        <p className="text-gray-600 mb-2">{error}</p>
+        {isPropagation && (
+          <p className="text-sm text-gray-400 mb-6">Microsoft can take up to 60 seconds to process admin consent for new tenants.</p>
+        )}
+        {isConfigError && (
+          <p className="text-sm text-gray-400 mb-6">This is a Shieldio platform issue, not a problem with your M365 tenant.</p>
+        )}
+        {isConsentError && (
+          <p className="text-sm text-gray-400 mb-6">You need to sign in with a Global Administrator account to approve the connection.</p>
+        )}
+        <div className="flex items-center justify-center gap-3 mt-4">
+          <button onClick={() => navigate('/onboard')} className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700">
+            {isPropagation ? 'Try Again (should work now)' : 'Try Again'}
+          </button>
           <button onClick={() => navigate('/')} className="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200">Dashboard</button>
         </div>
       </div>

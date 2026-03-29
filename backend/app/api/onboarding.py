@@ -30,6 +30,60 @@ router = APIRouter(prefix="/api/onboard", tags=["Onboarding"])
 _onboard_states: dict[str, dict] = {}
 
 
+@router.get("/connector-health")
+async def connector_health():
+    """Check if the Shieldio connector app is properly configured.
+
+    Returns health status so the frontend can show appropriate guidance
+    if the connector credentials are missing or invalid.
+    """
+    from app.connectors.registry import get_connector
+    from app.config import settings
+    import msal
+
+    app_id = settings.CONNECTOR_APP_ID
+    app_secret = settings.CONNECTOR_APP_SECRET
+
+    if not app_id or not app_secret:
+        return {
+            "healthy": False,
+            "error": "Connector app credentials not configured",
+            "action": "Set CONNECTOR_APP_ID and CONNECTOR_APP_SECRET environment variables",
+        }
+
+    # Verify the app registration exists and secret format is valid
+    try:
+        import httpx
+        # Use the app's home tenant to validate credentials
+        home_tenant = "common"
+        msal_app = msal.ConfidentialClientApplication(
+            client_id=app_id,
+            client_credential=app_secret,
+            authority=f"https://login.microsoftonline.com/{home_tenant}",
+        )
+        token = msal_app.acquire_token_for_client(scopes=["https://graph.microsoft.com/.default"])
+        if "error" in token:
+            error_desc = token.get("error_description", "")
+            # AADSTS7000215 = bad secret — this is a real problem
+            if "AADSTS7000215" in error_desc:
+                return {
+                    "healthy": False,
+                    "error": "Invalid client secret",
+                    "action": "Regenerate the client secret in Azure AD and update CONNECTOR_APP_SECRET",
+                }
+            # AADSTS7000229 = no SP in home tenant — OK for multi-tenant apps
+            if "AADSTS7000229" in error_desc:
+                return {"healthy": True, "app_id": app_id, "note": "Multi-tenant app ready for customer consent"}
+            return {
+                "healthy": False,
+                "error": "Credential validation failed",
+                "detail": error_desc[:200],
+            }
+        return {"healthy": True, "app_id": app_id}
+    except Exception as e:
+        return {"healthy": False, "error": str(e)[:200]}
+
+
 @router.get("/platforms")
 async def list_platforms():
     """List all available SaaS platforms for connection."""
@@ -66,6 +120,18 @@ async def start_connection(
     info = connector.info()
     if not info.available:
         raise HTTPException(status_code=400, detail=f"{info.display_name} is not yet available")
+
+    # Pre-flight check: verify connector secret works BEFORE sending user to Microsoft
+    if platform == "microsoft365":
+        from app.services.system_health import SystemHealthService
+        health = SystemHealthService()
+        check = await health.check_connector_secret()
+        if not check.healthy:
+            logger.error(f"Pre-flight connector check failed: {check.detail}")
+            raise HTTPException(
+                status_code=503,
+                detail=f"Shieldio connector is not properly configured. {check.fix}",
+            )
 
     # Generate state token for CSRF protection
     state = secrets.token_urlsafe(32)

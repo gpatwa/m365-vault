@@ -28,7 +28,7 @@ export default function SSOCallback() {
     api.post('/auth/sso/callback', { code, state })
       .then((data: any) => {
         if (data.access_token) {
-          localStorage.setItem('token', data.access_token);
+          api.setToken(data.access_token);
           navigate('/', { replace: true });
         } else {
           setError('No access token received');

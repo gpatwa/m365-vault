@@ -60,7 +60,23 @@ export default function Login() {
         await api.register({ username, email, password, full_name: fullName || undefined, role: 'admin' });
       }
       await authLogin(username, password);
-      navigate('/');  // SmartHome handles routing: no tenants → /onboard, has tenants → dashboard
+      console.log('[Shieldio] Login success. Token:', api.getToken()?.substring(0, 20) + '...');
+      // Check tenants directly — don't rely on SmartHome
+      try {
+        const tenants = await api.get<any[]>('/tenants/');
+        console.log('[Shieldio] Tenants response:', JSON.stringify(tenants)?.substring(0, 100));
+        if (!tenants || tenants.length === 0) {
+          console.log('[Shieldio] No tenants → navigating to /onboard');
+          window.location.href = '/onboard';  // Hard redirect, not React navigate
+        } else {
+          console.log('[Shieldio] Has tenants → navigating to /');
+          navigate('/', { replace: true });
+        }
+      } catch (tenantErr: any) {
+        console.error('[Shieldio] Tenant check failed:', tenantErr?.message);
+        // If tenant check fails, still try /onboard since it's a new user
+        window.location.href = '/onboard';
+      }
     } catch (err: any) {
       setError(err.message || 'Authentication failed');
     } finally {

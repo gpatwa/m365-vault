@@ -210,9 +210,76 @@ az role assignment create \
   -o none 2>/dev/null || warn "Role assignment may already exist."
 ok "Service principal can access tfstate storage."
 
-# ── Step 4: Set GitHub Repository Secrets ────────────────────────────
+# ── Step 4: Create Shieldio Connector App Registration ───────────────
 echo ""
-info "Step 4/5: Setting GitHub repository secrets..."
+info "Step 4/6: Creating Shieldio Connector multi-tenant app registration..."
+
+CONNECTOR_APP_NAME="Shieldio Connector"
+EXISTING_CONNECTOR=$(az ad app list --display-name "$CONNECTOR_APP_NAME" --query "[0].appId" -o tsv 2>/dev/null || true)
+
+if [[ -n "$EXISTING_CONNECTOR" ]]; then
+  warn "Connector app '$CONNECTOR_APP_NAME' already exists: $EXISTING_CONNECTOR"
+  CONNECTOR_APP_ID="$EXISTING_CONNECTOR"
+else
+  # Create multi-tenant app
+  CONNECTOR_APP_ID=$(az ad app create \
+    --display-name "$CONNECTOR_APP_NAME" \
+    --sign-in-audience AzureADMultipleOrgs \
+    --web-redirect-uris "http://localhost:5173/onboard/callback" "https://m365vault-frontend-dev.happyflower-239d5857.centralus.azurecontainerapps.io/onboard/callback" \
+    --query appId -o tsv)
+  ok "Created connector app: $CONNECTOR_APP_ID"
+
+  # Add Microsoft Graph API permissions (Application type)
+  GRAPH_API_ID="00000003-0000-0000-c000-000000000000"
+  GRAPH_PERMISSIONS=(
+    "7ab1d382-f21e-4acd-a863-ba3e13f7da61"  # Directory.Read.All
+    "df021288-bdef-4463-88db-98f22de89214"  # User.Read.All
+    "810c84a8-4a9e-49e6-bf7d-12d183f40d01"  # Mail.Read (Application)
+    "798ee544-9d2d-430c-a058-570e29e34338"  # Calendars.Read (Application)
+    "089fe4d0-434a-44c5-8827-41ba8a0b17f5"  # Contacts.Read (Application)
+    "01d4f6ba-0c23-47de-97d7-1a3a6b296f38"  # Files.Read.All (Application)
+    "332a536c-c7ef-4017-ab91-336970924f0d"  # Sites.Read.All (Application)
+    "6b7d71aa-70aa-4810-a8d9-5d9fb2830017"  # Chat.Read.All (Application)
+    "7b2449af-6ccd-4f4d-9f78-e550c10e2869"  # ChannelMessage.Read.All (Application)
+    "2280dda6-0bfd-44ee-a2f4-cb867cfc4c1e"  # Team.ReadBasic.All
+    "242607bd-1d2c-432c-82eb-bdb27baa23ab"  # TeamSettings.Read.All
+    "5b567255-7703-4780-807c-7be8301ae99b"  # Group.Read.All (Application)
+  )
+
+  # Build required resource access JSON
+  PERMISSIONS_JSON="["
+  for perm_id in "${GRAPH_PERMISSIONS[@]}"; do
+    PERMISSIONS_JSON+="{ \"id\": \"$perm_id\", \"type\": \"Role\" },"
+  done
+  PERMISSIONS_JSON="${PERMISSIONS_JSON%,}]"
+
+  CONNECTOR_OBJECT_ID=$(az ad app show --id "$CONNECTOR_APP_ID" --query id -o tsv)
+  az rest --method PATCH \
+    --uri "https://graph.microsoft.com/v1.0/applications/$CONNECTOR_OBJECT_ID" \
+    --body "{
+      \"requiredResourceAccess\": [{
+        \"resourceAppId\": \"$GRAPH_API_ID\",
+        \"resourceAccess\": $PERMISSIONS_JSON
+      }]
+    }" 2>/dev/null
+  ok "Added Microsoft Graph API permissions"
+fi
+
+# Create client secret if needed
+EXISTING_SECRET=$(az ad app credential list --id "$CONNECTOR_APP_ID" --query "[0].keyId" -o tsv 2>/dev/null || true)
+if [[ -n "$EXISTING_SECRET" ]]; then
+  warn "Connector app already has a client secret."
+  CONNECTOR_SECRET="(existing — check Key Vault or env vars)"
+else
+  CONNECTOR_SECRET=$(az ad app credential reset --id "$CONNECTOR_APP_ID" --years 2 --query password -o tsv)
+  ok "Created client secret (expires in 2 years)"
+fi
+
+ok "Connector App ID: $CONNECTOR_APP_ID"
+
+# ── Step 5: Set GitHub Repository Secrets ────────────────────────────
+echo ""
+info "Step 5/6: Setting GitHub repository secrets..."
 
 gh secret set AZURE_CLIENT_ID --repo "$GITHUB_REPO" --body "$CLIENT_ID"
 ok "Set secret: AZURE_CLIENT_ID"
@@ -221,12 +288,20 @@ ok "Set secret: AZURE_TENANT_ID"
 gh secret set AZURE_SUBSCRIPTION_ID --repo "$GITHUB_REPO" --body "$SUBSCRIPTION_ID"
 ok "Set secret: AZURE_SUBSCRIPTION_ID"
 
+# Set Shieldio Connector secrets
+gh secret set CONNECTOR_APP_ID --repo "$GITHUB_REPO" --body "$CONNECTOR_APP_ID"
+ok "Set secret: CONNECTOR_APP_ID"
+if [[ "$CONNECTOR_SECRET" != "(existing"* ]]; then
+  gh secret set CONNECTOR_APP_SECRET --repo "$GITHUB_REPO" --body "$CONNECTOR_SECRET"
+  ok "Set secret: CONNECTOR_APP_SECRET"
+fi
+
 # ACR name/login server will be set after first terraform apply
 info "Note: ACR_NAME and ACR_LOGIN_SERVER will be set after first 'terraform apply'."
 
-# ── Step 5: Enable Terraform Remote Backend ──────────────────────────
+# ── Step 6: Enable Terraform Remote Backend ──────────────────────────
 echo ""
-info "Step 5/5: Enabling Terraform remote backend..."
+info "Step 6/6: Enabling Terraform remote backend..."
 
 BACKEND_FILE="$(cd "$(dirname "$0")/../infra" && pwd)/backend.tf"
 cat > "$BACKEND_FILE" << 'TFEOF'
@@ -251,11 +326,12 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo -e "${GREEN}Bootstrap complete!${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "  Subscription:    $SUBSCRIPTION_ID"
-echo "  Tenant:          $TENANT_ID"
+echo "  Subscription:      $SUBSCRIPTION_ID"
+echo "  Tenant:            $TENANT_ID"
 echo "  Service Principal: $CLIENT_ID"
-echo "  TF State:        $TFSTATE_SA/$TFSTATE_CONTAINER"
-echo "  GitHub Repo:     $GITHUB_REPO"
+echo "  Connector App:     $CONNECTOR_APP_ID"
+echo "  TF State:          $TFSTATE_SA/$TFSTATE_CONTAINER"
+echo "  GitHub Repo:       $GITHUB_REPO"
 echo ""
 echo "Next steps:"
 echo "  1. Run Terraform to create infrastructure:"

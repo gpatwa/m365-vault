@@ -396,6 +396,137 @@ async def seed():
 
         await db.commit()
 
+        # ── Phase 2.5: Org Context + MVB Plans ──
+        print("\n  ── Org Context + Smart Recovery ──")
+        from app.models.org_context import UserContext, SiteContext, RecoveryPlan
+
+        # Create user context with realistic criticality
+        USER_PROFILES = [
+            {"name": "Sarah Chen", "email": "sarahc@acmecorp.com", "dept": "Executive", "title": "CEO", "ga": 1, "priv": 1, "score": 95, "tier": "critical"},
+            {"name": "Marcus Johnson", "email": "marcusj@acmecorp.com", "dept": "Finance", "title": "CFO", "ga": 0, "priv": 1, "score": 88, "tier": "critical"},
+            {"name": "Emily Rodriguez", "email": "emilyr@acmecorp.com", "dept": "Legal", "title": "General Counsel", "ga": 0, "priv": 0, "score": 82, "tier": "critical"},
+            {"name": "David Kim", "email": "davidk@acmecorp.com", "dept": "Engineering", "title": "VP Engineering", "ga": 0, "priv": 1, "score": 75, "tier": "high"},
+            {"name": "Lisa Thompson", "email": "lisat@acmecorp.com", "dept": "HR", "title": "HR Director", "ga": 0, "priv": 0, "score": 68, "tier": "high"},
+            {"name": "James Wilson", "email": "jamesw@acmecorp.com", "dept": "Sales", "title": "Sales Manager", "ga": 0, "priv": 0, "score": 45, "tier": "medium"},
+            {"name": "Priya Patel", "email": "priyap@acmecorp.com", "dept": "Marketing", "title": "Marketing Specialist", "ga": 0, "priv": 0, "score": 35, "tier": "low"},
+            {"name": "Alex Turner", "email": "alext@acmecorp.com", "dept": "Engineering", "title": "Junior Developer", "ga": 0, "priv": 0, "score": 22, "tier": "low"},
+        ]
+
+        for i, prof in enumerate(USER_PROFILES):
+            # Find matching protected object
+            po = None
+            for obj in objects:
+                if obj.display_name and prof["name"].split()[0] in obj.display_name and obj.workload_type == WorkloadType.EXCHANGE:
+                    po = obj
+                    break
+
+            ctx = UserContext(
+                tenant_id=tenant.id,
+                protected_object_id=po.id if po else None,
+                ms_user_id=f"user-{prof['name'].lower().replace(' ', '-')}",
+                display_name=prof["name"],
+                email=prof["email"],
+                job_title=prof["title"],
+                department=prof["dept"],
+                is_global_admin=prof["ga"],
+                has_privileged_role=prof["priv"],
+                privileged_roles=json.dumps(["Global Administrator"] if prof["ga"] else (["User Administrator"] if prof["priv"] else [])),
+                direct_reports_count=random.randint(0, 12) if prof["score"] > 60 else random.randint(0, 3),
+                last_sign_in_at=now - timedelta(hours=random.randint(1, 48)),
+                criticality_score=prof["score"],
+                criticality_tier=prof["tier"],
+                signals=json.dumps({"user_importance": int(prof["score"] * 0.4), "data_sensitivity": int(prof["score"] * 0.3), "activity_level": int(prof["score"] * 0.2), "floor_applied": "global_admin>=90" if prof["ga"] else None}),
+                synced_at=now,
+                computed_at=now,
+            )
+            db.add(ctx)
+
+            # Also set criticality on the protected object
+            if po:
+                po.criticality_score = prof["score"]
+                po.criticality_tier = prof["tier"]
+
+        # Site context
+        SITE_PROFILES = [
+            {"name": "Finance Reports", "score": 78, "tier": "high", "visitors": 45, "files": 230, "external": 1},
+            {"name": "Executive Dashboard", "score": 85, "tier": "critical", "visitors": 12, "files": 50, "external": 0},
+            {"name": "Marketing Hub", "score": 42, "tier": "medium", "visitors": 80, "files": 500, "external": 1},
+            {"name": "Engineering Wiki", "score": 55, "tier": "medium", "visitors": 60, "files": 1200, "external": 0},
+            {"name": "HR Portal", "score": 65, "tier": "high", "visitors": 30, "files": 100, "external": 0},
+            {"name": "Sales Pipeline", "score": 48, "tier": "medium", "visitors": 25, "files": 80, "external": 1},
+        ]
+
+        for sprof in SITE_PROFILES:
+            sp_obj = None
+            for obj in objects:
+                if obj.display_name and sprof["name"] in obj.display_name and obj.workload_type == WorkloadType.SHAREPOINT:
+                    sp_obj = obj
+                    break
+
+            sc = SiteContext(
+                tenant_id=tenant.id,
+                protected_object_id=sp_obj.id if sp_obj else None,
+                ms_site_id=f"site-{sprof['name'].lower().replace(' ', '-')}",
+                site_name=sprof["name"],
+                site_url=f"https://acmecorp.sharepoint.com/sites/{sprof['name'].lower().replace(' ', '-')}",
+                unique_visitors=sprof["visitors"],
+                file_count=sprof["files"],
+                external_sharing_enabled=sprof["external"],
+                criticality_score=sprof["score"],
+                criticality_tier=sprof["tier"],
+                signals=json.dumps({"traffic": sprof["visitors"], "files": sprof["files"]}),
+                synced_at=now,
+                computed_at=now,
+            )
+            db.add(sc)
+
+            if sp_obj:
+                sp_obj.criticality_score = sprof["score"]
+                sp_obj.criticality_tier = sprof["tier"]
+
+        print(f"  ✅ User Context: {len(USER_PROFILES)} users with criticality scores")
+        print(f"  ✅ Site Context: {len(SITE_PROFILES)} sites with criticality scores")
+
+        # Pre-computed MVB Recovery Plan
+        mvb_phases = [
+            {"phase": 1, "name": "Identity Controls", "priority": "immediate", "object_count": 1, "item_count": 192, "size_bytes": 118784, "estimated_minutes": 5, "reason": "Restore identity controls first to prevent re-compromise.", "object_summaries": [{"object_name": "Acme Corp (Entra ID)", "workload": "entra_id", "criticality_score": 90, "criticality_tier": "critical", "item_count": 192}]},
+            {"phase": 2, "name": "Minimum Viable Business", "priority": "critical", "object_count": 5, "item_count": 85, "size_bytes": 52000, "estimated_minutes": 15, "reason": "Restore CEO, CFO, and Legal Counsel — the minimum set needed for business continuity.", "object_summaries": [
+                {"object_name": "Sarah Chen (Mailbox)", "workload": "exchange", "criticality_score": 95, "criticality_tier": "critical", "item_count": 23},
+                {"object_name": "Marcus Johnson (Mailbox)", "workload": "exchange", "criticality_score": 88, "criticality_tier": "critical", "item_count": 18},
+                {"object_name": "Emily Rodriguez (Mailbox)", "workload": "exchange", "criticality_score": 82, "criticality_tier": "critical", "item_count": 15},
+                {"object_name": "Sarah Chen (OneDrive)", "workload": "onedrive", "criticality_score": 95, "criticality_tier": "critical", "item_count": 15},
+                {"object_name": "Executive Dashboard", "workload": "sharepoint", "criticality_score": 85, "criticality_tier": "critical", "item_count": 14},
+            ]},
+            {"phase": 3, "name": "High-Priority Data", "priority": "high", "object_count": 6, "item_count": 120, "size_bytes": 75000, "estimated_minutes": 30, "reason": "Restore VP Engineering, HR Director, and high-traffic sites.", "object_summaries": [
+                {"object_name": "David Kim (Mailbox)", "workload": "exchange", "criticality_score": 75, "criticality_tier": "high", "item_count": 20},
+                {"object_name": "Lisa Thompson (Mailbox)", "workload": "exchange", "criticality_score": 68, "criticality_tier": "high", "item_count": 18},
+                {"object_name": "Finance Reports", "workload": "sharepoint", "criticality_score": 78, "criticality_tier": "high", "item_count": 30},
+                {"object_name": "HR Portal", "workload": "sharepoint", "criticality_score": 65, "criticality_tier": "high", "item_count": 25},
+            ]},
+            {"phase": 4, "name": "Full Recovery", "priority": "normal", "object_count": 14, "item_count": 350, "size_bytes": 200000, "estimated_minutes": 120, "reason": "Complete recovery of remaining 14 objects.", "object_summaries": []},
+        ]
+
+        plan = RecoveryPlan(
+            tenant_id=tenant.id,
+            name="MVB Recovery Plan",
+            plan_type="mvb",
+            status="ready",
+            mvb_user_count=3,
+            mvb_object_count=6,
+            total_object_count=26,
+            phases_json=json.dumps(mvb_phases),
+            total_items=747,
+            total_size_bytes=445784,
+            estimated_minutes=170,
+            reasoning="Generated 4-phase recovery plan for 26 objects. MVB set: 3 critical users (CEO, CFO, General Counsel) + Executive Dashboard will be restored first for business continuity. Identity controls restored immediately. Full recovery of remaining 14 objects in Phase 4.",
+            computed_at=now,
+            stale_after=now + timedelta(hours=6),
+        )
+        db.add(plan)
+        print(f"  ✅ MVB Recovery Plan: 4 phases, 3 MVB users, est. 170 min")
+
+        await db.commit()
+
         print()
         print("═══ DEMO DATA READY ═══")
         print(f"  Tenant: Acme Corporation")
@@ -403,7 +534,9 @@ async def seed():
         print(f"  Jobs: {job_count} (14 days of history)")
         print(f"  Snapshots: {snapshot_count}")
         print(f"  Items: {item_count}")
-        print(f"  Login: admin / admin123")
+        print(f"  Org Context: {len(USER_PROFILES)} users + {len(SITE_PROFILES)} sites scored")
+        print(f"  MVB Plan: 4 phases (Identity → MVB → High → Full)")
+        print(f"  Login: admin / admin123 or demo / ShieldiDemo2026!")
         print()
 
 

@@ -197,6 +197,19 @@ class CriticalityScorer:
             activity_score * 0.20 +
             dep_score * 0.10
         )
+
+        # Floor for critical roles — these should NEVER score below threshold
+        # regardless of missing activity/sensitivity data
+        if ctx.is_global_admin:
+            total = max(total, 90)  # Global Admin is always critical
+            signals["floor_applied"] = "global_admin>=90"
+        elif ctx.has_privileged_role:
+            total = max(total, 75)  # Privileged roles are always high+
+            signals["floor_applied"] = "privileged_role>=75"
+        elif ctx.is_vip:
+            total = max(total, 80)  # Admin-flagged VIP is critical
+            signals["floor_applied"] = "vip>=80"
+
         total = max(0, min(100, total))
 
         # Add threat exposure (OCSF future integration)

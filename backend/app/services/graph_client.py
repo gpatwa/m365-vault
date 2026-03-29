@@ -5,14 +5,17 @@ Features:
 - Automatic token caching and refresh
 - Exponential backoff with jitter for throttling (429)
 - Request batching via $batch endpoint
-- Concurrent request limiting
+- Concurrent request limiting with auto-adjustment on throttling
 - Least-privilege access modes: backup (read-only) vs restore (read-write)
+- Per-workload API call metrics and budget tracking
 """
 import asyncio
 import json
 import logging
 import time
 import random
+from collections import defaultdict
+from datetime import datetime
 from typing import Any, Literal, Optional
 
 import httpx
@@ -21,6 +24,148 @@ import msal
 from app.config import settings
 
 logger = logging.getLogger(__name__)
+
+
+# ── Graph API Metrics (singleton, shared across all clients) ──
+
+class GraphAPIMetrics:
+    """Track Graph API usage per tenant per workload.
+
+    Provides visibility into:
+    - API call volume and rate
+    - Throttle (429) frequency
+    - Per-workload breakdown
+    - Latency percentiles
+    - Budget utilization
+    """
+
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
+
+    def __init__(self):
+        if self._initialized:
+            return
+        self._initialized = True
+        # Per-tenant metrics
+        self._calls: dict[str, list] = defaultdict(list)  # tenant_id -> call records
+        self._throttle_counts: dict[str, dict] = defaultdict(lambda: defaultdict(int))  # tenant -> workload -> count
+        self._max_records = 2000  # Keep last N records per tenant
+
+    def _classify_workload(self, path: str) -> str:
+        """Classify a Graph API path to a Shieldio workload."""
+        path_lower = path.lower()
+        if '/messages' in path_lower or '/mailfolders' in path_lower or '/calendar' in path_lower or '/contacts' in path_lower:
+            return 'exchange'
+        if '/drive' in path_lower or '/driveitem' in path_lower:
+            return 'onedrive'
+        if '/sites' in path_lower or '/lists' in path_lower:
+            return 'sharepoint'
+        if '/teams' in path_lower or '/channels' in path_lower or '/chats' in path_lower:
+            return 'teams'
+        if '/directoryroles' in path_lower or '/rolemanagement' in path_lower or '/conditionalaccesspolicies' in path_lower or '/applications' in path_lower or '/serviceprincipals' in path_lower:
+            return 'entra_id'
+        if '/users' in path_lower or '/organization' in path_lower or '/groups' in path_lower:
+            return 'directory'
+        return 'other'
+
+    def record(self, tenant_id: str, method: str, path: str, status: int,
+               duration_ms: int, retry_after: int = 0, response_headers: dict = None):
+        """Record a single Graph API call."""
+        workload = self._classify_workload(path)
+        record = {
+            "ts": datetime.utcnow().isoformat(),
+            "method": method,
+            "path": path[:120],  # Truncate long paths
+            "workload": workload,
+            "status": status,
+            "duration_ms": duration_ms,
+            "retry_after": retry_after,
+        }
+
+        # Extract rate limit headers from Microsoft response
+        if response_headers:
+            for header in ['RateLimit-Limit', 'RateLimit-Remaining', 'RateLimit-Reset']:
+                val = response_headers.get(header) or response_headers.get(header.lower())
+                if val:
+                    record[header.lower().replace('-', '_')] = val
+
+        self._calls[tenant_id].append(record)
+        # Trim to max records
+        if len(self._calls[tenant_id]) > self._max_records:
+            self._calls[tenant_id] = self._calls[tenant_id][-self._max_records:]
+
+        if status == 429:
+            self._throttle_counts[tenant_id][workload] += 1
+
+    def get_stats(self, tenant_id: str, window_seconds: int = 300) -> dict:
+        """Get metrics summary for a tenant (default: last 5 minutes)."""
+        calls = self._calls.get(tenant_id, [])
+        now = datetime.utcnow()
+        cutoff = now.timestamp() - window_seconds
+
+        recent = [c for c in calls if datetime.fromisoformat(c["ts"]).timestamp() > cutoff]
+
+        if not recent:
+            return {
+                "tenant_id": tenant_id,
+                "window_seconds": window_seconds,
+                "total_calls": 0,
+                "by_workload": {},
+                "throttle_rate_pct": 0,
+                "avg_latency_ms": 0,
+            }
+
+        # Per-workload breakdown
+        by_workload: dict = defaultdict(lambda: {"calls": 0, "throttled": 0, "avg_ms": 0, "errors": 0})
+        total_latency = 0
+        throttled = 0
+        errors = 0
+
+        for c in recent:
+            wl = c["workload"]
+            by_workload[wl]["calls"] += 1
+            by_workload[wl]["avg_ms"] += c["duration_ms"]
+            total_latency += c["duration_ms"]
+            if c["status"] == 429:
+                throttled += 1
+                by_workload[wl]["throttled"] += 1
+            if c["status"] >= 400:
+                errors += 1
+                by_workload[wl]["errors"] += 1
+
+        # Compute averages
+        for wl in by_workload:
+            count = by_workload[wl]["calls"]
+            by_workload[wl]["avg_ms"] = round(by_workload[wl]["avg_ms"] / count) if count else 0
+
+        calls_per_min = len(recent) / (window_seconds / 60)
+
+        return {
+            "tenant_id": tenant_id,
+            "window_seconds": window_seconds,
+            "total_calls": len(recent),
+            "calls_per_minute": round(calls_per_min, 1),
+            "throttled_calls": throttled,
+            "throttle_rate_pct": round(throttled / len(recent) * 100, 1) if recent else 0,
+            "error_calls": errors,
+            "error_rate_pct": round(errors / len(recent) * 100, 1) if recent else 0,
+            "avg_latency_ms": round(total_latency / len(recent)) if recent else 0,
+            "by_workload": dict(by_workload),
+            "lifetime_throttle_counts": dict(self._throttle_counts.get(tenant_id, {})),
+        }
+
+    def get_all_tenants(self) -> list[str]:
+        """List all tenants with recorded metrics."""
+        return list(self._calls.keys())
+
+
+# Global singleton
+graph_metrics = GraphAPIMetrics()
 
 
 class GraphAPIError(Exception):
@@ -77,8 +222,15 @@ class GraphClient:
         self._throttle_count = 0
         self._last_request_time = 0
 
+        # Auto-adjust concurrency: reduce when throttled, recover when clear
+        self._default_concurrency = settings.GRAPH_MAX_CONCURRENT_REQUESTS
+        self._current_concurrency = self._default_concurrency
+        self._consecutive_throttles = 0
+        self._last_throttle_reduce = 0
+
         logger.info(
-            f"GraphClient initialized in '{access_mode}' mode for tenant {tenant_id}"
+            f"GraphClient initialized in '{access_mode}' mode for tenant {tenant_id} "
+            f"(concurrency: {self._current_concurrency})"
         )
 
     def _get_scopes(self) -> list[str]:
@@ -144,6 +296,7 @@ class GraphClient:
             if headers:
                 req_headers.update(headers)
 
+            start_time = time.time()
             async with httpx.AsyncClient(timeout=60.0) as client:
                 try:
                     self._request_count += 1
@@ -155,14 +308,42 @@ class GraphClient:
                         json=json_data,
                         content=data,
                     )
+                    duration_ms = int((time.time() - start_time) * 1000)
+
+                    # Record metrics for every call
+                    graph_metrics.record(
+                        tenant_id=self.tenant_id,
+                        method=method,
+                        path=url.replace(settings.MS_GRAPH_BASE_URL, ''),
+                        status=response.status_code,
+                        duration_ms=duration_ms,
+                        response_headers=dict(response.headers),
+                    )
 
                     # Handle throttling (429)
                     if response.status_code == 429:
                         self._throttle_count += 1
+                        self._consecutive_throttles += 1
+
+                        # Auto-reduce concurrency when getting throttled
+                        self._auto_reduce_concurrency()
+
+                        retry_after = int(response.headers.get("Retry-After", 5))
+
+                        # Record throttle with retry_after
+                        graph_metrics.record(
+                            tenant_id=self.tenant_id,
+                            method=method,
+                            path=url.replace(settings.MS_GRAPH_BASE_URL, ''),
+                            status=429,
+                            duration_ms=duration_ms,
+                            retry_after=retry_after,
+                            response_headers=dict(response.headers),
+                        )
+
                         if retry_count >= settings.GRAPH_MAX_RETRIES:
                             raise GraphAPIError(429, "Max retries exceeded due to throttling")
 
-                        retry_after = int(response.headers.get("Retry-After", 5))
                         # Exponential backoff with jitter
                         delay = min(
                             retry_after * (2 ** retry_count) + random.uniform(0, 1),
@@ -170,12 +351,16 @@ class GraphClient:
                         )
                         logger.warning(
                             f"Throttled (429). Retry {retry_count + 1}/{settings.GRAPH_MAX_RETRIES} "
-                            f"after {delay:.1f}s"
+                            f"after {delay:.1f}s (concurrency: {self._current_concurrency})"
                         )
                         await asyncio.sleep(delay)
                         return await self._request(
                             method, url, headers, params, json_data, data, retry_count + 1
                         )
+
+                    # Success — clear throttle counter and consider restoring concurrency
+                    self._consecutive_throttles = 0
+                    self._auto_restore_concurrency()
 
                     # Handle server errors with retry
                     if response.status_code >= 500 and retry_count < settings.GRAPH_MAX_RETRIES:
@@ -202,6 +387,12 @@ class GraphClient:
                     return response
 
                 except httpx.TimeoutException:
+                    duration_ms = int((time.time() - start_time) * 1000)
+                    graph_metrics.record(
+                        tenant_id=self.tenant_id, method=method,
+                        path=url.replace(settings.MS_GRAPH_BASE_URL, ''),
+                        status=408, duration_ms=duration_ms,
+                    )
                     if retry_count < settings.GRAPH_MAX_RETRIES:
                         delay = settings.GRAPH_RETRY_BASE_DELAY * (2 ** retry_count)
                         logger.warning(f"Timeout. Retry {retry_count + 1} after {delay:.1f}s")
@@ -210,6 +401,33 @@ class GraphClient:
                             method, url, headers, params, json_data, data, retry_count + 1
                         )
                     raise GraphAPIError(408, "Request timed out after max retries")
+
+    def _auto_reduce_concurrency(self):
+        """Reduce concurrent requests when getting throttled."""
+        now = time.time()
+        if self._consecutive_throttles >= 3 and now - self._last_throttle_reduce > 30:
+            old = self._current_concurrency
+            self._current_concurrency = max(2, self._current_concurrency // 2)
+            if old != self._current_concurrency:
+                self._semaphore = asyncio.Semaphore(self._current_concurrency)
+                self._last_throttle_reduce = now
+                logger.warning(
+                    f"Auto-reduced Graph concurrency: {old} → {self._current_concurrency} "
+                    f"(tenant {self.tenant_id}, {self._consecutive_throttles} consecutive 429s)"
+                )
+
+    def _auto_restore_concurrency(self):
+        """Gradually restore concurrency after throttling clears."""
+        if self._current_concurrency < self._default_concurrency:
+            # Restore after 60s of no throttling
+            if time.time() - self._last_throttle_reduce > 60:
+                old = self._current_concurrency
+                self._current_concurrency = min(self._default_concurrency, self._current_concurrency + 2)
+                self._semaphore = asyncio.Semaphore(self._current_concurrency)
+                logger.info(
+                    f"Auto-restored Graph concurrency: {old} → {self._current_concurrency} "
+                    f"(tenant {self.tenant_id})"
+                )
 
     async def get(self, path: str, params: dict = None) -> dict:
         """GET request to Graph API."""

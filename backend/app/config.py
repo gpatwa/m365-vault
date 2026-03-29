@@ -92,8 +92,8 @@ class Settings(BaseSettings):
     # HTTPS
     FORCE_HTTPS: bool = False  # Set True in production (Azure Container Apps)
 
-    # Rate Limiting
-    RATE_LIMIT_REQUESTS_PER_MINUTE: int = 120  # 0 = disabled
+    # Rate Limiting (tiered: auth=20/min, onboard=60/min, API=600/min. 0 = disabled)
+    RATE_LIMIT_REQUESTS_PER_MINUTE: int = 600  # Default for authenticated API endpoints
 
     # Logging
     LOG_FORMAT: str = "text"  # "text" for dev, "json" for production

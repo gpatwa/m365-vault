@@ -95,43 +95,92 @@ class M365Connector(BaseConnector):
                 error="Admin consent was not granted or tenant ID missing",
             )
 
-        try:
-            # Verify we can get a token for this tenant
-            msal_app = msal.ConfidentialClientApplication(
-                client_id=self.app_id,
-                client_credential=self.app_secret,
-                authority=f"https://login.microsoftonline.com/{tenant}",
-            )
-            token_result = msal_app.acquire_token_for_client(
-                scopes=[f"{MS_GRAPH}/.default"]
-            )
+        # Retry token acquisition — Azure AD can take seconds to propagate consent
+        import asyncio
+        max_retries = 3
+        last_error = ""
 
-            if "error" in token_result:
-                return ConnectionResult(
-                    success=False,
-                    error=f"Token acquisition failed: {token_result.get('error_description', token_result.get('error'))}",
+        for attempt in range(max_retries):
+            try:
+                msal_app = msal.ConfidentialClientApplication(
+                    client_id=self.app_id,
+                    client_credential=self.app_secret,
+                    authority=f"https://login.microsoftonline.com/{tenant}",
+                )
+                token_result = msal_app.acquire_token_for_client(
+                    scopes=[f"{MS_GRAPH}/.default"]
                 )
 
-            # Get tenant display name
-            tenant_name = await self._get_tenant_name(
-                token_result["access_token"], tenant
-            )
+                if "error" in token_result:
+                    last_error = token_result.get('error_description', token_result.get('error', 'Unknown'))
+                    error_code = token_result.get('error', '')
 
-            return ConnectionResult(
-                success=True,
-                tenant_id=tenant,
-                tenant_name=tenant_name or f"Tenant {tenant[:8]}",
-                credentials={
-                    "ms_tenant_id": tenant,
-                    "client_id": self.app_id,
-                    "client_secret": self.app_secret,
-                    "auth_method": "multi_tenant_app",
-                },
-            )
+                    # AADSTS7000215 = invalid client secret — don't retry, it won't help
+                    if 'AADSTS7000215' in last_error:
+                        logger.error(f"Invalid client secret for Shieldio Connector app. Check CONNECTOR_APP_SECRET env var.")
+                        return ConnectionResult(
+                            success=False,
+                            error="Shieldio configuration error: the connector app secret is invalid. Please contact support.",
+                        )
 
-        except Exception as e:
-            logger.error(f"M365 callback failed: {e}")
-            return ConnectionResult(success=False, error=str(e))
+                    # AADSTS700016 = app not found in tenant — consent may not have propagated
+                    if 'AADSTS700016' in last_error or 'AADSTS65001' in last_error:
+                        if attempt < max_retries - 1:
+                            wait = (attempt + 1) * 5  # 5s, 10s
+                            logger.info(f"Consent not yet propagated for tenant {tenant}. Retry {attempt+1}/{max_retries} in {wait}s...")
+                            await asyncio.sleep(wait)
+                            continue
+
+                    # Other token errors — retry once
+                    if attempt < max_retries - 1:
+                        await asyncio.sleep(3)
+                        continue
+
+                    return ConnectionResult(
+                        success=False,
+                        error=self._friendly_error(last_error),
+                    )
+
+                # Success — get tenant name
+                tenant_name = await self._get_tenant_name(
+                    token_result["access_token"], tenant
+                )
+
+                return ConnectionResult(
+                    success=True,
+                    tenant_id=tenant,
+                    tenant_name=tenant_name or f"Tenant {tenant[:8]}",
+                    credentials={
+                        "ms_tenant_id": tenant,
+                        "client_id": self.app_id,
+                        "client_secret": self.app_secret,
+                        "auth_method": "multi_tenant_app",
+                    },
+                )
+
+            except Exception as e:
+                last_error = str(e)
+                logger.error(f"M365 callback attempt {attempt+1} failed: {e}")
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(3)
+                    continue
+
+        return ConnectionResult(success=False, error=self._friendly_error(last_error))
+
+    @staticmethod
+    def _friendly_error(technical_error: str) -> str:
+        """Convert AADSTS codes to user-friendly messages."""
+        if 'AADSTS7000215' in technical_error:
+            return "Shieldio configuration error. The connector credentials need to be updated. Please contact support."
+        if 'AADSTS700016' in technical_error:
+            return "Microsoft hasn't finished processing your consent yet. Please wait a minute and try again."
+        if 'AADSTS65001' in technical_error:
+            return "Admin consent is required. Please ask a Global Administrator to approve the connection."
+        if 'AADSTS50011' in technical_error:
+            return "Redirect URL mismatch. Please contact support."
+        if 'AADSTS90002' in technical_error:
+            return "Could not find your Microsoft 365 tenant. Please check your organization's Azure AD configuration."
+        return f"Connection failed: {technical_error[:200]}"
 
     async def test_connection(self, credentials: dict) -> bool:
         """Test M365 connection by calling Graph API."""

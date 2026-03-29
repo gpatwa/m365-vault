@@ -16,16 +16,24 @@ class ApiClient {
   private token: string | null = null;
 
   constructor() {
-    this.token = localStorage.getItem('token');
+    // Try sessionStorage first, fall back to localStorage for migration
+    this.token = sessionStorage.getItem('token') || localStorage.getItem('token');
+    // Migrate from localStorage to sessionStorage
+    if (!sessionStorage.getItem('token') && localStorage.getItem('token')) {
+      sessionStorage.setItem('token', localStorage.getItem('token')!);
+      localStorage.removeItem('token');
+    }
   }
 
   setToken(token: string) {
     this.token = token;
-    localStorage.setItem('token', token);
+    sessionStorage.setItem('token', token);
+    localStorage.removeItem('token'); // Clean up legacy
   }
 
   clearToken() {
     this.token = null;
+    sessionStorage.removeItem('token');
     localStorage.removeItem('token');
   }
 

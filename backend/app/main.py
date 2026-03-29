@@ -62,6 +62,10 @@ async def lifespan(app: FastAPI):
     start_scheduler()
     logger.info("Scheduler started")
 
+    # Startup health validation — log warnings for broken dependencies
+    from app.services.system_health import validate_startup_health
+    await validate_startup_health()
+
     # Demo mode: auto-seed data if DB is empty
     if settings.DEMO_MODE:
         try:
@@ -122,35 +126,79 @@ if settings.FORCE_HTTPS:
         return await call_next(request)
 
 
-# ── Rate Limiting (in-memory, use Redis in production) ──
+# ── Tiered Rate Limiting ──
+# Different limits for different endpoint categories
 _rate_limit_store: dict[str, list[float]] = {}
-RATE_LIMIT_REQUESTS = settings.RATE_LIMIT_REQUESTS_PER_MINUTE
-RATE_LIMIT_WINDOW = 60  # seconds
+
+# Tiered limits: (path_prefix, requests_per_minute)
+RATE_LIMIT_TIERS = {
+    "/api/auth/login": 20,       # Aggressive: prevent brute force
+    "/api/auth/register": 10,    # Very aggressive: prevent spam
+    "/api/onboard/": 60,         # Moderate: OAuth flow has multiple calls
+    "/api/": settings.RATE_LIMIT_REQUESTS_PER_MINUTE or 600,  # Default: generous for authenticated API
+}
+# Exempt paths (never rate limited)
+RATE_LIMIT_EXEMPT = {"/health", "/api/health", "/api/diagnostics/", "/openapi.json", "/docs"}
 
 
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
-    """Simple in-memory rate limiter per IP."""
-    if RATE_LIMIT_REQUESTS > 0:
-        client_ip = request.client.host if request.client else "unknown"
-        now = time.time()
+    """Tiered rate limiter — different limits for auth vs data vs admin endpoints."""
+    path = request.url.path
 
-        if client_ip not in _rate_limit_store:
-            _rate_limit_store[client_ip] = []
+    # Skip rate limiting if disabled or exempt path
+    if settings.RATE_LIMIT_REQUESTS_PER_MINUTE == 0:
+        return await call_next(request)
+    if any(path.startswith(exempt) for exempt in RATE_LIMIT_EXEMPT):
+        return await call_next(request)
 
-        # Clean old entries
-        _rate_limit_store[client_ip] = [t for t in _rate_limit_store[client_ip] if now - t < RATE_LIMIT_WINDOW]
+    # Determine rate limit tier
+    limit = RATE_LIMIT_TIERS.get("/api/", 600)  # Default
+    for prefix, tier_limit in RATE_LIMIT_TIERS.items():
+        if path.startswith(prefix):
+            limit = tier_limit
+            break
 
-        if len(_rate_limit_store[client_ip]) >= RATE_LIMIT_REQUESTS:
-            return JSONResponse(
-                status_code=429,
-                content={"detail": "Too many requests. Try again later."},
-                headers={"Retry-After": str(RATE_LIMIT_WINDOW)},
-            )
+    # Use forwarded IP (behind load balancer) or direct IP
+    client_ip = (
+        request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+        or (request.client.host if request.client else "unknown")
+    )
+    bucket = f"{client_ip}:{path.split('/')[2] if path.startswith('/api/') else 'other'}"
+    now = time.time()
+    window = 60
 
-        _rate_limit_store[client_ip].append(now)
+    if bucket not in _rate_limit_store:
+        _rate_limit_store[bucket] = []
+
+    _rate_limit_store[bucket] = [t for t in _rate_limit_store[bucket] if now - t < window]
+
+    if len(_rate_limit_store[bucket]) >= limit:
+        remaining = 0
+        reset_at = int(_rate_limit_store[bucket][0] + window)
+        return JSONResponse(
+            status_code=429,
+            content={
+                "detail": "Rate limit exceeded. Please slow down.",
+                "limit": limit,
+                "window": f"{window}s",
+                "retry_after": max(1, reset_at - int(now)),
+            },
+            headers={
+                "Retry-After": str(max(1, reset_at - int(now))),
+                "X-RateLimit-Limit": str(limit),
+                "X-RateLimit-Remaining": "0",
+                "X-RateLimit-Reset": str(reset_at),
+            },
+        )
+
+    _rate_limit_store[bucket].append(now)
+    remaining = limit - len(_rate_limit_store[bucket])
 
     response = await call_next(request)
+    # Add rate limit headers to all responses so frontend knows its budget
+    response.headers["X-RateLimit-Limit"] = str(limit)
+    response.headers["X-RateLimit-Remaining"] = str(remaining)
     return response
 
 
@@ -216,6 +264,7 @@ from app.api.status import router as status_router
 from app.api.export import router as export_router
 from app.api.recovery import router as recovery_router
 from app.api.org_context import router as org_context_router
+from app.api.diagnostics import router as diagnostics_router
 
 app.include_router(auth_router)
 app.include_router(tenants_router)
@@ -250,6 +299,7 @@ app.include_router(security_router)
 app.include_router(benchmarks_router)
 app.include_router(docs_api_router)
 app.include_router(org_context_router)
+app.include_router(diagnostics_router)
 
 
 @app.get("/")

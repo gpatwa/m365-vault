@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { OnboardingProvider } from './contexts/OnboardingContext';
@@ -51,23 +51,28 @@ function RootRoute() {
 
 /** Smart redirect: checks user state and routes to the right experience */
 function SmartHome() {
-  const navigate = useNavigate();
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    // Check if user has any tenants
+    console.log('[Shieldio:SmartHome] mounted, token:', !!api.getToken());
     api.get<any[]>('/tenants/')
       .then(tenants => {
+        console.log('[Shieldio:SmartHome] tenants:', tenants?.length, 'array?', Array.isArray(tenants));
         if (!tenants || tenants.length === 0) {
-          navigate('/onboard', { replace: true });  // No tenants → onboarding
+          console.log('[Shieldio:SmartHome] → hard redirect /onboard');
+          window.location.replace('/onboard');
         } else {
-          setChecked(true);  // Has tenants → show dashboard
+          console.log('[Shieldio:SmartHome] → dashboard');
+          setChecked(true);
         }
       })
-      .catch(() => setChecked(true));  // Fallback to dashboard
+      .catch((err) => {
+        console.error('[Shieldio:SmartHome] catch:', err?.message);
+        window.location.replace('/onboard');
+      });
   }, []);
 
-  if (!checked) return null;  // Brief loading while checking
+  if (!checked) return null;
   return <Dashboard />;
 }
 

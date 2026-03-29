@@ -45,7 +45,7 @@ const BG: Record<ToastType, string> = {
 
 function ToastItem({ t, onDismiss }: { t: Toast; onDismiss: (id: string) => void }) {
   const [exiting, setExiting] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     const dur = t.duration ?? (t.type === 'error' ? 8000 : 4000);

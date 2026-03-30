@@ -58,15 +58,15 @@ function SmartHome() {
   useEffect(() => {
     console.log('[Shieldio:SmartHome] mounted, token:', !!api.getToken());
 
-    // Check if this is the demo user — always route to onboard/demo
+    // Check if this is the demo user — route to onboard/demo unless they completed it
     api.get<any>('/auth/me')
       .then(user => {
-        if (user?.username === 'demo') {
+        if (user?.username === 'demo' && !sessionStorage.getItem('demo_onboard_complete')) {
           console.log('[Shieldio:SmartHome] → demo user, redirect /onboard/demo');
           window.location.replace('/onboard/demo');
           return;
         }
-        // Normal user — check tenants
+        // Normal user (or demo who completed onboard) — check tenants
         return api.get<any[]>('/tenants/');
       })
       .then(tenants => {

@@ -621,6 +621,7 @@ const WIZARD_STEPS = [
   { key: 'connect', label: 'Connect', icon: Shield },
   { key: 'discover', label: 'Discover', icon: Globe },
   { key: 'protect', label: 'Protect', icon: Shield },
+  { key: 'context', label: 'Intelligence', icon: Shield },
   { key: 'backup', label: 'Backup', icon: Shield },
   { key: 'recovery', label: 'Recovery', icon: Shield },
   { key: 'ready', label: 'Ready', icon: CheckCircle },
@@ -680,7 +681,7 @@ export function OnboardCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const [step, setStep] = useState(0); // 0=connecting, 1=discover, 2=protect, 3=backup, 4=recovery-sim, 5=ready
+  const [step, setStep] = useState(0); // 0=connecting, 1=discover, 2=protect, 3=intelligence, 4=backup, 5=recovery-sim, 6=ready
   const [simScene, setSimScene] = useState(0); // Recovery simulation scene (0-5)
   const [error, setError] = useState<string | null>(null);
   const [resultData, setResultData] = useState<any>(null);
@@ -807,7 +808,7 @@ export function OnboardCallback() {
         sla_policy_id: selectedSla,
         protect_all: true,
       });
-      setStep(3); // Move to first backup
+      setStep(3); // Move to intelligence/context step
     } catch (e: any) {
       setError(e.message || 'Protection failed');
     } finally {
@@ -842,7 +843,7 @@ export function OnboardCallback() {
     }
 
     setBackupStatus('complete');
-    setStep(4);
+    setStep(5); // Move to recovery sim
     setBackingUp(false);
   };
 
@@ -1093,6 +1094,57 @@ export function OnboardCallback() {
       {step === 3 && (
         <div>
           <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Smart Backup Intelligence</h2>
+            <p className="text-gray-500 mt-1">
+              Shieldio auto-detects your organizational context to prioritize what matters most.
+            </p>
+          </div>
+          <div className="space-y-3 mb-6">
+            <div className="p-4 rounded-xl border border-blue-200 bg-blue-50/50">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">1</div>
+                <div className="font-semibold text-gray-900">Org Context Detection</div>
+              </div>
+              <p className="text-sm text-gray-600 ml-11">Auto-discovers reporting hierarchy, department structure, VIP groups, and privileged roles from your Microsoft 365 tenant.</p>
+            </div>
+            <div className="p-4 rounded-xl border border-purple-200 bg-purple-50/50">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center text-sm font-bold">2</div>
+                <div className="font-semibold text-gray-900">Criticality Scoring</div>
+              </div>
+              <p className="text-sm text-gray-600 ml-11">Each user and site gets a 4-factor criticality score: role weight, direct reports, sign-in recency, and VIP group membership. Critical assets are prioritized for faster RPO.</p>
+            </div>
+            <div className="p-4 rounded-xl border border-green-200 bg-green-50/50">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center text-sm font-bold">3</div>
+                <div className="font-semibold text-gray-900">MVB Recovery Plans</div>
+              </div>
+              <p className="text-sm text-gray-600 ml-11">Pre-computed 4-phase NIST-ordered recovery plans ensure your CEO, CFO, and critical infrastructure are restored first — automatically, not manually.</p>
+            </div>
+            <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/50">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-full bg-amber-600 text-white flex items-center justify-center text-sm font-bold">4</div>
+                <div className="font-semibold text-gray-900">Confidence Scoring</div>
+              </div>
+              <p className="text-sm text-gray-600 ml-11">Criticality-weighted recovery confidence tells you not just "90% backed up" but "your most important 10 users have 100% coverage."</p>
+            </div>
+          </div>
+          <div className="bg-gray-900 rounded-xl p-4 mb-6 text-center">
+            <p className="text-gray-400 text-xs mb-1">What competitors require you to configure manually</p>
+            <p className="text-white font-semibold">Shieldio detects automatically from your Microsoft Graph data</p>
+          </div>
+          <button
+            onClick={() => setStep(4)}
+            className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+          >
+            Continue to Backup <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {step === 4 && (
+        <div>
+          <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Run Your First Backup</h2>
             <p className="text-gray-500 mt-1">Select workloads to back up now. Exchange is fastest for a quick verify.</p>
           </div>
@@ -1159,7 +1211,7 @@ export function OnboardCallback() {
           )}
 
           <button
-            onClick={() => setStep(4)}
+            onClick={() => setStep(5)}
             className="mt-4 w-full text-sm text-gray-400 hover:text-gray-600 text-center"
           >
             Skip — I'll run it later
@@ -1167,20 +1219,20 @@ export function OnboardCallback() {
         </div>
       )}
 
-      {/* Step 4: Cyber Recovery Simulation */}
-      {step === 4 && (
+      {/* Step 5: Cyber Recovery Simulation */}
+      {step === 5 && (
         <CyberRecoverySimulation
           tenantName={tenantName}
           tenantId={resultData?.db_tenant_id}
           disc={disc}
-          onComplete={() => setStep(5)}
+          onComplete={() => setStep(6)}
           simScene={simScene}
           setSimScene={setSimScene}
         />
       )}
 
-      {/* Step 5: Ready! */}
-      {step === 5 && (
+      {/* Step 6: Ready! */}
+      {step === 6 && (
         <div className="text-center">
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
             <CheckCircle className="w-10 h-10 text-green-600" />
@@ -1212,7 +1264,7 @@ export function OnboardCallback() {
 
           <div className="flex items-center justify-center gap-3">
             <button
-              onClick={() => navigate('/')}
+              onClick={() => { sessionStorage.setItem('demo_onboard_complete', '1'); navigate('/'); }}
               className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
             >
               Go to Dashboard <ArrowRight className="w-4 h-4" />

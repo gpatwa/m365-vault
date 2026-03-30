@@ -217,13 +217,14 @@ function useCountUp(target: number, active: boolean, duration = 1500) {
   return value;
 }
 
-function CyberRecoverySimulation({ tenantName, tenantId, disc, onComplete, simScene, setSimScene }: {
+function CyberRecoverySimulation({ tenantName, tenantId, disc, onComplete, simScene, setSimScene, activeWorkloads }: {
   tenantName: string;
   tenantId: number;
   disc: any;
   onComplete: () => void;
   simScene: number;
   setSimScene: (n: number) => void;
+  activeWorkloads?: Set<string>;
 }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -273,9 +274,12 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc, onComplete, simSc
     }
   }, [simScene, confidence]);
 
-  // Derived data
-  const workloads = summary?.workloads || {};
-  const totalItems = summary?.snapshots?.total_items || Object.values(workloads).reduce((s: number, w: any) => s + (w?.total || 0), 0);
+  // Derived data — filter to only selected workloads if provided
+  const allWorkloads = summary?.workloads || {};
+  const workloads = activeWorkloads
+    ? Object.fromEntries(Object.entries(allWorkloads).filter(([k]) => activeWorkloads.has(k)))
+    : allWorkloads;
+  const totalItems = Object.values(workloads).reduce((s: number, w: any) => s + (w?.total || 0), 0);
   const totalStorage = summary?.storage?.total_bytes || 0;
   const snapshotCount = summary?.snapshots?.total || 0;
   const entra = entraSummary || {};
@@ -1227,6 +1231,7 @@ export function OnboardCallback() {
           disc={disc}
           onComplete={() => setStep(6)}
           simScene={simScene}
+          activeWorkloads={selectedWorkloads}
           setSimScene={setSimScene}
         />
       )}

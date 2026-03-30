@@ -344,6 +344,9 @@ app.include_router(docs_api_router)
 app.include_router(org_context_router)
 app.include_router(diagnostics_router)
 
+from app.api.msp import router as msp_router
+app.include_router(msp_router)
+
 
 @app.get("/")
 async def root():

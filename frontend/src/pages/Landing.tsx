@@ -29,23 +29,7 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
   );
 }
 
-function Counter({ target, suffix = '' }: { target: number; suffix?: string }) {
-  const [count, setCount] = useState(0);
-  const { ref, inView } = useInView();
-  useEffect(() => {
-    if (!inView) return;
-    let frame: number;
-    const start = performance.now();
-    const animate = (now: number) => {
-      const p = Math.min((now - start) / 1500, 1);
-      setCount(Math.round(target * p));
-      if (p < 1) frame = requestAnimationFrame(animate);
-    };
-    frame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(frame);
-  }, [inView, target]);
-  return <span ref={ref}>{count}{suffix}</span>;
-}
+// Counter removed — hero metrics now use text labels instead of animated numbers
 
 // ── Cyber Recovery Story — Cinematic 6-Phase Animation ──
 function CyberRecoveryStory() {

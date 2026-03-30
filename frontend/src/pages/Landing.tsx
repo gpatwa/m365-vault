@@ -235,17 +235,16 @@ const WORKLOADS = [
   { icon: KeyRound, label: 'Entra ID', desc: '12 object types, Config drift', color: 'text-amber-600 bg-amber-50 border-amber-200' },
 ];
 
-// ── Competitor comparison ──
+// ── Competitor comparison (CISO-focused) ──
 const COMPARE_FEATURES = [
-  { feature: 'Open source', us: true, them: false },
-  { feature: 'Self-hosted option', us: true, them: false },
-  { feature: 'Per-tenant encryption keys', us: true, them: true },
-  { feature: 'AI anomaly detection', us: true, them: true },
-  { feature: 'AI intelligence included free', us: true, them: false },
+  { feature: 'Context-aware recovery plans', us: true, them: false },
+  { feature: 'Entra ID config backup + rollback', us: true, them: false },
+  { feature: 'Criticality-based restore order', us: true, them: false },
+  { feature: 'Recovery confidence score', us: true, them: false },
+  { feature: 'Anomaly detection (built-in)', us: true, them: false },
   { feature: 'WORM immutable storage', us: true, them: true },
-  { feature: 'Teams chat backup', us: true, them: true },
-  { feature: 'Entra ID config backup', us: true, them: false },
-  { feature: 'Starting price', usVal: 'Free', themVal: '$2.50/user/mo' },
+  { feature: 'Intelligence surcharge', usVal: '$0', themVal: '$$$' },
+  { feature: 'Starting price', usVal: '$1.50/user', themVal: '$2-10/user' },
 ];
 
 // ── Pricing tiers ──
@@ -308,8 +307,8 @@ export default function Landing() {
 
           {/* Sub */}
           <p className={`mt-6 text-lg text-gray-500 max-w-2xl mx-auto transition-all duration-700 delay-500 ${heroReady ? 'opacity-100' : 'opacity-0'}`}>
-            96% of ransomware attacks target backups. Microsoft 365 retention policies are not backup.
-            Shieldio gives you independent, encrypted, immutable protection for your SaaS data.
+            Microsoft's 93-day recycle bin is not a recovery plan. When ransomware hits,
+            Shieldio already knows who your CEO is, what to restore first, and has a plan ready.
           </p>
 
           {/* CTAs */}
@@ -323,12 +322,24 @@ export default function Landing() {
             </a>
           </div>
 
-          {/* Stats */}
-          <div className={`mt-12 flex items-center justify-center gap-12 text-center transition-all duration-700 delay-900 ${heroReady ? 'opacity-100' : 'opacity-0'}`}>
-            <div><div className="text-2xl font-bold text-gray-900"><Counter target={5} /></div><div className="text-xs text-gray-500">M365 Workloads</div></div>
-            <div><div className="text-2xl font-bold text-gray-900">&lt;<Counter target={9} suffix="ms" /></div><div className="text-xs text-gray-500">API Response (p50)</div></div>
-            <div><div className="text-2xl font-bold text-gray-900"><Counter target={2} suffix=".1x" /></div><div className="text-xs text-gray-500">Compression Ratio</div></div>
-            <div><div className="text-2xl font-bold text-gray-900"><Counter target={4} /></div><div className="text-xs text-gray-500">Compliance Frameworks</div></div>
+          {/* Stats — CISO-focused value props */}
+          <div className={`mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto transition-all duration-700 delay-900 ${heroReady ? 'opacity-100' : 'opacity-0'}`}>
+            <div className="text-center">
+              <div className="text-xl font-bold text-blue-600">Context-Aware</div>
+              <div className="text-xs text-gray-500 mt-1">Recovery Plans</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xl font-bold text-indigo-600">Pre-Computed</div>
+              <div className="text-xs text-gray-500 mt-1">Org Intelligence</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xl font-bold text-green-600">$0</div>
+              <div className="text-xs text-gray-500 mt-1">AI Surcharge</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-900"><Counter target={4} /></div>
+              <div className="text-xs text-gray-500 mt-1">Compliance Frameworks</div>
+            </div>
           </div>
         </div>
       </section>
@@ -341,11 +352,52 @@ export default function Landing() {
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-500/10 text-red-400 rounded-full text-xs font-medium mb-4">
                 <AlertTriangle className="w-3.5 h-3.5" /> Ransomware Scenario
               </div>
-              <h2 className="text-3xl font-bold text-white">Complete cyber recovery in 6 phases</h2>
-              <p className="text-gray-400 mt-2 max-w-xl mx-auto">Watch how Shieldio detects a ransomware attack and recovers every file — automatically</p>
+              <h2 className="text-3xl font-bold text-white">When ransomware hits at 2am, this is your playbook</h2>
+              <p className="text-gray-400 mt-2 max-w-xl mx-auto">Watch how Shieldio detects an attack, identifies the blast radius, and recovers your critical users first — automatically</p>
             </div>
           </FadeUp>
           <CyberRecoveryStory />
+        </div>
+      </section>
+
+      {/* ═══ SECTION 2.5: WHY NOT JUST USE MICROSOFT? ═══ */}
+      <section className="py-20 px-6 bg-gray-50">
+        <div className="max-w-4xl mx-auto">
+          <FadeUp>
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold text-gray-900">Why not just use Microsoft?</h2>
+              <p className="text-gray-500 mt-2">Microsoft 365 has built-in retention. Here's why it's not enough.</p>
+            </div>
+          </FadeUp>
+          <FadeUp delay={200}>
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-gray-50">
+                    <th className="text-left px-5 py-3 font-medium text-gray-600">Capability</th>
+                    <th className="text-center px-5 py-3 font-medium text-gray-400">Microsoft 365</th>
+                    <th className="text-center px-5 py-3 font-semibold text-blue-600">Shieldio</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {[
+                    { cap: 'Recovery model', m365: '93-day recycle bin', shieldio: 'Unlimited point-in-time restore' },
+                    { cap: 'Ransomware detection', m365: 'None', shieldio: 'AI anomaly detection (Z-score baselines)' },
+                    { cap: 'Recovery plan', m365: 'None — restore manually', shieldio: 'Pre-computed 4-phase MVB plans' },
+                    { cap: 'Entra ID rollback', m365: 'No undo for CA policies or roles', shieldio: 'Full config snapshot + diff comparison' },
+                    { cap: 'Recovery order', m365: 'Manual, one mailbox at a time', shieldio: 'Criticality-ordered — CEO restored first' },
+                    { cap: 'Recovery confidence', m365: 'Unknown until you try', shieldio: 'Scored 0-100 with evidence' },
+                  ].map(row => (
+                    <tr key={row.cap} className="hover:bg-gray-50">
+                      <td className="px-5 py-3 font-medium text-gray-700">{row.cap}</td>
+                      <td className="px-5 py-3 text-center text-gray-400">{row.m365}</td>
+                      <td className="px-5 py-3 text-center text-green-700 font-medium">{row.shieldio}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </FadeUp>
         </div>
       </section>
 
@@ -380,17 +432,18 @@ export default function Landing() {
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/10 text-amber-400 rounded-full text-xs font-medium mb-4">
                 <Brain className="w-3.5 h-3.5" /> AI-Powered Intelligence
               </div>
-              <h2 className="text-3xl font-bold">AI-powered protection. Built in.</h2>
+              <h2 className="text-3xl font-bold">Recovery intelligence that no competitor has.</h2>
               <p className="text-gray-400 mt-2 max-w-xl mx-auto">
-                Anomaly detection, health scoring, self-healing, and sensitive data discovery — intelligence included at every tier.
+                Other vendors back up your data. Shieldio understands your organization and builds recovery plans automatically.
               </p>
             </div>
           </FadeUp>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
-              { icon: Brain, title: 'Anomaly Detection', desc: 'Z-score baselines learn normal patterns. Flags mass deletions, encryption spikes, unusual changes.', color: 'from-amber-500 to-orange-500' },
-              { icon: ShieldCheck, title: 'Self-Healing', desc: 'Failed backups auto-retry with exponential backoff. Circuit breaker pauses on API outages.', color: 'from-green-500 to-emerald-500' },
-              { icon: Eye, title: 'Sensitive Data Scanner', desc: 'Regex PII/PHI/PCI detection on backup data. Finds sensitive data deleted from production.', color: 'from-blue-500 to-indigo-500' },
+              { icon: Eye, title: 'Org Context', desc: 'Auto-discovers your reporting hierarchy, VIP groups, and privileged roles from Microsoft Graph. No manual user mapping. No professional services.', color: 'from-blue-500 to-indigo-500' },
+              { icon: Brain, title: 'Criticality Scoring', desc: '4-factor scoring: role weight, data sensitivity, activity level, business dependency. Your CEO scores 95. The summer intern scores 30. Automatically.', color: 'from-amber-500 to-orange-500' },
+              { icon: ShieldCheck, title: 'Recovery Plans', desc: 'Pre-computed 4-phase NIST-ordered plans: identity controls first, then critical users, then high priority, then full recovery. Refreshed every 6 hours.', color: 'from-green-500 to-emerald-500' },
+              { icon: AlertTriangle, title: 'Anomaly Detection', desc: 'Z-score baselines detect mass encryption, data exfiltration, and unusual deletions while backups are running. Not after the incident.', color: 'from-rose-500 to-red-500' },
             ].map((f, i) => (
               <FadeUp key={f.title} delay={i * 150}>
                 <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-gray-600 transition-colors">
@@ -450,8 +503,8 @@ export default function Landing() {
         <div className="max-w-3xl mx-auto">
           <FadeUp>
             <div className="text-center mb-10">
-              <h2 className="text-3xl font-bold text-gray-900">How we compare</h2>
-              <p className="text-gray-500 mt-2">Shieldio vs. traditional backup vendors</p>
+              <h2 className="text-3xl font-bold text-gray-900">Shieldio vs. Veeam, Rubrik, Druva</h2>
+              <p className="text-gray-500 mt-2">Recovery intelligence that competitors charge extra for — or don't offer at all</p>
             </div>
           </FadeUp>
           <FadeUp delay={200}>
@@ -524,19 +577,21 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ═══ SECTION 8: DEPLOY ═══ */}
+      {/* ═══ SECTION 8: SEE IT LIVE ═══ */}
       <section className="py-16 px-6 bg-gray-900 text-white">
         <div className="max-w-3xl mx-auto text-center">
           <FadeUp>
-            <h2 className="text-2xl font-bold mb-3">Deploy in 5 minutes</h2>
-            <p className="text-gray-400 text-sm mb-6">Self-hosted on your infrastructure. Your data never leaves your control.</p>
-            <div className="bg-gray-800 rounded-xl p-4 text-left font-mono text-sm border border-gray-700">
-              <div className="text-gray-500"># Clone and start</div>
-              <div className="text-green-400">$ git clone https://github.com/gpatwa/m365-vault</div>
-              <div className="text-green-400">$ cd m365-vault && make dev</div>
-              <div className="text-gray-500 mt-2"># Or deploy to Azure</div>
-              <div className="text-green-400">$ make acr-push && make tf-apply</div>
+            <h2 className="text-2xl font-bold mb-3">See it live with your data in 10 minutes</h2>
+            <p className="text-gray-400 text-sm mb-6">Connect your M365 tenant. Watch Shieldio discover your org, score criticality, and build a recovery plan — in real time.</p>
+            <div className="flex items-center justify-center gap-4">
+              <Link to="/login" className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all hover:shadow-lg hover:shadow-blue-900 flex items-center gap-2">
+                Start Free <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link to="/login" className="px-6 py-3 bg-gray-800 text-gray-300 font-medium rounded-xl hover:bg-gray-700 transition-colors border border-gray-700">
+                Book a Demo
+              </Link>
             </div>
+            <p className="text-gray-600 text-xs mt-4">Free for up to 25 users. No credit card. SOC 2 + GDPR + HIPAA + DORA ready.</p>
           </FadeUp>
         </div>
       </section>
@@ -545,8 +600,8 @@ export default function Landing() {
       <section className="py-20 px-6 bg-gradient-to-br from-blue-600 to-indigo-700">
         <div className="max-w-3xl mx-auto text-center text-white">
           <FadeUp>
-            <h2 className="text-3xl font-bold mb-4">Ready to protect your SaaS data?</h2>
-            <p className="text-blue-100 mb-8">Free for up to 25 users. No credit card required.</p>
+            <h2 className="text-3xl font-bold mb-4">Ready to prove you can recover?</h2>
+            <p className="text-blue-100 mb-8">Most backup vendors prove you can back up. Shieldio proves you can recover.</p>
             <Link to="/login" className="inline-flex items-center gap-2 px-8 py-3.5 bg-white text-blue-700 font-semibold rounded-xl hover:bg-blue-50 transition-colors text-lg">
               Get Started Free <ArrowRight className="w-5 h-5" />
             </Link>

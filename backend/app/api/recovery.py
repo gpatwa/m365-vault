@@ -249,20 +249,41 @@ async def get_rpo_rto(
             workload_data[wl]["rpo_violated"] += 1
 
     # RTO: calculate from actual restore job durations
+    # Use EXTRACT(EPOCH FROM ...) for PostgreSQL, julianday for SQLite
     for wl in workload_data:
-        restore_result = await db.execute(
-            select(
-                func.avg(
-                    func.julianday(RestoreJob.completed_at) - func.julianday(RestoreJob.started_at)
-                ).label("avg_days")
-            ).where(
-                RestoreJob.tenant_id == tenant_id,
-                RestoreJob.status == RestoreStatus.COMPLETED,
+        try:
+            # PostgreSQL: EXTRACT(EPOCH FROM (completed_at - started_at))
+            from sqlalchemy import extract, literal_column
+            restore_result = await db.execute(
+                select(
+                    func.avg(
+                        extract('epoch', RestoreJob.completed_at) - extract('epoch', RestoreJob.started_at)
+                    ).label("avg_seconds")
+                ).where(
+                    RestoreJob.tenant_id == tenant_id,
+                    RestoreJob.status == RestoreStatus.COMPLETED,
+                )
             )
-        )
-        row = restore_result.one()
-        avg_days = row.avg_days or 0
-        workload_data[wl]["avg_rto_seconds"] = round(avg_days * 86400, 1)
+            row = restore_result.one()
+            workload_data[wl]["avg_rto_seconds"] = round(row.avg_seconds or 0, 1)
+        except Exception:
+            # SQLite fallback: julianday
+            try:
+                restore_result = await db.execute(
+                    select(
+                        func.avg(
+                            func.julianday(RestoreJob.completed_at) - func.julianday(RestoreJob.started_at)
+                        ).label("avg_days")
+                    ).where(
+                        RestoreJob.tenant_id == tenant_id,
+                        RestoreJob.status == RestoreStatus.COMPLETED,
+                    )
+                )
+                row = restore_result.one()
+                avg_days = row.avg_days or 0
+                workload_data[wl]["avg_rto_seconds"] = round(avg_days * 86400, 1)
+            except Exception:
+                workload_data[wl]["avg_rto_seconds"] = 0
 
     # Build response
     workloads = []

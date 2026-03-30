@@ -7,7 +7,15 @@ server {
     # Inject runtime API base URL as JavaScript for the SPA
     location = /config.js {
         default_type application/javascript;
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
         return 200 'window.__RUNTIME_CONFIG__={API_BASE:"${BACKEND_URL}"};';
+    }
+
+    # index.html — NEVER cache so new deploys are picked up immediately
+    location = /index.html {
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+        add_header Pragma "no-cache";
+        add_header Expires "0";
     }
 
     # SPA fallback — serve index.html for client-side routing
@@ -15,7 +23,7 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
-    # Cache static assets (but not config.js)
+    # Cache hashed static assets (fingerprinted filenames change per build)
     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf)$ {
         expires 1y;
         add_header Cache-Control "public, immutable";

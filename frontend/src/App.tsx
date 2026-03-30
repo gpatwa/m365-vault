@@ -35,7 +35,7 @@ import Docs from './pages/Docs';
 import DocViewer from './pages/DocViewer';
 import Performance from './pages/Performance';
 import OrgContext from './pages/OrgContext';
-import Onboard, { OnboardCallback } from './pages/Onboard';
+import Onboard, { OnboardCallback, DemoOnboard } from './pages/Onboard';
 
 const queryClient = new QueryClient();
 
@@ -57,14 +57,24 @@ function SmartHome() {
 
   useEffect(() => {
     console.log('[Shieldio:SmartHome] mounted, token:', !!api.getToken());
-    api.get<any[]>('/tenants/')
+
+    // Check if this is the demo user — always route to onboard/demo
+    api.get<any>('/auth/me')
+      .then(user => {
+        if (user?.username === 'demo') {
+          console.log('[Shieldio:SmartHome] → demo user, redirect /onboard/demo');
+          window.location.replace('/onboard/demo');
+          return;
+        }
+        // Normal user — check tenants
+        return api.get<any[]>('/tenants/');
+      })
       .then(tenants => {
-        console.log('[Shieldio:SmartHome] tenants:', tenants?.length, 'array?', Array.isArray(tenants));
+        if (!tenants) return; // demo user already redirected
+        console.log('[Shieldio:SmartHome] tenants:', tenants?.length);
         if (!tenants || tenants.length === 0) {
-          console.log('[Shieldio:SmartHome] → hard redirect /onboard');
           window.location.replace('/onboard');
         } else {
-          console.log('[Shieldio:SmartHome] → dashboard');
           setChecked(true);
         }
       })
@@ -90,6 +100,7 @@ function AppRoutes() {
       <Route path="/docs/view/:filename" element={<DocViewer />} />
       <Route path="/onboard" element={<ProtectedRoute><Onboard /></ProtectedRoute>} />
       <Route path="/onboard/callback" element={<ProtectedRoute><OnboardCallback /></ProtectedRoute>} />
+      <Route path="/onboard/demo" element={<ProtectedRoute><DemoOnboard /></ProtectedRoute>} />
 
       {/* Root: Landing for anonymous, Dashboard for authenticated */}
       <Route path="/" element={<RootRoute />}>

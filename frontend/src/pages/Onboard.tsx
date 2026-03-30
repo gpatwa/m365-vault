@@ -626,6 +626,56 @@ const WIZARD_STEPS = [
   { key: 'ready', label: 'Ready', icon: CheckCircle },
 ];
 
+/**
+ * Demo Onboard — starts at discovery (step 1), skipping OAuth.
+ * Uses the first active tenant. For prospect demos where the tenant
+ * is already connected but you want to show the full discovery → backup → recovery flow.
+ */
+export function DemoOnboard() {
+  const [tenantId, setTenantId] = useState<number | null>(null);
+  const [tenantName, setTenantName] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.get<any[]>('/tenants/')
+      .then(tenants => {
+        const active = tenants?.find((t: any) => t.status === 'active');
+        if (active) {
+          setTenantId(active.id);
+          setTenantName(active.name);
+        }
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+      </div>
+    );
+  }
+
+  if (!tenantId) {
+    // No tenant — fall back to regular onboarding
+    return <Onboard />;
+  }
+
+  // Render OnboardCallback with pre-set tenant data via URL params trick
+  // We navigate to the callback with fake params that simulate a successful connection
+  return <OnboardCallbackWithTenant tenantId={tenantId} tenantName={tenantName} />;
+}
+
+/** OnboardCallback variant that starts with an existing tenant (skips OAuth step 0) */
+function OnboardCallbackWithTenant({ tenantId, tenantName }: { tenantId: number; tenantName: string }) {
+  // Redirect to the callback URL with demo flag — OnboardCallback reads from searchParams
+  useEffect(() => {
+    window.location.replace(`/onboard/callback?demo=true&db_tenant_id=${tenantId}&tenant_name=${encodeURIComponent(tenantName)}`);
+  }, [tenantId, tenantName]);
+  return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>;
+}
+
 export function OnboardCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -648,8 +698,9 @@ export function OnboardCallback() {
   const [backupWorkloads, setBackupWorkloads] = useState<Set<string>>(new Set());
   const [backupProgress, setBackupProgress] = useState<Record<string, string>>({});
 
-  // Step 0: Process OAuth callback
+  // Step 0: Process OAuth callback (or demo mode)
   useEffect(() => {
+    const isDemo = searchParams.get('demo') === 'true';
     const adminConsent = searchParams.get('admin_consent');
     const tenant = searchParams.get('tenant');
     const state = searchParams.get('state');
@@ -663,12 +714,31 @@ export function OnboardCallback() {
     // Load workload metadata
     api.get<any>('/onboard/workloads').then(data => {
       setAvailableWorkloads(data.workloads || []);
-      // Pre-select recommended workloads
       const recommended = (data.workloads || [])
         .filter((w: any) => w.recommended)
         .map((w: any) => w.key);
       setSelectedWorkloads(new Set(recommended));
     }).catch(() => {});
+
+    // Demo mode: skip OAuth, use existing tenant
+    if (isDemo) {
+      const dbTenantId = parseInt(searchParams.get('db_tenant_id') || '0');
+      const tenantName = searchParams.get('tenant_name') || 'Demo Tenant';
+      if (dbTenantId) {
+        setResultData({
+          success: true, existing: true,
+          db_tenant_id: dbTenantId,
+          tenant_name: tenantName,
+        });
+        setStep(1); // Jump to discover
+        api.get<any>('/sla-policies/').then(policies => {
+          if (Array.isArray(policies)) setSlaPolicies(policies);
+        }).catch(() => {});
+      } else {
+        setError('Demo mode: no tenant ID provided');
+      }
+      return;
+    }
 
     if (adminConsent && tenant) {
       api.get<any>(`/onboard/callback?admin_consent=${adminConsent}&tenant=${tenant}&state=${state || ''}`)
@@ -677,7 +747,6 @@ export function OnboardCallback() {
             setResultData(data);
             if (data.discovery) setDiscoveryResults(data.discovery);
             setStep(1); // Move to discover
-            // Load SLA policies
             api.get<any>('/sla-policies/').then(policies => {
               if (Array.isArray(policies)) setSlaPolicies(policies);
             }).catch(() => {});

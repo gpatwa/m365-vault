@@ -36,6 +36,7 @@ import DocViewer from './pages/DocViewer';
 import Performance from './pages/Performance';
 import OrgContext from './pages/OrgContext';
 import Onboard, { OnboardCallback, DemoOnboard } from './pages/Onboard';
+import MSPDashboard from './pages/MSPDashboard';
 
 const queryClient = new QueryClient();
 
@@ -114,6 +115,7 @@ function AppRoutes() {
         <Route path="jobs" element={<Jobs />} />
         <Route path="tenants" element={<Tenants />} />
         <Route path="settings" element={<Tenants />} />
+        <Route path="msp" element={<MSPDashboard />} />
         <Route path="audit" element={<AuditLog />} />
         <Route path="failed-items" element={<FailedItems />} />
         <Route path="alerts" element={<AlertSettings />} />

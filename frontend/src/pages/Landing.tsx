@@ -308,7 +308,7 @@ export default function Landing() {
           {/* Sub */}
           <p className={`mt-6 text-lg text-gray-500 max-w-2xl mx-auto transition-all duration-700 delay-500 ${heroReady ? 'opacity-100' : 'opacity-0'}`}>
             Microsoft's 93-day recycle bin is not a recovery plan. When ransomware hits,
-            Shieldio already knows who your CEO is, what to restore first, and has a plan ready.
+            Shieldio already has a context-aware recovery plan — identity first, critical users next, then everyone else.
           </p>
 
           {/* CTAs */}
@@ -333,12 +333,12 @@ export default function Landing() {
               <div className="text-xs text-gray-500 mt-1">Org Intelligence</div>
             </div>
             <div className="text-center">
-              <div className="text-xl font-bold text-green-600">$0</div>
-              <div className="text-xs text-gray-500 mt-1">AI Surcharge</div>
+              <div className="text-xl font-bold text-green-600">$1.50/user</div>
+              <div className="text-xs text-gray-500 mt-1">All Included</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900"><Counter target={4} /></div>
-              <div className="text-xs text-gray-500 mt-1">Compliance Frameworks</div>
+              <div className="text-lg font-bold text-gray-900">SOC 2 + HIPAA</div>
+              <div className="text-xs text-gray-500 mt-1">+ GDPR + DORA</div>
             </div>
           </div>
         </div>

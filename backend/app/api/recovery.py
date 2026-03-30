@@ -248,42 +248,26 @@ async def get_rpo_rto(
         else:
             workload_data[wl]["rpo_violated"] += 1
 
-    # RTO: calculate from actual restore job durations
-    # Use EXTRACT(EPOCH FROM ...) for PostgreSQL, julianday for SQLite
-    for wl in workload_data:
-        try:
-            # PostgreSQL: EXTRACT(EPOCH FROM (completed_at - started_at))
-            from sqlalchemy import extract, literal_column
-            restore_result = await db.execute(
-                select(
-                    func.avg(
-                        extract('epoch', RestoreJob.completed_at) - extract('epoch', RestoreJob.started_at)
-                    ).label("avg_seconds")
-                ).where(
-                    RestoreJob.tenant_id == tenant_id,
-                    RestoreJob.status == RestoreStatus.COMPLETED,
-                )
+    # RTO: calculate from actual restore job durations (DB-agnostic)
+    try:
+        restore_jobs = await db.execute(
+            select(RestoreJob.started_at, RestoreJob.completed_at).where(
+                RestoreJob.tenant_id == tenant_id,
+                RestoreJob.status == RestoreStatus.COMPLETED,
+                RestoreJob.started_at.isnot(None),
+                RestoreJob.completed_at.isnot(None),
             )
-            row = restore_result.one()
-            workload_data[wl]["avg_rto_seconds"] = round(row.avg_seconds or 0, 1)
-        except Exception:
-            # SQLite fallback: julianday
-            try:
-                restore_result = await db.execute(
-                    select(
-                        func.avg(
-                            func.julianday(RestoreJob.completed_at) - func.julianday(RestoreJob.started_at)
-                        ).label("avg_days")
-                    ).where(
-                        RestoreJob.tenant_id == tenant_id,
-                        RestoreJob.status == RestoreStatus.COMPLETED,
-                    )
-                )
-                row = restore_result.one()
-                avg_days = row.avg_days or 0
-                workload_data[wl]["avg_rto_seconds"] = round(avg_days * 86400, 1)
-            except Exception:
-                workload_data[wl]["avg_rto_seconds"] = 0
+        )
+        durations = []
+        for rj in restore_jobs.all():
+            if rj.started_at and rj.completed_at:
+                durations.append((rj.completed_at - rj.started_at).total_seconds())
+        avg_rto = sum(durations) / len(durations) if durations else 0
+        for wl in workload_data:
+            workload_data[wl]["avg_rto_seconds"] = round(avg_rto, 1)
+    except Exception:
+        for wl in workload_data:
+            workload_data[wl]["avg_rto_seconds"] = 0
 
     # Build response
     workloads = []

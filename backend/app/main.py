@@ -16,6 +16,8 @@ from app.errors import ShieldioError, RATE_LIMIT_EXCEEDED
 from app.services.scheduler import start_scheduler, stop_scheduler
 from app.models.dedup import DedupEntry          # noqa: F401 — ensure table is created
 from app.models.worker_queue import WorkerQueueEntry  # noqa: F401 — ensure table is created
+from app.models.msp_branding import MSPBranding  # noqa: F401 — ensure table is created
+from app.models.billing import BillingRecord     # noqa: F401 — ensure table is created
 
 # Configure structured JSON logging for production
 if settings.LOG_FORMAT == "json":
@@ -343,6 +345,11 @@ app.include_router(benchmarks_router)
 app.include_router(docs_api_router)
 app.include_router(org_context_router)
 app.include_router(diagnostics_router)
+
+from app.api.msp import router as msp_router
+from app.api.feature_flags import router as feature_flags_router
+app.include_router(msp_router)
+app.include_router(feature_flags_router)
 
 
 @app.get("/")

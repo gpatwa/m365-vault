@@ -113,6 +113,10 @@ class Settings(BaseSettings):
     LICENSE_TIER: str = "community"  # community, professional, business, enterprise
     LICENSE_MAX_USERS: int = 25      # for community tier
 
+    # Feature overrides — force enable/disable features regardless of tier
+    # Format: "+msp_dashboard,-worm,+org_context"  (+ enables, - disables)
+    FEATURE_OVERRIDES: str = ""
+
     # Multi-tenant Connector (OAuth onboarding)
     CONNECTOR_APP_ID: str = ""        # Shieldio Connector multi-tenant app ID
     CONNECTOR_APP_SECRET: str = ""    # Shieldio Connector app secret

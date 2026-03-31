@@ -3,6 +3,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { OnboardingProvider } from './contexts/OnboardingContext';
+import { TenantProvider } from './contexts/TenantContext';
+import { BrandingProvider } from './contexts/BrandingContext';
+import { FeatureFlagProvider } from './contexts/FeatureFlagContext';
 import { ToastProvider } from './components/Toast';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { api } from './api/client';
@@ -36,6 +39,12 @@ import DocViewer from './pages/DocViewer';
 import Performance from './pages/Performance';
 import OrgContext from './pages/OrgContext';
 import Onboard, { OnboardCallback, DemoOnboard } from './pages/Onboard';
+import MSPDashboard from './pages/MSPDashboard';
+import MSPBrandingPage from './pages/MSPBranding';
+import BillingPortal from './pages/BillingPortal';
+import BulkOnboard from './pages/BulkOnboard';
+import MSPDemo from './pages/MSPDemo';
+import FeatureFlagsPage from './pages/FeatureFlags';
 
 const queryClient = new QueryClient();
 
@@ -114,6 +123,12 @@ function AppRoutes() {
         <Route path="jobs" element={<Jobs />} />
         <Route path="tenants" element={<Tenants />} />
         <Route path="settings" element={<Tenants />} />
+        <Route path="msp" element={<MSPDashboard />} />
+        <Route path="msp/branding" element={<MSPBrandingPage />} />
+        <Route path="msp/billing" element={<BillingPortal />} />
+        <Route path="msp/onboard" element={<BulkOnboard />} />
+        <Route path="msp/demo" element={<MSPDemo />} />
+        <Route path="features" element={<FeatureFlagsPage />} />
         <Route path="audit" element={<AuditLog />} />
         <Route path="failed-items" element={<FailedItems />} />
         <Route path="alerts" element={<AlertSettings />} />
@@ -134,18 +149,24 @@ function AppRoutes() {
 
 export default function App() {
   return (
+    <FeatureFlagProvider>
+    <BrandingProvider>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <OnboardingProvider>
-          <ToastProvider>
-            <ErrorBoundary>
-              <BrowserRouter>
-                <AppRoutes />
-              </BrowserRouter>
-            </ErrorBoundary>
-          </ToastProvider>
+          <TenantProvider>
+            <ToastProvider>
+              <ErrorBoundary>
+                <BrowserRouter>
+                  <AppRoutes />
+                </BrowserRouter>
+              </ErrorBoundary>
+            </ToastProvider>
+          </TenantProvider>
         </OnboardingProvider>
       </AuthProvider>
     </QueryClientProvider>
+    </BrandingProvider>
+    </FeatureFlagProvider>
   );
 }

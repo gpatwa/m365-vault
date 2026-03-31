@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Mail, HardDrive, Globe, Shield, ShieldCheck, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search, RotateCcw, BarChart3, Gauge, ChevronDown, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Mail, HardDrive, Globe, Shield, ShieldCheck, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search, RotateCcw, BarChart3, Gauge, ChevronDown, Menu, X, Users, Palette, Play } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useOnboarding } from '../contexts/OnboardingContext';
+import { useBranding } from '../contexts/BrandingContext';
 import CommandPalette from './CommandPalette';
 import ProductTour from './ProductTour';
 import FeedbackWidget from './FeedbackWidget';
@@ -11,12 +12,14 @@ interface NavItem {
   path: string;
   label: string;
   icon: any;
+  roles?: string[];  // If set, only visible to these roles
 }
 
 interface NavGroup {
   label: string;
   items: NavItem[];
   defaultOpen?: boolean;
+  roles?: string[];  // If set, entire group only visible to these roles
 }
 
 const navGroups: NavGroup[] = [
@@ -59,6 +62,18 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
+    label: 'MSP',
+    defaultOpen: false,
+    roles: ['admin', 'msp_admin'],
+    items: [
+      { path: '/msp', label: 'MSP Dashboard', icon: Building2 },
+      { path: '/msp/billing', label: 'Billing', icon: BarChart3 },
+      { path: '/msp/branding', label: 'Branding', icon: Palette },
+      { path: '/msp/onboard', label: 'Bulk Onboard', icon: Users },
+      { path: '/msp/demo', label: 'Interactive Demo', icon: Play },
+    ],
+  },
+  {
     label: 'Administration',
     defaultOpen: false,
     items: [
@@ -68,6 +83,7 @@ const navGroups: NavGroup[] = [
       { path: '/audit', label: 'Audit Log', icon: FileText },
       { path: '/security', label: 'Security', icon: ShieldAlert },
       { path: '/performance', label: 'Performance', icon: Activity },
+      { path: '/features', label: 'Feature Config', icon: Shield, roles: ['admin'] },
     ],
   },
 ];
@@ -84,11 +100,24 @@ export default function Layout() {
   // Close mobile sidebar on route change
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
 
+  // Get user role for role-based nav filtering
+  const { user } = useAuth();
+  const userRole = user?.role || 'viewer';
+  const branding = useBranding();
+
   // Progressive sidebar based on onboarding state
   let onboarding: any = null;
   try { onboarding = useOnboarding(); } catch { /* OnboardingProvider not mounted yet */ }
 
-  const visibleGroups = navGroups.map(group => {
+  const visibleGroups = navGroups
+    // Filter groups by role
+    .filter(group => !group.roles || group.roles.includes(userRole))
+    // Filter items within groups by role
+    .map(group => ({
+      ...group,
+      items: group.items.filter(item => !item.roles || item.roles.includes(userRole)),
+    }))
+    .map(group => {
     if (!onboarding || onboarding.isComplete) return group; // Show all when complete
 
     // Always show Dashboard
@@ -149,10 +178,14 @@ export default function Layout() {
         <div className="px-4 py-3 border-b border-gray-700">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Shield className="w-7 h-7 text-blue-400" />
+              {branding.logoUrl ? (
+                <img src={branding.logoUrl} alt={branding.companyName} className="w-7 h-7 rounded" />
+              ) : (
+                <Shield className="w-7 h-7 text-blue-400" />
+              )}
               <div>
-                <h1 className="text-base font-bold leading-tight">Shieldio</h1>
-                <p className="text-[10px] text-gray-500">SaaS Data Protection</p>
+                <h1 className="text-base font-bold leading-tight">{branding.companyName}</h1>
+                <p className="text-[10px] text-gray-500">{branding.tagline}</p>
               </div>
             </div>
             <button

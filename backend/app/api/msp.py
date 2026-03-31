@@ -702,3 +702,125 @@ async def get_compliance_report(
         "sla_policies": sla_info,
         "controls": report_def["safeguards"],
     }
+
+
+# ── Demo Seed ─────────────────────────────────────────────────
+
+DEMO_TENANTS = [
+    {"name": "Acme Healthcare", "ms_tenant_id": "demo-acme-healthcare", "users": 50, "segment": "HIPAA"},
+    {"name": "Summit Legal Group", "ms_tenant_id": "demo-summit-legal", "users": 30, "segment": "Legal"},
+    {"name": "Pacific Finance", "ms_tenant_id": "demo-pacific-finance", "users": 45, "segment": "SOC 2"},
+]
+
+
+@router.post("/demo-seed")
+async def seed_demo_data(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_msp_permission),
+):
+    """Seed demo tenants for the MSP interactive demo. Idempotent."""
+    from app.services.encryption import encryption_service
+
+    created = []
+    skipped = []
+
+    for demo in DEMO_TENANTS:
+        existing = (await db.execute(
+            select(Tenant).where(Tenant.ms_tenant_id == demo["ms_tenant_id"])
+        )).scalar_one_or_none()
+
+        if existing:
+            skipped.append(demo["name"])
+            continue
+
+        # Create tenant
+        tenant = Tenant(
+            name=demo["name"],
+            ms_tenant_id=demo["ms_tenant_id"],
+            client_id=f"demo-client-{demo['ms_tenant_id']}",
+            client_secret_encrypted=encryption_service.encrypt_string("demo-secret"),
+            status=TenantStatus.ACTIVE,
+        )
+        db.add(tenant)
+        await db.flush()
+
+        # Create protected objects
+        workloads = [WorkloadType.EXCHANGE, WorkloadType.ONEDRIVE, WorkloadType.SHAREPOINT,
+                     WorkloadType.TEAMS, WorkloadType.ENTRA_ID]
+        obj_count = 0
+        for wl in workloads:
+            count = demo["users"] if wl in (WorkloadType.EXCHANGE, WorkloadType.ONEDRIVE) else (
+                8 if wl == WorkloadType.SHAREPOINT else (
+                    demo["users"] // 5 if wl == WorkloadType.TEAMS else 1
+                )
+            )
+            for i in range(min(count, 15)):  # Cap at 15 per workload for demo
+                db.add(ProtectedObject(
+                    tenant_id=tenant.id,
+                    workload_type=wl,
+                    ms_object_id=f"demo-{tenant.id}-{wl.value}-{i}",
+                    display_name=f"{demo['name']} {wl.value.title()} {i+1}",
+                    status=ProtectionStatus.PROTECTED,
+                    last_backup_at=datetime.utcnow() - timedelta(hours=2),
+                ))
+                obj_count += 1
+
+        # Create backup jobs
+        for j in range(3):
+            db.add(BackupJob(
+                tenant_id=tenant.id,
+                workload_type="exchange",
+                status=JobStatus.COMPLETED,
+                started_at=datetime.utcnow() - timedelta(hours=j * 12 + 1),
+                completed_at=datetime.utcnow() - timedelta(hours=j * 12),
+                objects_total=obj_count,
+                objects_processed=obj_count,
+                objects_failed=0,
+                created_at=datetime.utcnow() - timedelta(hours=j * 12 + 1),
+            ))
+
+        created.append({"name": demo["name"], "tenant_id": tenant.id, "objects": obj_count})
+
+    await db.commit()
+
+    return {
+        "created": len(created),
+        "skipped": len(skipped),
+        "tenants": created,
+        "skipped_names": skipped,
+    }
+
+
+# ── Offboard ──────────────────────────────────────────────────
+
+@router.post("/offboard/{tenant_id}")
+async def offboard_tenant(
+    tenant_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_msp_permission),
+):
+    """Offboard a client tenant — deactivate but preserve backups per SLA retention."""
+    tenant = await db.get(Tenant, tenant_id)
+    if not tenant:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Tenant not found")
+
+    if tenant.status == TenantStatus.INACTIVE:
+        return {
+            "tenant_id": tenant.id,
+            "name": tenant.name,
+            "status": "already_inactive",
+            "message": "Tenant is already offboarded",
+        }
+
+    tenant.status = TenantStatus.INACTIVE
+    tenant.updated_at = datetime.utcnow()
+    await db.commit()
+
+    return {
+        "tenant_id": tenant.id,
+        "name": tenant.name,
+        "status": "offboarded",
+        "deactivated_at": datetime.utcnow().isoformat(),
+        "data_retention": "Backups retained per SLA policy retention period. No data is deleted on offboard.",
+    }

@@ -70,6 +70,7 @@ const navGroups: NavGroup[] = [
       { path: '/msp/billing', label: 'Billing', icon: BarChart3 },
       { path: '/msp/branding', label: 'Branding', icon: Palette },
       { path: '/msp/onboard', label: 'Bulk Onboard', icon: Users },
+      { path: '/msp/demo', label: 'Interactive Demo', icon: Play },
     ],
   },
   {

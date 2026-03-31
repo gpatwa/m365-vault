@@ -42,6 +42,7 @@ import MSPDashboard from './pages/MSPDashboard';
 import MSPBrandingPage from './pages/MSPBranding';
 import BillingPortal from './pages/BillingPortal';
 import BulkOnboard from './pages/BulkOnboard';
+import MSPDemo from './pages/MSPDemo';
 
 const queryClient = new QueryClient();
 
@@ -124,6 +125,7 @@ function AppRoutes() {
         <Route path="msp/branding" element={<MSPBrandingPage />} />
         <Route path="msp/billing" element={<BillingPortal />} />
         <Route path="msp/onboard" element={<BulkOnboard />} />
+        <Route path="msp/demo" element={<MSPDemo />} />
         <Route path="audit" element={<AuditLog />} />
         <Route path="failed-items" element={<FailedItems />} />
         <Route path="alerts" element={<AlertSettings />} />

@@ -11,12 +11,14 @@ interface NavItem {
   path: string;
   label: string;
   icon: any;
+  roles?: string[];  // If set, only visible to these roles
 }
 
 interface NavGroup {
   label: string;
   items: NavItem[];
   defaultOpen?: boolean;
+  roles?: string[];  // If set, entire group only visible to these roles
 }
 
 const navGroups: NavGroup[] = [
@@ -59,6 +61,16 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
+    label: 'MSP',
+    defaultOpen: false,
+    roles: ['admin', 'msp_admin'],
+    items: [
+      { path: '/msp', label: 'MSP Dashboard', icon: Building2 },
+      { path: '/msp/billing', label: 'Billing', icon: BarChart3 },
+      { path: '/msp/branding', label: 'Branding', icon: Shield },
+    ],
+  },
+  {
     label: 'Administration',
     defaultOpen: false,
     items: [
@@ -84,11 +96,23 @@ export default function Layout() {
   // Close mobile sidebar on route change
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
 
+  // Get user role for role-based nav filtering
+  const { user } = useAuth();
+  const userRole = user?.role || 'viewer';
+
   // Progressive sidebar based on onboarding state
   let onboarding: any = null;
   try { onboarding = useOnboarding(); } catch { /* OnboardingProvider not mounted yet */ }
 
-  const visibleGroups = navGroups.map(group => {
+  const visibleGroups = navGroups
+    // Filter groups by role
+    .filter(group => !group.roles || group.roles.includes(userRole))
+    // Filter items within groups by role
+    .map(group => ({
+      ...group,
+      items: group.items.filter(item => !item.roles || item.roles.includes(userRole)),
+    }))
+    .map(group => {
     if (!onboarding || onboarding.isComplete) return group; // Show all when complete
 
     // Always show Dashboard

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { useTenantContext } from '../contexts/TenantContext';
 import {
   Shield, AlertTriangle, CheckCircle, HardDrive,
   Users, Server, Activity, ChevronRight, Search,
@@ -79,6 +80,7 @@ function StatCard({ icon: Icon, label, value, sub }: { icon: typeof Shield; labe
 
 export default function MSPDashboard() {
   const navigate = useNavigate();
+  const { setTenant } = useTenantContext();
   const [search, setSearch] = useState('');
 
   const { data, isLoading } = useQuery({
@@ -138,7 +140,7 @@ export default function MSPDashboard() {
         {filtered.map(tenant => (
           <button
             key={tenant.id}
-            onClick={() => navigate(`/?tenant_id=${tenant.id}`)}
+            onClick={() => { setTenant(tenant.id, tenant.name); navigate('/'); }}
             className="w-full bg-gray-800 rounded-xl p-4 border border-gray-700 hover:border-gray-600 transition-all text-left flex items-center gap-4 group"
           >
             {/* Health score */}

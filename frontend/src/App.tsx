@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { OnboardingProvider } from './contexts/OnboardingContext';
+import { TenantProvider } from './contexts/TenantContext';
 import { ToastProvider } from './components/Toast';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { api } from './api/client';
@@ -139,13 +140,15 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <OnboardingProvider>
-          <ToastProvider>
-            <ErrorBoundary>
-              <BrowserRouter>
-                <AppRoutes />
-              </BrowserRouter>
-            </ErrorBoundary>
-          </ToastProvider>
+          <TenantProvider>
+            <ToastProvider>
+              <ErrorBoundary>
+                <BrowserRouter>
+                  <AppRoutes />
+                </BrowserRouter>
+              </ErrorBoundary>
+            </ToastProvider>
+          </TenantProvider>
         </OnboardingProvider>
       </AuthProvider>
     </QueryClientProvider>

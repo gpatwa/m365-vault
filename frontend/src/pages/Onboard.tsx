@@ -795,14 +795,7 @@ export function OnboardCallback() {
     });
   };
 
-  const toggleBackupWorkload = (key: string) => {
-    setBackupWorkloads(prev => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  };
+  // toggleBackupWorkload removed — smart backup backs up all selected workloads
 
   // Step 2 → 3: Assign SLA and protect all
   const handleProtect = async () => {
@@ -1152,77 +1145,156 @@ export function OnboardCallback() {
       {step === 4 && (
         <div>
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-white">Run Your First Backup</h2>
-            <p className="text-gray-500 mt-1">Select workloads to back up now. Exchange is fastest for a quick verify.</p>
+            <h2 className="text-2xl font-bold text-white">Smart Backup Engine</h2>
+            <p className="text-gray-500 mt-1">Shieldio discovers what needs protection, prioritizes by importance, and backs up automatically.</p>
           </div>
 
+          {/* What the smart engine discovered */}
           {backupStatus === 'pending' && (
             <>
-              <div className="space-y-2 mb-4">
-                {Array.from(selectedWorkloads).map(wlKey => {
-                  const wl = availableWorkloads.find((w: any) => w.key === wlKey) || { key: wlKey, label: wlKey, speed: '?' };
-                  const isChecked = backupWorkloads.has(wlKey);
-                  return (
-                    <button
-                      key={wlKey}
-                      onClick={() => toggleBackupWorkload(wlKey)}
-                      className={`w-full p-3 rounded-xl border-2 text-left transition-all flex items-center gap-3 ${
-                        isChecked ? 'border-green-400 bg-green-500/10/50' : 'border-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                        isChecked ? 'border-green-500 bg-green-500/100' : 'border-gray-300'
-                      }`}>
-                        {isChecked && <CheckCircle className="w-3.5 h-3.5 text-white" />}
-                      </div>
-                      <span className="font-medium text-sm text-white">{wl.label}</span>
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ml-auto ${
-                        wl.speed === 'fast' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-                      }`}>
-                        ~{wl.est_seconds || '?'}s
-                      </span>
-                    </button>
-                  );
-                })}
+              <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 mb-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center"><Globe className="w-3.5 h-3.5 text-blue-400" /></div>
+                  <span className="text-sm font-semibold text-white">Discovery Results</span>
+                  <span className="text-[10px] text-gray-500 ml-auto">{tenantName}</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {disc?.mailboxes > 0 && (
+                    <div className="bg-gray-900/50 rounded-lg p-2 text-center">
+                      <div className="text-lg font-bold text-blue-400">{disc.mailboxes}</div>
+                      <div className="text-[9px] text-gray-500">Mailboxes</div>
+                    </div>
+                  )}
+                  {disc?.onedrives > 0 && (
+                    <div className="bg-gray-900/50 rounded-lg p-2 text-center">
+                      <div className="text-lg font-bold text-purple-400">{disc.onedrives}</div>
+                      <div className="text-[9px] text-gray-500">OneDrive Accounts</div>
+                    </div>
+                  )}
+                  {disc?.sites > 0 && (
+                    <div className="bg-gray-900/50 rounded-lg p-2 text-center">
+                      <div className="text-lg font-bold text-green-400">{disc.sites}</div>
+                      <div className="text-[9px] text-gray-500">SharePoint Sites</div>
+                    </div>
+                  )}
+                  {disc?.teams > 0 && (
+                    <div className="bg-gray-900/50 rounded-lg p-2 text-center">
+                      <div className="text-lg font-bold text-pink-400">{disc.teams}</div>
+                      <div className="text-[9px] text-gray-500">Teams</div>
+                    </div>
+                  )}
+                  {disc?.entra_objects > 0 && (
+                    <div className="bg-gray-900/50 rounded-lg p-2 text-center">
+                      <div className="text-lg font-bold text-amber-400">{disc.entra_objects}</div>
+                      <div className="text-[9px] text-gray-500">Entra ID Objects</div>
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {/* What happens during backup */}
+              <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-4 mb-4">
+                <div className="text-xs font-medium text-gray-400 mb-2">What the Smart Engine does:</div>
+                <div className="space-y-2">
+                  {[
+                    { icon: '1', text: 'Reads each object via Microsoft Graph API (read-only, zero impact on your tenant)' },
+                    { icon: '2', text: 'Compresses with zstd + deduplicates changed blocks (saves 40-60% storage)' },
+                    { icon: '3', text: 'Encrypts with AES-256-GCM using a unique key per snapshot' },
+                    { icon: '4', text: 'Stores encrypted blob + manifest for point-in-time recovery' },
+                  ].map(item => (
+                    <div key={item.icon} className="flex items-start gap-2 text-xs">
+                      <div className="w-4 h-4 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5">{item.icon}</div>
+                      <span className="text-gray-400">{item.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <button
                 onClick={handleFirstBackup}
-                disabled={backupWorkloads.size === 0 && selectedWorkloads.size === 0}
-                className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                disabled={selectedWorkloads.size === 0}
+                className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-500 transition-colors flex items-center justify-center gap-2"
               >
                 <Shield className="w-5 h-5" />
-                Backup {backupWorkloads.size > 0 ? backupWorkloads.size : selectedWorkloads.size} Workload(s) Now
+                Start Smart Backup ({totalObjects} objects across {selectedWorkloads.size} workloads)
               </button>
             </>
           )}
 
+          {/* Live backup progress with per-workload detail */}
           {backupStatus === 'running' && (
-            <div className="space-y-2">
-              {Object.entries(backupProgress).map(([wl, status]) => (
-                <div key={wl} className="flex items-center gap-3 p-3 rounded-xl border border-gray-700">
-                  {status === 'pending' && <div className="w-5 h-5 rounded-full border-2 border-gray-300" />}
-                  {status === 'running' && <Loader2 className="w-5 h-5 animate-spin text-blue-500" />}
-                  {status === 'done' && <CheckCircle className="w-5 h-5 text-green-500" />}
-                  {status === 'failed' && <XCircle className="w-5 h-5 text-red-500" />}
-                  <span className="font-medium text-sm capitalize">{wl.replace('_', ' ')}</span>
-                  <span className={`ml-auto text-xs font-medium ${
-                    status === 'done' ? 'text-green-600' :
-                    status === 'running' ? 'text-blue-600' :
-                    status === 'failed' ? 'text-red-600' : 'text-gray-400'
+            <div className="space-y-3">
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-3 text-center text-sm text-blue-300">
+                Encrypting and storing {totalObjects} objects...
+              </div>
+              {Object.entries(backupProgress).map(([wl, status]) => {
+                const objectCount = wl === 'exchange' ? disc?.mailboxes : wl === 'onedrive' ? disc?.onedrives : wl === 'sharepoint' ? disc?.sites : wl === 'teams' ? disc?.teams : wl === 'entra_id' ? 1 : 0;
+                return (
+                  <div key={wl} className={`p-3 rounded-xl border transition-all ${
+                    status === 'running' ? 'border-blue-500/50 bg-blue-500/5' :
+                    status === 'done' ? 'border-green-500/30 bg-green-500/5' :
+                    status === 'failed' ? 'border-red-500/30 bg-red-500/5' :
+                    'border-gray-700'
                   }`}>
-                    {status === 'done' ? 'Complete ✓' : status === 'running' ? 'Backing up...' : status === 'failed' ? 'Failed' : 'Waiting'}
-                  </span>
-                </div>
-              ))}
+                    <div className="flex items-center gap-3">
+                      {status === 'pending' && <div className="w-5 h-5 rounded-full border-2 border-gray-600" />}
+                      {status === 'running' && <Loader2 className="w-5 h-5 animate-spin text-blue-400" />}
+                      {status === 'done' && <CheckCircle className="w-5 h-5 text-green-400" />}
+                      {status === 'failed' && <XCircle className="w-5 h-5 text-red-400" />}
+                      <div className="flex-1">
+                        <span className="font-medium text-sm text-white capitalize">{wl.replace('_', ' ')}</span>
+                        <span className="text-[10px] text-gray-500 ml-2">{objectCount || '?'} objects</span>
+                      </div>
+                      <span className={`text-xs font-medium ${
+                        status === 'done' ? 'text-green-400' : status === 'running' ? 'text-blue-400' : status === 'failed' ? 'text-red-400' : 'text-gray-500'
+                      }`}>
+                        {status === 'done' ? 'Encrypted ✓' : status === 'running' ? 'Reading → Compressing → Encrypting...' : status === 'failed' ? 'Failed' : 'Queued'}
+                      </span>
+                    </div>
+                    {status === 'running' && (
+                      <div className="mt-2 text-[10px] text-gray-500 ml-8">
+                        Reading via Graph API → zstd compress → SHA-256 hash → AES-256-GCM encrypt → Store
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
 
-          <button
-            onClick={() => setStep(5)}
-            className="mt-4 w-full text-sm text-gray-400 hover:text-gray-600 text-center"
-          >
-            Skip — I'll run it later
-          </button>
+          {/* Backup complete summary */}
+          {backupStatus === 'complete' && (
+            <div className="space-y-4">
+              <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-center">
+                <CheckCircle className="w-8 h-8 text-green-400 mx-auto mb-2" />
+                <div className="text-lg font-bold text-white">{totalObjects} Objects Protected</div>
+                <div className="text-xs text-green-300 mt-1">Encrypted with AES-256-GCM • Unique key per snapshot • Point-in-time restore ready</div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {Object.entries(backupProgress).filter(([, s]) => s === 'done').map(([wl]) => {
+                  const count = wl === 'exchange' ? disc?.mailboxes : wl === 'onedrive' ? disc?.onedrives : wl === 'sharepoint' ? disc?.sites : wl === 'teams' ? disc?.teams : 1;
+                  return (
+                    <div key={wl} className="bg-gray-800 rounded-lg p-3 text-center border border-gray-700">
+                      <div className="text-sm font-bold text-white">{count || '?'}</div>
+                      <div className="text-[9px] text-gray-500 capitalize">{wl.replace('_', ' ')} backed up</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="bg-gray-800/50 rounded-xl p-3 text-center text-xs text-gray-400">
+                Next: See how Shieldio builds a recovery plan from this data — including who gets restored first.
+              </div>
+              <button onClick={() => setStep(5)} className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-500 flex items-center justify-center gap-2">
+                See Recovery Playbook <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {backupStatus !== 'complete' && (
+            <button onClick={() => setStep(5)} className="mt-4 w-full text-sm text-gray-500 hover:text-gray-300 text-center">
+              Skip — I'll run it later
+            </button>
+          )}
         </div>
       )}
 

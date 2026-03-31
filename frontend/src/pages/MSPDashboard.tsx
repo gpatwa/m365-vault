@@ -3,8 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useTenantContext } from '../contexts/TenantContext';
 import ComplianceReport from '../components/ComplianceReport';
+import OffboardWorkflow from '../components/OffboardWorkflow';
 import {
-  Shield, AlertTriangle, CheckCircle, HardDrive, FileText,
+  Shield, AlertTriangle, CheckCircle, HardDrive, FileText, LogOut,
   Users, Server, Activity, ChevronRight, Search,
 } from 'lucide-react';
 import { api } from '../api/client';
@@ -84,6 +85,7 @@ export default function MSPDashboard() {
   const { setTenant } = useTenantContext();
   const [search, setSearch] = useState('');
   const [complianceTenant, setComplianceTenant] = useState<{ id: number; name: string } | null>(null);
+  const [offboardTenant, setOffboardTenant] = useState<{ id: number; name: string } | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['msp-overview'],
@@ -213,6 +215,15 @@ export default function MSPDashboard() {
               >
                 <FileText className="w-3.5 h-3.5 text-gray-400 hover:text-white" />
               </button>
+              {tenant.status === 'active' && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setOffboardTenant({ id: tenant.id, name: tenant.name }); }}
+                  className="p-1.5 bg-gray-700 rounded-lg hover:bg-red-600 transition-colors"
+                  title="Offboard Tenant"
+                >
+                  <LogOut className="w-3.5 h-3.5 text-gray-400 hover:text-white" />
+                </button>
+              )}
               <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-gray-400 transition-colors" />
             </div>
           </button>
@@ -224,6 +235,16 @@ export default function MSPDashboard() {
           </div>
         )}
       </div>
+
+      {/* Offboard Workflow Modal */}
+      {offboardTenant && (
+        <OffboardWorkflow
+          tenantId={offboardTenant.id}
+          tenantName={offboardTenant.name}
+          onClose={() => setOffboardTenant(null)}
+          onComplete={() => { setOffboardTenant(null); /* refetch overview */ }}
+        />
+      )}
 
       {/* Compliance Report Modal */}
       {complianceTenant && (

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Mail, HardDrive, Globe, Shield, ShieldCheck, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search, RotateCcw, BarChart3, Gauge, ChevronDown } from 'lucide-react';
+import { LayoutDashboard, Mail, HardDrive, Globe, Shield, ShieldCheck, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search, RotateCcw, BarChart3, Gauge, ChevronDown, Menu, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useOnboarding } from '../contexts/OnboardingContext';
 import CommandPalette from './CommandPalette';
@@ -76,9 +76,13 @@ export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [commandOpen, setCommandOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [showTour, setShowTour] = useState(
     !localStorage.getItem('shieldio_tour_completed')
   );
+
+  // Close mobile sidebar on route change
+  useEffect(() => { setMobileOpen(false); }, [location.pathname]);
 
   // Progressive sidebar based on onboarding state
   let onboarding: any = null;
@@ -139,10 +143,9 @@ export default function Layout() {
     setCollapsed(prev => ({ ...prev, [label]: !prev[label] }));
   };
 
-  return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <aside className="w-56 bg-gray-900 text-white flex flex-col">
+  // Sidebar content (shared between desktop and mobile)
+  const sidebarContent = (
+    <>
         <div className="px-4 py-3 border-b border-gray-700">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -218,11 +221,48 @@ export default function Layout() {
             Sign Out
           </button>
         </div>
+    </>
+  );
+
+  return (
+    <div className="flex h-screen bg-gray-50">
+      {/* Mobile header — visible on small screens only */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-gray-900 border-b border-gray-700 px-4 py-3 flex items-center justify-between">
+        <button onClick={() => setMobileOpen(true)} className="p-1 text-gray-400 hover:text-white">
+          <Menu className="w-6 h-6" />
+        </button>
+        <div className="flex items-center gap-2">
+          <Shield className="w-5 h-5 text-blue-400" />
+          <span className="text-sm font-bold text-white">Shieldio</span>
+        </div>
+        <button onClick={() => setCommandOpen(true)} className="p-1 text-gray-400 hover:text-white">
+          <Search className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* Mobile sidebar overlay */}
+      {mobileOpen && (
+        <div className="lg:hidden fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
+          <aside className="relative w-72 h-full bg-gray-900 text-white flex flex-col shadow-xl">
+            <div className="absolute top-3 right-3">
+              <button onClick={() => setMobileOpen(false)} className="p-1 text-gray-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            {sidebarContent}
+          </aside>
+        </div>
+      )}
+
+      {/* Desktop sidebar — hidden on mobile */}
+      <aside className="hidden lg:flex w-56 bg-gray-900 text-white flex-col">
+        {sidebarContent}
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto">
-        <div className="p-6">
+      <main className="flex-1 overflow-auto pt-14 lg:pt-0">
+        <div className="p-4 sm:p-6">
           <Outlet />
         </div>
       </main>

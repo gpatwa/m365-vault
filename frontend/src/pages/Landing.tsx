@@ -109,7 +109,7 @@ function CyberRecoveryStory() {
   return (
     <div ref={ref} className="max-w-5xl mx-auto">
       {/* Phase selector — timeline bar */}
-      <div className="flex items-center justify-between mb-8 relative">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-8 relative">
         {/* Timeline line */}
         <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-800 rounded">
           <div
@@ -281,7 +281,7 @@ export default function Landing() {
           </div>
 
           {/* Headline */}
-          <h1 className={`text-4xl md:text-6xl font-extrabold text-gray-900 leading-[1.1] tracking-tight transition-all duration-700 delay-200 ${heroReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
+          <h1 className={`text-3xl md:text-5xl font-extrabold text-gray-900 leading-[1.1] tracking-tight transition-all duration-700 delay-200 ${heroReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
             Your emails. Your files.{' '}
             <br className="hidden md:block" />
             <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
@@ -354,8 +354,8 @@ export default function Landing() {
             </div>
           </FadeUp>
           <FadeUp delay={200}>
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <table className="w-full text-sm">
+            <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
+              <table className="w-full text-sm min-w-[480px]">
                 <thead>
                   <tr className="border-b bg-gray-50">
                     <th className="text-left px-5 py-3 font-medium text-gray-600">Capability</th>
@@ -492,8 +492,8 @@ export default function Landing() {
             </div>
           </FadeUp>
           <FadeUp delay={200}>
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <table className="w-full text-sm">
+            <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
+              <table className="w-full text-sm min-w-[480px]">
                 <thead>
                   <tr className="border-b bg-gray-50">
                     <th className="text-left px-5 py-3 font-medium text-gray-600">Feature</th>
@@ -531,7 +531,7 @@ export default function Landing() {
               <p className="text-gray-500 mt-2">No per-GB charges. No surprise overages. Intelligence included free.</p>
             </div>
           </FadeUp>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
             {PRICING.map((tier, i) => (
               <FadeUp key={tier.name} delay={i * 100}>
                 <div className={`rounded-xl p-6 ${tier.primary ? 'bg-blue-600 text-white ring-2 ring-blue-600 ring-offset-2' : 'bg-white border border-gray-200'}`}>
@@ -567,7 +567,7 @@ export default function Landing() {
           <FadeUp>
             <h2 className="text-2xl font-bold mb-3">See it live with your data in 10 minutes</h2>
             <p className="text-gray-400 text-sm mb-6">Connect your M365 tenant. Watch Shieldio discover your org, score criticality, and build a recovery plan — in real time.</p>
-            <div className="flex items-center justify-center gap-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link to="/login" className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all hover:shadow-lg hover:shadow-blue-900 flex items-center gap-2">
                 Start Free <ArrowRight className="w-4 h-4" />
               </Link>

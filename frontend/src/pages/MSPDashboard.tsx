@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useTenantContext } from '../contexts/TenantContext';
+import ComplianceReport from '../components/ComplianceReport';
 import {
-  Shield, AlertTriangle, CheckCircle, HardDrive,
+  Shield, AlertTriangle, CheckCircle, HardDrive, FileText,
   Users, Server, Activity, ChevronRight, Search,
 } from 'lucide-react';
 import { api } from '../api/client';
@@ -82,6 +83,7 @@ export default function MSPDashboard() {
   const navigate = useNavigate();
   const { setTenant } = useTenantContext();
   const [search, setSearch] = useState('');
+  const [complianceTenant, setComplianceTenant] = useState<{ id: number; name: string } | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['msp-overview'],
@@ -204,6 +206,13 @@ export default function MSPDashboard() {
                   <span className="text-xs text-green-400 font-medium">OK</span>
                 </div>
               )}
+              <button
+                onClick={(e) => { e.stopPropagation(); setComplianceTenant({ id: tenant.id, name: tenant.name }); }}
+                className="p-1.5 bg-gray-700 rounded-lg hover:bg-blue-600 transition-colors"
+                title="Compliance Report"
+              >
+                <FileText className="w-3.5 h-3.5 text-gray-400 hover:text-white" />
+              </button>
               <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-gray-400 transition-colors" />
             </div>
           </button>
@@ -215,6 +224,15 @@ export default function MSPDashboard() {
           </div>
         )}
       </div>
+
+      {/* Compliance Report Modal */}
+      {complianceTenant && (
+        <ComplianceReport
+          tenantId={complianceTenant.id}
+          tenantName={complianceTenant.name}
+          onClose={() => setComplianceTenant(null)}
+        />
+      )}
     </div>
   );
 }

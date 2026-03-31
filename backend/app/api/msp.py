@@ -19,6 +19,7 @@ from app.models.backup_job import BackupJob, JobStatus
 from app.models.snapshot import Snapshot, SnapshotStatus
 from app.models.msp_branding import MSPBranding
 from app.models.billing import BillingRecord
+from app.models.sla_policy import SLAPolicy
 from app.models.user import User
 from app.services.auth import require_msp_permission, get_current_user
 
@@ -527,4 +528,177 @@ async def parse_bulk_csv(
         "invalid": len(errors),
         "entries": entries,
         "errors": errors,
+    }
+
+
+# ── Compliance Reports ────────────────────────────────────────
+
+REPORT_TYPES = {
+    "hipaa": {
+        "title": "HIPAA Compliance Evidence Report",
+        "framework": "Health Insurance Portability and Accountability Act",
+        "safeguards": [
+            {"id": "164.312(a)(1)", "name": "Access Control", "control": "RBAC with Admin/Operator/Viewer roles, JWT authentication"},
+            {"id": "164.312(a)(2)(iv)", "name": "Encryption", "control": "AES-256-GCM envelope encryption, per-snapshot DEK"},
+            {"id": "164.312(b)", "name": "Audit Controls", "control": "Append-only audit log with user, action, timestamp, IP"},
+            {"id": "164.312(c)(1)", "name": "Integrity", "control": "SHA-256 content hashing, backup validation"},
+            {"id": "164.312(d)", "name": "Authentication", "control": "bcrypt password hashing, SSO/OIDC support"},
+            {"id": "164.312(e)(1)", "name": "Transmission Security", "control": "TLS 1.2+ for all API and Graph communication"},
+        ],
+    },
+    "soc2": {
+        "title": "SOC 2 Type II Compliance Evidence Report",
+        "framework": "AICPA Trust Services Criteria",
+        "safeguards": [
+            {"id": "CC6.1", "name": "Logical Access", "control": "JWT + SSO/OIDC, RBAC, inactive user blocking"},
+            {"id": "CC6.3", "name": "Authorization", "control": "require_role() on every endpoint, 3 role levels"},
+            {"id": "CC6.6", "name": "Encryption", "control": "AES-256-GCM at rest, TLS 1.2+ in transit"},
+            {"id": "CC7.2", "name": "Monitoring", "control": "Anomaly detection, health scoring, circuit breaker"},
+            {"id": "CC8.1", "name": "Change Management", "control": "Git version control, CI/CD pipeline, Terraform IaC"},
+            {"id": "A1.2", "name": "Backup Recovery", "control": "SLA-driven scheduling, retry engine, restore verification"},
+        ],
+    },
+    "gdpr": {
+        "title": "GDPR Compliance Evidence Report",
+        "framework": "General Data Protection Regulation (EU)",
+        "safeguards": [
+            {"id": "Art. 5(1)(f)", "name": "Integrity & Confidentiality", "control": "AES-256-GCM, per-tenant key isolation"},
+            {"id": "Art. 17", "name": "Right to Erasure", "control": "Tenant purge, cascade data deletion"},
+            {"id": "Art. 25", "name": "Data Protection by Design", "control": "Per-snapshot DEK, RBAC, audit logging from day 1"},
+            {"id": "Art. 30", "name": "Processing Records", "control": "Audit log with user, action, timestamp, IP"},
+            {"id": "Art. 32", "name": "Security of Processing", "control": "Encryption, access control, backup validation, resilience"},
+            {"id": "Art. 33", "name": "Breach Notification", "control": "Anomaly detection alerts, structured incident logging"},
+        ],
+    },
+    "dora": {
+        "title": "DORA Compliance Evidence Report",
+        "framework": "Digital Operational Resilience Act (EU Financial Services)",
+        "safeguards": [
+            {"id": "Art. 6", "name": "ICT Risk Management", "control": "Smart Engine risk assessment, anomaly detection"},
+            {"id": "Art. 9", "name": "Protection & Prevention", "control": "WORM storage, encryption, pre-flight validation"},
+            {"id": "Art. 10", "name": "Detection", "control": "Anomaly detection, circuit breaker, health monitoring"},
+            {"id": "Art. 11", "name": "Response & Recovery", "control": "Self-healing retry, mass recovery, MVB plans"},
+            {"id": "Art. 12", "name": "Backup Policies", "control": "Configurable SLA policies, retention, WORM"},
+            {"id": "Art. 13", "name": "Learning & Evolving", "control": "Health baselines, trend analysis, audit trail"},
+        ],
+    },
+}
+
+
+@router.get("/compliance-report/{tenant_id}")
+async def get_compliance_report(
+    tenant_id: int,
+    report_type: str = Query("hipaa", description="Report type: hipaa, soc2, gdpr, dora"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_msp_permission),
+):
+    """Generate compliance evidence report for a tenant.
+
+    Returns structured JSON with backup coverage, encryption status,
+    audit summary, SLA compliance, and framework-specific control mapping.
+    """
+    tenant = await db.get(Tenant, tenant_id)
+    if not tenant:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Tenant not found")
+
+    report_def = REPORT_TYPES.get(report_type, REPORT_TYPES["hipaa"])
+
+    # Backup coverage
+    total_objects = (await db.execute(
+        select(func.count(ProtectedObject.id)).where(ProtectedObject.tenant_id == tenant_id)
+    )).scalar() or 0
+
+    protected_objects = (await db.execute(
+        select(func.count(ProtectedObject.id)).where(
+            ProtectedObject.tenant_id == tenant_id,
+            ProtectedObject.status == ProtectionStatus.PROTECTED,
+        )
+    )).scalar() or 0
+
+    coverage_pct = round(protected_objects / total_objects * 100, 1) if total_objects > 0 else 0
+
+    # Last backup per workload
+    workload_status = []
+    for wt in WorkloadType:
+        count = (await db.execute(
+            select(func.count(ProtectedObject.id)).where(
+                ProtectedObject.tenant_id == tenant_id,
+                ProtectedObject.workload_type == wt,
+                ProtectedObject.status == ProtectionStatus.PROTECTED,
+            )
+        )).scalar() or 0
+
+        last_backup = (await db.execute(
+            select(func.max(ProtectedObject.last_backup_at)).where(
+                ProtectedObject.tenant_id == tenant_id,
+                ProtectedObject.workload_type == wt,
+            )
+        )).scalar()
+
+        if count > 0:
+            workload_status.append({
+                "workload": wt.value,
+                "protected_objects": count,
+                "last_backup": last_backup.isoformat() if last_backup else None,
+            })
+
+    # SLA compliance
+    sla_result = await db.execute(
+        select(SLAPolicy).limit(5)
+    )
+    policies = sla_result.scalars().all()
+    sla_info = [
+        {"name": p.name, "frequency_hours": p.backup_frequency_hours,
+         "retention_days": p.retention_days, "worm_enabled": getattr(p, 'worm_enabled', False)}
+        for p in policies
+    ]
+
+    # Backup job stats (last 90 days)
+    since_90d = datetime.utcnow() - timedelta(days=90)
+    total_jobs = (await db.execute(
+        select(func.count(BackupJob.id)).where(
+            BackupJob.tenant_id == tenant_id, BackupJob.created_at >= since_90d,
+        )
+    )).scalar() or 0
+
+    successful_jobs = (await db.execute(
+        select(func.count(BackupJob.id)).where(
+            BackupJob.tenant_id == tenant_id, BackupJob.created_at >= since_90d,
+            BackupJob.status == JobStatus.COMPLETED,
+        )
+    )).scalar() or 0
+
+    success_rate = round(successful_jobs / total_jobs * 100, 1) if total_jobs > 0 else 0
+
+    return {
+        "report_type": report_type,
+        "title": report_def["title"],
+        "framework": report_def["framework"],
+        "generated_at": datetime.utcnow().isoformat(),
+        "tenant": {
+            "name": tenant.name,
+            "ms_tenant_id": tenant.ms_tenant_id,
+            "status": tenant.status.value,
+        },
+        "backup_coverage": {
+            "total_objects": total_objects,
+            "protected_objects": protected_objects,
+            "coverage_pct": coverage_pct,
+            "workloads": workload_status,
+        },
+        "encryption": {
+            "algorithm": "AES-256-GCM",
+            "key_management": "Per-snapshot DEK wrapped by master KEK",
+            "at_rest": "All backup data encrypted before storage",
+            "in_transit": "TLS 1.2+ for all API and Graph API communication",
+        },
+        "backup_reliability": {
+            "period": "Last 90 days",
+            "total_jobs": total_jobs,
+            "successful_jobs": successful_jobs,
+            "success_rate": success_rate,
+        },
+        "sla_policies": sla_info,
+        "controls": report_def["safeguards"],
     }

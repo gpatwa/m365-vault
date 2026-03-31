@@ -40,6 +40,7 @@ import OrgContext from './pages/OrgContext';
 import Onboard, { OnboardCallback, DemoOnboard } from './pages/Onboard';
 import MSPDashboard from './pages/MSPDashboard';
 import MSPBrandingPage from './pages/MSPBranding';
+import BillingPortal from './pages/BillingPortal';
 
 const queryClient = new QueryClient();
 
@@ -120,6 +121,7 @@ function AppRoutes() {
         <Route path="settings" element={<Tenants />} />
         <Route path="msp" element={<MSPDashboard />} />
         <Route path="msp/branding" element={<MSPBrandingPage />} />
+        <Route path="msp/billing" element={<BillingPortal />} />
         <Route path="audit" element={<AuditLog />} />
         <Route path="failed-items" element={<FailedItems />} />
         <Route path="alerts" element={<AlertSettings />} />

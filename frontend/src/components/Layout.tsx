@@ -83,6 +83,7 @@ const navGroups: NavGroup[] = [
       { path: '/audit', label: 'Audit Log', icon: FileText },
       { path: '/security', label: 'Security', icon: ShieldAlert },
       { path: '/performance', label: 'Performance', icon: Activity },
+      { path: '/features', label: 'Feature Config', icon: Shield, roles: ['admin'] },
     ],
   },
 ];

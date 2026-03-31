@@ -95,6 +95,11 @@ export default function MSPDemo() {
   const tenants = overview?.tenants || [];
   const summary = overview?.summary || {};
 
+  // Count-up animations (hooks must be at top level)
+  const animTenants = useCountUp(summary.total_tenants || 0, scene === 0 && seeded);
+  const animUsers = useCountUp(summary.total_protected_users || 0, scene === 0 && seeded);
+  const animHealth = useCountUp(summary.overall_health || 0, scene === 0 && seeded);
+
   // Auto-engage scenes with no interaction required
   useEffect(() => {
     if (scene === 0 && seeded && !engaged[0]) {
@@ -120,9 +125,9 @@ export default function MSPDemo() {
       ) : (
         <>
           <div className="grid grid-cols-4 gap-4">
-            <StatBox label="Client Tenants" value={useCountUp(summary.total_tenants || 0, scene === 0)} color="text-blue-400" />
-            <StatBox label="Protected Users" value={useCountUp(summary.total_protected_users || 0, scene === 0)} color="text-green-400" />
-            <StatBox label="Overall Health" value={useCountUp(summary.overall_health || 0, scene === 0)} color="text-emerald-400" suffix="/100" />
+            <StatBox label="Client Tenants" value={animTenants} color="text-blue-400" />
+            <StatBox label="Protected Users" value={animUsers} color="text-green-400" />
+            <StatBox label="Overall Health" value={animHealth} color="text-emerald-400" suffix="/100" />
             <StatBox label="Active Alerts" value={summary.total_alerts || 0} color={summary.total_alerts > 0 ? 'text-amber-400' : 'text-green-400'} />
           </div>
           <div className="space-y-2">

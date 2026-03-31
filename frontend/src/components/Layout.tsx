@@ -258,7 +258,7 @@ export default function Layout() {
   );
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-950">
       {/* Mobile header — visible on small screens only */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-gray-900 border-b border-gray-700 px-4 py-3 flex items-center justify-between">
         <button onClick={() => setMobileOpen(true)} className="p-1 text-gray-400 hover:text-white">
@@ -294,7 +294,7 @@ export default function Layout() {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto pt-14 lg:pt-0">
+      <main className="flex-1 overflow-auto pt-14 lg:pt-0 bg-gray-950 text-white">
         <div className="p-4 sm:p-6">
           <Outlet />
         </div>

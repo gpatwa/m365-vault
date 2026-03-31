@@ -237,18 +237,18 @@ export default function Settings() {
 
           return (
             <div key={t.id} className={`bg-white rounded-xl border shadow-sm p-5 ${isInactive ? 'opacity-75' : ''}`}>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-lg ${isInactive ? 'bg-gray-100' : 'bg-blue-50'}`}>
                     <Building2 className={`w-6 h-6 ${isInactive ? 'text-gray-400' : 'text-blue-600'}`} />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h3 className="font-semibold">{t.name}</h3>
-                    <p className="text-sm text-gray-500 font-mono">{t.ms_tenant_id}</p>
+                    <p className="text-sm text-gray-500 font-mono truncate">{t.ms_tenant_id}</p>
                   </div>
                   <StatusBadge status={t.status} />
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   {/* Common actions */}
                   <button onClick={() => testMutation.mutate(t.id)} className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 flex items-center gap-1">
                     <Wifi className="w-4 h-4" /> Test
@@ -282,7 +282,7 @@ export default function Settings() {
                   )}
                 </div>
               </div>
-              <div className="grid grid-cols-6 gap-3 mt-4 text-sm">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-4 text-sm">
                 <div className="bg-gray-50 rounded-lg p-3">
                   <p className="text-gray-500 text-xs">Mailboxes</p>
                   <p className="text-lg font-bold">{t.total_mailboxes}</p>
@@ -341,6 +341,7 @@ export default function Settings() {
                         </a>
                       )}
                     </div>
+                    <div className="overflow-x-auto">
                     <table className="w-full text-xs">
                       <thead className="bg-gray-50">
                         <tr>
@@ -398,6 +399,7 @@ export default function Settings() {
                         </tr>
                       </tfoot>
                     </table>
+                    </div>
 
                     {/* Instructions for fixing permissions */}
                     {!permsData.all_backup_ready && (

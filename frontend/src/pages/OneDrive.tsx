@@ -81,6 +81,7 @@ export default function OneDrive() {
         <button onClick={() => setSelectedSnapshot(null)} className="text-blue-600 hover:underline text-sm mb-4">&larr; Back to {selectedAccount?.display_name || 'snapshots'}</button>
         <h2 className="text-xl font-bold mb-4">Files — {selectedSnapshot.started_at?.slice(0, 16)}</h2>
         <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
@@ -107,6 +108,7 @@ export default function OneDrive() {
               {!browseData?.items?.length && <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-400">No items</td></tr>}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
     );
@@ -118,12 +120,12 @@ export default function OneDrive() {
       <div>
         <Breadcrumb items={[{ label: getActivePlatformLabel(), path: '/' }, { label: 'OneDrive', path: '/onedrive' }, { label: selectedAccount?.display_name || 'Account' }]} />
         <button onClick={() => setSelectedAccount(null)} className="text-blue-600 hover:underline text-sm mb-4">&larr; Back to OneDrive</button>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-xl font-bold">{selectedAccount.display_name}</h2>
-            <p className="text-gray-500">{selectedAccount.email}</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div className="min-w-0">
+            <h2 className="text-xl font-bold truncate">{selectedAccount.display_name}</h2>
+            <p className="text-gray-500 truncate">{selectedAccount.email}</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-shrink-0">
             <button
               onClick={() => backupMutation.mutate(selectedAccount.id)}
               disabled={backupMutation.isPending}
@@ -148,6 +150,7 @@ export default function OneDrive() {
         )}
         <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
           <div className="p-4 border-b bg-gray-50"><h3 className="font-semibold">Snapshots</h3></div>
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
@@ -177,6 +180,7 @@ export default function OneDrive() {
               {!snapshots?.length && <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">No snapshots</td></tr>}
             </tbody>
           </table>
+          </div>
         </div>
 
         {showRestore && snapshots && snapshots.length > 0 && (

@@ -150,6 +150,7 @@ export default function Exchange() {
           Browse Snapshot — {selectedSnapshot.started_at?.slice(0, 16)}
         </h2>
         <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
@@ -175,6 +176,7 @@ export default function Exchange() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
     );
@@ -192,12 +194,12 @@ export default function Exchange() {
         <button onClick={() => setSelectedMailbox(null)} className="text-blue-600 hover:underline text-sm mb-4 flex items-center gap-1">
           &larr; Back to Exchange
         </button>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-xl font-bold">{selectedMailbox.display_name}</h2>
-            <p className="text-gray-500">{selectedMailbox.email}</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div className="min-w-0">
+            <h2 className="text-xl font-bold truncate">{selectedMailbox.display_name}</h2>
+            <p className="text-gray-500 truncate">{selectedMailbox.email}</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-shrink-0">
             <button
               onClick={() => backupMutation.mutate(selectedMailbox.id)}
               disabled={backupMutation.isPending}
@@ -224,6 +226,7 @@ export default function Exchange() {
           <div className="p-4 border-b bg-gray-50">
             <h3 className="font-semibold">Snapshots ({snapshots?.length || 0})</h3>
           </div>
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
@@ -258,6 +261,7 @@ export default function Exchange() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
         {/* Restore Dialog */}

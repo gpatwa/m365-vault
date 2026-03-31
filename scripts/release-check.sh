@@ -114,9 +114,8 @@ if [ -d backend/tests ]; then
   # Remove stale test DB
   rm -f test.db
 
-  # Run tests with coverage
-  TEST_OUTPUT=$(python3 -m pytest tests/test_auth.py tests/test_health.py tests/test_api.py tests/test_entra_id.py tests/test_teams.py \
-    tests/test_base_worker.py tests/test_circuit_breaker.py tests/test_scheduler_dispatcher.py \
+  # Run ALL tests with coverage (auto-discovers new test files)
+  TEST_OUTPUT=$(python3 -m pytest tests/ \
     --tb=short -q \
     --cov=app --cov-report=term-missing \
     --cov-fail-under=$COVERAGE_THRESHOLD \
@@ -244,6 +243,29 @@ if curl -s http://localhost:8000/health >/dev/null 2>&1; then
   fi
 else
   skip "API smoke test (backend not running)"
+fi
+
+# ── Gate 8: Playwright E2E Tests (if stack running) ──
+gate 8 "Browser E2E Tests (Playwright)"
+if curl -s http://localhost:5173/ >/dev/null 2>&1; then
+  if [ -f tests/e2e/package.json ]; then
+    cd tests/e2e
+    E2E_OUTPUT=$(npx playwright test --reporter=line 2>&1)
+    E2E_EXIT=$?
+    E2E_SUMMARY=$(echo "$E2E_OUTPUT" | grep -E "passed|failed" | tail -1)
+
+    if [ $E2E_EXIT -eq 0 ]; then
+      pass "Playwright E2E: $E2E_SUMMARY"
+    else
+      echo "$E2E_OUTPUT" | tail -15
+      fail "Playwright E2E tests failed: $E2E_SUMMARY"
+    fi
+    cd ../..
+  else
+    skip "Playwright (tests/e2e/package.json not found)"
+  fi
+else
+  skip "Playwright E2E (frontend not running on localhost:5173)"
 fi
 
 # ── Summary ──

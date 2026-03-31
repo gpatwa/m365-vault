@@ -223,3 +223,67 @@ test.describe('API Headers', () => {
     expect(resp.headers()['content-type']).toContain('application/json');
   });
 });
+
+// ═══════════════════════════════════════════════════════
+// 10. MSP Dashboard
+// ═══════════════════════════════════════════════════════
+
+test.describe('MSP Dashboard', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
+  test('MSP page loads with title', async ({ page }) => {
+    await page.goto('/msp');
+    await expect(page.getByText('MSP Dashboard')).toBeVisible({ timeout: 5000 });
+  });
+
+  test('MSP page shows summary stats', async ({ page }) => {
+    await page.goto('/msp');
+    await expect(page.getByText('Total Tenants')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText('Protected Users')).toBeVisible();
+    await expect(page.getByText('Total Storage')).toBeVisible();
+    await expect(page.getByText('Overall Health')).toBeVisible();
+  });
+
+  test('MSP page shows tenant cards', async ({ page }) => {
+    await page.goto('/msp');
+    // Wait for data to load — should show at least the tenant name or "No tenants"
+    const hasTenants = page.locator('[class*="rounded-xl"]').first();
+    await expect(hasTenants).toBeVisible({ timeout: 10000 });
+  });
+
+  test('MSP page has search functionality', async ({ page }) => {
+    await page.goto('/msp');
+    const searchInput = page.getByPlaceholder('Search tenants...');
+    await expect(searchInput).toBeVisible({ timeout: 5000 });
+    await searchInput.fill('nonexistent');
+    await expect(page.getByText('No tenants matching')).toBeVisible({ timeout: 3000 });
+  });
+
+  test('MSP API returns correct structure', async ({ request }) => {
+    // Login first
+    const loginResp = await request.post('http://localhost:8000/api/auth/login', {
+      form: { username: 'admin', password: 'admin123' },
+    });
+    const token = (await loginResp.json()).access_token;
+
+    const resp = await request.get('http://localhost:8000/api/msp/overview', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(resp.status()).toBe(200);
+
+    const data = await resp.json();
+    expect(data).toHaveProperty('summary');
+    expect(data).toHaveProperty('tenants');
+    expect(data.summary).toHaveProperty('total_tenants');
+    expect(data.summary).toHaveProperty('total_protected_users');
+    expect(data.summary).toHaveProperty('overall_health');
+    expect(Array.isArray(data.tenants)).toBeTruthy();
+  });
+
+  test('MSP API requires authentication', async ({ request }) => {
+    const resp = await request.get('http://localhost:8000/api/msp/overview');
+    expect(resp.status()).toBe(401);
+  });
+});

@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { OnboardingProvider } from './contexts/OnboardingContext';
 import { TenantProvider } from './contexts/TenantContext';
+import { BrandingProvider } from './contexts/BrandingContext';
 import { ToastProvider } from './components/Toast';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { api } from './api/client';
@@ -38,6 +39,7 @@ import Performance from './pages/Performance';
 import OrgContext from './pages/OrgContext';
 import Onboard, { OnboardCallback, DemoOnboard } from './pages/Onboard';
 import MSPDashboard from './pages/MSPDashboard';
+import MSPBrandingPage from './pages/MSPBranding';
 
 const queryClient = new QueryClient();
 
@@ -117,6 +119,7 @@ function AppRoutes() {
         <Route path="tenants" element={<Tenants />} />
         <Route path="settings" element={<Tenants />} />
         <Route path="msp" element={<MSPDashboard />} />
+        <Route path="msp/branding" element={<MSPBrandingPage />} />
         <Route path="audit" element={<AuditLog />} />
         <Route path="failed-items" element={<FailedItems />} />
         <Route path="alerts" element={<AlertSettings />} />
@@ -137,6 +140,7 @@ function AppRoutes() {
 
 export default function App() {
   return (
+    <BrandingProvider>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <OnboardingProvider>
@@ -152,5 +156,6 @@ export default function App() {
         </OnboardingProvider>
       </AuthProvider>
     </QueryClientProvider>
+    </BrandingProvider>
   );
 }

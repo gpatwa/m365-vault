@@ -1,12 +1,14 @@
-"""MSP Multi-Tenant Dashboard API — overview of all client tenants for managed service providers.
+"""MSP Multi-Tenant Dashboard API — overview, branding, billing, onboarding.
 
 Provides a single-pane-of-glass view across all tenants with per-tenant
 health scores, protection status, backup activity, and alerts.
 """
 import logging
 from datetime import datetime, timedelta
+from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,8 +17,9 @@ from app.models.tenant import Tenant, TenantStatus
 from app.models.protected_object import ProtectedObject, ProtectionStatus, WorkloadType
 from app.models.backup_job import BackupJob, JobStatus
 from app.models.snapshot import Snapshot, SnapshotStatus
+from app.models.msp_branding import MSPBranding
 from app.models.user import User
-from app.services.auth import require_msp_permission
+from app.services.auth import require_msp_permission, get_current_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/msp", tags=["MSP Dashboard"])
@@ -162,4 +165,85 @@ async def msp_overview(
             "overall_health": round(sum(t["health_score"] for t in tenant_summaries) / len(tenant_summaries)) if tenant_summaries else 0,
         },
         "tenants": tenant_summaries,
+    }
+
+
+# ── Branding ──────────────────────────────────────────────────
+
+
+BRANDING_DEFAULTS = {
+    "company_name": "Shieldio",
+    "tagline": "SaaS Data Protection",
+    "logo_url": None,
+    "favicon_url": None,
+    "primary_color": "#3b82f6",
+    "secondary_color": "#1e293b",
+}
+
+
+@router.get("/branding")
+async def get_branding(db: AsyncSession = Depends(get_db)):
+    """Get MSP branding config. No auth required (login page needs branding too)."""
+    result = await db.execute(select(MSPBranding).limit(1))
+    branding = result.scalar_one_or_none()
+
+    if not branding:
+        return BRANDING_DEFAULTS
+
+    return {
+        "company_name": branding.company_name,
+        "tagline": branding.tagline,
+        "logo_url": branding.logo_url,
+        "favicon_url": branding.favicon_url,
+        "primary_color": branding.primary_color,
+        "secondary_color": branding.secondary_color,
+    }
+
+
+class BrandingUpdate(BaseModel):
+    company_name: Optional[str] = None
+    tagline: Optional[str] = None
+    logo_url: Optional[str] = None
+    favicon_url: Optional[str] = None
+    primary_color: Optional[str] = None
+    secondary_color: Optional[str] = None
+
+
+@router.put("/branding")
+async def update_branding(
+    req: BrandingUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_msp_permission),
+):
+    """Update MSP branding config. Upserts (creates if not exists)."""
+    result = await db.execute(select(MSPBranding).limit(1))
+    branding = result.scalar_one_or_none()
+
+    if not branding:
+        branding = MSPBranding()
+        db.add(branding)
+
+    if req.company_name is not None:
+        branding.company_name = req.company_name
+    if req.tagline is not None:
+        branding.tagline = req.tagline
+    if req.logo_url is not None:
+        branding.logo_url = req.logo_url
+    if req.favicon_url is not None:
+        branding.favicon_url = req.favicon_url
+    if req.primary_color is not None:
+        branding.primary_color = req.primary_color
+    if req.secondary_color is not None:
+        branding.secondary_color = req.secondary_color
+
+    branding.updated_at = datetime.utcnow()
+    await db.commit()
+
+    return {
+        "company_name": branding.company_name,
+        "tagline": branding.tagline,
+        "logo_url": branding.logo_url,
+        "favicon_url": branding.favicon_url,
+        "primary_color": branding.primary_color,
+        "secondary_color": branding.secondary_color,
     }

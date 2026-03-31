@@ -3,6 +3,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Mail, HardDrive, Globe, Shield, ShieldCheck, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search, RotateCcw, BarChart3, Gauge, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useOnboarding } from '../contexts/OnboardingContext';
+import { useBranding } from '../contexts/BrandingContext';
 import CommandPalette from './CommandPalette';
 import ProductTour from './ProductTour';
 import FeedbackWidget from './FeedbackWidget';
@@ -95,6 +96,7 @@ export default function Layout() {
   // Get user role for role-based nav filtering
   const { user } = useAuth();
   const userRole = user?.role || 'viewer';
+  const branding = useBranding();
 
   // Progressive sidebar based on onboarding state
   let onboarding: any = null;
@@ -170,10 +172,14 @@ export default function Layout() {
         <div className="px-4 py-3 border-b border-gray-700">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Shield className="w-7 h-7 text-blue-400" />
+              {branding.logoUrl ? (
+                <img src={branding.logoUrl} alt={branding.companyName} className="w-7 h-7 rounded" />
+              ) : (
+                <Shield className="w-7 h-7 text-blue-400" />
+              )}
               <div>
-                <h1 className="text-base font-bold leading-tight">Shieldio</h1>
-                <p className="text-[10px] text-gray-500">SaaS Data Protection</p>
+                <h1 className="text-base font-bold leading-tight">{branding.companyName}</h1>
+                <p className="text-[10px] text-gray-500">{branding.tagline}</p>
               </div>
             </div>
             <button

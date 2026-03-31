@@ -791,18 +791,183 @@ async def seed_demo_data(
     }
 
 
-# ── Offboard ──────────────────────────────────────────────────
+# ── Offboard Workflow ─────────────────────────────────────────
 
-@router.post("/offboard/{tenant_id}")
-async def offboard_tenant(
+
+@router.get("/offboard/{tenant_id}/pre-check")
+async def offboard_pre_check(
     tenant_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_msp_permission),
 ):
-    """Offboard a client tenant — deactivate but preserve backups per SLA retention."""
+    """Pre-offboard checklist — data inventory, active jobs, retention timeline.
+
+    Returns everything the MSP needs to review before deactivating a client.
+    """
+    from fastapi import HTTPException
+
     tenant = await db.get(Tenant, tenant_id)
     if not tenant:
-        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Tenant not found")
+
+    now = datetime.utcnow()
+
+    # Data inventory per workload
+    workload_inventory = []
+    total_objects = 0
+    total_snapshots = 0
+    total_storage = 0
+
+    for wl in WorkloadType:
+        obj_count = (await db.execute(
+            select(func.count(ProtectedObject.id)).where(
+                ProtectedObject.tenant_id == tenant_id,
+                ProtectedObject.workload_type == wl,
+            )
+        )).scalar() or 0
+
+        if obj_count == 0:
+            continue
+
+        snap_count = (await db.execute(
+            select(func.count(Snapshot.id))
+            .join(ProtectedObject, Snapshot.protected_object_id == ProtectedObject.id)
+            .where(
+                ProtectedObject.tenant_id == tenant_id,
+                ProtectedObject.workload_type == wl,
+            )
+        )).scalar() or 0
+
+        storage = (await db.execute(
+            select(func.sum(Snapshot.size_bytes))
+            .join(ProtectedObject, Snapshot.protected_object_id == ProtectedObject.id)
+            .where(
+                ProtectedObject.tenant_id == tenant_id,
+                ProtectedObject.workload_type == wl,
+            )
+        )).scalar() or 0
+
+        last_backup = (await db.execute(
+            select(func.max(ProtectedObject.last_backup_at)).where(
+                ProtectedObject.tenant_id == tenant_id,
+                ProtectedObject.workload_type == wl,
+            )
+        )).scalar()
+
+        total_objects += obj_count
+        total_snapshots += snap_count
+        total_storage += storage
+
+        workload_inventory.append({
+            "workload": wl.value,
+            "objects": obj_count,
+            "snapshots": snap_count,
+            "storage_bytes": storage,
+            "storage_gb": round(storage / (1024 ** 3), 3),
+            "last_backup": last_backup.isoformat() if last_backup else None,
+        })
+
+    # Active/running jobs
+    active_jobs = (await db.execute(
+        select(func.count(BackupJob.id)).where(
+            BackupJob.tenant_id == tenant_id,
+            BackupJob.status.in_([JobStatus.IN_PROGRESS, JobStatus.QUEUED]),
+        )
+    )).scalar() or 0
+
+    # SLA policies and retention timeline
+    sla_result = await db.execute(
+        select(SLAPolicy).join(
+            ProtectedObject, ProtectedObject.sla_policy_id == SLAPolicy.id
+        ).where(
+            ProtectedObject.tenant_id == tenant_id,
+        ).distinct()
+    )
+    policies = sla_result.scalars().all()
+
+    retention_timeline = []
+    for p in policies:
+        obj_count = (await db.execute(
+            select(func.count(ProtectedObject.id)).where(
+                ProtectedObject.tenant_id == tenant_id,
+                ProtectedObject.sla_policy_id == p.id,
+            )
+        )).scalar() or 0
+
+        purge_date = now + timedelta(days=p.retention_days)
+        retention_timeline.append({
+            "policy_name": p.name,
+            "retention_days": p.retention_days,
+            "worm_enabled": bool(getattr(p, 'worm_enabled', 0)),
+            "objects_covered": obj_count,
+            "data_purge_date": purge_date.strftime("%Y-%m-%d"),
+            "days_until_purge": p.retention_days,
+        })
+
+    # Blockers
+    blockers = []
+    if active_jobs > 0:
+        blockers.append({
+            "type": "active_jobs",
+            "message": f"{active_jobs} backup job(s) currently running",
+            "action": "Wait for jobs to complete or cancel them before offboarding",
+        })
+
+    worm_policies = [p for p in policies if getattr(p, 'worm_enabled', 0)]
+    if worm_policies:
+        blockers.append({
+            "type": "worm_lock",
+            "message": f"{len(worm_policies)} WORM-locked SLA policy(ies) — data cannot be deleted until retention expires",
+            "action": "WORM data will be retained even after offboarding. This is by design for compliance.",
+        })
+
+    return {
+        "tenant": {
+            "id": tenant.id,
+            "name": tenant.name,
+            "status": tenant.status.value,
+            "ms_tenant_id": tenant.ms_tenant_id,
+            "created_at": tenant.created_at.isoformat() if tenant.created_at else None,
+        },
+        "data_inventory": {
+            "total_objects": total_objects,
+            "total_snapshots": total_snapshots,
+            "total_storage_bytes": total_storage,
+            "total_storage_gb": round(total_storage / (1024 ** 3), 3),
+            "workloads": workload_inventory,
+        },
+        "active_jobs": active_jobs,
+        "retention_timeline": sorted(retention_timeline, key=lambda r: r["days_until_purge"]),
+        "blockers": blockers,
+        "can_offboard": active_jobs == 0,
+        "post_offboard": {
+            "backups_accessible": True,
+            "new_backups_stopped": True,
+            "data_export_available": True,
+            "auto_purge_after_retention": True,
+            "reactivation_possible": True,
+        },
+    }
+
+
+@router.post("/offboard/{tenant_id}")
+async def offboard_tenant(
+    tenant_id: int,
+    confirm: bool = Query(False, description="Must be true to execute offboard"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_msp_permission),
+):
+    """Execute offboard — deactivate tenant, stop new backups, preserve existing data.
+
+    Requires confirm=true to prevent accidental offboarding.
+    """
+    from fastapi import HTTPException
+
+    if not confirm:
+        raise HTTPException(status_code=400, detail="Set confirm=true to execute offboard. Use GET /offboard/{id}/pre-check first.")
+
+    tenant = await db.get(Tenant, tenant_id)
+    if not tenant:
         raise HTTPException(status_code=404, detail="Tenant not found")
 
     if tenant.status == TenantStatus.INACTIVE:
@@ -813,14 +978,52 @@ async def offboard_tenant(
             "message": "Tenant is already offboarded",
         }
 
+    # Check for active jobs
+    active_jobs = (await db.execute(
+        select(func.count(BackupJob.id)).where(
+            BackupJob.tenant_id == tenant_id,
+            BackupJob.status.in_([JobStatus.IN_PROGRESS, JobStatus.QUEUED]),
+        )
+    )).scalar() or 0
+
+    if active_jobs > 0:
+        raise HTTPException(status_code=409, detail=f"Cannot offboard: {active_jobs} job(s) still running. Wait or cancel first.")
+
+    now = datetime.utcnow()
     tenant.status = TenantStatus.INACTIVE
-    tenant.updated_at = datetime.utcnow()
+    tenant.updated_at = now
     await db.commit()
+
+    # Calculate retention info
+    sla_result = await db.execute(
+        select(SLAPolicy).join(
+            ProtectedObject, ProtectedObject.sla_policy_id == SLAPolicy.id
+        ).where(ProtectedObject.tenant_id == tenant_id).distinct()
+    )
+    policies = sla_result.scalars().all()
+    max_retention = max((p.retention_days for p in policies), default=30)
+    purge_date = now + timedelta(days=max_retention)
 
     return {
         "tenant_id": tenant.id,
         "name": tenant.name,
         "status": "offboarded",
-        "deactivated_at": datetime.utcnow().isoformat(),
-        "data_retention": "Backups retained per SLA policy retention period. No data is deleted on offboard.",
+        "deactivated_at": now.isoformat(),
+        "what_happened": [
+            "Tenant status set to INACTIVE",
+            "Scheduled backups stopped — no new backups will run",
+            "Existing backup data preserved per SLA retention policies",
+            "Connector credentials retained (encrypted) for potential reactivation",
+        ],
+        "retention": {
+            "max_retention_days": max_retention,
+            "data_purge_date": purge_date.strftime("%Y-%m-%d"),
+            "data_accessible_until": purge_date.isoformat(),
+            "worm_data": "WORM-locked data retained until lock expires regardless of offboard",
+        },
+        "next_steps": [
+            "Export any data you need before the retention period ends",
+            "To reactivate this tenant, use the tenant management API",
+            f"All backup data will be eligible for purge after {purge_date.strftime('%B %d, %Y')}",
+        ],
     }

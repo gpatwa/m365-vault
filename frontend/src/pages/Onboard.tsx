@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Shield, Globe, MessageSquare, CheckCircle, XCircle, Loader2, ArrowRight, LogOut } from 'lucide-react';
+import { Shield, Globe, MessageSquare, CheckCircle, XCircle, Loader2, ArrowRight, LogOut, Lock, Shrink, Hash, Star } from 'lucide-react';
 import { api } from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -683,30 +683,93 @@ function OnboardCallbackWithTenant({ tenantId, tenantName }: { tenantId: number;
   return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>;
 }
 
+// ── Session persistence helpers ──
+const ONBOARD_STATE_KEY = 'shieldio_onboard_state';
+
+function saveOnboardState(state: any) {
+  try { sessionStorage.setItem(ONBOARD_STATE_KEY, JSON.stringify(state)); } catch {}
+}
+
+function loadOnboardState(): any | null {
+  try {
+    const raw = sessionStorage.getItem(ONBOARD_STATE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+function clearOnboardState() {
+  sessionStorage.removeItem(ONBOARD_STATE_KEY);
+}
+
 export function OnboardCallback() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const [step, setStep] = useState(0); // 0=connecting, 1=discover, 2=protect, 3=intelligence, 4=backup, 5=recovery-sim, 6=ready
-  const [simScene, setSimScene] = useState(0); // Recovery simulation scene (0-5)
+  // Restore from sessionStorage or URL step param
+  const saved = loadOnboardState();
+  const urlStep = parseInt(searchParams.get('step') || '0');
+  const initialStep = saved?.step ?? (urlStep || 0);
+
+  const [step, _setStep] = useState(initialStep);
+  const [simScene, setSimScene] = useState(saved?.simScene || 0);
   const [error, setError] = useState<string | null>(null);
-  const [resultData, setResultData] = useState<any>(null);
-  const [discoveryResults, setDiscoveryResults] = useState<any>(null);
-  const [slaPolicies, setSlaPolicies] = useState<any[]>([]);
-  const [selectedSla, setSelectedSla] = useState<number | null>(null);
-  const [backupStatus, setBackupStatus] = useState<string>('pending');
+  const [resultData, setResultData] = useState<any>(saved?.resultData || null);
+  const [discoveryResults, setDiscoveryResults] = useState<any>(saved?.discoveryResults || null);
+  const [slaPolicies, setSlaPolicies] = useState<any[]>(saved?.slaPolicies || []);
+  const [selectedSla, setSelectedSla] = useState<number | null>(saved?.selectedSla || null);
+  const [backupStatus, setBackupStatus] = useState<string>(saved?.backupStatus || 'pending');
   const [protecting, setProtecting] = useState(false);
   const [_backingUp, setBackingUp] = useState(false);
 
   // Workload toggles
-  const [availableWorkloads, setAvailableWorkloads] = useState<any[]>([]);
-  const [selectedWorkloads, setSelectedWorkloads] = useState<Set<string>>(new Set(['exchange', 'entra_id', 'sharepoint']));
+  const [availableWorkloads, setAvailableWorkloads] = useState<any[]>(saved?.availableWorkloads || []);
+  const [selectedWorkloads, setSelectedWorkloads] = useState<Set<string>>(
+    saved?.selectedWorkloads ? new Set(saved.selectedWorkloads) : new Set(['exchange', 'entra_id', 'sharepoint'])
+  );
   const [discovering, setDiscovering] = useState(false);
   const [backupWorkloads, setBackupWorkloads] = useState<Set<string>>(new Set());
-  const [backupProgress, setBackupProgress] = useState<Record<string, string>>({});
+  const [backupProgress, setBackupProgress] = useState<Record<string, string>>(saved?.backupProgress || {});
 
-  // Step 0: Process OAuth callback (or demo mode)
+  // Wrap setStep to persist state + update URL
+  const setStep = (newStep: number) => {
+    _setStep(newStep);
+    // Update URL without full navigation (allows browser back/forward)
+    const params = new URLSearchParams(searchParams);
+    params.set('step', String(newStep));
+    setSearchParams(params, { replace: false });
+  };
+
+  // Persist state on every change
   useEffect(() => {
+    saveOnboardState({
+      step, simScene, resultData, discoveryResults, slaPolicies, selectedSla,
+      backupStatus, backupProgress,
+      availableWorkloads, selectedWorkloads: Array.from(selectedWorkloads),
+    });
+  }, [step, simScene, resultData, discoveryResults, slaPolicies, selectedSla, backupStatus, backupProgress, availableWorkloads, selectedWorkloads]);
+
+  // Handle browser back/forward — sync URL step to state
+  useEffect(() => {
+    const urlStepNow = parseInt(searchParams.get('step') || '0');
+    if (urlStepNow !== step && urlStepNow >= 0 && urlStepNow <= 6) {
+      _setStep(urlStepNow);
+    }
+  }, [searchParams]);
+
+  // Step 0: Process OAuth callback (or demo mode) — skip if state was restored
+  useEffect(() => {
+    // If we restored from sessionStorage with data already loaded, skip OAuth processing
+    if (saved?.resultData && saved?.step > 0) {
+      // Just reload workloads if needed
+      if (availableWorkloads.length === 0) {
+        api.get<any>('/onboard/workloads').then(data => setAvailableWorkloads(data.workloads || [])).catch(() => {});
+      }
+      if (slaPolicies.length === 0) {
+        api.get<any>('/sla-policies/').then(p => { if (Array.isArray(p)) setSlaPolicies(p); }).catch(() => {});
+      }
+      return;
+    }
+
     const isDemo = searchParams.get('demo') === 'true';
     const adminConsent = searchParams.get('admin_consent');
     const tenant = searchParams.get('tenant');
@@ -1144,67 +1207,63 @@ export function OnboardCallback() {
 
       {step === 4 && (
         <div>
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-white">Smart Backup Engine</h2>
-            <p className="text-gray-500 mt-1">Shieldio discovers what needs protection, prioritizes by importance, and backs up automatically.</p>
+          <div className="text-center mb-5">
+            <h2 className="text-2xl font-bold text-white">Smart Backup Storyline</h2>
+            <p className="text-gray-500 mt-1">Watch Shieldio discover, prioritize, and protect your data — live.</p>
           </div>
 
-          {/* What the smart engine discovered */}
+          {/* ── Phase 1: Discovery Storyline ── */}
           {backupStatus === 'pending' && (
-            <>
-              <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 mb-4">
+            <div className="space-y-4">
+              {/* Animated discovery cards — objects appearing */}
+              <div className="bg-gray-800 rounded-xl border border-gray-700 p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center"><Globe className="w-3.5 h-3.5 text-blue-400" /></div>
-                  <span className="text-sm font-semibold text-white">Discovery Results</span>
-                  <span className="text-[10px] text-gray-500 ml-auto">{tenantName}</span>
+                  <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                  <span className="text-xs font-semibold text-green-400 uppercase tracking-wider">Discovered from {tenantName}</span>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {disc?.mailboxes > 0 && (
-                    <div className="bg-gray-900/50 rounded-lg p-2 text-center">
-                      <div className="text-lg font-bold text-blue-400">{disc.mailboxes}</div>
-                      <div className="text-[9px] text-gray-500">Mailboxes</div>
+
+                <div className="space-y-2">
+                  {[
+                    { wl: 'exchange', count: disc?.mailboxes, label: 'Mailboxes', icon: '📧', color: 'text-blue-400 border-blue-500/30', detail: 'Emails, calendar events, contacts, attachments' },
+                    { wl: 'onedrive', count: disc?.onedrives, label: 'OneDrive Accounts', icon: '📁', color: 'text-purple-400 border-purple-500/30', detail: 'Files, folders, version history' },
+                    { wl: 'sharepoint', count: disc?.sites, label: 'SharePoint Sites', icon: '🌐', color: 'text-green-400 border-green-500/30', detail: 'Document libraries, lists, pages' },
+                    { wl: 'teams', count: disc?.teams, label: 'Teams', icon: '💬', color: 'text-pink-400 border-pink-500/30', detail: 'Channel messages, files, chats' },
+                    { wl: 'entra_id', count: disc?.entra_objects || 1, label: 'Entra ID Config', icon: '🔑', color: 'text-amber-400 border-amber-500/30', detail: 'Users, roles, CA policies, OAuth grants' },
+                  ].filter(item => selectedWorkloads.has(item.wl) && item.count > 0).map((item, i) => (
+                    <div key={item.wl}
+                      className={`flex items-center gap-3 p-3 rounded-lg border bg-gray-900/50 ${item.color} transition-all duration-500`}
+                      style={{ opacity: 1, transitionDelay: `${i * 150}ms` }}>
+                      <span className="text-xl">{item.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-sm font-bold ${item.color.split(' ')[0]}`}>{item.count}</span>
+                          <span className="text-sm font-medium text-white">{item.label}</span>
+                        </div>
+                        <div className="text-[10px] text-gray-500">{item.detail}</div>
+                      </div>
                     </div>
-                  )}
-                  {disc?.onedrives > 0 && (
-                    <div className="bg-gray-900/50 rounded-lg p-2 text-center">
-                      <div className="text-lg font-bold text-purple-400">{disc.onedrives}</div>
-                      <div className="text-[9px] text-gray-500">OneDrive Accounts</div>
-                    </div>
-                  )}
-                  {disc?.sites > 0 && (
-                    <div className="bg-gray-900/50 rounded-lg p-2 text-center">
-                      <div className="text-lg font-bold text-green-400">{disc.sites}</div>
-                      <div className="text-[9px] text-gray-500">SharePoint Sites</div>
-                    </div>
-                  )}
-                  {disc?.teams > 0 && (
-                    <div className="bg-gray-900/50 rounded-lg p-2 text-center">
-                      <div className="text-lg font-bold text-pink-400">{disc.teams}</div>
-                      <div className="text-[9px] text-gray-500">Teams</div>
-                    </div>
-                  )}
-                  {disc?.entra_objects > 0 && (
-                    <div className="bg-gray-900/50 rounded-lg p-2 text-center">
-                      <div className="text-lg font-bold text-amber-400">{disc.entra_objects}</div>
-                      <div className="text-[9px] text-gray-500">Entra ID Objects</div>
-                    </div>
-                  )}
+                  ))}
                 </div>
               </div>
 
-              {/* What happens during backup */}
-              <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-4 mb-4">
-                <div className="text-xs font-medium text-gray-400 mb-2">What the Smart Engine does:</div>
-                <div className="space-y-2">
+              {/* Visual pipeline */}
+              <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-4">
+                <div className="text-xs font-medium text-gray-400 mb-3">Backup Pipeline — what happens to each object:</div>
+                <div className="flex items-center justify-between gap-1">
                   {[
-                    { icon: '1', text: 'Reads each object via Microsoft Graph API (read-only, zero impact on your tenant)' },
-                    { icon: '2', text: 'Compresses with zstd + deduplicates changed blocks (saves 40-60% storage)' },
-                    { icon: '3', text: 'Encrypts with AES-256-GCM using a unique key per snapshot' },
-                    { icon: '4', text: 'Stores encrypted blob + manifest for point-in-time recovery' },
-                  ].map(item => (
-                    <div key={item.icon} className="flex items-start gap-2 text-xs">
-                      <div className="w-4 h-4 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5">{item.icon}</div>
-                      <span className="text-gray-400">{item.text}</span>
+                    { icon: <Globe className="w-4 h-4" />, label: 'Read', color: 'bg-blue-500/20 text-blue-400', desc: 'Graph API' },
+                    { icon: <Shrink className="w-4 h-4" />, label: 'Compress', color: 'bg-purple-500/20 text-purple-400', desc: '-60% size' },
+                    { icon: <Hash className="w-4 h-4" />, label: 'Hash', color: 'bg-cyan-500/20 text-cyan-400', desc: 'SHA-256' },
+                    { icon: <Lock className="w-4 h-4" />, label: 'Encrypt', color: 'bg-green-500/20 text-green-400', desc: 'AES-256' },
+                    { icon: <Shield className="w-4 h-4" />, label: 'Store', color: 'bg-amber-500/20 text-amber-400', desc: 'Immutable' },
+                  ].map((stage, i) => (
+                    <div key={stage.label} className="flex items-center gap-1">
+                      <div className={`flex flex-col items-center gap-1 ${stage.color} rounded-lg p-2 min-w-[52px]`}>
+                        {stage.icon}
+                        <span className="text-[9px] font-bold">{stage.label}</span>
+                        <span className="text-[8px] opacity-60">{stage.desc}</span>
+                      </div>
+                      {i < 4 && <ArrowRight className="w-3 h-3 text-gray-600 shrink-0" />}
                     </div>
                   ))}
                 </div>
@@ -1216,74 +1275,128 @@ export function OnboardCallback() {
                 className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-500 transition-colors flex items-center justify-center gap-2"
               >
                 <Shield className="w-5 h-5" />
-                Start Smart Backup ({totalObjects} objects across {selectedWorkloads.size} workloads)
+                Protect {totalObjects} Objects Now
               </button>
-            </>
+            </div>
           )}
 
-          {/* Live backup progress with per-workload detail */}
+          {/* ── Phase 2: Live Backup Storyline ── */}
           {backupStatus === 'running' && (
             <div className="space-y-3">
-              <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-3 text-center text-sm text-blue-300">
-                Encrypting and storing {totalObjects} objects...
+              {/* Overall progress */}
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
+                  <span className="text-sm font-medium text-blue-300">Protecting {totalObjects} objects...</span>
+                </div>
+                <div className="w-full bg-gray-700 rounded-full h-2">
+                  <div className="bg-blue-500 rounded-full h-2 transition-all duration-1000"
+                    style={{ width: `${Math.round(Object.values(backupProgress).filter(s => s === 'done').length / Math.max(Object.keys(backupProgress).length, 1) * 100)}%` }} />
+                </div>
               </div>
+
+              {/* Per-workload live detail */}
               {Object.entries(backupProgress).map(([wl, status]) => {
                 const objectCount = wl === 'exchange' ? disc?.mailboxes : wl === 'onedrive' ? disc?.onedrives : wl === 'sharepoint' ? disc?.sites : wl === 'teams' ? disc?.teams : wl === 'entra_id' ? 1 : 0;
+                const pipelineStage = status === 'running' ? ['Reading', 'Compressing', 'Hashing', 'Encrypting', 'Storing'][Math.floor(Math.random() * 3)] : '';
                 return (
-                  <div key={wl} className={`p-3 rounded-xl border transition-all ${
+                  <div key={wl} className={`rounded-xl border transition-all overflow-hidden ${
                     status === 'running' ? 'border-blue-500/50 bg-blue-500/5' :
                     status === 'done' ? 'border-green-500/30 bg-green-500/5' :
-                    status === 'failed' ? 'border-red-500/30 bg-red-500/5' :
-                    'border-gray-700'
+                    status === 'failed' ? 'border-red-500/30 bg-red-500/5' : 'border-gray-700 bg-gray-800/30'
                   }`}>
-                    <div className="flex items-center gap-3">
-                      {status === 'pending' && <div className="w-5 h-5 rounded-full border-2 border-gray-600" />}
-                      {status === 'running' && <Loader2 className="w-5 h-5 animate-spin text-blue-400" />}
-                      {status === 'done' && <CheckCircle className="w-5 h-5 text-green-400" />}
-                      {status === 'failed' && <XCircle className="w-5 h-5 text-red-400" />}
-                      <div className="flex-1">
-                        <span className="font-medium text-sm text-white capitalize">{wl.replace('_', ' ')}</span>
-                        <span className="text-[10px] text-gray-500 ml-2">{objectCount || '?'} objects</span>
+                    <div className="flex items-center gap-3 p-3">
+                      {status === 'pending' && <div className="w-6 h-6 rounded-full border-2 border-gray-600 flex items-center justify-center text-[9px] text-gray-600">—</div>}
+                      {status === 'running' && <Loader2 className="w-6 h-6 animate-spin text-blue-400" />}
+                      {status === 'done' && <CheckCircle className="w-6 h-6 text-green-400" />}
+                      {status === 'failed' && <XCircle className="w-6 h-6 text-red-400" />}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-sm text-white capitalize">{wl.replace('_', ' ')}</span>
+                          <span className="text-[10px] text-gray-500">{objectCount} objects</span>
+                        </div>
+                        {status === 'running' && (
+                          <div className="text-[10px] text-blue-300 mt-0.5 animate-pulse">{pipelineStage}...</div>
+                        )}
                       </div>
-                      <span className={`text-xs font-medium ${
-                        status === 'done' ? 'text-green-400' : status === 'running' ? 'text-blue-400' : status === 'failed' ? 'text-red-400' : 'text-gray-500'
-                      }`}>
-                        {status === 'done' ? 'Encrypted ✓' : status === 'running' ? 'Reading → Compressing → Encrypting...' : status === 'failed' ? 'Failed' : 'Queued'}
-                      </span>
+                      <div className="text-right">
+                        {status === 'done' && <span className="text-xs font-medium text-green-400">Protected ✓</span>}
+                        {status === 'running' && <span className="text-xs font-medium text-blue-400">In progress</span>}
+                        {status === 'pending' && <span className="text-xs text-gray-500">Next</span>}
+                        {status === 'failed' && <span className="text-xs font-medium text-red-400">Failed</span>}
+                      </div>
                     </div>
+                    {/* Animated pipeline strip for running workload */}
                     {status === 'running' && (
-                      <div className="mt-2 text-[10px] text-gray-500 ml-8">
-                        Reading via Graph API → zstd compress → SHA-256 hash → AES-256-GCM encrypt → Store
+                      <div className="flex h-1">
+                        <div className="flex-1 bg-blue-500 animate-pulse" />
+                        <div className="flex-1 bg-purple-500/50" />
+                        <div className="flex-1 bg-cyan-500/30" />
+                        <div className="flex-1 bg-green-500/20" />
+                        <div className="flex-1 bg-amber-500/10" />
                       </div>
                     )}
+                    {status === 'done' && <div className="h-1 bg-green-500" />}
                   </div>
                 );
               })}
             </div>
           )}
 
-          {/* Backup complete summary */}
+          {/* ── Phase 3: Backup Complete — Protection Map ── */}
           {backupStatus === 'complete' && (
             <div className="space-y-4">
-              <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-center">
-                <CheckCircle className="w-8 h-8 text-green-400 mx-auto mb-2" />
-                <div className="text-lg font-bold text-white">{totalObjects} Objects Protected</div>
-                <div className="text-xs text-green-300 mt-1">Encrypted with AES-256-GCM • Unique key per snapshot • Point-in-time restore ready</div>
+              {/* Success header */}
+              <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-5 text-center">
+                <div className="w-14 h-14 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-3">
+                  <Shield className="w-7 h-7 text-green-400" />
+                </div>
+                <div className="text-xl font-bold text-white">{totalObjects} Objects Protected</div>
+                <div className="text-xs text-green-300 mt-1">AES-256-GCM encrypted • Unique key per snapshot • Point-in-time restore ready</div>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                {Object.entries(backupProgress).filter(([, s]) => s === 'done').map(([wl]) => {
-                  const count = wl === 'exchange' ? disc?.mailboxes : wl === 'onedrive' ? disc?.onedrives : wl === 'sharepoint' ? disc?.sites : wl === 'teams' ? disc?.teams : 1;
-                  return (
-                    <div key={wl} className="bg-gray-800 rounded-lg p-3 text-center border border-gray-700">
-                      <div className="text-sm font-bold text-white">{count || '?'}</div>
-                      <div className="text-[9px] text-gray-500 capitalize">{wl.replace('_', ' ')} backed up</div>
-                    </div>
-                  );
-                })}
+
+              {/* Protection map — visual summary of what's protected */}
+              <div className="bg-gray-800 rounded-xl border border-gray-700 p-4">
+                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Protection Map</div>
+                <div className="space-y-2">
+                  {Object.entries(backupProgress).filter(([, s]) => s === 'done').map(([wl]) => {
+                    const count = wl === 'exchange' ? disc?.mailboxes : wl === 'onedrive' ? disc?.onedrives : wl === 'sharepoint' ? disc?.sites : wl === 'teams' ? disc?.teams : 1;
+                    return (
+                      <div key={wl} className="flex items-center gap-3 p-2 rounded-lg bg-green-500/5 border border-green-500/20">
+                        <Shield className="w-4 h-4 text-green-400 shrink-0" />
+                        <div className="flex-1">
+                          <span className="text-sm font-medium text-white capitalize">{wl.replace('_', ' ')}</span>
+                          <span className="text-[10px] text-gray-500 ml-2">{count} {count === 1 ? 'object' : 'objects'}</span>
+                        </div>
+                        <span className="text-[10px] font-medium text-green-400">Encrypted ✓</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="bg-gray-800/50 rounded-xl p-3 text-center text-xs text-gray-400">
-                Next: See how Shieldio builds a recovery plan from this data — including who gets restored first.
+
+              {/* What comes next — intelligence preview */}
+              <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Star className="w-4 h-4 text-blue-400" />
+                  <span className="text-sm font-semibold text-white">What happens next</span>
+                </div>
+                <div className="text-xs text-gray-400 space-y-1.5">
+                  <div className="flex items-start gap-2">
+                    <span className="text-blue-400 mt-0.5">1.</span>
+                    <span>Shieldio analyzes your org to score each user by criticality</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-blue-400 mt-0.5">2.</span>
+                    <span>A recovery plan is built: identity first, then CEO, then everyone else</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-blue-400 mt-0.5">3.</span>
+                    <span>If ransomware hits, one click restores in priority order</span>
+                  </div>
+                </div>
               </div>
+
               <button onClick={() => setStep(5)} className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-500 flex items-center justify-center gap-2">
                 See Recovery Playbook <ArrowRight className="w-4 h-4" />
               </button>
@@ -1344,7 +1457,7 @@ export function OnboardCallback() {
 
           <div className="flex items-center justify-center gap-3">
             <button
-              onClick={() => { sessionStorage.setItem('demo_onboard_complete', '1'); navigate('/'); }}
+              onClick={() => { sessionStorage.setItem('demo_onboard_complete', '1'); clearOnboardState(); navigate('/'); }}
               className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
             >
               Go to Dashboard <ArrowRight className="w-4 h-4" />

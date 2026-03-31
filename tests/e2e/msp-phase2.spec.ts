@@ -12,24 +12,44 @@
  *
  * Prerequisites:
  *   - Docker Compose running on feature/msp-dashboard branch
- *   - Admin user exists (admin / admin123)
+ *   - Admin user exists (admin / Admin123)
  *
  * Run: npx playwright test msp-phase2.spec.ts
  */
 import { test, expect, Page } from '@playwright/test';
 
 async function login(page: Page) {
-  await page.goto('/login');
-  try {
-    await page.waitForSelector('nav', { timeout: 2000 });
-    return;
-  } catch {
-    // Not logged in
+  // Get token via API, then inject into sessionStorage
+  const resp = await page.request.post('http://localhost:8000/api/auth/login', {
+    form: { username: 'admin', password: 'Admin123' },
+  });
+  const data = await resp.json();
+  const token = data.access_token;
+
+  // Ensure at least one ACTIVE tenant exists (so SmartHome doesn't redirect to /onboard)
+  const bulkResp = await page.request.post('http://localhost:8000/api/msp/onboard-bulk', {
+    headers: { Authorization: `Bearer ${token}` },
+    data: { tenants: [{ name: 'E2E Test Corp', ms_tenant_id: 'e2e-test-tid', client_id: 'e2e-cid', client_secret: 'e2e-secret' }] },
+  }).catch(() => null);
+
+  // Activate the tenant via complete endpoint
+  const tenants = await page.request.get('http://localhost:8000/api/tenants/', {
+    headers: { Authorization: `Bearer ${token}` },
+  }).then(r => r.json()).catch(() => []);
+  if (tenants.length > 0) {
+    await page.request.post('http://localhost:8000/api/onboard/complete', {
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      data: { tenant_id: tenants[0].id, protect_all: false },
+    }).catch(() => {});
   }
-  await page.fill('input[type="text"]', 'admin');
-  await page.fill('input[type="password"]', 'admin123');
-  await page.click('button[type="submit"]');
-  await page.waitForSelector('nav', { timeout: 15000 });
+
+  // Navigate to the app first (need origin for sessionStorage)
+  await page.goto('/login');
+  // Inject token into sessionStorage + dismiss product tour
+  await page.evaluate((t) => {
+    sessionStorage.setItem('token', t);
+    localStorage.setItem('shieldio_tour_completed', 'true');
+  }, token);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -39,10 +59,13 @@ async function login(page: Page) {
 test.describe('MSP Sidebar', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
+    // Navigate to an MSP page to get inside the Layout with sidebar
+    await page.goto('/msp');
+    await page.waitForTimeout(2000);
   });
 
   test('MSP nav group is visible for admin', async ({ page }) => {
-    await expect(page.getByText('MSP Dashboard')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('link', { name: 'MSP Dashboard' })).toBeVisible({ timeout: 5000 });
   });
 
   test('MSP nav has billing link', async ({ page }) => {
@@ -65,22 +88,21 @@ test.describe('MSP Sidebar', () => {
 test.describe('MSP Dashboard Page', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
+    await page.goto('/msp');
+    await page.waitForTimeout(1000);
   });
 
   test('dashboard page loads', async ({ page }) => {
-    await page.goto('/msp');
-    await expect(page.getByText('MSP Dashboard')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('heading', { name: 'MSP Dashboard' })).toBeVisible({ timeout: 5000 });
   });
 
   test('shows summary stats', async ({ page }) => {
-    await page.goto('/msp');
     await expect(page.getByText('Total Tenants')).toBeVisible({ timeout: 5000 });
     await expect(page.getByText('Protected Users')).toBeVisible();
     await expect(page.getByText('Overall Health')).toBeVisible();
   });
 
   test('search filters tenants', async ({ page }) => {
-    await page.goto('/msp');
     const search = page.getByPlaceholder('Search tenants...');
     await expect(search).toBeVisible({ timeout: 5000 });
     await search.fill('nonexistent-xyz');
@@ -95,31 +117,28 @@ test.describe('MSP Dashboard Page', () => {
 test.describe('Billing Portal', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
+    await page.goto('/msp/billing');
+    await page.waitForTimeout(1000);
   });
 
   test('billing page loads', async ({ page }) => {
-    await page.goto('/msp/billing');
     await expect(page.getByText('Billing Portal')).toBeVisible({ timeout: 5000 });
   });
 
   test('shows total cost', async ({ page }) => {
-    await page.goto('/msp/billing');
     await expect(page.getByText('Total Cost')).toBeVisible({ timeout: 5000 });
   });
 
   test('has month selector', async ({ page }) => {
-    await page.goto('/msp/billing');
     const select = page.locator('select');
     await expect(select).toBeVisible({ timeout: 5000 });
   });
 
   test('has CSV export button', async ({ page }) => {
-    await page.goto('/msp/billing');
     await expect(page.getByText('Export CSV')).toBeVisible({ timeout: 5000 });
   });
 
   test('shows wholesale tier info', async ({ page }) => {
-    await page.goto('/msp/billing');
     await expect(page.getByText('Wholesale Pricing Tiers')).toBeVisible({ timeout: 5000 });
   });
 });
@@ -131,31 +150,28 @@ test.describe('Billing Portal', () => {
 test.describe('White-Label Branding', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
+    await page.goto('/msp/branding');
+    await page.waitForTimeout(1000);
   });
 
   test('branding page loads', async ({ page }) => {
-    await page.goto('/msp/branding');
     await expect(page.getByText('White-Label Branding')).toBeVisible({ timeout: 5000 });
   });
 
   test('has company name input', async ({ page }) => {
-    await page.goto('/msp/branding');
     const input = page.locator('input').first();
     await expect(input).toBeVisible({ timeout: 5000 });
   });
 
   test('has live preview', async ({ page }) => {
-    await page.goto('/msp/branding');
     await expect(page.getByText('Live Preview')).toBeVisible({ timeout: 5000 });
   });
 
   test('has save button', async ({ page }) => {
-    await page.goto('/msp/branding');
     await expect(page.getByText('Save Branding')).toBeVisible({ timeout: 5000 });
   });
 
   test('has color pickers', async ({ page }) => {
-    await page.goto('/msp/branding');
     const colorInputs = page.locator('input[type="color"]');
     await expect(colorInputs.first()).toBeVisible({ timeout: 5000 });
   });
@@ -168,25 +184,23 @@ test.describe('White-Label Branding', () => {
 test.describe('Bulk Onboarding', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
+    await page.goto('/msp/onboard');
+    await page.waitForTimeout(1000);
   });
 
   test('bulk onboard page loads', async ({ page }) => {
-    await page.goto('/msp/onboard');
     await expect(page.getByText('Bulk Tenant Onboarding')).toBeVisible({ timeout: 5000 });
   });
 
   test('has CSV template download', async ({ page }) => {
-    await page.goto('/msp/onboard');
     await expect(page.getByText('CSV Template')).toBeVisible({ timeout: 5000 });
   });
 
   test('has manual add button', async ({ page }) => {
-    await page.goto('/msp/onboard');
     await expect(page.getByText('Add Manually')).toBeVisible({ timeout: 5000 });
   });
 
   test('manual add shows preview table', async ({ page }) => {
-    await page.goto('/msp/onboard');
     await page.getByText('Add Manually').click();
     await expect(page.getByText('Tenant Name')).toBeVisible({ timeout: 3000 });
   });
@@ -212,7 +226,7 @@ test.describe('MSP API Endpoints', () => {
 
   test('billing returns correct structure', async ({ request }) => {
     const loginResp = await request.post('http://localhost:8000/api/auth/login', {
-      form: { username: 'admin', password: 'admin123' },
+      form: { username: 'admin', password: 'Admin123' },
     });
     const token = (await loginResp.json()).access_token;
 
@@ -229,7 +243,7 @@ test.describe('MSP API Endpoints', () => {
 
   test('compliance report returns correct structure', async ({ request }) => {
     const loginResp = await request.post('http://localhost:8000/api/auth/login', {
-      form: { username: 'admin', password: 'admin123' },
+      form: { username: 'admin', password: 'Admin123' },
     });
     const token = (await loginResp.json()).access_token;
 

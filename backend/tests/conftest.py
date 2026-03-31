@@ -66,6 +66,44 @@ async def auth_client(client: AsyncClient):
 
 
 @pytest_asyncio.fixture
+async def msp_admin_client(client: AsyncClient):
+    """Authenticated client with msp_admin role."""
+    await client.post("/api/auth/register", json={
+        "username": "testmsp",
+        "email": "msp@test.com",
+        "password": "TestPass123",
+        "full_name": "Test MSP Admin",
+        "role": "msp_admin",
+    })
+    response = await client.post("/api/auth/login", data={
+        "username": "testmsp",
+        "password": "TestPass123",
+    })
+    token = response.json()["access_token"]
+    client.headers["Authorization"] = f"Bearer {token}"
+    yield client
+
+
+@pytest_asyncio.fixture
+async def viewer_client(client: AsyncClient):
+    """Authenticated client with viewer role (should be blocked from MSP)."""
+    await client.post("/api/auth/register", json={
+        "username": "testviewer",
+        "email": "viewer@test.com",
+        "password": "TestPass123",
+        "full_name": "Test Viewer",
+        "role": "viewer",
+    })
+    response = await client.post("/api/auth/login", data={
+        "username": "testviewer",
+        "password": "TestPass123",
+    })
+    token = response.json()["access_token"]
+    client.headers["Authorization"] = f"Bearer {token}"
+    yield client
+
+
+@pytest_asyncio.fixture
 async def db():
     """Database session for direct DB operations in tests."""
     async with async_session() as session:

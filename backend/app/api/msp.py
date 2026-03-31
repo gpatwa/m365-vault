@@ -16,7 +16,7 @@ from app.models.protected_object import ProtectedObject, ProtectionStatus, Workl
 from app.models.backup_job import BackupJob, JobStatus
 from app.models.snapshot import Snapshot, SnapshotStatus
 from app.models.user import User
-from app.services.auth import require_backup_permission
+from app.services.auth import require_msp_permission
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/msp", tags=["MSP Dashboard"])
@@ -25,7 +25,7 @@ router = APIRouter(prefix="/api/msp", tags=["MSP Dashboard"])
 @router.get("/overview")
 async def msp_overview(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_backup_permission),
+    current_user: User = Depends(require_msp_permission),
 ):
     """MSP overview — all tenants with per-tenant health summary.
 

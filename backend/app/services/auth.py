@@ -103,3 +103,6 @@ require_backup_permission = require_role(UserRole.ADMIN, UserRole.OPERATOR)
 
 # Restore/recovery operations: write access — ADMIN only (high-risk)
 require_restore_permission = require_role(UserRole.ADMIN)
+
+# MSP operations: dashboard, billing, branding — ADMIN and MSP_ADMIN
+require_msp_permission = require_role(UserRole.ADMIN, UserRole.MSP_ADMIN)

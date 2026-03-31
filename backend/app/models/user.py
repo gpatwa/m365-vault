@@ -8,6 +8,7 @@ from app.database import Base
 
 class UserRole(str, enum.Enum):
     ADMIN = "admin"
+    MSP_ADMIN = "msp_admin"
     OPERATOR = "operator"
     VIEWER = "viewer"
 

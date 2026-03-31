@@ -7,7 +7,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, UploadFile, File
 from pydantic import BaseModel
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -399,3 +399,132 @@ async def generate_billing_records(
 
     await db.commit()
     return {"month": month, "created": created, "updated": updated, "total": created + updated}
+
+
+# ── Bulk Onboarding ───────────────────────────────────────────
+
+
+class BulkTenantEntry(BaseModel):
+    name: str
+    ms_tenant_id: str
+    client_id: str
+    client_secret: str
+    sla_policy_id: Optional[int] = None
+
+
+class BulkOnboardRequest(BaseModel):
+    tenants: list[BulkTenantEntry]
+
+
+@router.post("/onboard-bulk")
+async def bulk_onboard_tenants(
+    req: BulkOnboardRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_msp_permission),
+):
+    """Bulk onboard multiple tenants at once.
+
+    Accepts a list of tenant configs with pre-configured credentials.
+    Encrypts secrets, creates tenants, skips duplicates.
+    """
+    from app.services.encryption import encryption_service
+    from app.models.sla_policy import SLAPolicy
+    from app.models.protected_object import ProtectedObject, ProtectionStatus
+
+    results = []
+
+    for entry in req.tenants:
+        # Check for duplicate
+        existing = (await db.execute(
+            select(Tenant).where(Tenant.ms_tenant_id == entry.ms_tenant_id)
+        )).scalar_one_or_none()
+
+        if existing:
+            results.append({
+                "name": entry.name, "ms_tenant_id": entry.ms_tenant_id,
+                "status": "skipped", "reason": "Tenant already exists",
+                "tenant_id": existing.id,
+            })
+            continue
+
+        try:
+            tenant = Tenant(
+                name=entry.name,
+                ms_tenant_id=entry.ms_tenant_id,
+                client_id=entry.client_id,
+                client_secret_encrypted=encryption_service.encrypt_string(entry.client_secret),
+                status=TenantStatus.ONBOARDING,
+            )
+            db.add(tenant)
+            await db.flush()
+
+            results.append({
+                "name": entry.name, "ms_tenant_id": entry.ms_tenant_id,
+                "status": "created", "tenant_id": tenant.id,
+            })
+        except Exception as e:
+            results.append({
+                "name": entry.name, "ms_tenant_id": entry.ms_tenant_id,
+                "status": "failed", "reason": str(e)[:200],
+            })
+
+    await db.commit()
+
+    created = sum(1 for r in results if r["status"] == "created")
+    skipped = sum(1 for r in results if r["status"] == "skipped")
+    failed = sum(1 for r in results if r["status"] == "failed")
+
+    return {
+        "total": len(req.tenants),
+        "created": created,
+        "skipped": skipped,
+        "failed": failed,
+        "results": results,
+    }
+
+
+@router.post("/onboard-bulk/csv-parse")
+async def parse_bulk_csv(
+    file: UploadFile = File(...),
+    current_user: User = Depends(require_msp_permission),
+):
+    """Parse a CSV file for bulk onboarding preview.
+
+    Expected CSV format: name, ms_tenant_id, client_id, client_secret
+    Returns parsed entries for review before submission.
+    """
+    import csv
+    import io
+
+    content = await file.read()
+    text = content.decode("utf-8-sig")  # Handle BOM
+    reader = csv.DictReader(io.StringIO(text))
+
+    entries = []
+    errors = []
+
+    for i, row in enumerate(reader):
+        name = (row.get("name") or row.get("tenant_name") or "").strip()
+        ms_tenant_id = (row.get("ms_tenant_id") or row.get("tenant_id") or "").strip()
+        client_id = (row.get("client_id") or row.get("app_id") or "").strip()
+        client_secret = (row.get("client_secret") or row.get("app_secret") or "").strip()
+
+        if not name or not ms_tenant_id or not client_id or not client_secret:
+            errors.append({"row": i + 2, "error": "Missing required fields", "data": row})
+            continue
+
+        entries.append({
+            "name": name,
+            "ms_tenant_id": ms_tenant_id,
+            "client_id": client_id,
+            "client_secret_masked": f"{client_secret[:4]}...{client_secret[-4:]}" if len(client_secret) > 8 else "***",
+            "client_secret": client_secret,
+        })
+
+    return {
+        "total_rows": len(entries) + len(errors),
+        "valid": len(entries),
+        "invalid": len(errors),
+        "entries": entries,
+        "errors": errors,
+    }

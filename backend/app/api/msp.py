@@ -18,6 +18,7 @@ from app.models.protected_object import ProtectedObject, ProtectionStatus, Workl
 from app.models.backup_job import BackupJob, JobStatus
 from app.models.snapshot import Snapshot, SnapshotStatus
 from app.models.msp_branding import MSPBranding
+from app.models.billing import BillingRecord
 from app.models.user import User
 from app.services.auth import require_msp_permission, get_current_user
 
@@ -247,3 +248,154 @@ async def update_branding(
         "primary_color": branding.primary_color,
         "secondary_color": branding.secondary_color,
     }
+
+
+# ── Billing ───────────────────────────────────────────────────
+
+WHOLESALE_TIERS = [
+    {"min_users": 0, "max_users": 500, "price": 1.50},
+    {"min_users": 501, "max_users": 2000, "price": 1.25},
+    {"min_users": 2001, "max_users": 5000, "price": 1.00},
+    {"min_users": 5001, "max_users": None, "price": 0.85},
+]
+
+
+def _get_wholesale_price(total_users: int) -> float:
+    for tier in WHOLESALE_TIERS:
+        if tier["max_users"] is None or total_users <= tier["max_users"]:
+            return tier["price"]
+    return 0.85
+
+
+@router.get("/billing")
+async def get_billing(
+    month: str = Query(None, description="Month in YYYY-MM format (default: current)"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_msp_permission),
+):
+    """Per-tenant billing summary with wholesale tiered pricing."""
+    if not month:
+        month = datetime.utcnow().strftime("%Y-%m")
+
+    result = await db.execute(select(Tenant).where(Tenant.status == TenantStatus.ACTIVE))
+    tenants = result.scalars().all()
+
+    total_users_all = 0
+    tenant_usage = []
+
+    for tenant in tenants:
+        user_count = (await db.execute(
+            select(func.count(ProtectedObject.id)).where(
+                ProtectedObject.tenant_id == tenant.id,
+                ProtectedObject.status == ProtectionStatus.PROTECTED,
+            )
+        )).scalar() or 0
+
+        storage_bytes = (await db.execute(
+            select(func.sum(Snapshot.size_bytes))
+            .join(ProtectedObject, Snapshot.protected_object_id == ProtectedObject.id)
+            .where(
+                ProtectedObject.tenant_id == tenant.id,
+                Snapshot.status == SnapshotStatus.COMPLETED,
+            )
+        )).scalar() or 0
+
+        total_users_all += user_count
+        tenant_usage.append({
+            "tenant_id": tenant.id, "tenant_name": tenant.name,
+            "user_count": user_count, "storage_gb": round(storage_bytes / (1024 ** 3), 3),
+        })
+
+    unit_price = _get_wholesale_price(total_users_all)
+    line_items = []
+    total_cost = 0.0
+
+    for usage in tenant_usage:
+        cost = round(usage["user_count"] * unit_price, 2)
+        total_cost += cost
+
+        existing = (await db.execute(
+            select(BillingRecord).where(
+                BillingRecord.tenant_id == usage["tenant_id"],
+                BillingRecord.month == month,
+            )
+        )).scalar_one_or_none()
+
+        line_items.append({
+            **usage, "unit_price": unit_price, "monthly_cost": cost,
+            "status": existing.status if existing else "draft",
+        })
+
+    return {
+        "month": month, "total_tenants": len(tenants), "total_users": total_users_all,
+        "unit_price": unit_price, "total_cost": round(total_cost, 2),
+        "wholesale_tier": f"${unit_price}/user ({total_users_all} total users)",
+        "line_items": line_items, "tiers": WHOLESALE_TIERS,
+    }
+
+
+@router.get("/billing/export")
+async def export_billing_csv(
+    month: str = Query(None),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_msp_permission),
+):
+    """Export billing data as CSV for invoicing."""
+    import csv, io
+    from fastapi.responses import StreamingResponse
+
+    billing = await get_billing(month=month, db=db, current_user=current_user)
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Tenant", "Users", "Storage (GB)", "Unit Price", "Monthly Cost", "Status"])
+    for item in billing["line_items"]:
+        writer.writerow([item["tenant_name"], item["user_count"], item["storage_gb"],
+                         f"${item['unit_price']:.2f}", f"${item['monthly_cost']:.2f}", item["status"]])
+    writer.writerow([])
+    writer.writerow(["Total", billing["total_users"], "", "", f"${billing['total_cost']:.2f}", ""])
+    writer.writerow(["Month", billing["month"]])
+
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]), media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=shieldio-billing-{billing['month']}.csv"},
+    )
+
+
+@router.post("/billing/generate")
+async def generate_billing_records(
+    month: str = Query(None),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_msp_permission),
+):
+    """Snapshot billing records for a month."""
+    if not month:
+        month = datetime.utcnow().strftime("%Y-%m")
+
+    billing = await get_billing(month=month, db=db, current_user=current_user)
+    created = updated = 0
+
+    for item in billing["line_items"]:
+        existing = (await db.execute(
+            select(BillingRecord).where(
+                BillingRecord.tenant_id == item["tenant_id"], BillingRecord.month == month,
+            )
+        )).scalar_one_or_none()
+
+        if existing:
+            existing.user_count = item["user_count"]
+            existing.storage_gb = item["storage_gb"]
+            existing.unit_price = item["unit_price"]
+            existing.total_cost = item["monthly_cost"]
+            existing.tenant_name = item["tenant_name"]
+            updated += 1
+        else:
+            db.add(BillingRecord(
+                tenant_id=item["tenant_id"], month=month, tenant_name=item["tenant_name"],
+                user_count=item["user_count"], storage_gb=item["storage_gb"],
+                unit_price=item["unit_price"], total_cost=item["monthly_cost"], status="draft",
+            ))
+            created += 1
+
+    await db.commit()
+    return {"month": month, "created": created, "updated": updated, "total": created + updated}

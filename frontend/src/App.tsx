@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { OnboardingProvider } from './contexts/OnboardingContext';
 import { TenantProvider } from './contexts/TenantContext';
 import { BrandingProvider } from './contexts/BrandingContext';
+import { FeatureFlagProvider } from './contexts/FeatureFlagContext';
 import { ToastProvider } from './components/Toast';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { api } from './api/client';
@@ -43,6 +44,7 @@ import MSPBrandingPage from './pages/MSPBranding';
 import BillingPortal from './pages/BillingPortal';
 import BulkOnboard from './pages/BulkOnboard';
 import MSPDemo from './pages/MSPDemo';
+import FeatureFlagsPage from './pages/FeatureFlags';
 
 const queryClient = new QueryClient();
 
@@ -126,6 +128,7 @@ function AppRoutes() {
         <Route path="msp/billing" element={<BillingPortal />} />
         <Route path="msp/onboard" element={<BulkOnboard />} />
         <Route path="msp/demo" element={<MSPDemo />} />
+        <Route path="features" element={<FeatureFlagsPage />} />
         <Route path="audit" element={<AuditLog />} />
         <Route path="failed-items" element={<FailedItems />} />
         <Route path="alerts" element={<AlertSettings />} />
@@ -146,6 +149,7 @@ function AppRoutes() {
 
 export default function App() {
   return (
+    <FeatureFlagProvider>
     <BrandingProvider>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
@@ -163,5 +167,6 @@ export default function App() {
       </AuthProvider>
     </QueryClientProvider>
     </BrandingProvider>
+    </FeatureFlagProvider>
   );
 }

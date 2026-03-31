@@ -347,7 +347,9 @@ app.include_router(org_context_router)
 app.include_router(diagnostics_router)
 
 from app.api.msp import router as msp_router
+from app.api.feature_flags import router as feature_flags_router
 app.include_router(msp_router)
+app.include_router(feature_flags_router)
 
 
 @app.get("/")

@@ -106,6 +106,9 @@ async def seed():
             {"username": "demo", "email": "demo@shieldio.local", "password": "ShieldiDemo2026!",
              "full_name": "Demo User", "role": UserRole.ADMIN,
              "purpose": "Clean onboarding Storyline — fresh tenant setup"},
+            {"username": "prospect", "email": "prospect@shieldio.local", "password": "Prospect2026!",
+             "full_name": "Prospect Demo", "role": UserRole.ADMIN,
+             "purpose": "Post-auth onboarding — tenant connected, start at discovery"},
             {"username": "msp", "email": "msp@shieldio.local", "password": "MSPDemo2026!",
              "full_name": "MSP Partner", "role": UserRole.MSP_ADMIN,
              "purpose": "MSP evaluation — multi-tenant dashboard, billing, branding"},
@@ -124,6 +127,22 @@ async def seed():
                 )
                 db.add(user)
                 print(f"  ✅ {acct['role'].value:10} {acct['username']:8} / {acct['password']:20} — {acct['purpose']}")
+
+        # ── 1b. Prospect Tenant (connected but not discovered) ──
+        prospect_tenant_exists = await db.execute(
+            select(Tenant).where(Tenant.ms_tenant_id == "prospect-contoso-demo")
+        )
+        if not prospect_tenant_exists.scalar_one_or_none():
+            prospect_tenant = Tenant(
+                name="Contoso Corp",
+                ms_tenant_id="prospect-contoso-demo",
+                client_id="demo-prospect-client-id",
+                client_secret_encrypted="demo-encrypted-secret",
+                status=TenantStatus.ONBOARDING,
+            )
+            db.add(prospect_tenant)
+            await db.flush()
+            print(f"  ✅ Prospect tenant: Contoso Corp (id={prospect_tenant.id}) — connected, awaiting discovery")
 
         # ── 2. SLA Policies ──
         daily_sla = SLAPolicy(

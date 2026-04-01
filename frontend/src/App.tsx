@@ -70,8 +70,8 @@ function SmartHome() {
     // Route users based on their role and purpose
     api.get<any>('/auth/me')
       .then(user => {
-        if (user?.username === 'demo' && !sessionStorage.getItem('demo_onboard_complete')) {
-          console.log('[Shieldio:SmartHome] → demo user, redirect /onboard/demo');
+        if ((user?.username === 'demo' || user?.username === 'prospect') && !sessionStorage.getItem('demo_onboard_complete')) {
+          console.log('[Shieldio:SmartHome] → demo/prospect user, redirect /onboard/demo');
           window.location.replace('/onboard/demo');
           return;
         }

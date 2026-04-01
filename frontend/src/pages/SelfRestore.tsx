@@ -98,7 +98,7 @@ export default function SelfRestore() {
       {/* Page Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-blue-50">
+          <div className="p-2.5 rounded-xl bg-blue-500/10">
             <DownloadCloud className="w-6 h-6 text-blue-600" />
           </div>
           <div>
@@ -139,7 +139,7 @@ export default function SelfRestore() {
                 onClick={() => { setWorkload(tab.key); if (searchQuery) setSearchQuery(searchQuery); }}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   workload === tab.key
-                    ? 'bg-blue-100 text-blue-700 ring-1 ring-blue-300'
+                    ? 'bg-blue-500/15 text-blue-400 ring-1 ring-blue-300'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -153,7 +153,7 @@ export default function SelfRestore() {
       {/* Alert Messages */}
       {restoreMsg && (
         <div className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm mb-4 ${
-          restoreMsg.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+          restoreMsg.type === 'success' ? 'bg-green-500/10 text-green-400 border border-green-200' : 'bg-red-500/10 text-red-400 border border-red-200'
         }`}>
           {restoreMsg.type === 'success' ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
           {restoreMsg.text}
@@ -185,7 +185,7 @@ export default function SelfRestore() {
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-800/50">
                 <tr>
                   <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
                   <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider">Workload</th>
@@ -199,7 +199,7 @@ export default function SelfRestore() {
                   const Icon = ITEM_ICONS[item.item_type] || FileText;
                   const wlColor = WORKLOAD_COLORS[item.workload] || 'text-gray-500';
                   return (
-                    <tr key={`${item.snapshot_id}-${item.id}`} className="hover:bg-gray-50 transition-colors">
+                    <tr key={`${item.snapshot_id}-${item.id}`} className="hover:bg-gray-800/50 transition-colors">
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-3">
                           <Icon className="w-4 h-4 text-gray-400 flex-shrink-0" />
@@ -220,7 +220,7 @@ export default function SelfRestore() {
                         <button
                           onClick={() => restoreMutation.mutate({ snapshotId: item.snapshot_id, itemIds: String(item.id) })}
                           disabled={restoreMutation.isPending}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-100 disabled:opacity-50 transition-colors"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 border border-blue-200 text-blue-400 rounded-lg text-xs font-medium hover:bg-blue-500/15 disabled:opacity-50 transition-colors"
                         >
                           <RotateCcw className="w-3 h-3" /> Restore
                         </button>
@@ -234,7 +234,7 @@ export default function SelfRestore() {
         </div>
       ) : !searchQuery ? (
         <div className="text-center py-16 bg-white rounded-xl border shadow-sm">
-          <div className="p-4 bg-blue-50 rounded-2xl w-fit mx-auto mb-4">
+          <div className="p-4 bg-blue-500/10 rounded-2xl w-fit mx-auto mb-4">
             <Search className="w-10 h-10 text-blue-300" />
           </div>
           <p className="text-sm font-medium text-gray-600">Search your backup archive</p>

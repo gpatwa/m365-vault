@@ -74,7 +74,7 @@ export default function FeedbackWidget() {
                       <button
                         key={cat}
                         onClick={() => { setCategory(cat); setStep('details'); }}
-                        className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${category === cat ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-300'}`}
+                        className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${category === cat ? 'bg-blue-500/10 border-blue-300 text-blue-400' : 'bg-gray-800/50 border-gray-200 text-gray-600 hover:border-gray-300'}`}
                       >
                         {cat}
                       </button>
@@ -119,7 +119,7 @@ export default function FeedbackWidget() {
 
           {step === 'thanks' && (
             <div className="text-center py-4">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <div className="w-12 h-12 bg-green-500/15 rounded-full flex items-center justify-center mx-auto mb-3">
                 <ThumbsUp className="w-6 h-6 text-green-600" />
               </div>
               <p className="text-sm font-semibold text-gray-800">Thank you!</p>

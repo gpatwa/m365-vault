@@ -122,8 +122,8 @@ export default function Settings() {
       {/* Action messages */}
       {(testResult || actionMsg) && (
         <div className={`rounded-lg p-4 mb-4 flex items-center gap-3 ${
-          testResult ? (testResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200')
-            : 'bg-blue-50 border border-blue-200'
+          testResult ? (testResult.success ? 'bg-green-500/10 border border-green-200' : 'bg-red-500/10 border border-red-200')
+            : 'bg-blue-500/10 border border-blue-200'
         }`}>
           {testResult ? (
             <>
@@ -145,7 +145,7 @@ export default function Settings() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-red-100 rounded-lg">
+              <div className="p-2 bg-red-500/15 rounded-lg">
                 <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
               <div>
@@ -239,7 +239,7 @@ export default function Settings() {
             <div key={t.id} className={`bg-white rounded-xl border shadow-sm p-5 ${isInactive ? 'opacity-75' : ''}`}>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${isInactive ? 'bg-gray-100' : 'bg-blue-50'}`}>
+                  <div className={`p-2 rounded-lg ${isInactive ? 'bg-gray-100' : 'bg-blue-500/10'}`}>
                     <Building2 className={`w-6 h-6 ${isInactive ? 'text-gray-400' : 'text-blue-600'}`} />
                   </div>
                   <div className="min-w-0">
@@ -260,7 +260,7 @@ export default function Settings() {
                   {/* Active tenant actions */}
                   {isActive && (
                     <>
-                      <button onClick={() => discoverMutation.mutate(t.id)} className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-sm hover:bg-blue-200 flex items-center gap-1">
+                      <button onClick={() => discoverMutation.mutate(t.id)} className="px-3 py-1.5 bg-blue-500/15 text-blue-400 rounded-lg text-sm hover:bg-blue-200 flex items-center gap-1">
                         <RefreshCw className="w-4 h-4" /> Discover
                       </button>
                       <button onClick={() => deactivateMutation.mutate(t.id)} className="px-3 py-1.5 bg-yellow-100 text-yellow-700 rounded-lg text-sm hover:bg-yellow-200 flex items-center gap-1">
@@ -272,10 +272,10 @@ export default function Settings() {
                   {/* Inactive tenant actions */}
                   {isInactive && (
                     <>
-                      <button onClick={() => reactivateMutation.mutate(t.id)} className="px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-sm hover:bg-green-200 flex items-center gap-1">
+                      <button onClick={() => reactivateMutation.mutate(t.id)} className="px-3 py-1.5 bg-green-500/15 text-green-400 rounded-lg text-sm hover:bg-green-200 flex items-center gap-1">
                         <Play className="w-4 h-4" /> Reactivate
                       </button>
-                      <button onClick={() => setPurgeConfirm({ id: t.id, name: t.name })} className="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg text-sm hover:bg-red-200 flex items-center gap-1">
+                      <button onClick={() => setPurgeConfirm({ id: t.id, name: t.name })} className="px-3 py-1.5 bg-red-500/15 text-red-400 rounded-lg text-sm hover:bg-red-200 flex items-center gap-1">
                         <Trash2 className="w-4 h-4" /> Purge
                       </button>
                     </>
@@ -283,27 +283,27 @@ export default function Settings() {
                 </div>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-4 text-sm">
-                <div className="bg-gray-50 rounded-lg p-3">
+                <div className="bg-gray-800/50 rounded-lg p-3">
                   <p className="text-gray-500 text-xs">Mailboxes</p>
                   <p className="text-lg font-bold">{t.total_mailboxes}</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-3">
+                <div className="bg-gray-800/50 rounded-lg p-3">
                   <p className="text-gray-500 text-xs">OneDrives</p>
                   <p className="text-lg font-bold">{t.total_onedrives}</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-3">
+                <div className="bg-gray-800/50 rounded-lg p-3">
                   <p className="text-gray-500 text-xs">SharePoint</p>
                   <p className="text-lg font-bold">{t.total_sites}</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-3">
+                <div className="bg-gray-800/50 rounded-lg p-3">
                   <p className="text-gray-500 text-xs">Teams</p>
                   <p className="text-lg font-bold">{t.total_teams || 0}</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-3">
+                <div className="bg-gray-800/50 rounded-lg p-3">
                   <p className="text-gray-500 text-xs">Entra ID</p>
                   <p className="text-lg font-bold">{t.total_entra_objects || 0}</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-3">
+                <div className="bg-gray-800/50 rounded-lg p-3">
                   <p className="text-gray-500 text-xs">Last Discovery</p>
                   <p className="text-sm font-medium">{t.last_discovery_at?.slice(0, 16) || 'Never'}</p>
                 </div>
@@ -313,7 +313,7 @@ export default function Settings() {
                 <button
                   onClick={() => checkPerms(t.id)}
                   disabled={permsLoading && permsTenant === t.id}
-                  className="px-3 py-1.5 border border-gray-200 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-50 flex items-center gap-1"
+                  className="px-3 py-1.5 border border-gray-200 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-800/50 flex items-center gap-1"
                 >
                   {permsLoading && permsTenant === t.id
                     ? <><Loader2 className="w-3 h-3 animate-spin" /> Checking...</>
@@ -324,7 +324,7 @@ export default function Settings() {
                 {permsTenant === t.id && permsData && !permsData.error && (
                   <div className="mt-3 border rounded-lg overflow-hidden">
                     <div className={`px-4 py-2 text-sm font-medium flex items-center justify-between ${
-                      permsData.all_backup_ready ? 'bg-green-50 text-green-700' : 'bg-orange-50 text-orange-700'
+                      permsData.all_backup_ready ? 'bg-green-500/10 text-green-400' : 'bg-orange-50 text-orange-700'
                     }`}>
                       <span className="flex items-center gap-1.5">
                         {permsData.all_backup_ready ? <CheckCircle className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
@@ -343,7 +343,7 @@ export default function Settings() {
                     </div>
                     <div className="overflow-x-auto">
                     <table className="w-full text-xs">
-                      <thead className="bg-gray-50">
+                      <thead className="bg-gray-800/50">
                         <tr>
                           <th className="text-left px-4 py-2 font-medium text-gray-600">Workload</th>
                           <th className="text-center px-4 py-2 font-medium text-gray-600">Backup</th>
@@ -372,7 +372,7 @@ export default function Settings() {
                                 {allMissing.length > 0 ? (
                                   <div className="space-y-1">
                                     {allMissing.map((perm: string) => (
-                                      <code key={perm} className="inline-block bg-red-50 text-red-700 px-1.5 py-0.5 rounded text-[10px] font-mono mr-1">{perm}</code>
+                                      <code key={perm} className="inline-block bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded text-[10px] font-mono mr-1">{perm}</code>
                                     ))}
                                   </div>
                                 ) : <span className="text-green-600 text-xs font-medium">All granted</span>}
@@ -382,7 +382,7 @@ export default function Settings() {
                         })}
                       </tbody>
                       <tfoot>
-                        <tr className="bg-gray-50 border-t">
+                        <tr className="bg-gray-800/50 border-t">
                           <td colSpan={4} className="px-4 py-3">
                             <div className="flex items-center gap-3">
                               <a
@@ -403,15 +403,15 @@ export default function Settings() {
 
                     {/* Instructions for fixing permissions */}
                     {!permsData.all_backup_ready && (
-                      <div className="bg-blue-50 border-t border-blue-100 px-4 py-3">
+                      <div className="bg-blue-500/10 border-t border-blue-100 px-4 py-3">
                         <p className="text-xs font-semibold text-blue-800 mb-2">How to grant missing permissions:</p>
-                        <ol className="text-xs text-blue-700 space-y-1.5 list-decimal list-inside">
+                        <ol className="text-xs text-blue-400 space-y-1.5 list-decimal list-inside">
                           <li>
                             <strong>One-time setup:</strong> Add redirect URI to your app registration in{' '}
                             <a href={`https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Authentication/appId/${t.client_id}`}
                               target="_blank" rel="noopener noreferrer" className="underline font-medium">Azure Portal → Authentication</a>
                             {' '}→ Add platform → Web → enter:
-                            <code className="block mt-1 ml-4 bg-blue-100 px-2 py-1 rounded text-[11px] font-mono text-blue-900 select-all">
+                            <code className="block mt-1 ml-4 bg-blue-500/15 px-2 py-1 rounded text-[11px] font-mono text-blue-900 select-all">
                               {window.location.origin}/settings
                             </code>
                           </li>
@@ -425,7 +425,7 @@ export default function Settings() {
                                 .flatMap(([, s]: [string, any]) => [...(s.missing_backup || []), ...(s.missing_restore || [])])
                                 .filter((v, i, a) => a.indexOf(v) === i)
                                 .map((perm: string) => (
-                                  <code key={perm} className="block bg-blue-100 px-1.5 py-0.5 rounded text-[11px] font-mono text-blue-900 select-all">{perm}</code>
+                                  <code key={perm} className="block bg-blue-500/15 px-1.5 py-0.5 rounded text-[11px] font-mono text-blue-900 select-all">{perm}</code>
                                 ))
                               }
                             </div>
@@ -439,7 +439,7 @@ export default function Settings() {
                 )}
 
                 {permsTenant === t.id && permsData?.error && (
-                  <div className="mt-3 bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+                  <div className="mt-3 bg-red-500/10 border border-red-200 rounded-lg p-3 text-sm text-red-400">
                     {permsData.error}
                   </div>
                 )}

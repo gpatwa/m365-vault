@@ -41,9 +41,9 @@ export default function WorkloadSwimlane({
     label: wlConfig?.label || workload,
     icon: wlConfig?.icon,
     color: wlConfig?.iconColor || 'text-gray-600',
-    bgColor: wlConfig?.bgColor || 'bg-gray-50',
+    bgColor: wlConfig?.bgColor || 'bg-gray-800/50',
     borderColor: wlConfig?.borderColor || 'border-gray-200',
-    barColor: wlConfig?.barColor || 'bg-gray-500',
+    barColor: wlConfig?.barColor || 'bg-gray-800/500',
     ringColor: wlConfig?.ringColor || 'ring-gray-400',
   };
   const Icon = config.icon;
@@ -104,7 +104,7 @@ export default function WorkloadSwimlane({
     }`}>
       {/* Header — always visible */}
       <div
-        className={`px-5 py-4 cursor-pointer select-none ${isExpanded ? config.bgColor : 'bg-white hover:bg-gray-50'} rounded-t-xl ${!isExpanded ? 'rounded-b-xl' : ''}`}
+        className={`px-5 py-4 cursor-pointer select-none ${isExpanded ? config.bgColor : 'bg-white hover:bg-gray-800/50'} rounded-t-xl ${!isExpanded ? 'rounded-b-xl' : ''}`}
         onClick={onToggle}
       >
         <div className="flex items-center justify-between">
@@ -124,19 +124,19 @@ export default function WorkloadSwimlane({
             {stats.completed > 0 && (
               <div className="flex items-center gap-1 text-xs">
                 <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-                <span className="font-medium text-green-700">{stats.completed}</span>
+                <span className="font-medium text-green-400">{stats.completed}</span>
               </div>
             )}
             {stats.failed > 0 && (
               <div className="flex items-center gap-1 text-xs">
                 <XCircle className="w-3.5 h-3.5 text-red-500" />
-                <span className="font-medium text-red-700">{stats.failed}</span>
+                <span className="font-medium text-red-400">{stats.failed}</span>
               </div>
             )}
             {stats.in_progress > 0 && (
               <div className="flex items-center gap-1 text-xs">
                 <Loader2 className="w-3.5 h-3.5 text-blue-500 animate-spin" />
-                <span className="font-medium text-blue-700">{stats.in_progress}</span>
+                <span className="font-medium text-blue-400">{stats.in_progress}</span>
               </div>
             )}
             {stats.queued > 0 && (
@@ -187,7 +187,7 @@ export default function WorkloadSwimlane({
           {stats.total > 0 && (
             <>
               <span className="text-gray-300">|</span>
-              <span>Success: <strong className={progressPercent >= 90 ? 'text-green-700' : progressPercent >= 70 ? 'text-yellow-700' : 'text-red-700'}>{progressPercent}%</strong></span>
+              <span>Success: <strong className={progressPercent >= 90 ? 'text-green-400' : progressPercent >= 70 ? 'text-yellow-700' : 'text-red-400'}>{progressPercent}%</strong></span>
             </>
           )}
         </div>

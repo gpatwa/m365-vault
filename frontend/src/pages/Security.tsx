@@ -3,18 +3,18 @@ import { Shield, Lock, Eye, ShieldCheck, CheckCircle2, XCircle, FileText, Server
 import { api } from '../api/client';
 
 const CATEGORY_CONFIG: Record<string, { label: string; icon: typeof Shield; color: string; bg: string }> = {
-  encryption: { label: 'Encryption', icon: Lock, color: 'text-blue-600', bg: 'bg-blue-50' },
-  data_protection: { label: 'Data Protection', icon: ShieldCheck, color: 'text-green-600', bg: 'bg-green-50' },
-  authentication: { label: 'Authentication', icon: Key, color: 'text-purple-600', bg: 'bg-purple-50' },
-  monitoring: { label: 'Monitoring', icon: Eye, color: 'text-amber-600', bg: 'bg-amber-50' },
-  infrastructure: { label: 'Infrastructure', icon: Server, color: 'text-gray-600', bg: 'bg-gray-50' },
+  encryption: { label: 'Encryption', icon: Lock, color: 'text-blue-600', bg: 'bg-blue-500/10' },
+  data_protection: { label: 'Data Protection', icon: ShieldCheck, color: 'text-green-600', bg: 'bg-green-500/10' },
+  authentication: { label: 'Authentication', icon: Key, color: 'text-purple-600', bg: 'bg-purple-500/10' },
+  monitoring: { label: 'Monitoring', icon: Eye, color: 'text-amber-600', bg: 'bg-amber-500/10' },
+  infrastructure: { label: 'Infrastructure', icon: Server, color: 'text-gray-600', bg: 'bg-gray-800/50' },
 };
 
 const COMPLIANCE_CONFIG: Record<string, { label: string; full: string; color: string }> = {
-  soc2: { label: 'SOC 2', full: 'SOC 2 Trust Services Criteria', color: 'border-blue-200 bg-blue-50 text-blue-800' },
-  gdpr: { label: 'GDPR', full: 'General Data Protection Regulation', color: 'border-green-200 bg-green-50 text-green-800' },
-  hipaa: { label: 'HIPAA', full: 'Health Insurance Portability & Accountability Act', color: 'border-purple-200 bg-purple-50 text-purple-800' },
-  dora: { label: 'DORA', full: 'Digital Operational Resilience Act', color: 'border-amber-200 bg-amber-50 text-amber-800' },
+  soc2: { label: 'SOC 2', full: 'SOC 2 Trust Services Criteria', color: 'border-blue-200 bg-blue-500/10 text-blue-800' },
+  gdpr: { label: 'GDPR', full: 'General Data Protection Regulation', color: 'border-green-200 bg-green-500/10 text-green-800' },
+  hipaa: { label: 'HIPAA', full: 'Health Insurance Portability & Accountability Act', color: 'border-purple-200 bg-purple-500/10 text-purple-800' },
+  dora: { label: 'DORA', full: 'Digital Operational Resilience Act', color: 'border-amber-200 bg-amber-500/10 text-amber-800' },
 };
 
 export default function SecurityPage() {
@@ -61,7 +61,7 @@ export default function SecurityPage() {
         {/* Encryption */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <div className="flex items-center gap-2 mb-3">
-            <div className="p-2 bg-blue-50 rounded-lg"><Lock className="w-4 h-4 text-blue-600" /></div>
+            <div className="p-2 bg-blue-500/10 rounded-lg"><Lock className="w-4 h-4 text-blue-600" /></div>
             <span className="text-sm font-semibold text-gray-800">Encryption</span>
           </div>
           <div className="space-y-1.5">
@@ -80,7 +80,7 @@ export default function SecurityPage() {
         {/* Immutability */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <div className="flex items-center gap-2 mb-3">
-            <div className="p-2 bg-green-50 rounded-lg"><ShieldCheck className="w-4 h-4 text-green-600" /></div>
+            <div className="p-2 bg-green-500/10 rounded-lg"><ShieldCheck className="w-4 h-4 text-green-600" /></div>
             <span className="text-sm font-semibold text-gray-800">Immutability</span>
           </div>
           <div className="space-y-1.5">
@@ -101,7 +101,7 @@ export default function SecurityPage() {
         {/* Coverage */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <div className="flex items-center gap-2 mb-3">
-            <div className="p-2 bg-purple-50 rounded-lg"><Users className="w-4 h-4 text-purple-600" /></div>
+            <div className="p-2 bg-purple-500/10 rounded-lg"><Users className="w-4 h-4 text-purple-600" /></div>
             <span className="text-sm font-semibold text-gray-800">Coverage</span>
           </div>
           <div className="text-2xl font-bold text-gray-900">{data?.coverage?.coverage_percent || 0}%</div>
@@ -141,7 +141,7 @@ export default function SecurityPage() {
         <h2 className="text-sm font-semibold text-gray-800 mb-4">Security Controls ({score?.active_features}/{score?.total_features} active)</h2>
         <div className="space-y-4">
           {Object.entries(grouped).map(([category, items]) => {
-            const config = CATEGORY_CONFIG[category] || { label: category, icon: Shield, color: 'text-gray-600', bg: 'bg-gray-50' };
+            const config = CATEGORY_CONFIG[category] || { label: category, icon: Shield, color: 'text-gray-600', bg: 'bg-gray-800/50' };
             const Icon = config.icon;
             return (
               <div key={category}>
@@ -151,7 +151,7 @@ export default function SecurityPage() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 ml-8">
                   {items.map((f: any) => (
-                    <div key={f.name} className="flex items-start gap-2 p-2.5 bg-gray-50 rounded-lg">
+                    <div key={f.name} className="flex items-start gap-2 p-2.5 bg-gray-800/50 rounded-lg">
                       {f.status === 'active'
                         ? <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
                         : <XCircle className="w-4 h-4 text-gray-300 flex-shrink-0 mt-0.5" />}

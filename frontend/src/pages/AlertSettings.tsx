@@ -38,7 +38,7 @@ export default function AlertSettings() {
             <Mail className="w-5 h-5 text-blue-600" />
             <h3 className="font-semibold text-gray-900">Email Alerts</h3>
             {config?.smtp_configured
-              ? <span className="ml-auto px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">Configured</span>
+              ? <span className="ml-auto px-2 py-0.5 bg-green-500/15 text-green-400 text-xs rounded-full font-medium">Configured</span>
               : <span className="ml-auto px-2 py-0.5 bg-gray-100 text-gray-500 text-xs rounded-full font-medium">Not Configured</span>
             }
           </div>
@@ -58,9 +58,9 @@ export default function AlertSettings() {
             </div>
           </div>
 
-          <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-            <p className="text-xs text-blue-700">
-              Configure via environment variables: <code className="bg-blue-100 px-1 rounded">SMTP_HOST</code>, <code className="bg-blue-100 px-1 rounded">SMTP_PORT</code>, <code className="bg-blue-100 px-1 rounded">SMTP_USER</code>, <code className="bg-blue-100 px-1 rounded">SMTP_PASSWORD</code>, <code className="bg-blue-100 px-1 rounded">SMTP_FROM</code>, <code className="bg-blue-100 px-1 rounded">ALERT_EMAIL_RECIPIENTS</code>
+          <div className="mt-4 p-3 bg-blue-500/10 rounded-lg">
+            <p className="text-xs text-blue-400">
+              Configure via environment variables: <code className="bg-blue-500/15 px-1 rounded">SMTP_HOST</code>, <code className="bg-blue-500/15 px-1 rounded">SMTP_PORT</code>, <code className="bg-blue-500/15 px-1 rounded">SMTP_USER</code>, <code className="bg-blue-500/15 px-1 rounded">SMTP_PASSWORD</code>, <code className="bg-blue-500/15 px-1 rounded">SMTP_FROM</code>, <code className="bg-blue-500/15 px-1 rounded">ALERT_EMAIL_RECIPIENTS</code>
             </p>
           </div>
         </div>
@@ -71,7 +71,7 @@ export default function AlertSettings() {
             <Globe className="w-5 h-5 text-purple-600" />
             <h3 className="font-semibold text-gray-900">Webhook Alerts</h3>
             {config?.webhook_configured
-              ? <span className="ml-auto px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">Configured</span>
+              ? <span className="ml-auto px-2 py-0.5 bg-green-500/15 text-green-400 text-xs rounded-full font-medium">Configured</span>
               : <span className="ml-auto px-2 py-0.5 bg-gray-100 text-gray-500 text-xs rounded-full font-medium">Not Configured</span>
             }
           </div>
@@ -83,9 +83,9 @@ export default function AlertSettings() {
             </div>
           </div>
 
-          <div className="mt-4 p-3 bg-purple-50 rounded-lg">
-            <p className="text-xs text-purple-700">
-              Supports Slack, Teams, or custom webhooks. Set <code className="bg-purple-100 px-1 rounded">ALERT_WEBHOOK_URL</code> environment variable.
+          <div className="mt-4 p-3 bg-purple-500/10 rounded-lg">
+            <p className="text-xs text-purple-400">
+              Supports Slack, Teams, or custom webhooks. Set <code className="bg-purple-500/15 px-1 rounded">ALERT_WEBHOOK_URL</code> environment variable.
             </p>
           </div>
         </div>
@@ -105,12 +105,12 @@ export default function AlertSettings() {
             { event: 'Storage Warning', desc: 'When storage usage exceeds threshold', severity: 'warning' },
             { event: 'WORM Lock Applied', desc: 'When immutable retention lock is set', severity: 'info' },
           ].map(({ event, desc, severity }) => (
-            <div key={event} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+            <div key={event} className="flex items-center gap-3 p-3 bg-gray-800/50 rounded-lg">
               <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${
-                severity === 'critical' ? 'bg-red-100 text-red-700' :
+                severity === 'critical' ? 'bg-red-500/15 text-red-400' :
                 severity === 'error' ? 'bg-orange-100 text-orange-700' :
                 severity === 'warning' ? 'bg-yellow-100 text-yellow-700' :
-                'bg-blue-100 text-blue-700'
+                'bg-blue-500/15 text-blue-400'
               }`}>{severity}</span>
               <div>
                 <p className="font-medium text-gray-800">{event}</p>
@@ -137,7 +137,7 @@ export default function AlertSettings() {
           </button>
         </div>
         {testResult && (
-          <div className={`mt-3 p-3 rounded-lg flex items-center gap-2 text-sm ${testResult.sent ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+          <div className={`mt-3 p-3 rounded-lg flex items-center gap-2 text-sm ${testResult.sent ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
             {testResult.sent ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
             {testResult.message}
           </div>

@@ -133,7 +133,7 @@ export default function ProductTour({ onComplete }: ProductTourProps) {
       <div className="relative pointer-events-auto mb-6 mx-4 w-full max-w-lg animate-slide-up">
         <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
           {/* Progress bar */}
-          <div className="h-1 bg-gray-100">
+          <div className="h-1 bg-gray-700">
             <div
               className={`h-full ${current.color} transition-all duration-500`}
               style={{ width: `${progress}%` }}

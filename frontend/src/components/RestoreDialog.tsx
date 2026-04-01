@@ -62,7 +62,7 @@ export default function RestoreDialog({
         <div className="p-6 space-y-4">
           {/* Success */}
           {restoreMutation.isSuccess && (
-            <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center space-y-2">
+            <div className="bg-green-500/10 border border-green-200 rounded-xl p-4 text-center space-y-2">
               <CheckCircle className="w-10 h-10 text-green-500 mx-auto" />
               <p className="font-semibold text-green-800">Restore {result?.status === 'queued' ? 'Queued' : 'Complete'}</p>
               <p className="text-sm text-green-600">
@@ -77,7 +77,7 @@ export default function RestoreDialog({
 
           {/* Error */}
           {restoreMutation.isError && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center space-y-2">
+            <div className="bg-red-500/10 border border-red-200 rounded-xl p-4 text-center space-y-2">
               <AlertTriangle className="w-10 h-10 text-red-500 mx-auto" />
               <p className="font-semibold text-red-800">Restore Failed</p>
               <p className="text-sm text-red-600">{(restoreMutation.error as any)?.message || 'Unknown error'}</p>
@@ -91,7 +91,7 @@ export default function RestoreDialog({
           {!restoreMutation.isSuccess && !restoreMutation.isError && (
             <>
               {/* Object info */}
-              <div className="bg-gray-50 rounded-xl p-4">
+              <div className="bg-gray-800/50 rounded-xl p-4">
                 <p className="text-sm font-medium text-gray-900">{objectName}</p>
                 <p className="text-xs text-gray-500 mt-1">
                   Snapshot: {snapshotDate?.slice(0, 16) || `#${snapshotId}`}
@@ -111,7 +111,7 @@ export default function RestoreDialog({
                     ] : []),
                   ].map(opt => (
                     <label key={opt.value} className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
-                      restoreType === opt.value ? 'border-green-400 bg-green-50' : 'border-gray-200 hover:border-green-200'
+                      restoreType === opt.value ? 'border-green-400 bg-green-500/10' : 'border-gray-200 hover:border-green-200'
                     }`}>
                       <input
                         type="radio" name="restoreType" value={opt.value}
@@ -129,9 +129,9 @@ export default function RestoreDialog({
               </div>
 
               {/* Malware scan notice */}
-              <div className="flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-lg p-3">
+              <div className="flex items-start gap-2 bg-blue-500/10 border border-blue-100 rounded-lg p-3">
                 <Shield className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                <p className="text-xs text-blue-700">
+                <p className="text-xs text-blue-400">
                   Malware scan will run automatically before restore. If threats are detected, the restore will be blocked.
                 </p>
               </div>
@@ -144,7 +144,7 @@ export default function RestoreDialog({
 
               {/* Actions */}
               <div className="flex gap-3">
-                <button onClick={onClose} className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <button onClick={onClose} className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-800/50">
                   Cancel
                 </button>
                 <button

@@ -265,7 +265,7 @@ export default function DataTable<T extends Record<string, any>>({
             {exportable && (
               <button
                 onClick={handleExport}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-800/50 transition-colors"
               >
                 <Download className="w-3.5 h-3.5" /> Export
               </button>
@@ -335,7 +335,7 @@ export default function DataTable<T extends Record<string, any>>({
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
+              <tr className="border-b border-gray-700 bg-gray-800/50">
                 {columns.map(col => (
                   <th
                     key={col.key}
@@ -379,7 +379,7 @@ export default function DataTable<T extends Record<string, any>>({
                   <tr
                     key={getRowKey(row, idx)}
                     className={`transition-colors ${
-                      onRowClick ? 'cursor-pointer hover:bg-blue-50' : 'hover:bg-gray-50'
+                      onRowClick ? 'cursor-pointer hover:bg-blue-500/10' : 'hover:bg-gray-800/50'
                     }`}
                     onClick={onRowClick ? () => onRowClick(row) : undefined}
                   >
@@ -417,7 +417,7 @@ export default function DataTable<T extends Record<string, any>>({
 
         {/* Pagination */}
         {data && data.total > pageSize && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-700 bg-gray-800/50">
             <div className="flex items-center gap-2 text-xs text-gray-500">
               <span>Rows per page:</span>
               <select

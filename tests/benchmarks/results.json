@@ -1,72 +1,72 @@
 {
-  "timestamp": "2026-03-26T02:13:20.305036Z",
+  "timestamp": "2026-04-01T05:38:25.871668Z",
   "target": "http://localhost:8000",
-  "version": "1.4.0",
+  "version": "3.0.0",
   "benchmarks": {
     "health_check": {
       "status": "healthy",
-      "latency_ms": 4.6
+      "latency_ms": 8.1
     },
     "api_latency": {
       "Dashboard": {
-        "avg_ms": 16.5,
-        "p50_ms": 10.8,
-        "p95_ms": 40.2,
-        "p99_ms": 40.2
+        "avg_ms": 13.6,
+        "p50_ms": 11.0,
+        "p95_ms": 24.0,
+        "p99_ms": 24.0
       },
       "Jobs List": {
-        "avg_ms": 7.9,
-        "p50_ms": 6.3,
-        "p95_ms": 15.7,
-        "p99_ms": 15.7
+        "avg_ms": 6.7,
+        "p50_ms": 5.5,
+        "p95_ms": 11.5,
+        "p99_ms": 11.5
       },
       "Tenants": {
-        "avg_ms": 5.1,
-        "p50_ms": 4.3,
-        "p95_ms": 9.7,
-        "p99_ms": 9.7
+        "avg_ms": 6.3,
+        "p50_ms": 6.6,
+        "p95_ms": 10.4,
+        "p99_ms": 10.4
       },
       "SLA Policies": {
-        "avg_ms": 6.4,
-        "p50_ms": 5.9,
-        "p95_ms": 8.9,
-        "p99_ms": 8.9
+        "avg_ms": 4.1,
+        "p50_ms": 4.2,
+        "p95_ms": 4.3,
+        "p99_ms": 4.3
       },
       "Health Score": {
-        "avg_ms": 6.7,
-        "p50_ms": 5.8,
-        "p95_ms": 11.3,
-        "p99_ms": 11.3
+        "avg_ms": 7.5,
+        "p50_ms": 7.2,
+        "p95_ms": 9.8,
+        "p99_ms": 9.8
       },
       "Reports": {
-        "avg_ms": 17.6,
-        "p50_ms": 16.4,
-        "p95_ms": 23.2,
-        "p99_ms": 23.2
+        "avg_ms": 21.9,
+        "p50_ms": 18.8,
+        "p95_ms": 33.7,
+        "p99_ms": 33.7
       },
       "Usage": {
-        "avg_ms": 6.3,
-        "p50_ms": 5.9,
-        "p95_ms": 8.3,
-        "p99_ms": 8.3
+        "avg_ms": 7.0,
+        "p50_ms": 6.8,
+        "p95_ms": 9.6,
+        "p99_ms": 9.6
       },
       "Security Posture": {
-        "avg_ms": 5.9,
-        "p50_ms": 5.5,
-        "p95_ms": 7.5,
-        "p99_ms": 7.5
+        "avg_ms": 7.2,
+        "p50_ms": 6.7,
+        "p95_ms": 8.7,
+        "p99_ms": 8.7
       },
       "Failed Items": {
-        "avg_ms": 7.4,
-        "p50_ms": 5.3,
-        "p95_ms": 13.8,
-        "p99_ms": 13.8
+        "avg_ms": 9.3,
+        "p50_ms": 9.8,
+        "p95_ms": 11.1,
+        "p99_ms": 11.1
       },
       "Audit Logs": {
-        "avg_ms": 5.8,
-        "p50_ms": 5.4,
-        "p95_ms": 7.4,
-        "p99_ms": 7.4
+        "avg_ms": 6.0,
+        "p50_ms": 5.6,
+        "p95_ms": 8.1,
+        "p99_ms": 8.1
       }
     },
     "backup": {
@@ -74,7 +74,7 @@
         "objects": 1,
         "items": 0,
         "size_bytes": 0,
-        "duration_sec": 0.08,
+        "duration_sec": 0.13,
         "items_per_sec": 0.0,
         "mb_per_sec": 0.0,
         "status": "success"
@@ -83,7 +83,7 @@
         "objects": 1,
         "items": 0,
         "size_bytes": 0,
-        "duration_sec": 0.03,
+        "duration_sec": 0.05,
         "items_per_sec": 0.0,
         "mb_per_sec": 0.0,
         "status": "success"
@@ -92,7 +92,7 @@
         "objects": 1,
         "items": 0,
         "size_bytes": 0,
-        "duration_sec": 0.02,
+        "duration_sec": 0.04,
         "items_per_sec": 0.0,
         "mb_per_sec": 0.0,
         "status": "success"
@@ -101,7 +101,7 @@
         "objects": 1,
         "items": 0,
         "size_bytes": 0,
-        "duration_sec": 0.05,
+        "duration_sec": 0.03,
         "items_per_sec": 0.0,
         "mb_per_sec": 0.0,
         "status": "success"
@@ -117,8 +117,8 @@
       }
     },
     "storage": {
-      "total_size_bytes": 27735660,
-      "compression_ratio": 2.14,
+      "total_size_bytes": 0,
+      "compression_ratio": 1.0,
       "dedup_ratio": null
     },
     "success_rate": {
@@ -127,9 +127,9 @@
       "total_jobs": null
     },
     "concurrent": {
-      "5_concurrent_avg_ms": 42.1,
-      "10_concurrent_avg_ms": 79.9,
-      "25_concurrent_avg_ms": 33.9
+      "5_concurrent_avg_ms": 46.4,
+      "10_concurrent_avg_ms": 81.6,
+      "25_concurrent_avg_ms": 546.4
     }
   }
 }

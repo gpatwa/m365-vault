@@ -46,7 +46,7 @@ export default function SearchTrigger({
       <span className="flex-1 text-sm text-gray-400 group-hover:text-gray-500 transition-colors">
         {placeholder}
       </span>
-      <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-gray-50 border border-gray-200 rounded text-[10px] text-gray-400 font-mono">
+      <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-gray-800/50 border border-gray-200 rounded text-[10px] text-gray-400 font-mono">
         <Command className="w-3 h-3" />K
       </kbd>
     </button>

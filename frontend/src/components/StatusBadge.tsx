@@ -1,19 +1,19 @@
 import { clsx } from 'clsx';
 
 const statusColors: Record<string, string> = {
-  protected: 'bg-green-100 text-green-800',
+  protected: 'bg-green-500/15 text-green-800',
   unprotected: 'bg-gray-100 text-gray-800',
-  active: 'bg-green-100 text-green-800',
-  completed: 'bg-green-100 text-green-800',
-  in_progress: 'bg-blue-100 text-blue-800',
+  active: 'bg-green-500/15 text-green-800',
+  completed: 'bg-green-500/15 text-green-800',
+  in_progress: 'bg-blue-500/15 text-blue-800',
   queued: 'bg-yellow-100 text-yellow-800',
-  failed: 'bg-red-100 text-red-800',
+  failed: 'bg-red-500/15 text-red-800',
   partial: 'bg-orange-100 text-orange-800',
-  error: 'bg-red-100 text-red-800',
+  error: 'bg-red-500/15 text-red-800',
   paused: 'bg-yellow-100 text-yellow-800',
   expired: 'bg-gray-100 text-gray-500',
-  success: 'bg-green-100 text-green-800',
-  onboarding: 'bg-blue-100 text-blue-800',
+  success: 'bg-green-500/15 text-green-800',
+  onboarding: 'bg-blue-500/15 text-blue-800',
 };
 
 export default function StatusBadge({ status }: { status: string }) {

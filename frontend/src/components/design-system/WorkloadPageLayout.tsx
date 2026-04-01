@@ -160,8 +160,8 @@ export default function WorkloadPageLayout({
       {statusMessage && (
         <div className={`rounded-lg p-3 mb-4 text-sm ${
           statusMessage.includes('failed') || statusMessage.includes('error')
-            ? 'bg-red-50 border border-red-200 text-red-700'
-            : 'bg-green-50 border border-green-200 text-green-700'
+            ? 'bg-red-500/10 border border-red-500/30 text-red-400'
+            : 'bg-green-500/10 border border-green-500/30 text-green-400'
         }`}>
           {statusMessage}
         </div>

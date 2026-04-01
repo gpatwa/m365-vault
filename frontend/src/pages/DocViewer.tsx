@@ -60,8 +60,8 @@ function renderMarkdown(md: string): string {
     .replace(/^(\|.+\|)$/gm, (line) => {
       if (/^\|[\s:-]+\|$/.test(line)) return '';
       const cells = line.split('|').filter(c => c.trim() !== '');
-      return '<tr class="hover:bg-gray-50">' + cells.map(c =>
-        `<td class="px-4 py-2.5 text-sm text-gray-700 border-b border-gray-100">${c.trim()}</td>`
+      return '<tr class="hover:bg-gray-800/50">' + cells.map(c =>
+        `<td class="px-4 py-2.5 text-sm text-gray-700 border-b border-gray-700">${c.trim()}</td>`
       ).join('') + '</tr>';
     })
     // Wrap table rows
@@ -69,7 +69,7 @@ function renderMarkdown(md: string): string {
       const rows = block.trim().split('\n');
       const header = rows[0]?.replace(/<td/g, '<th').replace(/<\/td>/g, '</th>').replace(/text-gray-700/g, 'text-gray-600 font-medium') || '';
       const body = rows.slice(1).join('\n');
-      return `<div class="overflow-x-auto my-6 rounded-xl border border-gray-200"><table class="w-full text-sm"><thead class="bg-gray-50">${header}</thead><tbody>${body}</tbody></table></div>`;
+      return `<div class="overflow-x-auto my-6 rounded-xl border border-gray-200"><table class="w-full text-sm"><thead class="bg-gray-800/50">${header}</thead><tbody>${body}</tbody></table></div>`;
     })
     // Lists
     .replace(/^- (.+)$/gm, '<li class="text-sm text-gray-700 leading-relaxed">$1</li>')
@@ -85,7 +85,7 @@ function renderMarkdown(md: string): string {
 
     if (block.type === 'mermaid') {
       const id = `mermaid-${Date.now()}-${idx}`;
-      return `<div class="my-8 p-6 bg-gray-50 rounded-xl border border-gray-200 overflow-x-auto"><pre class="mermaid" id="${id}">${block.content}</pre></div>`;
+      return `<div class="my-8 p-6 bg-gray-800/50 rounded-xl border border-gray-200 overflow-x-auto"><pre class="mermaid" id="${id}">${block.content}</pre></div>`;
     }
 
     // Regular code block
@@ -128,7 +128,7 @@ export default function DocViewer() {
 
   return (
     <div className="min-h-screen bg-white">
-      <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-sm border-b border-gray-100">
+      <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-sm border-b border-gray-700">
         <div className="max-w-4xl mx-auto px-6 py-3 flex items-center justify-between">
           <Link to="/welcome" className="flex items-center gap-2">
             <Shield className="w-6 h-6 text-blue-600" />
@@ -151,7 +151,7 @@ export default function DocViewer() {
         )}
 
         {error && (
-          <div className="mt-8 bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+          <div className="mt-8 bg-red-500/10 border border-red-200 rounded-xl p-6 text-center">
             <p className="text-red-600 font-medium">Document not found</p>
             <Link to="/docs" className="text-sm text-blue-600 hover:underline mt-2 block">Back to documentation</Link>
           </div>

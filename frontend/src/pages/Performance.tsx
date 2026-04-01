@@ -80,7 +80,7 @@ export default function Performance() {
       </div>
 
       {noResults ? (
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-8 text-center">
+        <div className="bg-gray-800/50 border border-gray-200 rounded-xl p-8 text-center">
           <Server className="w-10 h-10 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-600 font-medium">No benchmark results available</p>
           <p className="text-sm text-gray-400 mt-1">Run <code className="bg-gray-200 px-2 py-0.5 rounded text-xs">make benchmark</code> to generate performance data</p>
@@ -150,7 +150,7 @@ export default function Performance() {
               <p className="text-xs text-gray-400 mb-4">Per-endpoint latency percentiles</p>
               <div className="overflow-auto max-h-48">
                 <table className="w-full text-xs">
-                  <thead className="bg-gray-50 sticky top-0">
+                  <thead className="bg-gray-800/50 sticky top-0">
                     <tr>
                       <th className="text-left px-2 py-1.5 font-medium text-gray-600">Endpoint</th>
                       <th className="text-right px-2 py-1.5 font-medium text-gray-600">Avg</th>
@@ -160,7 +160,7 @@ export default function Performance() {
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {Object.entries(b.api_latency || {}).map(([name, v]) => (
-                      <tr key={name} className="hover:bg-gray-50">
+                      <tr key={name} className="hover:bg-gray-800/50">
                         <td className="px-2 py-1.5 text-gray-700">{name}</td>
                         <td className="px-2 py-1.5 text-right font-mono">{v.avg_ms.toFixed(1)}</td>
                         <td className="px-2 py-1.5 text-right font-mono">{v.p50_ms.toFixed(1)}</td>
@@ -234,7 +234,7 @@ export default function Performance() {
           </div>
 
           {/* How to run */}
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
+          <div className="bg-gray-800/50 border border-gray-200 rounded-xl p-4 text-center">
             <p className="text-xs text-gray-500">
               Run <code className="bg-gray-200 px-2 py-0.5 rounded">make benchmark</code> to refresh these results.
               Benchmarks measure real API performance against the running system.

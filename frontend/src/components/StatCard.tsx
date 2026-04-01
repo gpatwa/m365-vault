@@ -9,13 +9,13 @@ interface StatCardProps {
 }
 
 const colorMap: Record<string, string> = {
-  blue: 'bg-blue-50 text-blue-600',
-  green: 'bg-green-50 text-green-600',
-  red: 'bg-red-50 text-red-600',
-  yellow: 'bg-yellow-50 text-yellow-600',
-  purple: 'bg-purple-50 text-purple-600',
-  indigo: 'bg-indigo-50 text-indigo-600',
-  amber: 'bg-amber-50 text-amber-600',
+  blue: 'bg-blue-500/10 text-blue-400',
+  green: 'bg-green-500/10 text-green-400',
+  red: 'bg-red-500/10 text-red-400',
+  yellow: 'bg-yellow-500/10 text-yellow-400',
+  purple: 'bg-purple-500/10 text-purple-400',
+  indigo: 'bg-indigo-500/10 text-indigo-400',
+  amber: 'bg-amber-500/10 text-amber-400',
 };
 
 export default function StatCard({ title, value, subtitle, icon: Icon, color = 'blue' }: StatCardProps) {

@@ -133,7 +133,7 @@ export default function Search() {
             </div>
             <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b">
+                <thead className="bg-gray-800/50 border-b">
                   <tr>
                     <th className="text-left px-4 py-2 font-medium text-gray-600">Type</th>
                     <th className="text-left px-4 py-2 font-medium text-gray-600">Name</th>
@@ -147,7 +147,7 @@ export default function Search() {
                   {items.map(item => {
                     const TypeIcon = ITEM_TYPE_ICONS[item.item_type] || FileText;
                     return (
-                      <tr key={`${item.snapshot_id}-${item.item_id}`} className="hover:bg-gray-50">
+                      <tr key={`${item.snapshot_id}-${item.item_id}`} className="hover:bg-gray-800/50">
                         <td className="px-4 py-2.5">
                           <div className="flex items-center gap-1.5">
                             <TypeIcon className="w-4 h-4 text-gray-400" />

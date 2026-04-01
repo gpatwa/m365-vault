@@ -38,9 +38,92 @@ class DiscoveryService:
         Args:
             workloads: Optional list like ["exchange", "entra_id"]. None = discover all.
         """
+        # Demo tenants use simulated discovery (no real Graph API)
+        if tenant.ms_tenant_id and tenant.ms_tenant_id.startswith("demo-"):
+            return await self._discover_demo(tenant, set(workloads) if workloads else None)
+
         if workloads:
             return await self._discover_filtered(tenant, set(workloads))
         return await self._discover_all_workloads(tenant)
+
+    async def _discover_demo(self, tenant: Tenant, workloads: set[str] | None) -> dict:
+        """Simulated discovery for demo tenants — creates realistic fake objects."""
+        import random
+        demo_names = [
+            ("Sarah Chen", "sarahc"), ("Marcus Johnson", "marcusj"), ("Emily Rodriguez", "emilyr"),
+            ("David Kim", "davidk"), ("Lisa Thompson", "lisat"), ("James Wilson", "jamesw"),
+            ("Priya Patel", "priyap"), ("Alex Turner", "alext"), ("Rachel Lee", "rachell"),
+            ("Tom Nakamura", "tomn"), ("Fatima Al-Zahra", "fatimaz"), ("Ben Cooper", "benc"),
+            ("Mia Santos", "mias"), ("Jake Morrison", "jakem"), ("Olga Petrov", "olgap"),
+        ]
+        site_names = ["Marketing Hub", "Engineering Wiki", "Sales Pipeline", "HR Portal", "Finance Reports", "Executive Dashboard"]
+        team_names = ["Engineering", "Marketing", "Sales", "Leadership", "All Hands"]
+        domain = tenant.name.lower().replace(" ", "") + ".com"
+        all_workloads = workloads or {"exchange", "onedrive", "sharepoint", "teams", "entra_id"}
+        results = {"mailboxes": 0, "onedrives": 0, "sites": 0, "teams": 0, "entra_objects": 0, "removed": 0, "errors": []}
+
+        for name, login in demo_names:
+            email = f"{login}@{domain}"
+            ext_id = f"demo-user-{login}"
+
+            if "exchange" in all_workloads:
+                existing = await self.db.execute(
+                    select(ProtectedObject).where(ProtectedObject.tenant_id == tenant.id, ProtectedObject.ms_object_id == ext_id, ProtectedObject.workload_type == WorkloadType.EXCHANGE)
+                )
+                if not existing.scalar_one_or_none():
+                    self.db.add(ProtectedObject(tenant_id=tenant.id, ms_object_id=ext_id, display_name=name, email=email, workload_type=WorkloadType.EXCHANGE, status=ProtectionStatus.UNPROTECTED))
+                results["mailboxes"] += 1
+
+            if "onedrive" in all_workloads:
+                od_id = f"demo-drive-{login}"
+                existing = await self.db.execute(
+                    select(ProtectedObject).where(ProtectedObject.tenant_id == tenant.id, ProtectedObject.ms_object_id == od_id, ProtectedObject.workload_type == WorkloadType.ONEDRIVE)
+                )
+                if not existing.scalar_one_or_none():
+                    self.db.add(ProtectedObject(tenant_id=tenant.id, ms_object_id=od_id, display_name=f"{name}'s OneDrive", email=email, workload_type=WorkloadType.ONEDRIVE, status=ProtectionStatus.UNPROTECTED))
+                results["onedrives"] += 1
+
+        if "sharepoint" in all_workloads:
+            for site in site_names:
+                sp_id = f"demo-site-{site.lower().replace(' ', '-')}"
+                existing = await self.db.execute(
+                    select(ProtectedObject).where(ProtectedObject.tenant_id == tenant.id, ProtectedObject.ms_object_id == sp_id, ProtectedObject.workload_type == WorkloadType.SHAREPOINT)
+                )
+                if not existing.scalar_one_or_none():
+                    self.db.add(ProtectedObject(tenant_id=tenant.id, ms_object_id=sp_id, display_name=site, workload_type=WorkloadType.SHAREPOINT, status=ProtectionStatus.UNPROTECTED))
+                results["sites"] += 1
+
+        if "teams" in all_workloads:
+            for team in team_names:
+                t_id = f"demo-team-{team.lower().replace(' ', '-')}"
+                existing = await self.db.execute(
+                    select(ProtectedObject).where(ProtectedObject.tenant_id == tenant.id, ProtectedObject.ms_object_id == t_id, ProtectedObject.workload_type == WorkloadType.TEAMS)
+                )
+                if not existing.scalar_one_or_none():
+                    self.db.add(ProtectedObject(tenant_id=tenant.id, ms_object_id=t_id, display_name=team, workload_type=WorkloadType.TEAMS, status=ProtectionStatus.UNPROTECTED))
+                results["teams"] += 1
+
+        if "entra_id" in all_workloads:
+            entra_objects = [("Users", 15), ("Groups", 8), ("Roles", 3)]
+            for obj_type, count in entra_objects:
+                e_id = f"demo-entra-{obj_type.lower()}"
+                existing = await self.db.execute(
+                    select(ProtectedObject).where(ProtectedObject.tenant_id == tenant.id, ProtectedObject.ms_object_id == e_id, ProtectedObject.workload_type == WorkloadType.ENTRA_ID)
+                )
+                if not existing.scalar_one_or_none():
+                    self.db.add(ProtectedObject(tenant_id=tenant.id, ms_object_id=e_id, display_name=f"Entra {obj_type} ({count})", workload_type=WorkloadType.ENTRA_ID, status=ProtectionStatus.UNPROTECTED))
+                results["entra_objects"] += count
+
+        # Update tenant counts
+        tenant.total_mailboxes = results["mailboxes"]
+        tenant.total_onedrives = results["onedrives"]
+        tenant.total_sites = results["sites"]
+        tenant.total_teams = results["teams"]
+        tenant.total_entra_objects = results["entra_objects"]
+        tenant.status = TenantStatus.ACTIVE
+
+        logger.info(f"Demo discovery for {tenant.name}: {results}")
+        return results
 
     async def _discover_all_workloads(self, tenant: Tenant) -> dict:
         """Run full discovery for a tenant. Returns counts."""

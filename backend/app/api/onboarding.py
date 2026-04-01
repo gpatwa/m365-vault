@@ -262,8 +262,29 @@ async def complete_onboarding(
     if not tenant:
         raise ShieldioError(CONNECTOR_TENANT_NOT_FOUND, detail="Tenant not found in database")
 
-    # Assign SLA policy if requested
-    if req.protect_all and req.sla_policy_id:
+    # Auto-create default SLA policy if none provided or doesn't exist
+    sla_id = req.sla_policy_id
+    if req.protect_all:
+        from app.models.sla_policy import SLAPolicy
+        if sla_id:
+            existing_sla = await db.get(SLAPolicy, sla_id)
+            if not existing_sla:
+                sla_id = None  # Will create default below
+        if not sla_id:
+            # Create a default daily SLA policy for this tenant
+            default_sla = SLAPolicy(
+                name=f"Daily Backup - {tenant.name}",
+                backup_frequency_hours=24,
+                retention_days=30,
+                is_active=1,
+            )
+            db.add(default_sla)
+            await db.flush()  # Get the ID
+            sla_id = default_sla.id
+            logger.info(f"Created default SLA policy {sla_id} for tenant {req.tenant_id}")
+
+    # Assign SLA policy to all unprotected objects
+    if req.protect_all and sla_id:
         from app.models.protected_object import ProtectedObject, ProtectionStatus
         result = await db.execute(
             select(ProtectedObject).where(
@@ -272,7 +293,7 @@ async def complete_onboarding(
             )
         )
         for obj in result.scalars().all():
-            obj.sla_policy_id = req.sla_policy_id
+            obj.sla_policy_id = sla_id
             obj.status = ProtectionStatus.PROTECTED
 
     # Activate tenant

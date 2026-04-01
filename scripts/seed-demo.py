@@ -98,16 +98,32 @@ async def seed():
         print("🌱 Seeding demo data for Shieldio...")
         now = datetime.utcnow()
 
-        # ── 1. Admin User ──
-        admin_exists = await db.execute(select(User).where(User.username == "admin"))
-        if not admin_exists.scalar_one_or_none():
-            admin = User(
-                username="admin", email="admin@shieldio.local",
-                password_hash=hash_password("admin123"),
-                full_name="Demo Admin", role=UserRole.ADMIN, is_active=1,
-            )
-            db.add(admin)
-            print("  ✅ Admin user: admin / admin123")
+        # ── 1. Demo Accounts ──
+        DEMO_ACCOUNTS = [
+            {"username": "admin", "email": "admin@shieldio.local", "password": "Admin123",
+             "full_name": "Platform Admin", "role": UserRole.ADMIN,
+             "purpose": "Full product with data — dashboard, all features"},
+            {"username": "demo", "email": "demo@shieldio.local", "password": "ShieldiDemo2026!",
+             "full_name": "Demo User", "role": UserRole.ADMIN,
+             "purpose": "Clean onboarding Storyline — fresh tenant setup"},
+            {"username": "msp", "email": "msp@shieldio.local", "password": "MSPDemo2026!",
+             "full_name": "MSP Partner", "role": UserRole.MSP_ADMIN,
+             "purpose": "MSP evaluation — multi-tenant dashboard, billing, branding"},
+            {"username": "viewer", "email": "viewer@shieldio.local", "password": "Viewer2026!",
+             "full_name": "Compliance Auditor", "role": UserRole.VIEWER,
+             "purpose": "Read-only — browse dashboard, reports, audit log"},
+        ]
+
+        for acct in DEMO_ACCOUNTS:
+            existing = await db.execute(select(User).where(User.username == acct["username"]))
+            if not existing.scalar_one_or_none():
+                user = User(
+                    username=acct["username"], email=acct["email"],
+                    password_hash=hash_password(acct["password"]),
+                    full_name=acct["full_name"], role=acct["role"], is_active=1,
+                )
+                db.add(user)
+                print(f"  ✅ {acct['role'].value:10} {acct['username']:8} / {acct['password']:20} — {acct['purpose']}")
 
         # ── 2. SLA Policies ──
         daily_sla = SLAPolicy(

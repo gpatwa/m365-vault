@@ -67,7 +67,7 @@ function SmartHome() {
   useEffect(() => {
     console.log('[Shieldio:SmartHome] mounted, token:', !!api.getToken());
 
-    // Check if this is the demo user — route to onboard/demo unless they completed it
+    // Route users based on their role and purpose
     api.get<any>('/auth/me')
       .then(user => {
         if (user?.username === 'demo' && !sessionStorage.getItem('demo_onboard_complete')) {
@@ -75,7 +75,12 @@ function SmartHome() {
           window.location.replace('/onboard/demo');
           return;
         }
-        // Normal user (or demo who completed onboard) — check tenants
+        if (user?.username === 'msp' || user?.role === 'msp_admin') {
+          console.log('[Shieldio:SmartHome] → MSP user, redirect /msp');
+          window.location.replace('/msp');
+          return;
+        }
+        // Normal user (admin/operator/viewer) — check tenants
         return api.get<any[]>('/tenants/');
       })
       .then(tenants => {

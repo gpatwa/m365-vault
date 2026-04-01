@@ -83,7 +83,7 @@ export default function SharePoint() {
         <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-800/50 border-b">
+            <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Name</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Path</th>
@@ -94,7 +94,7 @@ export default function SharePoint() {
             </thead>
             <tbody className="divide-y">
               {browseData?.items?.map((item, i) => (
-                <tr key={i} className="hover:bg-gray-800/50">
+                <tr key={i} className="hover:bg-gray-50">
                   <td className="px-4 py-3 font-medium flex items-center gap-2">
                     {['folder', 'document_library', 'list'].includes(item.item_type) ? <Folder className="w-4 h-4 text-yellow-500" /> : <FileText className="w-4 h-4 text-green-500" />}
                     {item.file_name || item.name}
@@ -138,15 +138,15 @@ export default function SharePoint() {
           </div>
         </div>
         {backupMsg && (
-          <div className={`rounded-lg p-3 mb-4 text-sm ${backupMsg.includes('failed') ? 'bg-red-500/10 border border-red-200 text-red-400' : 'bg-green-500/10 border border-green-200 text-green-400'}`}>
+          <div className={`rounded-lg p-3 mb-4 text-sm ${backupMsg.includes('failed') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-green-50 border border-green-200 text-green-700'}`}>
             {backupMsg}
           </div>
         )}
         <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-          <div className="p-4 border-b bg-gray-800/50"><h3 className="font-semibold">Snapshots</h3></div>
+          <div className="p-4 border-b bg-gray-50"><h3 className="font-semibold">Snapshots</h3></div>
           <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-800/50 border-b">
+            <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Date</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Type</th>
@@ -158,7 +158,7 @@ export default function SharePoint() {
             </thead>
             <tbody className="divide-y">
               {snapshots?.map(s => (
-                <tr key={s.id} className="hover:bg-gray-800/50">
+                <tr key={s.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">{s.started_at?.slice(0, 16)}</td>
                   <td className="px-4 py-3 capitalize">{s.snapshot_type}</td>
                   <td className="px-4 py-3"><StatusBadge status={s.status} /></td>
@@ -249,7 +249,7 @@ export default function SharePoint() {
       statusMessage={backupMsg}
     >
       {backupMsg && !selectedSite && (
-        <div className={`rounded-lg p-3 mb-4 text-sm ${backupMsg.includes('failed') ? 'bg-red-500/10 border border-red-200 text-red-400' : 'bg-green-500/10 border border-green-200 text-green-400'}`}>
+        <div className={`rounded-lg p-3 mb-4 text-sm ${backupMsg.includes('failed') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-green-50 border border-green-200 text-green-700'}`}>
           {backupMsg}
         </div>
       )}

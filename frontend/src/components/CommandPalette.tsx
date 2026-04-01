@@ -232,11 +232,11 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
           />
           {loading && <Loader2 className="w-4 h-4 text-blue-500 animate-spin mr-2" />}
           {workloadFilter && (
-            <button onClick={() => setWorkloadFilter(null)} className="mr-2 px-2 py-0.5 text-[10px] bg-blue-500/15 text-blue-400 rounded-full hover:bg-blue-200">
+            <button onClick={() => setWorkloadFilter(null)} className="mr-2 px-2 py-0.5 text-[10px] bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200">
               {workloadFilter.replace('_', ' ')} ×
             </button>
           )}
-          <kbd className="hidden sm:inline-flex px-2 py-0.5 text-[10px] text-gray-400 bg-gray-700 rounded font-mono">ESC</kbd>
+          <kbd className="hidden sm:inline-flex px-2 py-0.5 text-[10px] text-gray-400 bg-gray-100 rounded font-mono">ESC</kbd>
         </div>
 
         {/* Results Area */}
@@ -258,7 +258,7 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
                 <button
                   key={nav.path}
                   onClick={() => goToLink(nav.path)}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left hover:bg-gray-800/50 text-gray-700"
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left hover:bg-gray-50 text-gray-700"
                 >
                   <ArrowRight className="w-4 h-4 text-gray-300" />
                   <span className="text-sm flex-1">{nav.label}</span>
@@ -281,9 +281,9 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
                 return (
                   <div
                     key={`${category}-${item.id}-${i}`}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800/50 group"
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 group"
                   >
-                    <div className={`p-1.5 rounded-md ${wl?.bgColor || 'bg-gray-700'}`}>
+                    <div className={`p-1.5 rounded-md ${wl?.bgColor || 'bg-gray-100'}`}>
                       <ItemIcon className={`w-4 h-4 ${wl?.iconColor || 'text-gray-500'}`} />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -302,7 +302,7 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
                           <button
                             key={action}
                             onClick={() => handleAction(item, action)}
-                            className="px-2 py-1 text-[10px] font-medium text-blue-600 bg-blue-500/10 rounded hover:bg-blue-500/15 flex items-center gap-1 capitalize"
+                            className="px-2 py-1 text-[10px] font-medium text-blue-600 bg-blue-50 rounded hover:bg-blue-100 flex items-center gap-1 capitalize"
                             title={action}
                           >
                             <ActionIcon className="w-3 h-3" />
@@ -334,7 +334,7 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
                   <p className="px-2 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Recent</p>
                   {recentSearches.map(s => (
                     <button key={s} onClick={() => setQuery(s)}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left hover:bg-gray-800/50 text-gray-600">
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left hover:bg-gray-50 text-gray-600">
                       <Clock className="w-4 h-4 text-gray-300" />
                       <span className="text-sm">{s}</span>
                     </button>
@@ -349,12 +349,12 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
                   data-idx={i}
                   onClick={() => goToLink(link.path)}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                    selectedIdx === i ? 'bg-blue-500/10 text-blue-900' : 'hover:bg-gray-800/50 text-gray-700'
+                    selectedIdx === i ? 'bg-blue-50 text-blue-900' : 'hover:bg-gray-50 text-gray-700'
                   }`}
                 >
                   <ArrowRight className="w-4 h-4 text-gray-300" />
                   <span className="text-sm flex-1">{link.label}</span>
-                  <kbd className="px-1.5 py-0.5 text-[10px] text-gray-400 bg-gray-700 rounded font-mono">{link.shortcut}</kbd>
+                  <kbd className="px-1.5 py-0.5 text-[10px] text-gray-400 bg-gray-100 rounded font-mono">{link.shortcut}</kbd>
                 </button>
               ))}
             </div>
@@ -363,9 +363,9 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
 
         {/* Footer */}
         <div className="border-t px-4 py-2 flex items-center gap-4 text-[10px] text-gray-400">
-          <span className="flex items-center gap-1"><kbd className="px-1 bg-gray-700 rounded">↑↓</kbd> navigate</span>
-          <span className="flex items-center gap-1"><kbd className="px-1 bg-gray-700 rounded">↵</kbd> select</span>
-          <span className="flex items-center gap-1"><kbd className="px-1 bg-gray-700 rounded">esc</kbd> close</span>
+          <span className="flex items-center gap-1"><kbd className="px-1 bg-gray-100 rounded">↑↓</kbd> navigate</span>
+          <span className="flex items-center gap-1"><kbd className="px-1 bg-gray-100 rounded">↵</kbd> select</span>
+          <span className="flex items-center gap-1"><kbd className="px-1 bg-gray-100 rounded">esc</kbd> close</span>
           <span className="ml-auto flex items-center gap-1"><Command className="w-3 h-3" />K</span>
         </div>
       </div>

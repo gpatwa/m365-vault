@@ -26,9 +26,9 @@ interface PlatformCardProps {
 
 function getStatusColor(protected_: number, total: number) {
   if (total === 0) return { bg: 'bg-gray-100', text: 'text-gray-500', label: '—' };
-  if (protected_ === total) return { bg: 'bg-green-500/15', text: 'text-green-400', label: '✅' };
-  if (protected_ === 0) return { bg: 'bg-red-500/15', text: 'text-red-400', label: '❌' };
-  return { bg: 'bg-amber-500/15', text: 'text-amber-400', label: '⚠' };
+  if (protected_ === total) return { bg: 'bg-green-100', text: 'text-green-700', label: '✅' };
+  if (protected_ === 0) return { bg: 'bg-red-100', text: 'text-red-700', label: '❌' };
+  return { bg: 'bg-amber-100', text: 'text-amber-700', label: '⚠' };
 }
 
 function timeAgo(dateStr: string | null): string {
@@ -55,7 +55,7 @@ export default function PlatformCard({
       {/* Header — always visible */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full px-5 py-4 flex items-center gap-4 hover:bg-gray-800/50 transition-colors"
+        className="w-full px-5 py-4 flex items-center gap-4 hover:bg-gray-50 transition-colors"
       >
         <div className="flex-shrink-0">{icon}</div>
         <div className="flex-1 text-left">
@@ -70,9 +70,9 @@ export default function PlatformCard({
 
         {/* Health score pill */}
         <div className={`px-3 py-1.5 rounded-lg text-sm font-bold ${
-          healthScore >= 80 ? 'bg-green-500/15 text-green-400' :
-          healthScore >= 50 ? 'bg-amber-500/15 text-amber-400' :
-          'bg-red-500/15 text-red-400'
+          healthScore >= 80 ? 'bg-green-100 text-green-700' :
+          healthScore >= 50 ? 'bg-amber-100 text-amber-700' :
+          'bg-red-100 text-red-700'
         }`}>
           {healthScore}
         </div>
@@ -92,7 +92,7 @@ export default function PlatformCard({
 
       {/* Expanded: workload grid */}
       {expanded && (
-        <div className="px-5 pb-4 border-t border-gray-700">
+        <div className="px-5 pb-4 border-t border-gray-100">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mt-3">
             {workloads.map(wl => {
               const wlStatus = getStatusColor(wl.protected, wl.total);
@@ -101,7 +101,7 @@ export default function PlatformCard({
                 <button
                   key={wl.key}
                   onClick={() => navigate(wl.path)}
-                  className="bg-gray-800/50 hover:bg-white border border-gray-700 hover:border-gray-200 rounded-lg p-3 text-left transition-all hover:shadow-sm group"
+                  className="bg-gray-50 hover:bg-white border border-gray-100 hover:border-gray-200 rounded-lg p-3 text-left transition-all hover:shadow-sm group"
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <Icon className={`w-4 h-4 ${wl.iconColor}`} />
@@ -119,7 +119,7 @@ export default function PlatformCard({
                     <div
                       className={`h-full rounded-full ${
                         wl.protected === wl.total ? 'bg-green-400' :
-                        wl.protected > 0 ? 'bg-amber-400' : 'bg-red-400'
+                        wl.protected > 0 ? 'bg-amber-400' : 'bg-red-300'
                       }`}
                       style={{ width: `${wl.total > 0 ? (wl.protected / wl.total * 100) : 0}%` }}
                     />

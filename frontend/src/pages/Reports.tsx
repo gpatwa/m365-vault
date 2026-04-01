@@ -19,7 +19,7 @@ function formatBytes(bytes: number) {
 }
 
 function StatBox({ label, value, sub, color = 'blue' }: { label: string; value: string | number; sub?: string; color?: string }) {
-  const colors: Record<string, string> = { blue: 'bg-blue-500/10 text-blue-400', green: 'bg-green-500/10 text-green-400', red: 'bg-red-500/10 text-red-400', amber: 'bg-amber-500/10 text-amber-400', purple: 'bg-purple-500/10 text-purple-400' };
+  const colors: Record<string, string> = { blue: 'bg-blue-50 text-blue-700', green: 'bg-green-50 text-green-700', red: 'bg-red-50 text-red-700', amber: 'bg-amber-50 text-amber-700', purple: 'bg-purple-50 text-purple-700' };
   return (
     <div className={`rounded-lg p-4 ${colors[color] || colors.blue}`}>
       <p className="text-xs font-medium opacity-70">{label}</p>
@@ -247,7 +247,7 @@ export default function Reports() {
             <h3 className="font-semibold text-gray-800 mb-4">Compliance by SLA Policy</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-800/50">
+                <thead className="bg-gray-50">
                   <tr>
                     <th className="text-left px-4 py-2 font-medium text-gray-600">Policy</th>
                     <th className="text-center px-4 py-2 font-medium text-gray-600">Objects</th>
@@ -263,7 +263,7 @@ export default function Reports() {
                       <td className="px-4 py-2 text-center">{p.total}</td>
                       <td className="px-4 py-2 text-center text-green-600">{p.compliant}</td>
                       <td className="px-4 py-2 text-center">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${p.compliance_rate >= 95 ? 'bg-green-500/15 text-green-400' : p.compliance_rate >= 80 ? 'bg-amber-500/15 text-amber-400' : 'bg-red-500/15 text-red-400'}`}>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${p.compliance_rate >= 95 ? 'bg-green-100 text-green-700' : p.compliance_rate >= 80 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
                           {p.compliance_rate}%
                         </span>
                       </td>
@@ -284,12 +284,12 @@ export default function Reports() {
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-red-500/10">
+                  <thead className="bg-red-50">
                     <tr>
-                      <th className="text-left px-4 py-2 font-medium text-red-400">Object</th>
-                      <th className="text-left px-4 py-2 font-medium text-red-400">Workload</th>
-                      <th className="text-left px-4 py-2 font-medium text-red-400">Policy</th>
-                      <th className="text-left px-4 py-2 font-medium text-red-400">Hours Overdue</th>
+                      <th className="text-left px-4 py-2 font-medium text-red-700">Object</th>
+                      <th className="text-left px-4 py-2 font-medium text-red-700">Workload</th>
+                      <th className="text-left px-4 py-2 font-medium text-red-700">Policy</th>
+                      <th className="text-left px-4 py-2 font-medium text-red-700">Hours Overdue</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">

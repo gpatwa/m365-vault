@@ -47,7 +47,7 @@ export default function SmartEngine() {
   const scoreColor = (score: number) =>
     score >= 80 ? 'text-green-600' : score >= 50 ? 'text-yellow-600' : 'text-red-600';
   const scoreBg = (score: number) =>
-    score >= 80 ? 'bg-green-500/10 border-green-200' : score >= 50 ? 'bg-yellow-50 border-yellow-200' : 'bg-red-500/10 border-red-200';
+    score >= 80 ? 'bg-green-50 border-green-200' : score >= 50 ? 'bg-yellow-50 border-yellow-200' : 'bg-red-50 border-red-200';
 
   const formatMetric = (metric: string, value: number) => {
     if (metric === 'size_bytes') return `${(value / 1024).toFixed(1)} KB`;
@@ -129,7 +129,7 @@ export default function SmartEngine() {
               <div key={a.id} className={`p-3 ${a.resolved ? 'opacity-50' : ''}`}>
                 <div className="flex items-center gap-2 mb-1">
                   <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${
-                    a.severity === 'critical' ? 'bg-red-500/15 text-red-400' : 'bg-yellow-100 text-yellow-700'
+                    a.severity === 'critical' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
                   }`}>{a.severity}</span>
                   <span className="text-xs font-medium text-gray-700 capitalize">{a.workload}</span>
                   <span className="text-xs text-gray-400">{a.metric}</span>
@@ -156,7 +156,7 @@ export default function SmartEngine() {
           </div>
           <div className="overflow-auto max-h-96">
             <table className="w-full text-sm">
-              <thead className="bg-gray-800/50 sticky top-0">
+              <thead className="bg-gray-50 sticky top-0">
                 <tr>
                   <th className="text-left px-3 py-2 font-medium text-gray-600">Workload</th>
                   <th className="text-left px-3 py-2 font-medium text-gray-600">Metric</th>
@@ -171,7 +171,7 @@ export default function SmartEngine() {
                   <tr><td colSpan={6} className="p-8 text-center text-gray-400">No baselines yet. Run a health check to start collecting.</td></tr>
                 )}
                 {baselines?.items.map((b, i) => (
-                  <tr key={i} className="hover:bg-gray-800/50">
+                  <tr key={i} className="hover:bg-gray-50">
                     <td className="px-3 py-2 capitalize font-medium text-gray-700">{b.workload.replace('_', ' ')}</td>
                     <td className="px-3 py-2 text-gray-600">{b.metric}</td>
                     <td className="px-3 py-2 text-right font-mono">{formatMetric(b.metric, b.avg)}</td>
@@ -187,7 +187,7 @@ export default function SmartEngine() {
       </div>
 
       {/* How it works */}
-      <div className="mt-6 bg-purple-500/10 border border-purple-200 rounded-xl p-5">
+      <div className="mt-6 bg-purple-50 border border-purple-200 rounded-xl p-5">
         <h3 className="font-semibold text-purple-900 mb-2 flex items-center gap-2">
           <Brain className="w-4 h-4" /> How Smart Engine Works
         </h3>

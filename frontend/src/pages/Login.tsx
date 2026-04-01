@@ -189,7 +189,7 @@ export default function Login() {
               <button
                 onClick={handleSSO}
                 disabled={ssoLoading}
-                className="w-full py-2.5 bg-white border-2 border-gray-200 rounded-xl font-medium text-gray-700 hover:bg-gray-800/50 hover:border-gray-300 transition-all flex items-center justify-center gap-3"
+                className="w-full py-2.5 bg-white border-2 border-gray-200 rounded-xl font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-3"
               >
                 <svg className="w-5 h-5" viewBox="0 0 21 21"><path d="M0 0h10v10H0z" fill="#f25022"/><path d="M11 0h10v10H11z" fill="#7fba00"/><path d="M0 11h10v10H0z" fill="#00a4ef"/><path d="M11 11h10v10H11z" fill="#ffb900"/></svg>
                 {ssoLoading ? 'Redirecting...' : 'Continue with Microsoft'}
@@ -203,8 +203,8 @@ export default function Login() {
 
           {/* Error */}
           {error && (
-            <div className="bg-red-500/10 border border-red-100 text-red-600 rounded-xl p-3 mb-4 text-sm flex items-start gap-2">
-              <div className="w-4 h-4 bg-red-500/15 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+            <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl p-3 mb-4 text-sm flex items-start gap-2">
+              <div className="w-4 h-4 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                 <span className="text-[10px] font-bold">!</span>
               </div>
               {error}
@@ -295,7 +295,7 @@ export default function Login() {
           </p>
 
           {/* Footer */}
-          <div className="mt-8 pt-6 border-t border-gray-700 text-center">
+          <div className="mt-8 pt-6 border-t border-gray-100 text-center">
             <p className="text-[11px] text-gray-400">
               Free for up to 25 users.{' '}
               <Link to="/legal?tab=tos" className="underline hover:text-gray-600">Terms</Link>

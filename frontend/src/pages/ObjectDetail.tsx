@@ -79,7 +79,7 @@ export default function ObjectDetail() {
       </nav>
 
       {/* Object Summary Bar */}
-      <div className={`rounded-xl border ${wlConfig?.borderColor || 'border-gray-200'} ${wlConfig?.bgColor || 'bg-gray-800/50'} p-5 mb-6`}>
+      <div className={`rounded-xl border ${wlConfig?.borderColor || 'border-gray-200'} ${wlConfig?.bgColor || 'bg-gray-50'} p-5 mb-6`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {Icon && (
@@ -92,8 +92,8 @@ export default function ObjectDetail() {
               <div className="flex items-center gap-3 mt-0.5">
                 {object?.status && (
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    object.status === 'protected' ? 'bg-green-500/15 text-green-400' :
-                    object.status === 'error' ? 'bg-red-500/15 text-red-400' :
+                    object.status === 'protected' ? 'bg-green-100 text-green-700' :
+                    object.status === 'error' ? 'bg-red-100 text-red-700' :
                     'bg-gray-100 text-gray-600'
                   }`}>
                     {object.status}
@@ -126,7 +126,7 @@ export default function ObjectDetail() {
         {/* Left: Snapshot History */}
         <div className="lg:col-span-1">
           <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
-            <div className="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-gray-400" />
                 <h3 className="text-sm font-semibold text-gray-800">Backup History</h3>
@@ -142,8 +142,8 @@ export default function ObjectDetail() {
                 (snapshots?.items || []).map((snap: Snapshot) => (
                   <div
                     key={snap.id}
-                    className={`px-4 py-3 hover:bg-gray-800/50 cursor-pointer transition-colors ${
-                      snap.id === latestSnapshotId ? 'bg-blue-500/10/50 border-l-2 border-blue-400' : ''
+                    className={`px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors ${
+                      snap.id === latestSnapshotId ? 'bg-blue-50/50 border-l-2 border-blue-400' : ''
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -182,7 +182,7 @@ export default function ObjectDetail() {
         {/* Right: Item Catalog */}
         <div className="lg:col-span-2">
           <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
-            <div className="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-gray-400" />
                 <h3 className="text-sm font-semibold text-gray-800">
@@ -201,7 +201,7 @@ export default function ObjectDetail() {
                 </div>
               ) : (
                 <table className="w-full">
-                  <thead className="bg-gray-800/50 sticky top-0">
+                  <thead className="bg-gray-50 sticky top-0">
                     <tr>
                       <th className="text-left px-4 py-2 text-[10px] font-semibold text-gray-500 uppercase">Name</th>
                       <th className="text-left px-4 py-2 text-[10px] font-semibold text-gray-500 uppercase">Type</th>
@@ -212,7 +212,7 @@ export default function ObjectDetail() {
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {(items?.items || []).map((item: SnapshotItem) => (
-                      <tr key={item.id} className="hover:bg-gray-800/50 transition-colors">
+                      <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-2.5">
                           <p className="text-sm text-gray-800 font-medium truncate max-w-[250px]">{item.name}</p>
                         </td>
@@ -224,7 +224,7 @@ export default function ObjectDetail() {
                         <td className="px-4 py-2.5 text-xs text-gray-500 truncate max-w-[150px]">{item.path || '-'}</td>
                         <td className="px-4 py-2.5 text-xs text-gray-500 text-right">{formatSize(item.size_bytes)}</td>
                         <td className="px-4 py-2.5 text-right">
-                          <button className="text-[10px] px-2 py-1 bg-blue-500/10 text-blue-600 rounded hover:bg-blue-500/15 font-medium transition-colors">
+                          <button className="text-[10px] px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 font-medium transition-colors">
                             Restore
                           </button>
                         </td>

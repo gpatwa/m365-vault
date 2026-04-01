@@ -20,7 +20,7 @@ const CATEGORY_LABELS: Record<string, { label: string; icon: string; color: stri
   recovery: { label: 'Recovery', icon: '🔄', color: 'border-green-500/30 bg-green-500/5' },
   compliance: { label: 'Compliance', icon: '📋', color: 'border-amber-500/30 bg-amber-500/5' },
   operations: { label: 'Operations (MSP)', icon: '🏢', color: 'border-cyan-500/30 bg-cyan-500/5' },
-  platform: { label: 'Platform', icon: '⚙️', color: 'border-gray-500/30 bg-gray-800/500/5' },
+  platform: { label: 'Platform', icon: '⚙️', color: 'border-gray-500/30 bg-gray-500/5' },
 };
 
 const TIER_LABELS: Record<string, { label: string; color: string }> = {

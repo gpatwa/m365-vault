@@ -25,7 +25,7 @@ interface BillingData {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: 'bg-gray-800/500/10 text-gray-400',
+  draft: 'bg-gray-500/10 text-gray-400',
   invoiced: 'bg-blue-500/10 text-blue-400',
   paid: 'bg-green-500/10 text-green-400',
 };

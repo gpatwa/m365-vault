@@ -46,15 +46,15 @@ export default function Usage() {
   }
 
   const tierColors: Record<string, string> = {
-    community: 'border-gray-300 bg-gray-800/50',
-    professional: 'border-blue-300 bg-blue-500/10',
-    enterprise: 'border-purple-300 bg-purple-500/10',
+    community: 'border-gray-300 bg-gray-50',
+    professional: 'border-blue-300 bg-blue-50',
+    enterprise: 'border-purple-300 bg-purple-50',
   };
 
   const tierBadge: Record<string, string> = {
     community: 'bg-gray-200 text-gray-700',
-    professional: 'bg-blue-200 text-blue-400',
-    enterprise: 'bg-purple-200 text-purple-400',
+    professional: 'bg-blue-200 text-blue-700',
+    enterprise: 'bg-purple-200 text-purple-700',
   };
 
   return (
@@ -95,7 +95,7 @@ export default function Usage() {
           {license.alerts?.length > 0 && (
             <div className="mt-4 space-y-2">
               {license.alerts.map((a: any, i: number) => (
-                <div key={i} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${a.level === 'error' ? 'bg-red-500/15 text-red-400' : 'bg-amber-500/15 text-amber-400'}`}>
+                <div key={i} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${a.level === 'error' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
                   <AlertTriangle className="w-4 h-4 flex-shrink-0" />
                   {a.message}
                 </div>

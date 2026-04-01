@@ -107,7 +107,7 @@ export default function ComplianceReport({ tenantId, tenantName, onClose }: Comp
               {data.backup_coverage.workloads.length > 0 && (
                 <div className="mt-2 space-y-1">
                   {data.backup_coverage.workloads.map(wl => (
-                    <div key={wl.workload} className="flex items-center justify-between text-xs px-2 py-1 bg-gray-800/50 print:bg-gray-800/50 rounded">
+                    <div key={wl.workload} className="flex items-center justify-between text-xs px-2 py-1 bg-gray-800/50 print:bg-gray-50 rounded">
                       <span className="text-gray-300 print:text-black capitalize">{wl.workload}</span>
                       <span className="text-gray-500">{wl.protected_objects} objects | Last: {wl.last_backup ? new Date(wl.last_backup).toLocaleDateString() : 'Never'}</span>
                     </div>
@@ -182,7 +182,7 @@ export default function ComplianceReport({ tenantId, tenantName, onClose }: Comp
                 <h3 className="text-sm font-semibold text-gray-300 print:text-black mb-3">Retention Policies</h3>
                 <div className="space-y-1">
                   {data.sla_policies.map(p => (
-                    <div key={p.name} className="flex items-center justify-between text-xs px-2 py-1.5 bg-gray-800/50 print:bg-gray-800/50 rounded">
+                    <div key={p.name} className="flex items-center justify-between text-xs px-2 py-1.5 bg-gray-800/50 print:bg-gray-50 rounded">
                       <span className="text-gray-300 print:text-black font-medium">{p.name}</span>
                       <span className="text-gray-500">Every {p.frequency_hours}h | {p.retention_days}d retention{p.worm_enabled ? ' | WORM' : ''}</span>
                     </div>

@@ -11,12 +11,12 @@ export interface HeroStat {
 }
 
 const colorMap = {
-  green: { bg: 'bg-green-500/10', text: 'text-green-400', border: 'border-green-500/30', icon: 'text-green-500' },
-  blue: { bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/30', icon: 'text-blue-500' },
-  amber: { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/30', icon: 'text-amber-500' },
-  red: { bg: 'bg-red-500/10', text: 'text-red-400', border: 'border-red-500/30', icon: 'text-red-500' },
-  gray: { bg: 'bg-gray-800/50', text: 'text-gray-700', border: 'border-gray-200', icon: 'text-gray-500' },
-  purple: { bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-200', icon: 'text-purple-500' },
+  green: { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200', icon: 'text-green-500' },
+  blue: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', icon: 'text-blue-500' },
+  amber: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', icon: 'text-amber-500' },
+  red: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', icon: 'text-red-500' },
+  gray: { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200', icon: 'text-gray-500' },
+  purple: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200', icon: 'text-purple-500' },
 };
 
 const trendIcons = { up: '↑', down: '↓', flat: '→' };

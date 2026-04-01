@@ -165,7 +165,7 @@ export default function SLAPolicies() {
           <h3 className="text-lg font-semibold mb-2">Assign "{showAssign.name}" to Workloads</h3>
           <p className="text-gray-500 text-sm mb-4">Choose which workloads to protect with this SLA policy</p>
           {assignMsg && (
-            <div className="bg-green-500/10 border border-green-200 text-green-400 rounded-lg p-3 mb-4 text-sm">{assignMsg}</div>
+            <div className="bg-green-50 border border-green-200 text-green-700 rounded-lg p-3 mb-4 text-sm">{assignMsg}</div>
           )}
           <div className={`grid grid-cols-2 md:grid-cols-${WORKLOADS.length + 1} gap-3`}>
             {WORKLOADS.map(w => {
@@ -195,7 +195,7 @@ export default function SLAPolicies() {
                 <h3 className="font-semibold">{p.name}</h3>
                 {p.is_locked ? <Lock className="w-4 h-4 text-orange-500" /> : null}
                 {(p as any).worm_enabled ? <span className="px-1.5 py-0.5 bg-orange-100 text-orange-700 text-[10px] font-bold rounded" title="WORM: Write-Once Read-Many">WORM</span> : null}
-                {(p as any).legal_hold ? <span className="px-1.5 py-0.5 bg-red-500/15 text-red-400 text-[10px] font-bold rounded" title="Legal Hold: Cannot delete">HOLD</span> : null}
+                {(p as any).legal_hold ? <span className="px-1.5 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded" title="Legal Hold: Cannot delete">HOLD</span> : null}
               </div>
               <div className="flex gap-1">
                 <button onClick={() => setShowAssign(p)} title="Assign to workloads" className="p-1.5 text-gray-400 hover:text-green-600 rounded"><Link className="w-4 h-4" /></button>
@@ -218,7 +218,7 @@ export default function SLAPolicies() {
               </div>
             </div>
             <button onClick={() => setShowAssign(p)}
-              className="mt-3 w-full px-3 py-2 bg-gray-800/50 hover:bg-gray-100 border rounded-lg text-sm text-gray-600 font-medium flex items-center justify-center gap-2">
+              className="mt-3 w-full px-3 py-2 bg-gray-50 hover:bg-gray-100 border rounded-lg text-sm text-gray-600 font-medium flex items-center justify-center gap-2">
               <Link className="w-4 h-4" /> Assign to Workloads
             </button>
           </div>

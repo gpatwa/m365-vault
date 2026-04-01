@@ -19,9 +19,9 @@ const WORKLOADS = WORKLOAD_KEYS;
 
 const statusBadge = (status: string) => {
   const colors: Record<string, string> = {
-    completed: 'bg-green-500/15 text-green-400',
-    failed: 'bg-red-500/15 text-red-400',
-    in_progress: 'bg-blue-500/15 text-blue-400',
+    completed: 'bg-green-100 text-green-700',
+    failed: 'bg-red-100 text-red-700',
+    in_progress: 'bg-blue-100 text-blue-700',
     queued: 'bg-yellow-100 text-yellow-700',
     partial: 'bg-orange-100 text-orange-700',
     cancelled: 'bg-gray-100 text-gray-600',
@@ -290,9 +290,9 @@ export default function Jobs() {
         </div>
         {failedSummary && failedSummary.total_failed > 0 && (
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-red-500/10 border border-red-200 rounded-lg px-3 py-2 text-sm">
+            <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm">
               <AlertTriangle className="w-4 h-4 text-red-500" />
-              <span className="text-red-400 font-medium">{failedSummary.total_failed} failed</span>
+              <span className="text-red-700 font-medium">{failedSummary.total_failed} failed</span>
               <span className="text-red-500">({failedSummary.ready_now} ready to retry)</span>
             </div>
             <button
@@ -309,7 +309,7 @@ export default function Jobs() {
 
       {/* Retry message */}
       {retryMsg && (
-        <div className={`rounded-lg p-3 mb-4 text-sm ${retryMsg.includes('failed') ? 'bg-red-500/10 border border-red-200 text-red-400' : 'bg-green-500/10 border border-green-200 text-green-400'}`}>
+        <div className={`rounded-lg p-3 mb-4 text-sm ${retryMsg.includes('failed') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-green-50 border border-green-200 text-green-700'}`}>
           {retryMsg}
         </div>
       )}

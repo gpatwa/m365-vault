@@ -72,7 +72,7 @@ export default function Onboard() {
         </button>
       </div>
       <div className="text-center mb-10">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-500/15 rounded-2xl mb-4">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-2xl mb-4">
           <Shield className="w-8 h-8 text-blue-600" />
         </div>
         <h1 className="text-3xl font-bold text-white mb-2">Connect Your SaaS Platform</h1>
@@ -84,7 +84,7 @@ export default function Onboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {platforms.map(platform => {
           const Icon = PLATFORM_ICONS[platform.icon] || Shield;
-          const colors = PLATFORM_COLORS[platform.key] || 'border-gray-500/30 bg-gray-800/500/10';
+          const colors = PLATFORM_COLORS[platform.key] || 'border-gray-500/30 bg-gray-500/10';
           const isConnecting = connecting === platform.key;
 
           return (
@@ -332,19 +332,19 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc, onComplete, simSc
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {Object.entries(workloads).map(([k, v]: [string, any], i) => (
             <div key={k} className="text-center transition-all duration-700" style={{ opacity: countUpActive ? 1 : 0, transitionDelay: `${i * 150}ms` }}>
-              <div className="text-2xl font-bold text-green-400">{v?.total || 0}</div>
+              <div className="text-2xl font-bold text-green-700">{v?.total || 0}</div>
               <div className="text-xs text-green-600">{WORKLOAD_LABELS[k] || k}</div>
             </div>
           ))}
           {snapshotCount > 0 && (
             <div className="text-center transition-all duration-700" style={{ opacity: countUpActive ? 1 : 0, transitionDelay: `${Object.keys(workloads).length * 150}ms` }}>
-              <div className="text-2xl font-bold text-green-400">{animSnaps}</div>
+              <div className="text-2xl font-bold text-green-700">{animSnaps}</div>
               <div className="text-xs text-green-600">Snapshots</div>
             </div>
           )}
           {totalStorage > 0 && (
             <div className="text-center transition-all duration-700" style={{ opacity: countUpActive ? 1 : 0, transitionDelay: `${(Object.keys(workloads).length + 1) * 150}ms` }}>
-              <div className="text-2xl font-bold text-green-400">{fmtBytes(totalStorage)}</div>
+              <div className="text-2xl font-bold text-green-700">{fmtBytes(totalStorage)}</div>
               <div className="text-xs text-green-600">Protected</div>
             </div>
           )}
@@ -362,7 +362,7 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc, onComplete, simSc
     <div className="space-y-3">
       {entra.protected ? (
         <>
-          <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4">
+          <div className="bg-purple-50 border border-purple-500/30 rounded-xl p-4">
             <p className="text-xs font-semibold text-purple-500 uppercase mb-2">Your Entra ID Backup</p>
             <div className="space-y-1.5">
               {Object.entries(entra.counts || {}).map(([type, count]: [string, any]) => {
@@ -370,13 +370,13 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc, onComplete, simSc
                 const isUnderAttack = attackPhase !== 'idle' && meta.critical;
                 return (
                   <div key={type} className={`flex items-center justify-between text-sm px-2 py-1 rounded transition-all duration-500 ${
-                    isUnderAttack && attackPhase === 'attacking' ? 'bg-red-500/15 ring-1 ring-red-400' :
-                    isUnderAttack && attackPhase === 'resolved' ? 'bg-green-500/15 ring-1 ring-green-400' : ''
+                    isUnderAttack && attackPhase === 'attacking' ? 'bg-red-100 ring-1 ring-red-400' :
+                    isUnderAttack && attackPhase === 'resolved' ? 'bg-green-100 ring-1 ring-green-400' : ''
                   }`}>
-                    <span className="text-purple-400">{meta.label}</span>
+                    <span className="text-purple-700">{meta.label}</span>
                     <span className="flex items-center gap-1.5">
                       <span className="font-bold text-purple-800">{count}</span>
-                      {meta.critical && <span className="text-[10px] px-1.5 py-0.5 bg-red-500/15 text-red-400 rounded font-semibold">CRITICAL</span>}
+                      {meta.critical && <span className="text-[10px] px-1.5 py-0.5 bg-red-100 text-red-700 rounded font-semibold">CRITICAL</span>}
                     </span>
                   </div>
                 );
@@ -502,7 +502,7 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc, onComplete, simSc
             <div key={wl} className="mb-2">
               <div className="flex items-center gap-2 mb-1">
                 <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold text-white ${
-                  wl === 'entra_id' ? 'bg-red-500' : wl === 'exchange' ? 'bg-amber-500' : 'bg-blue-500'
+                  wl === 'entra_id' ? 'bg-red-500/100' : wl === 'exchange' ? 'bg-amber-500/100' : 'bg-blue-500/100'
                 }`}>
                   {wl === 'entra_id' ? 'P1' : wl === 'exchange' ? 'P2' : 'P3'}
                 </span>
@@ -559,14 +559,14 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc, onComplete, simSc
         {scenes.map((s, i) => (
           <button key={s.key} onClick={() => setSimScene(i)}
             className={`w-2.5 h-2.5 rounded-full transition-all ${
-              i === simScene ? 'w-8 bg-blue-500' : engaged[i] ? 'bg-green-500' : i < simScene ? 'bg-blue-300' : 'bg-gray-200'
+              i === simScene ? 'w-8 bg-blue-500/100' : engaged[i] ? 'bg-green-500/100' : i < simScene ? 'bg-blue-300' : 'bg-gray-200'
             }`} />
         ))}
       </div>
 
       {/* Step content */}
       <div className="bg-gray-800 rounded-2xl border border-gray-700 shadow-sm overflow-hidden">
-        <div className="bg-gray-800/50 border-b border-gray-700 px-5 py-3">
+        <div className="bg-gray-50 border-b border-gray-700 px-5 py-3">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-gray-400">Step {simScene + 1} of {STEP_COUNT}</span>
             {engaged[simScene] && <span className="text-xs font-semibold text-green-600 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Done</span>}
@@ -584,7 +584,7 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc, onComplete, simSc
         <div className="px-5 py-4">{scene.render()}</div>
 
         {/* Footer: Next + Explore link */}
-        <div className="px-5 py-4 border-t border-gray-700 bg-gray-800/50">
+        <div className="px-5 py-4 border-t border-gray-100 bg-gray-50">
           <div className="flex items-center justify-between">
             {!isLastStep ? (
               <button onClick={() => setSimScene(simScene + 1)} disabled={!canAdvance}
@@ -602,7 +602,7 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc, onComplete, simSc
               </button>
             )}
             <button onClick={() => navigate(scene.explore.route)}
-              className="text-xs text-blue-500 hover:text-blue-400 hover:underline">
+              className="text-xs text-blue-500 hover:text-blue-700 hover:underline">
               {scene.explore.label} →
             </button>
           </div>
@@ -923,7 +923,7 @@ export function OnboardCallback() {
     return (
       <div className="max-w-lg mx-auto text-center py-16">
         <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
-          isConfigError ? 'bg-amber-500/15' : 'bg-red-500/15'
+          isConfigError ? 'bg-amber-100' : 'bg-red-100'
         }`}>
           <XCircle className={`w-8 h-8 ${isConfigError ? 'text-amber-600' : 'text-red-600'}`} />
         </div>
@@ -959,14 +959,14 @@ export function OnboardCallback() {
           {WIZARD_STEPS.map((s, i) => (
             <div key={s.key} className="flex items-center gap-1.5">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                i < step ? 'bg-green-500 text-white' :
+                i < step ? 'bg-green-500/100 text-white' :
                 i === step ? 'bg-blue-600 text-white ring-4 ring-blue-100' :
                 'bg-gray-200 text-gray-500'
               }`}>
                 {i < step ? <CheckCircle className="w-4 h-4" /> : i + 1}
               </div>
               <span className={`text-xs font-medium hidden sm:block ${i <= step ? 'text-white' : 'text-gray-400'}`}>{s.label}</span>
-              {i < WIZARD_STEPS.length - 1 && <div className={`w-8 sm:w-16 h-0.5 mx-1 ${i < step ? 'bg-green-500' : 'bg-gray-200'}`} />}
+              {i < WIZARD_STEPS.length - 1 && <div className={`w-8 sm:w-16 h-0.5 mx-1 ${i < step ? 'bg-green-500/100' : 'bg-gray-200'}`} />}
             </div>
           ))}
         </div>
@@ -985,7 +985,7 @@ export function OnboardCallback() {
       {step === 1 && (
         <div>
           <div className="text-center mb-6">
-            <div className="w-14 h-14 bg-green-500/15 rounded-full flex items-center justify-center mx-auto mb-3">
+            <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
               <CheckCircle className="w-7 h-7 text-green-600" />
             </div>
             <h2 className="text-2xl font-bold text-white">Connected to {tenantName}</h2>
@@ -1026,7 +1026,7 @@ export function OnboardCallback() {
                   }`}
                 >
                   <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
-                    isSelected ? 'border-blue-500 bg-blue-500' : 'border-gray-300'
+                    isSelected ? 'border-blue-500 bg-blue-500/100' : 'border-gray-300'
                   }`}>
                     {isSelected && <CheckCircle className="w-3.5 h-3.5 text-white" />}
                   </div>
@@ -1034,8 +1034,8 @@ export function OnboardCallback() {
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-white text-sm">{wl.label}</span>
                       <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                        wl.speed === 'fast' ? 'bg-green-500/15 text-green-400' :
-                        wl.speed === 'medium' ? 'bg-amber-500/15 text-amber-400' :
+                        wl.speed === 'fast' ? 'bg-green-100 text-green-700' :
+                        wl.speed === 'medium' ? 'bg-amber-100 text-amber-700' :
                         'bg-gray-700 text-gray-600'
                       }`}>
                         {wl.speed === 'fast' ? '⚡ fast' : wl.speed === 'medium' ? '~5s' : '~10s'}
@@ -1120,7 +1120,7 @@ export function OnboardCallback() {
                     </div>
                   </div>
                   <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                    selectedSla === sla.id ? 'border-blue-500 bg-blue-500' : 'border-gray-300'
+                    selectedSla === sla.id ? 'border-blue-500 bg-blue-500/100' : 'border-gray-300'
                   }`}>
                     {selectedSla === sla.id && <CheckCircle className="w-4 h-4 text-white" />}
                   </div>
@@ -1427,13 +1427,13 @@ export function OnboardCallback() {
       {/* Step 6: Ready! */}
       {step === 6 && (
         <div className="text-center">
-          <div className="w-20 h-20 bg-green-500/15 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
             <CheckCircle className="w-10 h-10 text-green-600" />
           </div>
           <h2 className="text-3xl font-bold text-white mb-2">You're Protected! 🎉</h2>
           <p className="text-gray-500 mb-2">{tenantName} is now backed up with Shieldio.</p>
 
-          <div className="bg-gray-800/50 rounded-xl p-4 mb-6 text-sm text-left max-w-md mx-auto">
+          <div className="bg-gray-50 rounded-xl p-4 mb-6 text-sm text-left max-w-md mx-auto">
             <div className="font-semibold text-white mb-2">What happens next:</div>
             <div className="space-y-2 text-gray-600">
               <div className="flex items-start gap-2">

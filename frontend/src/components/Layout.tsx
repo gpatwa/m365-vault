@@ -258,9 +258,9 @@ export default function Layout() {
   );
 
   return (
-    <div className="flex h-screen" style={{ backgroundColor: 'var(--color-bg, #0d1117)' }}>
+    <div className="flex h-screen" style={{ backgroundColor: 'var(--background, #0a0a0a)', color: 'var(--foreground, #fafafa)' }}>
       {/* Mobile header — visible on small screens only */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 px-4 py-3 flex items-center justify-between" style={{ backgroundColor: 'var(--color-bg-card, #161b22)', borderBottom: '1px solid var(--color-border, #30363d)' }}>
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 px-4 py-3 flex items-center justify-between" style={{ backgroundColor: 'var(--card, #171717)', borderBottom: '1px solid var(--border, rgba(255,255,255,0.1))' }}>
         <button onClick={() => setMobileOpen(true)} className="p-1 text-gray-400 hover:text-white">
           <Menu className="w-6 h-6" />
         </button>
@@ -289,12 +289,12 @@ export default function Layout() {
       )}
 
       {/* Desktop sidebar — hidden on mobile */}
-      <aside className="hidden lg:flex w-56 flex-col" style={{ backgroundColor: 'var(--color-bg-sidebar, #010409)', color: 'var(--color-text, #e6edf3)' }}>
+      <aside className="hidden lg:flex w-56 flex-col" style={{ backgroundColor: 'var(--sidebar, #171717)', color: 'var(--sidebar-foreground, #fafafa)' }}>
         {sidebarContent}
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto pt-14 lg:pt-0" style={{ backgroundColor: 'var(--color-bg, #0d1117)', color: 'var(--color-text, #e6edf3)' }}>
+      <main className="flex-1 overflow-auto pt-14 lg:pt-0" style={{ backgroundColor: 'var(--background, #0a0a0a)', color: 'var(--foreground, #fafafa)' }}>
         <div className="p-4 sm:p-6">
           <Outlet />
         </div>

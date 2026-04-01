@@ -60,10 +60,10 @@ export default function SmartEngine() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Brain className="w-7 h-7 text-purple-600" /> Smart Engine
           </h1>
-          <p className="text-gray-500">Zero-cost intelligence: health scoring, anomaly detection, baselines</p>
+          <p className="text-muted-foreground">Zero-cost intelligence: health scoring, anomaly detection, baselines</p>
         </div>
         <button
           onClick={() => checkMutation.mutate()}
@@ -81,7 +81,7 @@ export default function SmartEngine() {
           <div className="flex items-center gap-6">
             <div className="text-center">
               <div className={`text-5xl font-bold ${scoreColor(health.score)}`}>{health.score}</div>
-              <p className="text-sm text-gray-500 mt-1">Health Score</p>
+              <p className="text-sm text-muted-foreground mt-1">Health Score</p>
             </div>
             <div className="flex-1 grid grid-cols-4 gap-4">
               {[
@@ -90,15 +90,15 @@ export default function SmartEngine() {
                 { label: 'Anomaly Score', value: health.components.anomaly_score, icon: AlertTriangle, color: 'text-orange-600' },
                 { label: 'Storage Health', value: health.components.storage_score, icon: Activity, color: 'text-purple-600' },
               ].map(({ label, value, icon: Icon, color }) => (
-                <div key={label} className="bg-white/60 rounded-lg p-3 text-center">
+                <div key={label} className="bg-card/60 rounded-lg p-3 text-center">
                   <Icon className={`w-5 h-5 ${color} mx-auto mb-1`} />
-                  <div className="text-lg font-bold text-gray-800">{value}%</div>
-                  <p className="text-xs text-gray-500">{label}</p>
+                  <div className="text-lg font-bold text-foreground">{value}%</div>
+                  <p className="text-xs text-muted-foreground">{label}</p>
                 </div>
               ))}
             </div>
           </div>
-          <div className="mt-4 flex gap-6 text-xs text-gray-500 border-t border-gray-200/50 pt-3">
+          <div className="mt-4 flex gap-6 text-xs text-muted-foreground border-t border-border/50 pt-3">
             <span>Jobs (7d): {health.details.total_jobs_7d}</span>
             <span>Completed: {health.details.completed_jobs_7d}</span>
             <span>Protected: {health.details.protected_objects}</span>
@@ -110,17 +110,17 @@ export default function SmartEngine() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Anomalies */}
-        <div className="bg-white rounded-xl border shadow-sm">
+        <div className="bg-card rounded-xl border shadow-sm">
           <div className="p-4 border-b flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-orange-500" />
-            <h3 className="font-semibold text-gray-900">Anomalies</h3>
+            <h3 className="font-semibold text-foreground">Anomalies</h3>
             <span className="ml-auto px-2 py-0.5 bg-orange-100 text-orange-700 text-xs rounded-full font-medium">
               {anomalies?.items.filter(a => !a.resolved).length || 0} active
             </span>
           </div>
-          <div className="divide-y divide-gray-100 max-h-96 overflow-auto">
+          <div className="divide-y divide-border max-h-96 overflow-auto">
             {anomalies?.items.length === 0 && (
-              <div className="p-8 text-center text-gray-400">
+              <div className="p-8 text-center text-muted-foreground">
                 <CheckCircle className="w-8 h-8 mx-auto mb-2 text-green-400" />
                 <p>No anomalies detected</p>
               </div>
@@ -131,12 +131,12 @@ export default function SmartEngine() {
                   <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${
                     a.severity === 'critical' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
                   }`}>{a.severity}</span>
-                  <span className="text-xs font-medium text-gray-700 capitalize">{a.workload}</span>
-                  <span className="text-xs text-gray-400">{a.metric}</span>
+                  <span className="text-xs font-medium text-foreground/80 capitalize">{a.workload}</span>
+                  <span className="text-xs text-muted-foreground">{a.metric}</span>
                   {a.resolved && <span className="ml-auto text-xs text-green-600 font-medium">Resolved</span>}
                 </div>
-                <p className="text-sm text-gray-600">{a.message}</p>
-                <div className="flex gap-4 mt-1 text-xs text-gray-400">
+                <p className="text-sm text-muted-foreground">{a.message}</p>
+                <div className="flex gap-4 mt-1 text-xs text-muted-foreground">
                   <span>Expected: {formatMetric(a.metric, a.expected)}</span>
                   <span>Actual: {formatMetric(a.metric, a.actual)}</span>
                   <span>z-score: {a.z_score}</span>
@@ -148,36 +148,36 @@ export default function SmartEngine() {
         </div>
 
         {/* Baselines */}
-        <div className="bg-white rounded-xl border shadow-sm">
+        <div className="bg-card rounded-xl border shadow-sm">
           <div className="p-4 border-b flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-blue-500" />
-            <h3 className="font-semibold text-gray-900">Baselines</h3>
-            <span className="ml-auto text-xs text-gray-400">{baselines?.total || 0} metrics tracked</span>
+            <h3 className="font-semibold text-foreground">Baselines</h3>
+            <span className="ml-auto text-xs text-muted-foreground">{baselines?.total || 0} metrics tracked</span>
           </div>
           <div className="overflow-auto max-h-96">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 sticky top-0">
+              <thead className="bg-muted/50 sticky top-0">
                 <tr>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Workload</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600">Metric</th>
-                  <th className="text-right px-3 py-2 font-medium text-gray-600">Avg</th>
-                  <th className="text-right px-3 py-2 font-medium text-gray-600">Std Dev</th>
-                  <th className="text-right px-3 py-2 font-medium text-gray-600">Range</th>
-                  <th className="text-right px-3 py-2 font-medium text-gray-600">Samples</th>
+                  <th className="text-left px-3 py-2 font-medium text-muted-foreground">Workload</th>
+                  <th className="text-left px-3 py-2 font-medium text-muted-foreground">Metric</th>
+                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Avg</th>
+                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Std Dev</th>
+                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Range</th>
+                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Samples</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-border">
                 {baselines?.items.length === 0 && (
-                  <tr><td colSpan={6} className="p-8 text-center text-gray-400">No baselines yet. Run a health check to start collecting.</td></tr>
+                  <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">No baselines yet. Run a health check to start collecting.</td></tr>
                 )}
                 {baselines?.items.map((b, i) => (
-                  <tr key={i} className="hover:bg-gray-50">
-                    <td className="px-3 py-2 capitalize font-medium text-gray-700">{b.workload.replace('_', ' ')}</td>
-                    <td className="px-3 py-2 text-gray-600">{b.metric}</td>
+                  <tr key={i} className="hover:bg-muted/50">
+                    <td className="px-3 py-2 capitalize font-medium text-foreground/80">{b.workload.replace('_', ' ')}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{b.metric}</td>
                     <td className="px-3 py-2 text-right font-mono">{formatMetric(b.metric, b.avg)}</td>
-                    <td className="px-3 py-2 text-right font-mono text-gray-400">{formatMetric(b.metric, b.std_dev)}</td>
-                    <td className="px-3 py-2 text-right font-mono text-gray-400 text-xs">{formatMetric(b.metric, b.min)} – {formatMetric(b.metric, b.max)}</td>
-                    <td className="px-3 py-2 text-right text-gray-500">{b.samples}</td>
+                    <td className="px-3 py-2 text-right font-mono text-muted-foreground">{formatMetric(b.metric, b.std_dev)}</td>
+                    <td className="px-3 py-2 text-right font-mono text-muted-foreground text-xs">{formatMetric(b.metric, b.min)} – {formatMetric(b.metric, b.max)}</td>
+                    <td className="px-3 py-2 text-right text-muted-foreground">{b.samples}</td>
                   </tr>
                 ))}
               </tbody>

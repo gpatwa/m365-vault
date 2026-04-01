@@ -41,7 +41,7 @@ const ITEM_TYPE_CONFIG: Record<string, { label: string; icon: typeof Users; colo
   service_principal: { label: 'Service Principals', icon: Server, color: 'text-cyan-600' },
   administrative_unit: { label: 'Admin Units', icon: Building2, color: 'text-teal-600' },
   oauth_permission_grant: { label: 'OAuth Grants', icon: Lock, color: 'text-pink-600' },
-  device: { label: 'Devices', icon: Laptop, color: 'text-gray-600' },
+  device: { label: 'Devices', icon: Laptop, color: 'text-muted-foreground' },
   domain: { label: 'Domains', icon: Globe, color: 'text-emerald-600' },
 };
 
@@ -63,7 +63,7 @@ const itemColumns: Column<SnapshotItem>[] = [
       const config = ITEM_TYPE_CONFIG[row.item_type];
       const Icon = config?.icon || Shield;
       return (
-        <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${config?.color || 'text-gray-600'}`}>
+        <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${config?.color || 'text-muted-foreground'}`}>
           <Icon className="w-3.5 h-3.5" />
           {config?.label || row.item_type}
         </span>
@@ -75,13 +75,13 @@ const itemColumns: Column<SnapshotItem>[] = [
     label: 'Name',
     sortable: true,
     width: 'min-w-[200px]',
-    render: (row) => <span className="font-medium text-gray-900">{row.name}</span>,
+    render: (row) => <span className="font-medium text-foreground">{row.name}</span>,
   },
   {
     key: 'metadata',
     label: 'Details',
     render: (row) => (
-      <span className="text-gray-500 text-xs">
+      <span className="text-muted-foreground text-xs">
         {row.metadata && Object.entries(row.metadata)
           .filter(([, v]) => v !== null && v !== undefined && v !== '')
           .slice(0, 3)
@@ -95,7 +95,7 @@ const itemColumns: Column<SnapshotItem>[] = [
     label: 'Size',
     sortable: true,
     className: 'text-right',
-    render: (row) => <span className="text-gray-500">{formatSize(row.size_bytes)}</span>,
+    render: (row) => <span className="text-muted-foreground">{formatSize(row.size_bytes)}</span>,
   },
 ];
 
@@ -160,9 +160,9 @@ export default function EntraID() {
 
   if (!tenantId) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-        <KeyRound className="w-12 h-12 mb-3 text-gray-300" />
-        <p className="text-lg font-medium text-gray-600">No Tenant Connected</p>
+      <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+        <KeyRound className="w-12 h-12 mb-3 text-foreground/70" />
+        <p className="text-lg font-medium text-muted-foreground">No Tenant Connected</p>
         <p className="text-sm mt-1">Connect a SaaS platform from the <a href="/tenants" className="text-blue-600 hover:underline">Tenants</a> page to get started.</p>
       </div>
     );
@@ -179,9 +179,9 @@ export default function EntraID() {
   if (!summary?.protected) {
     return (
       <div className="text-center py-16">
-        <Shield className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-        <h2 className="text-xl font-semibold text-gray-700 mb-2">Entra ID Not Discovered</h2>
-        <p className="text-gray-500">Run discovery on your tenant from the Settings page to enable Entra ID backup.</p>
+        <Shield className="w-16 h-16 mx-auto mb-4 text-foreground/70" />
+        <h2 className="text-xl font-semibold text-foreground/80 mb-2">Entra ID Not Discovered</h2>
+        <p className="text-muted-foreground">Run discovery on your tenant from the Settings page to enable Entra ID backup.</p>
       </div>
     );
   }
@@ -236,13 +236,13 @@ export default function EntraID() {
                 isSelected
                   ? 'border-amber-400 bg-amber-50 ring-2 ring-amber-200'
                   : count > 0
-                    ? 'border-gray-200 bg-white hover:border-amber-200 hover:bg-amber-50/50'
-                    : 'border-gray-100 bg-gray-50/50 opacity-60'
+                    ? 'border-border bg-card hover:border-amber-200 hover:bg-amber-50/50'
+                    : 'border-border bg-muted/50/50 opacity-60'
               }`}
             >
               <Icon className={`w-4 h-4 mb-0.5 ${config.color}`} />
               <p className="text-base font-bold">{count}</p>
-              <p className="text-[10px] text-gray-500 truncate">{config.label}</p>
+              <p className="text-[10px] text-muted-foreground truncate">{config.label}</p>
             </button>
           );
         })}
@@ -253,7 +253,7 @@ export default function EntraID() {
         <button
           onClick={() => setShowDiff(!showDiff)}
           className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-            showDiff ? 'bg-amber-50 border-amber-300 text-amber-700' : 'bg-white border-gray-200 text-gray-600 hover:border-amber-200'
+            showDiff ? 'bg-amber-50 border-amber-300 text-amber-700' : 'bg-card border-border text-muted-foreground hover:border-amber-200'
           }`}
         >
           {showDiff ? '✕ Close Diff' : '🔍 Compare Snapshots'}
@@ -261,7 +261,7 @@ export default function EntraID() {
         {showDiff && snapshots?.items && snapshots.items.length >= 2 && (
           <div className="flex items-center gap-2 text-xs">
             <select
-              className="border border-gray-200 rounded-lg px-2 py-1 text-xs"
+              className="border border-border rounded-lg px-2 py-1 text-xs"
               value={diffSnapA || ''}
               onChange={e => setDiffSnapA(Number(e.target.value) || null)}
             >
@@ -270,9 +270,9 @@ export default function EntraID() {
                 <option key={s.id} value={s.id}>#{s.id} ({s.item_count} items, {s.started_at?.slice(0, 10)})</option>
               ))}
             </select>
-            <span className="text-gray-400">→</span>
+            <span className="text-muted-foreground">→</span>
             <select
-              className="border border-gray-200 rounded-lg px-2 py-1 text-xs"
+              className="border border-border rounded-lg px-2 py-1 text-xs"
               value={diffSnapB || ''}
               onChange={e => setDiffSnapB(Number(e.target.value) || null)}
             >
@@ -287,7 +287,7 @@ export default function EntraID() {
 
       {/* Diff Results */}
       {showDiff && diffResult && (
-        <div className="bg-white border border-amber-200 rounded-xl p-4 space-y-3">
+        <div className="bg-card border border-amber-200 rounded-xl p-4 space-y-3">
           <h3 className="text-sm font-semibold text-amber-800">Configuration Drift: Snapshot #{diffResult.snapshot_a} → #{diffResult.snapshot_b}</h3>
           <div className="grid grid-cols-4 gap-3">
             <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
@@ -302,9 +302,9 @@ export default function EntraID() {
               <p className="text-2xl font-bold text-amber-700">{diffResult.summary.changed}</p>
               <p className="text-[10px] text-amber-600 font-medium">Changed</p>
             </div>
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
-              <p className="text-2xl font-bold text-gray-600">{diffResult.summary.unchanged}</p>
-              <p className="text-[10px] text-gray-500 font-medium">Unchanged</p>
+            <div className="bg-muted/50 border border-border rounded-lg p-3 text-center">
+              <p className="text-2xl font-bold text-muted-foreground">{diffResult.summary.unchanged}</p>
+              <p className="text-[10px] text-muted-foreground font-medium">Unchanged</p>
             </div>
           </div>
           {(diffResult.added.length > 0 || diffResult.removed.length > 0 || diffResult.changed.length > 0) && (
@@ -328,7 +328,7 @@ export default function EntraID() {
                   <span className="font-mono">~</span>
                   <span className="font-medium">{ITEM_TYPE_CONFIG[c.item_type]?.label || c.item_type}:</span>
                   <span>{c.name}</span>
-                  <span className="text-gray-400">({formatSize(c.old_size)} → {formatSize(c.new_size)})</span>
+                  <span className="text-muted-foreground">({formatSize(c.old_size)} → {formatSize(c.new_size)})</span>
                 </div>
               ))}
             </div>

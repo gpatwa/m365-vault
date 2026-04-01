@@ -96,8 +96,8 @@ export default function SLAPolicies() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">SLA Policies</h1>
-          <p className="text-gray-500">Define backup frequency and retention policies</p>
+          <h1 className="text-2xl font-bold text-foreground">SLA Policies</h1>
+          <p className="text-muted-foreground">Define backup frequency and retention policies</p>
         </div>
         <button onClick={openNew} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
           <Plus className="w-4 h-4" /> New Policy
@@ -105,33 +105,33 @@ export default function SLAPolicies() {
       </div>
 
       {showForm && (
-        <div className="bg-white rounded-xl border shadow-sm p-6 mb-6">
+        <div className="bg-card rounded-xl border shadow-sm p-6 mb-6">
           <h3 className="text-lg font-semibold mb-4">{editPolicy ? 'Edit Policy' : 'Create New SLA Policy'}</h3>
           <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+              <label className="block text-sm font-medium text-foreground/80 mb-1">Name</label>
               <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Priority (1=highest)</label>
+              <label className="block text-sm font-medium text-foreground/80 mb-1">Priority (1=highest)</label>
               <input type="number" value={form.priority} onChange={e => setForm({ ...form, priority: +e.target.value })} min={1} max={10}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Backup Frequency (hours)</label>
+              <label className="block text-sm font-medium text-foreground/80 mb-1">Backup Frequency (hours)</label>
               <input type="number" value={form.backup_frequency_hours} onChange={e => setForm({ ...form, backup_frequency_hours: +e.target.value })} min={1}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Retention (days)</label>
+              <label className="block text-sm font-medium text-foreground/80 mb-1">Retention (days)</label>
               <input type="number" value={form.retention_days} onChange={e => setForm({ ...form, retention_days: +e.target.value })} min={1}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring" />
             </div>
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <label className="block text-sm font-medium text-foreground/80 mb-1">Description</label>
               <input type="text" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring" />
             </div>
             <div className="col-span-2 flex items-center gap-6">
               <label className="flex items-center gap-2 text-sm">
@@ -151,7 +151,7 @@ export default function SLAPolicies() {
               <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
                 {editPolicy ? 'Update' : 'Create'} Policy
               </button>
-              <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">
+              <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-muted text-foreground/80 rounded-lg text-sm font-medium hover:bg-accent">
                 Cancel
               </button>
             </div>
@@ -161,9 +161,9 @@ export default function SLAPolicies() {
 
       {/* Assign panel */}
       {showAssign && (
-        <div className="bg-white rounded-xl border-2 border-blue-300 shadow-sm p-6 mb-6">
+        <div className="bg-card rounded-xl border-2 border-blue-300 shadow-sm p-6 mb-6">
           <h3 className="text-lg font-semibold mb-2">Assign "{showAssign.name}" to Workloads</h3>
-          <p className="text-gray-500 text-sm mb-4">Choose which workloads to protect with this SLA policy</p>
+          <p className="text-muted-foreground text-sm mb-4">Choose which workloads to protect with this SLA policy</p>
           {assignMsg && (
             <div className="bg-green-50 border border-green-200 text-green-700 rounded-lg p-3 mb-4 text-sm">{assignMsg}</div>
           )}
@@ -182,13 +182,13 @@ export default function SLAPolicies() {
               <Shield className="w-5 h-5" /> All Workloads
             </button>
           </div>
-          <button onClick={() => { setShowAssign(null); setAssignMsg(''); }} className="mt-3 text-sm text-gray-500 hover:underline">Cancel</button>
+          <button onClick={() => { setShowAssign(null); setAssignMsg(''); }} className="mt-3 text-sm text-muted-foreground hover:underline">Cancel</button>
         </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {policies?.map(p => (
-          <div key={p.id} className="bg-white rounded-xl border shadow-sm p-5">
+          <div key={p.id} className="bg-card rounded-xl border shadow-sm p-5">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-blue-500" />
@@ -198,33 +198,33 @@ export default function SLAPolicies() {
                 {(p as any).legal_hold ? <span className="px-1.5 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded" title="Legal Hold: Cannot delete">HOLD</span> : null}
               </div>
               <div className="flex gap-1">
-                <button onClick={() => setShowAssign(p)} title="Assign to workloads" className="p-1.5 text-gray-400 hover:text-green-600 rounded"><Link className="w-4 h-4" /></button>
-                <button onClick={() => openEdit(p)} className="p-1.5 text-gray-400 hover:text-blue-600 rounded"><Pencil className="w-4 h-4" /></button>
-                <button onClick={() => { if (confirm('Delete this policy?')) deleteMutation.mutate(p.id); }} className="p-1.5 text-gray-400 hover:text-red-600 rounded"><Trash2 className="w-4 h-4" /></button>
+                <button onClick={() => setShowAssign(p)} title="Assign to workloads" className="p-1.5 text-muted-foreground hover:text-green-600 rounded"><Link className="w-4 h-4" /></button>
+                <button onClick={() => openEdit(p)} className="p-1.5 text-muted-foreground hover:text-blue-600 rounded"><Pencil className="w-4 h-4" /></button>
+                <button onClick={() => { if (confirm('Delete this policy?')) deleteMutation.mutate(p.id); }} className="p-1.5 text-muted-foreground hover:text-red-600 rounded"><Trash2 className="w-4 h-4" /></button>
               </div>
             </div>
-            {p.description && <p className="text-sm text-gray-500 mb-3">{p.description}</p>}
+            {p.description && <p className="text-sm text-muted-foreground mb-3">{p.description}</p>}
             <div className="space-y-2 text-sm">
-              <div className="flex items-center gap-2 text-gray-600">
+              <div className="flex items-center gap-2 text-muted-foreground">
                 <Clock className="w-4 h-4" />
                 Every <strong>{p.backup_frequency_hours}h</strong>
               </div>
-              <div className="flex items-center gap-2 text-gray-600">
+              <div className="flex items-center gap-2 text-muted-foreground">
                 <Calendar className="w-4 h-4" />
                 Retain <strong>{p.retention_days} days</strong>
               </div>
-              <div className="text-gray-400">
+              <div className="text-muted-foreground">
                 Priority: {p.priority} &middot; {p.protected_objects_count || 0} objects assigned
               </div>
             </div>
             <button onClick={() => setShowAssign(p)}
-              className="mt-3 w-full px-3 py-2 bg-gray-50 hover:bg-gray-100 border rounded-lg text-sm text-gray-600 font-medium flex items-center justify-center gap-2">
+              className="mt-3 w-full px-3 py-2 bg-muted/50 hover:bg-muted border rounded-lg text-sm text-muted-foreground font-medium flex items-center justify-center gap-2">
               <Link className="w-4 h-4" /> Assign to Workloads
             </button>
           </div>
         ))}
-        {isLoading && <p className="text-gray-400">Loading...</p>}
-        {!isLoading && !policies?.length && <p className="text-gray-400 col-span-3 text-center py-8">No SLA policies defined yet. Create one to get started.</p>}
+        {isLoading && <p className="text-muted-foreground">Loading...</p>}
+        {!isLoading && !policies?.length && <p className="text-muted-foreground col-span-3 text-center py-8">No SLA policies defined yet. Create one to get started.</p>}
       </div>
     </div>
   );

@@ -16,22 +16,22 @@ export default function Breadcrumb({ items, rightSlot }: BreadcrumbProps) {
   return (
     <nav className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-1 text-sm">
-        <Link to="/" className="text-gray-400 hover:text-gray-600 transition-colors">
+        <Link to="/" className="text-muted-foreground hover:text-muted-foreground transition-colors">
           <Home className="w-4 h-4" />
         </Link>
         {items.map((item, i) => (
           <span key={i} className="flex items-center gap-1">
-            <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
+            <ChevronRight className="w-3.5 h-3.5 text-foreground/70" />
             {item.path ? (
               <Link
                 to={item.path}
-                className="text-gray-500 hover:text-blue-600 transition-colors flex items-center gap-1"
+                className="text-muted-foreground hover:text-blue-600 transition-colors flex items-center gap-1"
               >
                 {item.icon}
                 {item.label}
               </Link>
             ) : (
-              <span className="text-gray-900 font-medium flex items-center gap-1">
+              <span className="text-foreground font-medium flex items-center gap-1">
                 {item.icon}
                 {item.label}
               </span>

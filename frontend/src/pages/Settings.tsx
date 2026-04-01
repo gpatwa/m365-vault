@@ -97,8 +97,8 @@ export default function Settings() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Tenants</h1>
-          <p className="text-gray-500">Manage SaaS platform connections and lifecycle</p>
+          <h1 className="text-2xl font-bold text-foreground">Tenants</h1>
+          <p className="text-muted-foreground">Manage SaaS platform connections and lifecycle</p>
         </div>
         {!showWizard && (
           <button onClick={() => setShowWizard(true)} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
@@ -136,28 +136,28 @@ export default function Settings() {
               <span className="text-blue-800">{actionMsg}</span>
             </>
           )}
-          <button onClick={() => { setTestResult(null); setActionMsg(''); }} className="ml-auto text-gray-400 hover:text-gray-600">&times;</button>
+          <button onClick={() => { setTestResult(null); setActionMsg(''); }} className="ml-auto text-muted-foreground hover:text-muted-foreground">&times;</button>
         </div>
       )}
 
       {/* Purge Confirmation Modal */}
       {purgeConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4">
+          <div className="bg-card rounded-xl shadow-xl p-6 max-w-md w-full mx-4">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-red-100 rounded-lg">
                 <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Purge Tenant</h3>
-                <p className="text-sm text-gray-500">This action is irreversible</p>
+                <h3 className="text-lg font-bold text-foreground">Purge Tenant</h3>
+                <p className="text-sm text-muted-foreground">This action is irreversible</p>
               </div>
             </div>
-            <p className="text-sm text-gray-700 mb-4">
+            <p className="text-sm text-foreground/80 mb-4">
               This will permanently delete <strong>{purgeConfirm.name}</strong> and ALL associated data including backups, snapshots, jobs, and storage blobs.
             </p>
-            <p className="text-sm text-gray-700 mb-2">
-              Type <strong className="font-mono bg-gray-100 px-1 rounded">{purgeConfirm.name}</strong> to confirm:
+            <p className="text-sm text-foreground/80 mb-2">
+              Type <strong className="font-mono bg-muted px-1 rounded">{purgeConfirm.name}</strong> to confirm:
             </p>
             <input
               type="text" value={purgeInput}
@@ -167,7 +167,7 @@ export default function Settings() {
               autoFocus
             />
             <div className="flex gap-3 justify-end">
-              <button onClick={() => { setPurgeConfirm(null); setPurgeInput(''); }} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">
+              <button onClick={() => { setPurgeConfirm(null); setPurgeInput(''); }} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground">
                 Cancel
               </button>
               <button
@@ -185,31 +185,31 @@ export default function Settings() {
       {/* Update Credentials Modal */}
       {credentialsEdit && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Update Credentials</h3>
-            <p className="text-sm text-gray-500 mb-4">Update your Azure AD App Registration credentials. Leave blank to keep current value.</p>
+          <div className="bg-card rounded-xl shadow-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold text-foreground mb-4">Update Credentials</h3>
+            <p className="text-sm text-muted-foreground mb-4">Update your Azure AD App Registration credentials. Leave blank to keep current value.</p>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Application (Client) ID</label>
+                <label className="block text-sm font-medium text-foreground/80 mb-1">Application (Client) ID</label>
                 <input
                   type="text" value={credForm.client_id}
                   onChange={e => setCredForm({ ...credForm, client_id: e.target.value })}
                   placeholder="Leave blank to keep current"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring font-mono text-sm"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Client Secret</label>
+                <label className="block text-sm font-medium text-foreground/80 mb-1">Client Secret</label>
                 <input
                   type="password" value={credForm.client_secret}
                   onChange={e => setCredForm({ ...credForm, client_secret: e.target.value })}
                   placeholder="Leave blank to keep current"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring"
                 />
               </div>
             </div>
             <div className="flex gap-3 justify-end mt-4">
-              <button onClick={() => { setCredentialsEdit(null); setCredForm({ client_id: '', client_secret: '' }); }} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">
+              <button onClick={() => { setCredentialsEdit(null); setCredForm({ client_id: '', client_secret: '' }); }} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground">
                 Cancel
               </button>
               <button
@@ -236,24 +236,24 @@ export default function Settings() {
           const isInactive = t.status === 'inactive';
 
           return (
-            <div key={t.id} className={`bg-white rounded-xl border shadow-sm p-5 ${isInactive ? 'opacity-75' : ''}`}>
+            <div key={t.id} className={`bg-card rounded-xl border shadow-sm p-5 ${isInactive ? 'opacity-75' : ''}`}>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${isInactive ? 'bg-gray-100' : 'bg-blue-50'}`}>
-                    <Building2 className={`w-6 h-6 ${isInactive ? 'text-gray-400' : 'text-blue-600'}`} />
+                  <div className={`p-2 rounded-lg ${isInactive ? 'bg-muted' : 'bg-blue-50'}`}>
+                    <Building2 className={`w-6 h-6 ${isInactive ? 'text-muted-foreground' : 'text-blue-600'}`} />
                   </div>
                   <div className="min-w-0">
                     <h3 className="font-semibold">{t.name}</h3>
-                    <p className="text-sm text-gray-500 font-mono truncate">{t.ms_tenant_id}</p>
+                    <p className="text-sm text-muted-foreground font-mono truncate">{t.ms_tenant_id}</p>
                   </div>
                   <StatusBadge status={t.status} />
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   {/* Common actions */}
-                  <button onClick={() => testMutation.mutate(t.id)} className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 flex items-center gap-1">
+                  <button onClick={() => testMutation.mutate(t.id)} className="px-3 py-1.5 bg-muted text-foreground/80 rounded-lg text-sm hover:bg-accent flex items-center gap-1">
                     <Wifi className="w-4 h-4" /> Test
                   </button>
-                  <button onClick={() => setCredentialsEdit({ id: t.id })} className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 flex items-center gap-1">
+                  <button onClick={() => setCredentialsEdit({ id: t.id })} className="px-3 py-1.5 bg-muted text-foreground/80 rounded-lg text-sm hover:bg-accent flex items-center gap-1">
                     <KeyRound className="w-4 h-4" />
                   </button>
 
@@ -283,28 +283,28 @@ export default function Settings() {
                 </div>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-4 text-sm">
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-gray-500 text-xs">Mailboxes</p>
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <p className="text-muted-foreground text-xs">Mailboxes</p>
                   <p className="text-lg font-bold">{t.total_mailboxes}</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-gray-500 text-xs">OneDrives</p>
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <p className="text-muted-foreground text-xs">OneDrives</p>
                   <p className="text-lg font-bold">{t.total_onedrives}</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-gray-500 text-xs">SharePoint</p>
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <p className="text-muted-foreground text-xs">SharePoint</p>
                   <p className="text-lg font-bold">{t.total_sites}</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-gray-500 text-xs">Teams</p>
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <p className="text-muted-foreground text-xs">Teams</p>
                   <p className="text-lg font-bold">{t.total_teams || 0}</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-gray-500 text-xs">Entra ID</p>
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <p className="text-muted-foreground text-xs">Entra ID</p>
                   <p className="text-lg font-bold">{t.total_entra_objects || 0}</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-gray-500 text-xs">Last Discovery</p>
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <p className="text-muted-foreground text-xs">Last Discovery</p>
                   <p className="text-sm font-medium">{t.last_discovery_at?.slice(0, 16) || 'Never'}</p>
                 </div>
               </div>
@@ -313,7 +313,7 @@ export default function Settings() {
                 <button
                   onClick={() => checkPerms(t.id)}
                   disabled={permsLoading && permsTenant === t.id}
-                  className="px-3 py-1.5 border border-gray-200 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-50 flex items-center gap-1"
+                  className="px-3 py-1.5 border border-border text-foreground/80 rounded-lg text-xs font-medium hover:bg-muted/50 flex items-center gap-1"
                 >
                   {permsLoading && permsTenant === t.id
                     ? <><Loader2 className="w-3 h-3 animate-spin" /> Checking...</>
@@ -335,7 +335,7 @@ export default function Settings() {
                           href={`https://login.microsoftonline.com/${t.ms_tenant_id}/adminconsent?client_id=${t.client_id}&redirect_uri=${encodeURIComponent(window.location.origin + '/settings')}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-2.5 py-1 bg-orange-600 text-white rounded text-xs font-medium hover:bg-orange-700 flex items-center gap-1"
+                          className="px-2.5 py-1 bg-orange-600 text-foreground rounded text-xs font-medium hover:bg-orange-700 flex items-center gap-1"
                         >
                           <ExternalLink className="w-3 h-3" /> Grant in Azure Portal
                         </a>
@@ -343,15 +343,15 @@ export default function Settings() {
                     </div>
                     <div className="overflow-x-auto">
                     <table className="w-full text-xs">
-                      <thead className="bg-gray-50">
+                      <thead className="bg-muted/50">
                         <tr>
-                          <th className="text-left px-4 py-2 font-medium text-gray-600">Workload</th>
-                          <th className="text-center px-4 py-2 font-medium text-gray-600">Backup</th>
-                          <th className="text-center px-4 py-2 font-medium text-gray-600">Restore</th>
-                          <th className="text-left px-4 py-2 font-medium text-gray-600">Missing Permissions</th>
+                          <th className="text-left px-4 py-2 font-medium text-muted-foreground">Workload</th>
+                          <th className="text-center px-4 py-2 font-medium text-muted-foreground">Backup</th>
+                          <th className="text-center px-4 py-2 font-medium text-muted-foreground">Restore</th>
+                          <th className="text-left px-4 py-2 font-medium text-muted-foreground">Missing Permissions</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100">
+                      <tbody className="divide-y divide-border">
                         {Object.entries(permsData.workloads).map(([wl, status]: [string, any]) => {
                           const allMissing = [...(status.missing_backup || []), ...(status.missing_restore || [])];
                           return (
@@ -363,7 +363,7 @@ export default function Settings() {
                                   : <XCircle className="w-4 h-4 text-red-500 mx-auto" />}
                               </td>
                               <td className="px-4 py-2 text-center">
-                                {status.restore === null ? <span className="text-gray-300">N/A</span>
+                                {status.restore === null ? <span className="text-foreground/70">N/A</span>
                                   : status.restore
                                     ? <CheckCircle className="w-4 h-4 text-green-500 mx-auto" />
                                     : <XCircle className="w-4 h-4 text-red-500 mx-auto" />}
@@ -382,18 +382,18 @@ export default function Settings() {
                         })}
                       </tbody>
                       <tfoot>
-                        <tr className="bg-gray-50 border-t">
+                        <tr className="bg-muted/50 border-t">
                           <td colSpan={4} className="px-4 py-3">
                             <div className="flex items-center gap-3">
                               <a
                                 href={`https://login.microsoftonline.com/${t.ms_tenant_id}/adminconsent?client_id=${t.client_id}&redirect_uri=${encodeURIComponent(window.location.origin + '/settings')}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="px-3 py-1.5 bg-orange-600 text-white rounded-lg text-xs font-medium hover:bg-orange-700 flex items-center gap-1"
+                                className="px-3 py-1.5 bg-orange-600 text-foreground rounded-lg text-xs font-medium hover:bg-orange-700 flex items-center gap-1"
                               >
                                 <ExternalLink className="w-3 h-3" /> Grant All Permissions
                               </a>
-                              <span className="text-[10px] text-gray-400">Opens Microsoft consent page to grant all configured permissions at once</span>
+                              <span className="text-[10px] text-muted-foreground">Opens Microsoft consent page to grant all configured permissions at once</span>
                             </div>
                           </td>
                         </tr>
@@ -447,10 +447,10 @@ export default function Settings() {
             </div>
           );
         })}
-        {isLoading && <p className="text-gray-400 text-center py-8">Loading...</p>}
+        {isLoading && <p className="text-muted-foreground text-center py-8">Loading...</p>}
         {!isLoading && !tenants?.length && (
-          <div className="text-center py-12 text-gray-400">
-            <Building2 className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+          <div className="text-center py-12 text-muted-foreground">
+            <Building2 className="w-12 h-12 mx-auto mb-3 text-foreground/70" />
             <p className="text-lg font-medium">No tenants configured</p>
             <p className="text-sm">Add your first SaaS platform to get started</p>
           </div>

@@ -131,9 +131,9 @@ export default function ProductTour({ onComplete }: ProductTourProps) {
 
       {/* Tour Card */}
       <div className="relative pointer-events-auto mb-6 mx-4 w-full max-w-lg animate-slide-up">
-        <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+        <div className="bg-card rounded-2xl shadow-2xl border border-border overflow-hidden">
           {/* Progress bar */}
-          <div className="h-1 bg-gray-100">
+          <div className="h-1 bg-muted">
             <div
               className={`h-full ${current.color} transition-all duration-500`}
               style={{ width: `${progress}%` }}
@@ -142,25 +142,25 @@ export default function ProductTour({ onComplete }: ProductTourProps) {
 
           <div className="p-6">
             {/* Close button */}
-            <button onClick={complete} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+            <button onClick={complete} className="absolute top-4 right-4 text-muted-foreground hover:text-muted-foreground transition-colors">
               <X className="w-5 h-5" />
             </button>
 
             {/* Icon + Step counter */}
             <div className="flex items-center gap-3 mb-4">
               <div className={`p-2.5 ${current.color} rounded-xl`}>
-                <Icon className="w-5 h-5 text-white" />
+                <Icon className="w-5 h-5 text-foreground" />
               </div>
               <div>
-                <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
                   Step {step + 1} of {TOUR_STEPS.length}
                 </span>
               </div>
             </div>
 
             {/* Content */}
-            <h3 className="text-lg font-bold text-gray-900 mb-2">{current.title}</h3>
-            <p className="text-sm text-gray-600 leading-relaxed">{current.description}</p>
+            <h3 className="text-lg font-bold text-foreground mb-2">{current.title}</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">{current.description}</p>
 
             {/* Navigation */}
             <div className="flex items-center justify-between mt-6">
@@ -176,13 +176,13 @@ export default function ProductTour({ onComplete }: ProductTourProps) {
 
               <div className="flex gap-2">
                 {step > 0 && (
-                  <button onClick={prev} className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1 transition-colors">
+                  <button onClick={prev} className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground/80 flex items-center gap-1 transition-colors">
                     <ArrowLeft className="w-3.5 h-3.5" /> Back
                   </button>
                 )}
                 <button
                   onClick={next}
-                  className={`px-4 py-1.5 ${current.color} text-white text-sm font-medium rounded-lg hover:opacity-90 flex items-center gap-1.5 transition-all`}
+                  className={`px-4 py-1.5 ${current.color} text-foreground text-sm font-medium rounded-lg hover:opacity-90 flex items-center gap-1.5 transition-all`}
                 >
                   {step === TOUR_STEPS.length - 1 ? 'Get Started' : 'Next'}
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -192,7 +192,7 @@ export default function ProductTour({ onComplete }: ProductTourProps) {
 
             {/* Skip link */}
             {step < TOUR_STEPS.length - 1 && (
-              <button onClick={complete} className="w-full text-center text-xs text-gray-400 hover:text-gray-600 mt-3 transition-colors">
+              <button onClick={complete} className="w-full text-center text-xs text-muted-foreground hover:text-muted-foreground mt-3 transition-colors">
                 Skip tour
               </button>
             )}

@@ -11,16 +11,16 @@ export interface HeroStat {
 }
 
 const colorMap = {
-  green: { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200', icon: 'text-green-500' },
-  blue: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', icon: 'text-blue-500' },
-  amber: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', icon: 'text-amber-500' },
-  red: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', icon: 'text-red-500' },
-  gray: { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200', icon: 'text-gray-500' },
-  purple: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200', icon: 'text-purple-500' },
+  green: { bg: 'bg-green-500/10', text: 'text-green-400', border: 'border-green-500/20', icon: 'text-green-400' },
+  blue: { bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/20', icon: 'text-blue-400' },
+  amber: { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20', icon: 'text-amber-400' },
+  red: { bg: 'bg-red-500/10', text: 'text-red-400', border: 'border-red-500/20', icon: 'text-red-400' },
+  gray: { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border', icon: 'text-muted-foreground' },
+  purple: { bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-500/20', icon: 'text-purple-400' },
 };
 
 const trendIcons = { up: '↑', down: '↓', flat: '→' };
-const trendColors = { up: 'text-green-600', down: 'text-red-600', flat: 'text-gray-500' };
+const trendColors = { up: 'text-green-400', down: 'text-red-400', flat: 'text-muted-foreground' };
 
 export default function HeroSummaryBar({ stats, className = '' }: { stats: HeroStat[]; className?: string }) {
   return (
@@ -38,10 +38,10 @@ export default function HeroSummaryBar({ stats, className = '' }: { stats: HeroS
           >
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">{stat.label}</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{stat.label}</p>
                 <p className={`text-2xl font-bold mt-1 ${c.text}`}>{stat.value}</p>
                 {stat.subtitle && (
-                  <p className="text-xs text-gray-500 mt-0.5">{stat.subtitle}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{stat.subtitle}</p>
                 )}
                 {stat.trend && (
                   <p className={`text-xs mt-1 font-medium ${trendColors[stat.trend.direction]}`}>

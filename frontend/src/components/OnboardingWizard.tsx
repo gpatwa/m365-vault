@@ -181,12 +181,12 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
   };
 
   return (
-    <div className="bg-white rounded-xl border shadow-lg overflow-hidden mb-6">
+    <div className="bg-card rounded-xl border shadow-lg overflow-hidden mb-6">
       {/* Progress Header */}
-      <div className="bg-gray-50 border-b px-6 py-4">
+      <div className="bg-muted/50 border-b px-6 py-4">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-bold text-gray-900">Connect SaaS Platform</h2>
-          <span className="text-sm text-gray-500">Step {step} of 3</span>
+          <h2 className="text-lg font-bold text-foreground">Connect SaaS Platform</h2>
+          <span className="text-sm text-muted-foreground">Step {step} of 3</span>
         </div>
         <div className="flex gap-1">
           {[1, 2, 3].map(s => (
@@ -195,7 +195,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
             }`} />
           ))}
         </div>
-        <div className="flex justify-between mt-2 text-xs text-gray-500">
+        <div className="flex justify-between mt-2 text-xs text-muted-foreground">
           <span className={step >= 1 ? 'text-blue-600 font-medium' : ''}>Connect</span>
           <span className={step >= 2 ? 'text-blue-600 font-medium' : ''}>Discover</span>
           <span className={step >= 3 ? 'text-blue-600 font-medium' : ''}>Protect</span>
@@ -213,7 +213,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
         {/* ── STEP 1: Connect ── */}
         {step === 1 && (
           <div>
-            <p className="text-gray-600 text-sm mb-4">
+            <p className="text-muted-foreground text-sm mb-4">
               Enter your Azure AD App Registration credentials to connect your SaaS platform.
             </p>
 
@@ -243,39 +243,39 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
             <form onSubmit={handleStep1Submit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Organization Name</label>
+                  <label className="block text-sm font-medium text-foreground/80 mb-1">Organization Name</label>
                   <input
                     type="text" required value={form.name}
                     onChange={e => setForm({ ...form, name: e.target.value })}
                     placeholder="Contoso Inc."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring focus:border-ring"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Azure AD Tenant ID</label>
+                  <label className="block text-sm font-medium text-foreground/80 mb-1">Azure AD Tenant ID</label>
                   <input
                     type="text" required value={form.ms_tenant_id}
                     onChange={e => setForm({ ...form, ms_tenant_id: e.target.value })}
                     placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring focus:border-ring font-mono text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Application (Client) ID</label>
+                  <label className="block text-sm font-medium text-foreground/80 mb-1">Application (Client) ID</label>
                   <input
                     type="text" required value={form.client_id}
                     onChange={e => setForm({ ...form, client_id: e.target.value })}
                     placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring focus:border-ring font-mono text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Client Secret</label>
+                  <label className="block text-sm font-medium text-foreground/80 mb-1">Client Secret</label>
                   <input
                     type="password" required value={form.client_secret}
                     onChange={e => setForm({ ...form, client_secret: e.target.value })}
                     placeholder="Client secret value"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring focus:border-ring"
                   />
                 </div>
               </div>
@@ -292,7 +292,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
               )}
 
               <div className="flex justify-between pt-2">
-                <button type="button" onClick={onCancel} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">
+                <button type="button" onClick={onCancel} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground">
                   Cancel
                 </button>
                 <button
@@ -312,12 +312,12 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
             {discovering ? (
               <div className="text-center py-12">
                 <Loader2 className="w-10 h-10 animate-spin text-blue-600 mx-auto mb-4" />
-                <p className="text-lg font-medium text-gray-700">Discovering workloads...</p>
-                <p className="text-sm text-gray-500 mt-1">Scanning mailboxes, drives, sites, and directory objects</p>
+                <p className="text-lg font-medium text-foreground/80">Discovering workloads...</p>
+                <p className="text-sm text-muted-foreground mt-1">Scanning mailboxes, drives, sites, and directory objects</p>
               </div>
             ) : discovery ? (
               <div>
-                <p className="text-gray-600 text-sm mb-4">
+                <p className="text-muted-foreground text-sm mb-4">
                   Select which workloads to protect. All discovered workloads are enabled by default.
                 </p>
 
@@ -334,23 +334,23 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                         disabled={count === 0}
                         className={`relative p-4 rounded-xl border-2 text-left transition-all ${
                           count === 0
-                            ? 'border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed'
+                            ? 'border-border bg-muted/50 opacity-50 cursor-not-allowed'
                             : selected
                               ? `${c.border} ${c.bg} ring-2 ${c.ring}`
-                              : 'border-gray-200 bg-white hover:border-gray-300'
+                              : 'border-border bg-card hover:border-border'
                         }`}
                       >
                         {count > 0 && (
                           <div className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center ${
                             selected ? 'bg-green-500' : 'bg-gray-200'
                           }`}>
-                            {selected && <CheckCircle className="w-4 h-4 text-white" />}
+                            {selected && <CheckCircle className="w-4 h-4 text-foreground" />}
                           </div>
                         )}
-                        <Icon className={`w-6 h-6 mb-2 ${count > 0 ? c.text : 'text-gray-300'}`} />
-                        <p className={`text-2xl font-bold ${count > 0 ? 'text-gray-900' : 'text-gray-300'}`}>{count}</p>
-                        <p className="text-sm font-medium text-gray-700">{w.label}</p>
-                        <p className="text-xs text-gray-500">{w.desc}</p>
+                        <Icon className={`w-6 h-6 mb-2 ${count > 0 ? c.text : 'text-foreground/70'}`} />
+                        <p className={`text-2xl font-bold ${count > 0 ? 'text-foreground' : 'text-foreground/70'}`}>{count}</p>
+                        <p className="text-sm font-medium text-foreground/80">{w.label}</p>
+                        <p className="text-xs text-muted-foreground">{w.desc}</p>
                       </button>
                     );
                   })}
@@ -375,7 +375,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                         href={permissions.consent_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-3 py-1.5 bg-orange-600 text-white rounded-lg text-xs font-medium hover:bg-orange-700 flex items-center gap-1"
+                        className="px-3 py-1.5 bg-orange-600 text-foreground rounded-lg text-xs font-medium hover:bg-orange-700 flex items-center gap-1"
                       >
                         <ExternalLink className="w-3 h-3" /> Grant Permissions
                       </a>
@@ -410,7 +410,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                 )}
 
                 <div className="flex justify-between pt-2">
-                  <button onClick={() => { setStep(1); setDiscovery(null); }} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">
+                  <button onClick={() => { setStep(1); setDiscovery(null); }} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground">
                     Back
                   </button>
                   <button
@@ -425,8 +425,8 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
             ) : (
               <div className="text-center py-12">
                 <XCircle className="w-10 h-10 text-red-400 mx-auto mb-4" />
-                <p className="text-gray-700">Discovery failed. Please go back and check your credentials.</p>
-                <button onClick={() => setStep(1)} className="mt-4 px-4 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200">
+                <p className="text-foreground/80">Discovery failed. Please go back and check your credentials.</p>
+                <button onClick={() => setStep(1)} className="mt-4 px-4 py-2 bg-muted rounded-lg text-sm hover:bg-accent">
                   Back to Credentials
                 </button>
               </div>
@@ -437,13 +437,13 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
         {/* ── STEP 3: Protect ── */}
         {step === 3 && (
           <div>
-            <p className="text-gray-600 text-sm mb-4">
+            <p className="text-muted-foreground text-sm mb-4">
               Choose a backup schedule and start protecting your data.
             </p>
 
             {/* Frequency Selection */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Backup Frequency</label>
+              <label className="block text-sm font-medium text-foreground/80 mb-2">Backup Frequency</label>
               <div className="grid grid-cols-3 gap-3">
                 {FREQUENCIES.map(f => {
                   const Icon = f.icon;
@@ -454,14 +454,14 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                       className={`p-3 rounded-lg border-2 text-left transition-all ${
                         frequency === f.hours
                           ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
-                          : 'border-gray-200 hover:border-gray-300'
+                          : 'border-border hover:border-border'
                       }`}
                     >
                       <div className="flex items-center gap-2 mb-1">
                         <Icon className="w-4 h-4 text-blue-600" />
                         <span className="text-sm font-medium">{f.label}</span>
                       </div>
-                      <p className="text-xs text-gray-500">{f.desc}</p>
+                      <p className="text-xs text-muted-foreground">{f.desc}</p>
                     </button>
                   );
                 })}
@@ -470,7 +470,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
 
             {/* Retention */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Retention Period</label>
+              <label className="block text-sm font-medium text-foreground/80 mb-2">Retention Period</label>
               <div className="flex gap-2">
                 {RETENTION_OPTIONS.map(days => (
                   <button
@@ -479,7 +479,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                       retention === days
                         ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : 'bg-muted text-foreground/80 hover:bg-accent'
                     }`}
                   >
                     {days} days
@@ -493,14 +493,14 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
               <input
                 type="checkbox" checked={autoBackup}
                 onChange={e => setAutoBackup(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-ring"
               />
-              <span className="text-sm text-gray-700">Start first backup immediately after setup</span>
+              <span className="text-sm text-foreground/80">Start first backup immediately after setup</span>
             </label>
 
             {/* Summary */}
-            <div className="bg-gray-50 rounded-lg border p-4 mb-6">
-              <p className="text-sm font-medium text-gray-700 mb-2">Protection Summary</p>
+            <div className="bg-muted/50 rounded-lg border p-4 mb-6">
+              <p className="text-sm font-medium text-foreground/80 mb-2">Protection Summary</p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                 {WORKLOADS.filter(w => selectedWorkloads.has(w.key)).map(w => {
                   const Icon = w.icon;
@@ -513,14 +513,14 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                   );
                 })}
               </div>
-              <div className="mt-3 pt-3 border-t border-gray-200 flex items-center justify-between text-sm">
-                <span className="text-gray-600">Total objects: <strong>{totalProtected}</strong></span>
-                <span className="text-gray-600">Schedule: <strong>Every {frequency}h</strong> &bull; Retain: <strong>{retention} days</strong></span>
+              <div className="mt-3 pt-3 border-t border-border flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Total objects: <strong>{totalProtected}</strong></span>
+                <span className="text-muted-foreground">Schedule: <strong>Every {frequency}h</strong> &bull; Retain: <strong>{retention} days</strong></span>
               </div>
             </div>
 
             <div className="flex justify-between">
-              <button onClick={() => setStep(2)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">
+              <button onClick={() => setStep(2)} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground">
                 Back
               </button>
               <button

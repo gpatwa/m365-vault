@@ -8,7 +8,7 @@ const WorkloadIcon = ({ type }: { type: string }) => {
     case 'exchange': return <Mail className="w-4 h-4 text-blue-500" />;
     case 'onedrive': return <HardDrive className="w-4 h-4 text-purple-500" />;
     case 'sharepoint': return <Globe className="w-4 h-4 text-green-500" />;
-    default: return <Activity className="w-4 h-4 text-gray-500" />;
+    default: return <Activity className="w-4 h-4 text-muted-foreground" />;
   }
 };
 
@@ -17,7 +17,7 @@ const ObjectStatusIcon = ({ status }: { status: string }) => {
     case 'completed': return <CheckCircle2 className="w-4 h-4 text-green-500" />;
     case 'failed': return <XCircle className="w-4 h-4 text-red-500" />;
     case 'in_progress': return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
-    default: return <Clock className="w-4 h-4 text-gray-400" />;
+    default: return <Clock className="w-4 h-4 text-muted-foreground" />;
   }
 };
 
@@ -38,35 +38,35 @@ export default function JobTable({
   if (type === 'restore') {
     const restoreJobs = jobs as RestoreJob[];
     return (
-      <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+      <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
+          <thead className="bg-muted/50 border-b">
             <tr>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">ID</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Type</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Status</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Started</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Duration</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Items Restored</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Failed</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Error</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">ID</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Type</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Started</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Duration</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Items Restored</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Failed</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Error</th>
             </tr>
           </thead>
           <tbody className="divide-y">
             {restoreJobs.map(j => (
-              <tr key={j.id} className="hover:bg-gray-50">
+              <tr key={j.id} className="hover:bg-muted/50">
                 <td className="px-4 py-3 font-mono text-xs">#{j.id}</td>
                 <td className="px-4 py-3 capitalize">{j.restore_type.replace(/_/g, ' ')}</td>
                 <td className="px-4 py-3"><StatusBadge status={j.status} /></td>
-                <td className="px-4 py-3 text-gray-500">{j.started_at?.slice(0, 16) || '—'}</td>
-                <td className="px-4 py-3 text-gray-500">{formatDuration(j.started_at, j.completed_at)}</td>
+                <td className="px-4 py-3 text-muted-foreground">{j.started_at?.slice(0, 16) || '—'}</td>
+                <td className="px-4 py-3 text-muted-foreground">{formatDuration(j.started_at, j.completed_at)}</td>
                 <td className="px-4 py-3">{j.items_restored}</td>
                 <td className="px-4 py-3 text-red-500">{j.items_failed || 0}</td>
                 <td className="px-4 py-3 text-red-500 text-xs max-w-[200px] truncate">{j.error_message || '—'}</td>
               </tr>
             ))}
-            {isLoading && <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400">Loading...</td></tr>}
-            {!isLoading && !restoreJobs.length && <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400">No restore jobs found</td></tr>}
+            {isLoading && <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Loading...</td></tr>}
+            {!isLoading && !restoreJobs.length && <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">No restore jobs found</td></tr>}
           </tbody>
         </table>
       </div>
@@ -75,20 +75,20 @@ export default function JobTable({
 
   const backupJobs = jobs as BackupJob[];
   return (
-    <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+    <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
       <table className="w-full text-sm">
-        <thead className="bg-gray-50 border-b">
+        <thead className="bg-muted/50 border-b">
           <tr>
-            <th className="px-4 py-3 text-left font-medium text-gray-500 w-8"></th>
-            <th className="px-4 py-3 text-left font-medium text-gray-500">ID</th>
-            {showWorkloadColumn && <th className="px-4 py-3 text-left font-medium text-gray-500">Workload</th>}
-            <th className="px-4 py-3 text-left font-medium text-gray-500">Status</th>
-            <th className="px-4 py-3 text-left font-medium text-gray-500">Progress</th>
-            <th className="px-4 py-3 text-left font-medium text-gray-500">Items</th>
-            <th className="px-4 py-3 text-left font-medium text-gray-500">Size</th>
-            <th className="px-4 py-3 text-left font-medium text-gray-500">Started</th>
-            <th className="px-4 py-3 text-left font-medium text-gray-500">Duration</th>
-            <th className="px-4 py-3 text-left font-medium text-gray-500">Retry</th>
+            <th className="px-4 py-3 text-left font-medium text-muted-foreground w-8"></th>
+            <th className="px-4 py-3 text-left font-medium text-muted-foreground">ID</th>
+            {showWorkloadColumn && <th className="px-4 py-3 text-left font-medium text-muted-foreground">Workload</th>}
+            <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
+            <th className="px-4 py-3 text-left font-medium text-muted-foreground">Progress</th>
+            <th className="px-4 py-3 text-left font-medium text-muted-foreground">Items</th>
+            <th className="px-4 py-3 text-left font-medium text-muted-foreground">Size</th>
+            <th className="px-4 py-3 text-left font-medium text-muted-foreground">Started</th>
+            <th className="px-4 py-3 text-left font-medium text-muted-foreground">Duration</th>
+            <th className="px-4 py-3 text-left font-medium text-muted-foreground">Retry</th>
           </tr>
         </thead>
         <tbody className="divide-y">
@@ -101,11 +101,11 @@ export default function JobTable({
 
             return (
               <tbody key={j.id}>
-                <tr className={`hover:bg-gray-50 ${hasProgress ? 'cursor-pointer' : ''}`}
+                <tr className={`hover:bg-muted/50 ${hasProgress ? 'cursor-pointer' : ''}`}
                     onClick={() => hasProgress && onToggleExpand(j.id)}>
                   <td className="px-4 py-3">
                     {hasProgress ? (
-                      isExpanded ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />
+                      isExpanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />
                     ) : null}
                   </td>
                   <td className="px-4 py-3 font-mono text-xs">#{j.id}</td>
@@ -127,19 +127,19 @@ export default function JobTable({
                             style={{ width: `${Math.round(((j.objects_processed + j.objects_failed) / j.objects_total) * 100)}%` }}
                           />
                         </div>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-muted-foreground">
                           {j.objects_processed + j.objects_failed}/{j.objects_total}
                           {j.objects_failed > 0 && <span className="text-red-500 ml-1">({j.objects_failed} failed)</span>}
                         </span>
                       </div>
                     ) : (
-                      <span className="text-gray-400">—</span>
+                      <span className="text-muted-foreground">—</span>
                     )}
                   </td>
                   <td className="px-4 py-3">{summary?.total_items || j.total_items || '—'}</td>
                   <td className="px-4 py-3">{formatSize(summary?.total_size_bytes || j.total_size_bytes)}</td>
-                  <td className="px-4 py-3 text-gray-500">{j.started_at?.slice(0, 16) || '—'}</td>
-                  <td className="px-4 py-3 text-gray-500">{formatDuration(j.started_at, j.completed_at)}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{j.started_at?.slice(0, 16) || '—'}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{formatDuration(j.started_at, j.completed_at)}</td>
                   <td className="px-4 py-3">
                     {(j.status === 'failed' || j.status === 'partial') && onRetry ? (
                       <div className="flex items-center gap-2">
@@ -151,30 +151,30 @@ export default function JobTable({
                           <RotateCcw className="w-3 h-3" /> Retry
                         </button>
                         {j.retry_count > 0 && (
-                          <span className="text-xs text-gray-400">({j.retry_count}/{j.max_retries})</span>
+                          <span className="text-xs text-muted-foreground">({j.retry_count}/{j.max_retries})</span>
                         )}
                       </div>
                     ) : j.retry_count > 0 ? (
-                      <span className="text-xs text-gray-400">retried {j.retry_count}x</span>
+                      <span className="text-xs text-muted-foreground">retried {j.retry_count}x</span>
                     ) : (
-                      <span className="text-gray-300">—</span>
+                      <span className="text-foreground/70">—</span>
                     )}
                   </td>
                 </tr>
                 {isExpanded && hasProgress && (
                   <tr>
                     <td colSpan={colCount} className="px-0 py-0">
-                      <div className="bg-gray-50 border-t border-b px-8 py-3">
-                        <div className="text-xs font-semibold text-gray-500 uppercase mb-2">Per-Object Progress</div>
+                      <div className="bg-muted/50 border-t border-b px-8 py-3">
+                        <div className="text-xs font-semibold text-muted-foreground uppercase mb-2">Per-Object Progress</div>
                         <div className="space-y-1.5">
                           {Object.entries(progress.objects).map(([objId, obj]: [string, any]) => (
-                            <div key={objId} className="flex items-center gap-3 py-1.5 px-3 bg-white rounded-lg border text-sm">
+                            <div key={objId} className="flex items-center gap-3 py-1.5 px-3 bg-card rounded-lg border text-sm">
                               <ObjectStatusIcon status={obj.status} />
                               <div className="flex-1 min-w-0">
                                 <span className="font-medium truncate block">{obj.name}</span>
-                                {obj.email && <span className="text-gray-400 text-xs">{obj.email}</span>}
+                                {obj.email && <span className="text-muted-foreground text-xs">{obj.email}</span>}
                               </div>
-                              <div className="flex items-center gap-4 text-xs text-gray-500">
+                              <div className="flex items-center gap-4 text-xs text-muted-foreground">
                                 {obj.detail && <span className="italic">{obj.detail}</span>}
                                 {obj.item_count !== undefined && (
                                   <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">
@@ -196,7 +196,7 @@ export default function JobTable({
                                 obj.status === 'completed' ? 'bg-green-100 text-green-700' :
                                 obj.status === 'failed' ? 'bg-red-100 text-red-700' :
                                 obj.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
-                                'bg-gray-100 text-gray-500'
+                                'bg-muted text-muted-foreground'
                               }`}>
                                 {obj.status.replace('_', ' ')}
                               </span>
@@ -215,8 +215,8 @@ export default function JobTable({
               </tbody>
             );
           })}
-          {isLoading && <tr><td colSpan={showWorkloadColumn ? 10 : 9} className="px-4 py-8 text-center text-gray-400">Loading...</td></tr>}
-          {!isLoading && !backupJobs.length && <tr><td colSpan={showWorkloadColumn ? 10 : 9} className="px-4 py-8 text-center text-gray-400">No backup jobs found</td></tr>}
+          {isLoading && <tr><td colSpan={showWorkloadColumn ? 10 : 9} className="px-4 py-8 text-center text-muted-foreground">Loading...</td></tr>}
+          {!isLoading && !backupJobs.length && <tr><td colSpan={showWorkloadColumn ? 10 : 9} className="px-4 py-8 text-center text-muted-foreground">No backup jobs found</td></tr>}
         </tbody>
       </table>
     </div>

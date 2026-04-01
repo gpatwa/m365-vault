@@ -65,15 +65,15 @@ function HealthBadge({ score, status }: { score: number; status: string }) {
 
 function StatCard({ icon: Icon, label, value, sub }: { icon: typeof Shield; label: string; value: string | number; sub?: string }) {
   return (
-    <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+    <div className="bg-card rounded-xl p-4 border border-border">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
           <Icon className="w-5 h-5 text-blue-400" />
         </div>
         <div>
-          <div className="text-2xl font-bold text-white">{value}</div>
-          <div className="text-xs text-gray-400">{label}</div>
-          {sub && <div className="text-[10px] text-gray-500">{sub}</div>}
+          <div className="text-2xl font-bold text-foreground">{value}</div>
+          <div className="text-xs text-muted-foreground">{label}</div>
+          {sub && <div className="text-[10px] text-muted-foreground">{sub}</div>}
         </div>
       </div>
     </div>
@@ -102,7 +102,7 @@ export default function MSPDashboard() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="text-gray-400 animate-pulse">Loading MSP dashboard...</div>
+        <div className="text-muted-foreground animate-pulse">Loading MSP dashboard...</div>
       </div>
     );
   }
@@ -111,18 +111,18 @@ export default function MSPDashboard() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">MSP Dashboard</h1>
-          <p className="text-sm text-gray-400">All client tenants at a glance</p>
+          <h1 className="text-2xl font-bold text-foreground">MSP Dashboard</h1>
+          <p className="text-sm text-muted-foreground">All client tenants at a glance</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-500" />
+            <Search className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search tenants..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-9 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 w-64"
+              className="pl-9 pr-4 py-2 bg-card border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring w-64"
             />
           </div>
         </div>
@@ -145,7 +145,7 @@ export default function MSPDashboard() {
           <button
             key={tenant.id}
             onClick={() => { setTenant(tenant.id, tenant.name); navigate('/'); }}
-            className="w-full bg-gray-800 rounded-xl p-4 border border-gray-700 hover:border-gray-600 transition-all text-left flex items-center gap-4 group"
+            className="w-full bg-card rounded-xl p-4 border border-border hover:border-border transition-all text-left flex items-center gap-4 group"
           >
             {/* Health score */}
             <HealthBadge score={tenant.health_score} status={tenant.health_status} />
@@ -153,45 +153,45 @@ export default function MSPDashboard() {
             {/* Tenant info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-white text-sm">{tenant.name}</span>
+                <span className="font-semibold text-foreground text-sm">{tenant.name}</span>
                 <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                  tenant.status === 'active' ? 'bg-green-500/10 text-green-400' : 'bg-gray-600 text-gray-400'
+                  tenant.status === 'active' ? 'bg-green-500/10 text-green-400' : 'bg-gray-600 text-muted-foreground'
                 }`}>
                   {tenant.status}
                 </span>
               </div>
-              <div className="text-xs text-gray-500 mt-0.5 truncate">{tenant.ms_tenant_id}</div>
+              <div className="text-xs text-muted-foreground mt-0.5 truncate">{tenant.ms_tenant_id}</div>
             </div>
 
             {/* Metrics */}
             <div className="hidden md:flex items-center gap-6 text-center">
               <div>
-                <div className="text-sm font-semibold text-white">{tenant.protection_pct}%</div>
-                <div className="text-[10px] text-gray-500">Protected</div>
+                <div className="text-sm font-semibold text-foreground">{tenant.protection_pct}%</div>
+                <div className="text-[10px] text-muted-foreground">Protected</div>
               </div>
               <div>
-                <div className="text-sm font-semibold text-white">{tenant.protected_objects}/{tenant.total_objects}</div>
-                <div className="text-[10px] text-gray-500">Objects</div>
+                <div className="text-sm font-semibold text-foreground">{tenant.protected_objects}/{tenant.total_objects}</div>
+                <div className="text-[10px] text-muted-foreground">Objects</div>
               </div>
               <div>
-                <div className="text-sm font-semibold text-white">{tenant.workload_count}</div>
-                <div className="text-[10px] text-gray-500">Workloads</div>
+                <div className="text-sm font-semibold text-foreground">{tenant.workload_count}</div>
+                <div className="text-[10px] text-muted-foreground">Workloads</div>
               </div>
               <div>
-                <div className={`text-sm font-semibold ${tenant.failed_24h > 0 ? 'text-red-400' : 'text-white'}`}>
+                <div className={`text-sm font-semibold ${tenant.failed_24h > 0 ? 'text-red-400' : 'text-foreground'}`}>
                   {tenant.backups_24h}
                 </div>
-                <div className="text-[10px] text-gray-500">Backups 24h</div>
+                <div className="text-[10px] text-muted-foreground">Backups 24h</div>
               </div>
               <div>
-                <div className="text-sm font-semibold text-white">{tenant.storage_gb} GB</div>
-                <div className="text-[10px] text-gray-500">Storage</div>
+                <div className="text-sm font-semibold text-foreground">{tenant.storage_gb} GB</div>
+                <div className="text-[10px] text-muted-foreground">Storage</div>
               </div>
               <div>
-                <div className="text-xs text-gray-400">
+                <div className="text-xs text-muted-foreground">
                   {tenant.last_backup ? new Date(tenant.last_backup).toLocaleDateString() : 'Never'}
                 </div>
-                <div className="text-[10px] text-gray-500">Last Backup</div>
+                <div className="text-[10px] text-muted-foreground">Last Backup</div>
               </div>
             </div>
 
@@ -210,27 +210,27 @@ export default function MSPDashboard() {
               )}
               <button
                 onClick={(e) => { e.stopPropagation(); setComplianceTenant({ id: tenant.id, name: tenant.name }); }}
-                className="p-1.5 bg-gray-700 rounded-lg hover:bg-blue-600 transition-colors"
+                className="p-1.5 bg-secondary rounded-lg hover:bg-blue-600 transition-colors"
                 title="Compliance Report"
               >
-                <FileText className="w-3.5 h-3.5 text-gray-400 hover:text-white" />
+                <FileText className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" />
               </button>
               {tenant.status === 'active' && (
                 <button
                   onClick={(e) => { e.stopPropagation(); setOffboardTenant({ id: tenant.id, name: tenant.name }); }}
-                  className="p-1.5 bg-gray-700 rounded-lg hover:bg-red-600 transition-colors"
+                  className="p-1.5 bg-secondary rounded-lg hover:bg-red-600 transition-colors"
                   title="Offboard Tenant"
                 >
-                  <LogOut className="w-3.5 h-3.5 text-gray-400 hover:text-white" />
+                  <LogOut className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" />
                 </button>
               )}
-              <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-gray-400 transition-colors" />
+              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-muted-foreground transition-colors" />
             </div>
           </button>
         ))}
 
         {filtered.length === 0 && (
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-12 text-muted-foreground">
             {search ? `No tenants matching "${search}"` : 'No tenants found'}
           </div>
         )}

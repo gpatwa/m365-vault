@@ -63,30 +63,30 @@ export default function Search() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <SearchIcon className="w-7 h-7 text-blue-600" /> Global Search
         </h1>
-        <p className="text-gray-500">Search across all workloads — emails, files, Teams messages, Entra ID objects</p>
+        <p className="text-muted-foreground">Search across all workloads — emails, files, Teams messages, Entra ID objects</p>
       </div>
 
       {/* Search Bar */}
       <form onSubmit={handleSearch} className="mb-6">
         <div className="flex gap-3">
           <div className="flex-1 relative">
-            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <input
               type="text"
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Search emails, files, documents, users, policies..."
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-ring focus:border-ring text-sm"
               autoFocus
             />
           </div>
           <select
             value={workloadFilter}
             onChange={e => { setWorkloadFilter(e.target.value); if (searchQuery) setSearchQuery(query); }}
-            className="px-4 py-3 border border-gray-300 rounded-xl text-sm bg-white"
+            className="px-4 py-3 border border-gray-300 rounded-xl text-sm bg-card"
           >
             <option value="">All Workloads</option>
             {WORKLOADS.map(w => (
@@ -106,14 +106,14 @@ export default function Search() {
 
       {/* Results */}
       {searchQuery && !isLoading && data && (
-        <div className="mb-4 text-sm text-gray-500">
-          Found <strong className="text-gray-900">{data.total}</strong> results for "<strong className="text-gray-900">{data.query}</strong>"
-          {workloadFilter && <> in <strong className="text-gray-900">{WORKLOAD_MAP[workloadFilter]?.label || workloadFilter}</strong></>}
+        <div className="mb-4 text-sm text-muted-foreground">
+          Found <strong className="text-foreground">{data.total}</strong> results for "<strong className="text-foreground">{data.query}</strong>"
+          {workloadFilter && <> in <strong className="text-foreground">{WORKLOAD_MAP[workloadFilter]?.label || workloadFilter}</strong></>}
         </div>
       )}
 
       {searchQuery && !isLoading && data?.total === 0 && (
-        <div className="text-center py-12 text-gray-400">
+        <div className="text-center py-12 text-muted-foreground">
           <SearchIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
           <p className="text-lg">No results found</p>
           <p className="text-sm mt-1">Try different keywords or remove the workload filter</p>
@@ -127,49 +127,49 @@ export default function Search() {
         return (
           <div key={workload} className="mb-6">
             <div className="flex items-center gap-2 mb-3">
-              <WlIcon className={`w-5 h-5 ${wlConfig?.iconColor || 'text-gray-500'}`} />
-              <h3 className="font-semibold text-gray-900">{wlConfig?.label || workload}</h3>
-              <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">{items.length}</span>
+              <WlIcon className={`w-5 h-5 ${wlConfig?.iconColor || 'text-muted-foreground'}`} />
+              <h3 className="font-semibold text-foreground">{wlConfig?.label || workload}</h3>
+              <span className="px-2 py-0.5 bg-muted text-muted-foreground rounded-full text-xs font-medium">{items.length}</span>
             </div>
-            <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+            <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b">
+                <thead className="bg-muted/50 border-b">
                   <tr>
-                    <th className="text-left px-4 py-2 font-medium text-gray-600">Type</th>
-                    <th className="text-left px-4 py-2 font-medium text-gray-600">Name</th>
-                    <th className="text-left px-4 py-2 font-medium text-gray-600">Location</th>
-                    <th className="text-left px-4 py-2 font-medium text-gray-600">Source</th>
-                    <th className="text-right px-4 py-2 font-medium text-gray-600">Size</th>
-                    <th className="text-right px-4 py-2 font-medium text-gray-600">Backed Up</th>
+                    <th className="text-left px-4 py-2 font-medium text-muted-foreground">Type</th>
+                    <th className="text-left px-4 py-2 font-medium text-muted-foreground">Name</th>
+                    <th className="text-left px-4 py-2 font-medium text-muted-foreground">Location</th>
+                    <th className="text-left px-4 py-2 font-medium text-muted-foreground">Source</th>
+                    <th className="text-right px-4 py-2 font-medium text-muted-foreground">Size</th>
+                    <th className="text-right px-4 py-2 font-medium text-muted-foreground">Backed Up</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-border">
                   {items.map(item => {
                     const TypeIcon = ITEM_TYPE_ICONS[item.item_type] || FileText;
                     return (
-                      <tr key={`${item.snapshot_id}-${item.item_id}`} className="hover:bg-gray-50">
+                      <tr key={`${item.snapshot_id}-${item.item_id}`} className="hover:bg-muted/50">
                         <td className="px-4 py-2.5">
                           <div className="flex items-center gap-1.5">
-                            <TypeIcon className="w-4 h-4 text-gray-400" />
-                            <span className="text-xs text-gray-500 capitalize">{item.item_type.replace('_', ' ')}</span>
+                            <TypeIcon className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground capitalize">{item.item_type.replace('_', ' ')}</span>
                           </div>
                         </td>
                         <td className="px-4 py-2.5">
-                          <p className="font-medium text-gray-900 truncate max-w-xs" title={item.name}>
+                          <p className="font-medium text-foreground truncate max-w-xs" title={item.name}>
                             {item.subject || item.file_name || item.name}
                           </p>
-                          {item.sender && <p className="text-xs text-gray-400">from: {item.sender}</p>}
+                          {item.sender && <p className="text-xs text-muted-foreground">from: {item.sender}</p>}
                         </td>
-                        <td className="px-4 py-2.5 text-gray-500 text-xs truncate max-w-[200px]" title={item.path}>
+                        <td className="px-4 py-2.5 text-muted-foreground text-xs truncate max-w-[200px]" title={item.path}>
                           {item.path || '-'}
                         </td>
-                        <td className="px-4 py-2.5 text-gray-500 text-xs truncate max-w-[200px]" title={item.object_name}>
+                        <td className="px-4 py-2.5 text-muted-foreground text-xs truncate max-w-[200px]" title={item.object_name}>
                           {item.object_name}
                         </td>
-                        <td className="px-4 py-2.5 text-right text-gray-500 font-mono text-xs">
+                        <td className="px-4 py-2.5 text-right text-muted-foreground font-mono text-xs">
                           {formatSize(item.size_bytes)}
                         </td>
-                        <td className="px-4 py-2.5 text-right text-gray-400 text-xs">
+                        <td className="px-4 py-2.5 text-right text-muted-foreground text-xs">
                           {item.snapshot_date ? timeAgo(item.snapshot_date) : '-'}
                         </td>
                       </tr>

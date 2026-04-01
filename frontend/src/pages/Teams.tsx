@@ -116,7 +116,7 @@ export default function Teams() {
       render: (row) => (
         <div className="flex items-center gap-2">
           <Users className="w-4 h-4 text-pink-600 flex-shrink-0" />
-          <span className="font-medium text-gray-900">{row.display_name.replace(' (Team)', '').replace(' (Chats)', '')}</span>
+          <span className="font-medium text-foreground">{row.display_name.replace(' (Team)', '').replace(' (Chats)', '')}</span>
           {row.display_name.includes('(Chats)') && (
             <span className="px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded text-[10px] font-medium">Chat</span>
           )}
@@ -133,7 +133,7 @@ export default function Teams() {
       key: 'criticality_tier',
       label: 'Criticality',
       sortable: true,
-      render: (row: any) => row.criticality_tier ? <CriticalityBadge tier={row.criticality_tier} score={row.criticality_score} /> : <span className="text-gray-300">—</span>,
+      render: (row: any) => row.criticality_tier ? <CriticalityBadge tier={row.criticality_tier} score={row.criticality_score} /> : <span className="text-foreground/70">—</span>,
     },
     { key: 'total_items_backed_up', label: 'Items', sortable: true },
     {
@@ -147,7 +147,7 @@ export default function Teams() {
       label: 'Last Backup',
       sortable: true,
       render: (row) => (
-        <span className="text-gray-500">{row.last_backup_at ? timeAgo(row.last_backup_at) : 'Never'}</span>
+        <span className="text-muted-foreground">{row.last_backup_at ? timeAgo(row.last_backup_at) : 'Never'}</span>
       ),
     },
   ];
@@ -156,9 +156,9 @@ export default function Teams() {
 
   if (!tenantId) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-        <MessageSquare className="w-12 h-12 mb-3 text-gray-300" />
-        <p className="text-lg font-medium text-gray-600">No Tenant Connected</p>
+      <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+        <MessageSquare className="w-12 h-12 mb-3 text-foreground/70" />
+        <p className="text-lg font-medium text-muted-foreground">No Tenant Connected</p>
         <p className="text-sm mt-1">Connect a SaaS platform from the <a href="/tenants" className="text-blue-600 hover:underline">Tenants</a> page.</p>
       </div>
     );
@@ -179,28 +179,28 @@ export default function Teams() {
         <h2 className="text-xl font-bold mb-4">
           Browse Snapshot — {selectedSnapshot.started_at?.slice(0, 16)}
         </h2>
-        <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+        <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-muted/50 border-b">
               <tr>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Type</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Name / Content</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Path</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Size</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Type</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Name / Content</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Path</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Size</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {browseData?.items?.map((item, i) => (
-                <tr key={i} className="hover:bg-gray-50">
+                <tr key={i} className="hover:bg-muted/50">
                   <td className="px-4 py-3"><StatusBadge status={item.item_type} /></td>
                   <td className="px-4 py-3 font-medium max-w-md truncate">{item.name}</td>
-                  <td className="px-4 py-3 text-gray-500 text-xs">{item.path || '—'}</td>
-                  <td className="px-4 py-3 text-gray-500">{formatSize(item.size_bytes)}</td>
+                  <td className="px-4 py-3 text-muted-foreground text-xs">{item.path || '—'}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{formatSize(item.size_bytes)}</td>
                 </tr>
               ))}
               {(!browseData?.items?.length) && (
-                <tr><td colSpan={4} className="px-4 py-8 text-center text-gray-400">No items in this snapshot</td></tr>
+                <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">No items in this snapshot</td></tr>
               )}
             </tbody>
           </table>
@@ -225,7 +225,7 @@ export default function Teams() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div className="min-w-0">
             <h2 className="text-xl font-bold truncate">{selectedTeam.display_name}</h2>
-            <p className="text-gray-500">
+            <p className="text-muted-foreground">
               {selectedTeam.total_items_backed_up} items • {formatSize(selectedTeam.total_size_bytes)}
               {selectedTeam.last_backup_at && ` • Last backup: ${timeAgo(selectedTeam.last_backup_at)}`}
             </p>
@@ -234,7 +234,7 @@ export default function Teams() {
             <button
               onClick={() => backupMutation.mutate(selectedTeam.id)}
               disabled={backupMutation.isPending}
-              className="px-4 py-2 bg-pink-600 text-white rounded-lg text-sm font-medium hover:bg-pink-700 flex items-center gap-2 disabled:opacity-50"
+              className="px-4 py-2 bg-pink-600 text-foreground rounded-lg text-sm font-medium hover:bg-pink-700 flex items-center gap-2 disabled:opacity-50"
             >
               {backupMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               {backupMutation.isPending ? 'Backing up...' : 'Backup Now'}
@@ -249,25 +249,25 @@ export default function Teams() {
             {backupMsg}
           </div>
         )}
-        <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-          <div className="p-4 border-b bg-gray-50">
+        <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
+          <div className="p-4 border-b bg-muted/50">
             <h3 className="font-semibold">Snapshots ({snapshots?.length || 0})</h3>
           </div>
           <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-muted/50 border-b">
               <tr>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Date</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Type</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Status</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Items</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Size</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Actions</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Date</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Type</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Items</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Size</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {snapshots?.map(s => (
-                <tr key={s.id} className="hover:bg-gray-50">
+                <tr key={s.id} className="hover:bg-muted/50">
                   <td className="px-4 py-3">{s.started_at?.slice(0, 16)}</td>
                   <td className="px-4 py-3 capitalize">{s.snapshot_type}</td>
                   <td className="px-4 py-3"><StatusBadge status={s.status} /></td>
@@ -284,7 +284,7 @@ export default function Teams() {
                 </tr>
               ))}
               {(!snapshots?.length) && (
-                <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">No snapshots yet. Run a backup first.</td></tr>
+                <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No snapshots yet. Run a backup first.</td></tr>
               )}
             </tbody>
           </table>

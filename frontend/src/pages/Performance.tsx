@@ -19,14 +19,14 @@ interface BenchmarkData {
 
 function MetricCard({ icon: Icon, label, value, unit, color }: { icon: typeof Activity; label: string; value: string | number; unit?: string; color: string }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5">
+    <div className="bg-card rounded-xl border border-border p-5">
       <div className="flex items-center gap-3">
         <div className={`p-2.5 rounded-lg ${color}`}>
-          <Icon className="w-5 h-5 text-white" />
+          <Icon className="w-5 h-5 text-foreground" />
         </div>
         <div>
-          <div className="text-2xl font-bold text-gray-900">{value}{unit && <span className="text-sm font-normal text-gray-400 ml-1">{unit}</span>}</div>
-          <div className="text-xs text-gray-500">{label}</div>
+          <div className="text-2xl font-bold text-foreground">{value}{unit && <span className="text-sm font-normal text-muted-foreground ml-1">{unit}</span>}</div>
+          <div className="text-xs text-muted-foreground">{label}</div>
         </div>
       </div>
     </div>
@@ -71,19 +71,19 @@ export default function Performance() {
     <div>
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Performance</h1>
-        <p className="text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-foreground">Performance</h1>
+        <p className="text-sm text-muted-foreground">
           Benchmark results from real system measurements
-          {data?.timestamp && <span className="ml-2 text-gray-400">• Last run: {new Date(data.timestamp).toLocaleDateString()}</span>}
-          {data?.version && <span className="ml-2 text-gray-400">• v{data.version}</span>}
+          {data?.timestamp && <span className="ml-2 text-muted-foreground">• Last run: {new Date(data.timestamp).toLocaleDateString()}</span>}
+          {data?.version && <span className="ml-2 text-muted-foreground">• v{data.version}</span>}
         </p>
       </div>
 
       {noResults ? (
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-8 text-center">
-          <Server className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-600 font-medium">No benchmark results available</p>
-          <p className="text-sm text-gray-400 mt-1">Run <code className="bg-gray-200 px-2 py-0.5 rounded text-xs">make benchmark</code> to generate performance data</p>
+        <div className="bg-muted/50 border border-border rounded-xl p-8 text-center">
+          <Server className="w-10 h-10 text-foreground/70 mx-auto mb-3" />
+          <p className="text-muted-foreground font-medium">No benchmark results available</p>
+          <p className="text-sm text-muted-foreground mt-1">Run <code className="bg-gray-200 px-2 py-0.5 rounded text-xs">make benchmark</code> to generate performance data</p>
         </div>
       ) : (
         <>
@@ -97,9 +97,9 @@ export default function Performance() {
 
           {/* API Latency Chart */}
           {latencyData.length > 0 && (
-            <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
-              <h2 className="text-sm font-semibold text-gray-800 mb-1">API Response Latency</h2>
-              <p className="text-xs text-gray-400 mb-4">Per-endpoint performance (5 samples each, milliseconds)</p>
+            <div className="bg-card rounded-xl border border-border p-5 mb-6">
+              <h2 className="text-sm font-semibold text-foreground mb-1">API Response Latency</h2>
+              <p className="text-xs text-muted-foreground mb-4">Per-endpoint performance (5 samples each, milliseconds)</p>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={latencyData} margin={{ top: 5, right: 20, bottom: 40, left: 0 }}>
@@ -127,9 +127,9 @@ export default function Performance() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {/* Concurrent Load */}
             {concurrentData.length > 0 && (
-              <div className="bg-white rounded-xl border border-gray-200 p-5">
-                <h2 className="text-sm font-semibold text-gray-800 mb-1">Concurrent Load Test</h2>
-                <p className="text-xs text-gray-400 mb-4">Average response time under parallel requests</p>
+              <div className="bg-card rounded-xl border border-border p-5">
+                <h2 className="text-sm font-semibold text-foreground mb-1">Concurrent Load Test</h2>
+                <p className="text-xs text-muted-foreground mb-4">Average response time under parallel requests</p>
                 <div className="h-48">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={concurrentData}>
@@ -145,23 +145,23 @@ export default function Performance() {
             )}
 
             {/* Endpoint Details Table */}
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <h2 className="text-sm font-semibold text-gray-800 mb-1">Endpoint Details</h2>
-              <p className="text-xs text-gray-400 mb-4">Per-endpoint latency percentiles</p>
+            <div className="bg-card rounded-xl border border-border p-5">
+              <h2 className="text-sm font-semibold text-foreground mb-1">Endpoint Details</h2>
+              <p className="text-xs text-muted-foreground mb-4">Per-endpoint latency percentiles</p>
               <div className="overflow-auto max-h-48">
                 <table className="w-full text-xs">
-                  <thead className="bg-gray-50 sticky top-0">
+                  <thead className="bg-muted/50 sticky top-0">
                     <tr>
-                      <th className="text-left px-2 py-1.5 font-medium text-gray-600">Endpoint</th>
-                      <th className="text-right px-2 py-1.5 font-medium text-gray-600">Avg</th>
-                      <th className="text-right px-2 py-1.5 font-medium text-gray-600">p50</th>
-                      <th className="text-right px-2 py-1.5 font-medium text-gray-600">p95</th>
+                      <th className="text-left px-2 py-1.5 font-medium text-muted-foreground">Endpoint</th>
+                      <th className="text-right px-2 py-1.5 font-medium text-muted-foreground">Avg</th>
+                      <th className="text-right px-2 py-1.5 font-medium text-muted-foreground">p50</th>
+                      <th className="text-right px-2 py-1.5 font-medium text-muted-foreground">p95</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-border">
                     {Object.entries(b.api_latency || {}).map(([name, v]) => (
-                      <tr key={name} className="hover:bg-gray-50">
-                        <td className="px-2 py-1.5 text-gray-700">{name}</td>
+                      <tr key={name} className="hover:bg-muted/50">
+                        <td className="px-2 py-1.5 text-foreground/80">{name}</td>
                         <td className="px-2 py-1.5 text-right font-mono">{v.avg_ms.toFixed(1)}</td>
                         <td className="px-2 py-1.5 text-right font-mono">{v.p50_ms.toFixed(1)}</td>
                         <td className="px-2 py-1.5 text-right font-mono">{v.p95_ms.toFixed(1)}</td>
@@ -176,57 +176,57 @@ export default function Performance() {
           {/* Backup + Storage + Success */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             {/* Storage */}
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <h2 className="text-sm font-semibold text-gray-800 mb-3">Storage Efficiency</h2>
+            <div className="bg-card rounded-xl border border-border p-5">
+              <h2 className="text-sm font-semibold text-foreground mb-3">Storage Efficiency</h2>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Total Size</span>
+                  <span className="text-xs text-muted-foreground">Total Size</span>
                   <span className="text-sm font-semibold">{b.storage?.total_size_bytes ? `${(b.storage.total_size_bytes / 1024 / 1024).toFixed(1)} MB` : '—'}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Compression</span>
+                  <span className="text-xs text-muted-foreground">Compression</span>
                   <span className="text-sm font-semibold text-green-600">{b.storage?.compression_ratio || '—'}x</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Dedup Ratio</span>
+                  <span className="text-xs text-muted-foreground">Dedup Ratio</span>
                   <span className="text-sm font-semibold">{b.storage?.dedup_ratio || 'N/A'}</span>
                 </div>
               </div>
             </div>
 
             {/* Success Rate */}
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <h2 className="text-sm font-semibold text-gray-800 mb-3">Success Rate</h2>
+            <div className="bg-card rounded-xl border border-border p-5">
+              <h2 className="text-sm font-semibold text-foreground mb-3">Success Rate</h2>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Period</span>
+                  <span className="text-xs text-muted-foreground">Period</span>
                   <span className="text-sm">{b.success_rate?.period || '30d'}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Rate</span>
+                  <span className="text-xs text-muted-foreground">Rate</span>
                   <span className="text-sm font-semibold text-green-600">{b.success_rate?.rate != null ? `${b.success_rate.rate}%` : 'N/A'}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Total Jobs</span>
+                  <span className="text-xs text-muted-foreground">Total Jobs</span>
                   <span className="text-sm">{b.success_rate?.total_jobs ?? 'N/A'}</span>
                 </div>
               </div>
             </div>
 
             {/* System Info */}
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <h2 className="text-sm font-semibold text-gray-800 mb-3">System</h2>
+            <div className="bg-card rounded-xl border border-border p-5">
+              <h2 className="text-sm font-semibold text-foreground mb-3">System</h2>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Health</span>
+                  <span className="text-xs text-muted-foreground">Health</span>
                   <span className="flex items-center gap-1 text-sm text-green-600"><CheckCircle2 className="w-3.5 h-3.5" /> {b.health_check?.status || '—'}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Version</span>
+                  <span className="text-xs text-muted-foreground">Version</span>
                   <span className="text-sm">{data?.version || '—'}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Last Benchmark</span>
+                  <span className="text-xs text-muted-foreground">Last Benchmark</span>
                   <span className="text-sm">{data?.timestamp ? new Date(data.timestamp).toLocaleString() : '—'}</span>
                 </div>
               </div>
@@ -234,8 +234,8 @@ export default function Performance() {
           </div>
 
           {/* How to run */}
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
-            <p className="text-xs text-gray-500">
+          <div className="bg-muted/50 border border-border rounded-xl p-4 text-center">
+            <p className="text-xs text-muted-foreground">
               Run <code className="bg-gray-200 px-2 py-0.5 rounded">make benchmark</code> to refresh these results.
               Benchmarks measure real API performance against the running system.
             </p>

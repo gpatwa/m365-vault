@@ -1,9 +1,9 @@
 /** Criticality tier badge — shows business importance level */
 const TIER_STYLES: Record<string, string> = {
-  critical: 'bg-red-100 text-red-800 border-red-200',
-  high: 'bg-orange-100 text-orange-800 border-orange-200',
-  medium: 'bg-blue-100 text-blue-800 border-blue-200',
-  low: 'bg-gray-100 text-gray-600 border-gray-200',
+  critical: 'bg-red-500/10 text-red-400 border-red-500/20',
+  high: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+  medium: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  low: 'bg-muted text-muted-foreground border-border',
 };
 
 export default function CriticalityBadge({ tier, score }: { tier: string; score?: number }) {

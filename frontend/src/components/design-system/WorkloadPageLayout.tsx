@@ -138,8 +138,8 @@ export default function WorkloadPageLayout({
             <Icon className={`w-6 h-6 ${iconColor}`} />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">{workloadLabel}</h1>
-            <p className="text-xs text-gray-500">
+            <h1 className="text-xl font-bold text-foreground">{workloadLabel}</h1>
+            <p className="text-xs text-muted-foreground">
               {stats.protected} protected • {stats.totalItems} items backed up • {formatSize(stats.totalSize)}
             </p>
           </div>
@@ -148,7 +148,7 @@ export default function WorkloadPageLayout({
           <button
             onClick={onBackupAll}
             disabled={isBackingUp}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2 disabled:opacity-50 transition-colors"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 flex items-center gap-2 disabled:opacity-50 transition-colors"
           >
             {isBackingUp ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
             {isBackingUp ? 'Backing up...' : 'Backup All'}
@@ -160,8 +160,8 @@ export default function WorkloadPageLayout({
       {statusMessage && (
         <div className={`rounded-lg p-3 mb-4 text-sm ${
           statusMessage.includes('failed') || statusMessage.includes('error')
-            ? 'bg-red-50 border border-red-200 text-red-700'
-            : 'bg-green-50 border border-green-200 text-green-700'
+            ? 'bg-red-500/10 border border-red-500/20 text-red-400'
+            : 'bg-green-500/10 border border-green-500/20 text-green-400'
         }`}>
           {statusMessage}
         </div>

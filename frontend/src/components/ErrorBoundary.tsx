@@ -47,23 +47,23 @@ export class ErrorBoundary extends Component<Props, State> {
               <AlertTriangle className="w-8 h-8 text-red-400" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-white mb-2">Something went wrong</h2>
-              <p className="text-gray-400 text-sm">
+              <h2 className="text-xl font-semibold text-foreground mb-2">Something went wrong</h2>
+              <p className="text-muted-foreground text-sm">
                 An unexpected error occurred. Our team has been notified.
               </p>
             </div>
             {this.state.error && (
-              <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-3 text-left">
-                <p className="text-xs text-gray-400 font-mono break-all">
+              <div className="bg-muted/50 border border-border rounded-lg p-3 text-left">
+                <p className="text-xs text-muted-foreground font-mono break-all">
                   {this.state.error.message}
                 </p>
-                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-700">
-                  <p className="text-[10px] text-gray-500 font-mono">
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-border">
+                  <p className="text-[10px] text-muted-foreground font-mono">
                     ID: {this.state.correlationId}
                   </p>
                   <button
                     onClick={this.handleCopy}
-                    className="text-gray-500 hover:text-gray-300 transition-colors"
+                    className="text-muted-foreground hover:text-foreground/70 transition-colors"
                     title="Copy error details"
                   >
                     {this.state.copied
@@ -77,13 +77,13 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="flex items-center justify-center gap-3">
               <button
                 onClick={() => window.location.reload()}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-foreground text-sm rounded-lg transition-colors"
               >
                 <RefreshCw className="w-4 h-4" /> Try Again
               </button>
               <a
                 href="/"
-                className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-accent text-foreground text-sm rounded-lg transition-colors"
               >
                 <Home className="w-4 h-4" /> Dashboard
               </a>

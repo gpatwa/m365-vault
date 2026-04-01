@@ -68,54 +68,54 @@ export default function ObjectDetail() {
   return (
     <div>
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-sm text-gray-500 mb-4">
-        <button onClick={() => navigate('/')} className="hover:text-gray-700">Dashboard</button>
+      <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-4">
+        <button onClick={() => navigate('/')} className="hover:text-foreground/80">Dashboard</button>
         <ChevronRight className="w-3.5 h-3.5" />
-        <button onClick={() => navigate(`/${workload?.replace('_', '-')}`)} className="hover:text-gray-700">
+        <button onClick={() => navigate(`/${workload?.replace('_', '-')}`)} className="hover:text-foreground/80">
           {workloadLabel}
         </button>
         <ChevronRight className="w-3.5 h-3.5" />
-        <span className="text-gray-900 font-medium truncate max-w-[200px]">{objectName}</span>
+        <span className="text-foreground font-medium truncate max-w-[200px]">{objectName}</span>
       </nav>
 
       {/* Object Summary Bar */}
-      <div className={`rounded-xl border ${wlConfig?.borderColor || 'border-gray-200'} ${wlConfig?.bgColor || 'bg-gray-50'} p-5 mb-6`}>
+      <div className={`rounded-xl border ${wlConfig?.borderColor || 'border-border'} ${wlConfig?.bgColor || 'bg-muted/50'} p-5 mb-6`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {Icon && (
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center bg-white border ${wlConfig?.borderColor || 'border-gray-200'}`}>
-                <Icon className={`w-5 h-5 ${wlConfig?.iconColor || 'text-gray-500'}`} />
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center bg-card border ${wlConfig?.borderColor || 'border-border'}`}>
+                <Icon className={`w-5 h-5 ${wlConfig?.iconColor || 'text-muted-foreground'}`} />
               </div>
             )}
             <div>
-              <h1 className="text-lg font-bold text-gray-900">{objectName}</h1>
+              <h1 className="text-lg font-bold text-foreground">{objectName}</h1>
               <div className="flex items-center gap-3 mt-0.5">
                 {object?.status && (
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                     object.status === 'protected' ? 'bg-green-100 text-green-700' :
                     object.status === 'error' ? 'bg-red-100 text-red-700' :
-                    'bg-gray-100 text-gray-600'
+                    'bg-muted text-muted-foreground'
                   }`}>
                     {object.status}
                   </span>
                 )}
-                {object?.email && <span className="text-xs text-gray-500">{object.email}</span>}
-                {object?.site_url && <span className="text-xs text-gray-500 truncate max-w-[300px]">{object.site_url}</span>}
+                {object?.email && <span className="text-xs text-muted-foreground">{object.email}</span>}
+                {object?.site_url && <span className="text-xs text-muted-foreground truncate max-w-[300px]">{object.site_url}</span>}
               </div>
             </div>
           </div>
           <div className="flex items-center gap-6 text-center">
             <div>
-              <p className="text-xl font-bold text-gray-900">{object?.total_items_backed_up || 0}</p>
-              <p className="text-[10px] text-gray-500 uppercase">Items</p>
+              <p className="text-xl font-bold text-foreground">{object?.total_items_backed_up || 0}</p>
+              <p className="text-[10px] text-muted-foreground uppercase">Items</p>
             </div>
             <div>
-              <p className="text-xl font-bold text-gray-900">{formatSize(object?.total_size_bytes || 0)}</p>
-              <p className="text-[10px] text-gray-500 uppercase">Size</p>
+              <p className="text-xl font-bold text-foreground">{formatSize(object?.total_size_bytes || 0)}</p>
+              <p className="text-[10px] text-muted-foreground uppercase">Size</p>
             </div>
             <div>
-              <p className="text-sm font-semibold text-gray-700">{object?.last_backup_at ? timeAgo(object.last_backup_at) : 'Never'}</p>
-              <p className="text-[10px] text-gray-500 uppercase">Last Backup</p>
+              <p className="text-sm font-semibold text-foreground/80">{object?.last_backup_at ? timeAgo(object.last_backup_at) : 'Never'}</p>
+              <p className="text-[10px] text-muted-foreground uppercase">Last Backup</p>
             </div>
           </div>
         </div>
@@ -125,24 +125,24 @@ export default function ObjectDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: Snapshot History */}
         <div className="lg:col-span-1">
-          <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
-            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+          <div className="bg-card border border-border rounded-xl shadow-sm">
+            <div className="px-4 py-3 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-gray-400" />
-                <h3 className="text-sm font-semibold text-gray-800">Backup History</h3>
+                <Clock className="w-4 h-4 text-muted-foreground" />
+                <h3 className="text-sm font-semibold text-foreground">Backup History</h3>
               </div>
-              <span className="text-[10px] text-gray-400">{snapshots?.total || 0} snapshots</span>
+              <span className="text-[10px] text-muted-foreground">{snapshots?.total || 0} snapshots</span>
             </div>
-            <div className="divide-y divide-gray-50 max-h-[500px] overflow-y-auto">
+            <div className="divide-y divide-border/50 max-h-[500px] overflow-y-auto">
               {loadingSnapshots ? (
-                <div className="p-4 text-center"><Loader2 className="w-5 h-5 animate-spin text-gray-300 mx-auto" /></div>
+                <div className="p-4 text-center"><Loader2 className="w-5 h-5 animate-spin text-foreground/70 mx-auto" /></div>
               ) : (snapshots?.items || []).length === 0 ? (
-                <div className="p-6 text-center text-sm text-gray-400">No backups yet</div>
+                <div className="p-6 text-center text-sm text-muted-foreground">No backups yet</div>
               ) : (
                 (snapshots?.items || []).map((snap: Snapshot) => (
                   <div
                     key={snap.id}
-                    className={`px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors ${
+                    className={`px-4 py-3 hover:bg-muted/50 cursor-pointer transition-colors ${
                       snap.id === latestSnapshotId ? 'bg-blue-50/50 border-l-2 border-blue-400' : ''
                     }`}
                   >
@@ -154,18 +154,18 @@ export default function ObjectDetail() {
                           snap.status === 'in_progress' ? 'bg-blue-400 animate-pulse' :
                           'bg-gray-300'
                         }`} />
-                        <span className="text-xs font-medium text-gray-700">
+                        <span className="text-xs font-medium text-foreground/80">
                           #{snap.id}
                         </span>
-                        <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 rounded text-gray-500">
+                        <span className="text-[10px] px-1.5 py-0.5 bg-muted rounded text-muted-foreground">
                           {snap.snapshot_type}
                         </span>
                       </div>
-                      <span className="text-[10px] text-gray-400">
+                      <span className="text-[10px] text-muted-foreground">
                         {snap.completed_at ? timeAgo(snap.completed_at) : 'Running'}
                       </span>
                     </div>
-                    <div className="flex items-center gap-3 mt-1 text-[10px] text-gray-500">
+                    <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
                       <span>{snap.item_count} items</span>
                       <span>{formatSize(snap.size_bytes)}</span>
                       {snap.items_failed > 0 && (
@@ -181,48 +181,48 @@ export default function ObjectDetail() {
 
         {/* Right: Item Catalog */}
         <div className="lg:col-span-2">
-          <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
-            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+          <div className="bg-card border border-border rounded-xl shadow-sm">
+            <div className="px-4 py-3 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-gray-400" />
-                <h3 className="text-sm font-semibold text-gray-800">
+                <FileText className="w-4 h-4 text-muted-foreground" />
+                <h3 className="text-sm font-semibold text-foreground">
                   Backed-up Items
-                  {latestSnapshotId && <span className="text-gray-400 font-normal ml-1">(Snapshot #{latestSnapshotId})</span>}
+                  {latestSnapshotId && <span className="text-muted-foreground font-normal ml-1">(Snapshot #{latestSnapshotId})</span>}
                 </h3>
               </div>
-              <span className="text-[10px] text-gray-400">{items?.total || 0} items</span>
+              <span className="text-[10px] text-muted-foreground">{items?.total || 0} items</span>
             </div>
             <div className="max-h-[500px] overflow-y-auto">
               {loadingItems ? (
-                <div className="p-8 text-center"><Loader2 className="w-5 h-5 animate-spin text-gray-300 mx-auto" /></div>
+                <div className="p-8 text-center"><Loader2 className="w-5 h-5 animate-spin text-foreground/70 mx-auto" /></div>
               ) : (items?.items || []).length === 0 ? (
-                <div className="p-8 text-center text-sm text-gray-400">
+                <div className="p-8 text-center text-sm text-muted-foreground">
                   {latestSnapshotId ? 'No items in this snapshot' : 'Run a backup to see items here'}
                 </div>
               ) : (
                 <table className="w-full">
-                  <thead className="bg-gray-50 sticky top-0">
+                  <thead className="bg-muted/50 sticky top-0">
                     <tr>
-                      <th className="text-left px-4 py-2 text-[10px] font-semibold text-gray-500 uppercase">Name</th>
-                      <th className="text-left px-4 py-2 text-[10px] font-semibold text-gray-500 uppercase">Type</th>
-                      <th className="text-left px-4 py-2 text-[10px] font-semibold text-gray-500 uppercase">Path</th>
-                      <th className="text-right px-4 py-2 text-[10px] font-semibold text-gray-500 uppercase">Size</th>
-                      <th className="text-right px-4 py-2 text-[10px] font-semibold text-gray-500 uppercase">Actions</th>
+                      <th className="text-left px-4 py-2 text-[10px] font-semibold text-muted-foreground uppercase">Name</th>
+                      <th className="text-left px-4 py-2 text-[10px] font-semibold text-muted-foreground uppercase">Type</th>
+                      <th className="text-left px-4 py-2 text-[10px] font-semibold text-muted-foreground uppercase">Path</th>
+                      <th className="text-right px-4 py-2 text-[10px] font-semibold text-muted-foreground uppercase">Size</th>
+                      <th className="text-right px-4 py-2 text-[10px] font-semibold text-muted-foreground uppercase">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-border/50">
                     {(items?.items || []).map((item: SnapshotItem) => (
-                      <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                      <tr key={item.id} className="hover:bg-muted/50 transition-colors">
                         <td className="px-4 py-2.5">
-                          <p className="text-sm text-gray-800 font-medium truncate max-w-[250px]">{item.name}</p>
+                          <p className="text-sm text-foreground font-medium truncate max-w-[250px]">{item.name}</p>
                         </td>
                         <td className="px-4 py-2.5">
-                          <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 rounded text-gray-500">
+                          <span className="text-[10px] px-1.5 py-0.5 bg-muted rounded text-muted-foreground">
                             {item.item_type.replace('_', ' ')}
                           </span>
                         </td>
-                        <td className="px-4 py-2.5 text-xs text-gray-500 truncate max-w-[150px]">{item.path || '-'}</td>
-                        <td className="px-4 py-2.5 text-xs text-gray-500 text-right">{formatSize(item.size_bytes)}</td>
+                        <td className="px-4 py-2.5 text-xs text-muted-foreground truncate max-w-[150px]">{item.path || '-'}</td>
+                        <td className="px-4 py-2.5 text-xs text-muted-foreground text-right">{formatSize(item.size_bytes)}</td>
                         <td className="px-4 py-2.5 text-right">
                           <button className="text-[10px] px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 font-medium transition-colors">
                             Restore

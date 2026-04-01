@@ -40,10 +40,10 @@ export default function WorkloadSwimlane({
   const config = {
     label: wlConfig?.label || workload,
     icon: wlConfig?.icon,
-    color: wlConfig?.iconColor || 'text-gray-600',
-    bgColor: wlConfig?.bgColor || 'bg-gray-50',
-    borderColor: wlConfig?.borderColor || 'border-gray-200',
-    barColor: wlConfig?.barColor || 'bg-gray-500',
+    color: wlConfig?.iconColor || 'text-muted-foreground',
+    bgColor: wlConfig?.bgColor || 'bg-muted/50',
+    borderColor: wlConfig?.borderColor || 'border-border',
+    barColor: wlConfig?.barColor || 'bg-muted/500',
     ringColor: wlConfig?.ringColor || 'ring-gray-400',
   };
   const Icon = config.icon;
@@ -100,11 +100,11 @@ export default function WorkloadSwimlane({
     <div className={`rounded-xl border transition-all duration-200 ${
       isExpanded
         ? `${config.borderColor} ring-2 ${config.ringColor} shadow-md`
-        : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
+        : 'border-border hover:border-border hover:shadow-sm'
     }`}>
       {/* Header — always visible */}
       <div
-        className={`px-5 py-4 cursor-pointer select-none ${isExpanded ? config.bgColor : 'bg-white hover:bg-gray-50'} rounded-t-xl ${!isExpanded ? 'rounded-b-xl' : ''}`}
+        className={`px-5 py-4 cursor-pointer select-none ${isExpanded ? config.bgColor : 'bg-card hover:bg-muted/50'} rounded-t-xl ${!isExpanded ? 'rounded-b-xl' : ''}`}
         onClick={onToggle}
       >
         <div className="flex items-center justify-between">
@@ -114,8 +114,8 @@ export default function WorkloadSwimlane({
               <Icon className={`w-5 h-5 ${config.color}`} />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">{config.label}</h3>
-              <span className="text-xs text-gray-500">{stats.total} jobs</span>
+              <h3 className="font-semibold text-foreground">{config.label}</h3>
+              <span className="text-xs text-muted-foreground">{stats.total} jobs</span>
             </div>
           </div>
 
@@ -152,12 +152,12 @@ export default function WorkloadSwimlane({
             {isExpanded ? (
               <button
                 onClick={(e) => { e.stopPropagation(); onToggle(); }}
-                className="p-1 hover:bg-white rounded-lg transition-colors"
+                className="p-1 hover:bg-card rounded-lg transition-colors"
               >
-                <X className="w-4 h-4 text-gray-500" />
+                <X className="w-4 h-4 text-muted-foreground" />
               </button>
             ) : (
-              <ChevronRight className="w-4 h-4 text-gray-400" />
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
             )}
           </div>
         </div>
@@ -178,15 +178,15 @@ export default function WorkloadSwimlane({
         </div>
 
         {/* Metrics row */}
-        <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
-          <span>Last: <strong className="text-gray-700">{timeAgo(stats.lastBackup)}</strong></span>
-          <span className="text-gray-300">|</span>
-          <span>Avg: <strong className="text-gray-700">{formatAvgDuration(stats.avgDurationSec)}</strong></span>
-          <span className="text-gray-300">|</span>
-          <span>Size: <strong className="text-gray-700">{formatSize(stats.totalSize)}</strong></span>
+        <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
+          <span>Last: <strong className="text-foreground/80">{timeAgo(stats.lastBackup)}</strong></span>
+          <span className="text-foreground/70">|</span>
+          <span>Avg: <strong className="text-foreground/80">{formatAvgDuration(stats.avgDurationSec)}</strong></span>
+          <span className="text-foreground/70">|</span>
+          <span>Size: <strong className="text-foreground/80">{formatSize(stats.totalSize)}</strong></span>
           {stats.total > 0 && (
             <>
-              <span className="text-gray-300">|</span>
+              <span className="text-foreground/70">|</span>
               <span>Success: <strong className={progressPercent >= 90 ? 'text-green-700' : progressPercent >= 70 ? 'text-yellow-700' : 'text-red-700'}>{progressPercent}%</strong></span>
             </>
           )}
@@ -195,14 +195,14 @@ export default function WorkloadSwimlane({
 
       {/* Expanded: Job table */}
       {isExpanded && (
-        <div className="border-t px-5 py-4 bg-white rounded-b-xl">
+        <div className="border-t px-5 py-4 bg-card rounded-b-xl">
           {/* Tabs */}
           <div className="flex items-center justify-between mb-4">
-            <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit">
+            <div className="flex gap-1 bg-muted rounded-lg p-1 w-fit">
               <button
                 onClick={() => { setTab('backup'); setStatusFilter(''); setExpandedJob(null); }}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  tab === 'backup' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'
+                  tab === 'backup' ? 'bg-card shadow text-foreground' : 'text-muted-foreground hover:text-foreground/80'
                 }`}
               >
                 Backup Jobs ({backupJobs.length})
@@ -210,7 +210,7 @@ export default function WorkloadSwimlane({
               <button
                 onClick={() => { setTab('restore'); setStatusFilter(''); setExpandedJob(null); }}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  tab === 'restore' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'
+                  tab === 'restore' ? 'bg-card shadow text-foreground' : 'text-muted-foreground hover:text-foreground/80'
                 }`}
               >
                 Restore Jobs ({restoreJobs.length})

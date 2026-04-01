@@ -47,14 +47,14 @@ export default function RestoreDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+      <div className="bg-card rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-white">
+          <div className="flex items-center gap-2 text-foreground">
             <Download className="w-5 h-5" />
             <h3 className="font-semibold text-lg">Restore Data</h3>
           </div>
-          <button onClick={onClose} className="text-white/70 hover:text-white">
+          <button onClick={onClose} className="text-foreground/70 hover:text-foreground">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -91,9 +91,9 @@ export default function RestoreDialog({
           {!restoreMutation.isSuccess && !restoreMutation.isError && (
             <>
               {/* Object info */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <p className="text-sm font-medium text-gray-900">{objectName}</p>
-                <p className="text-xs text-gray-500 mt-1">
+              <div className="bg-muted/50 rounded-xl p-4">
+                <p className="text-sm font-medium text-foreground">{objectName}</p>
+                <p className="text-xs text-muted-foreground mt-1">
                   Snapshot: {snapshotDate?.slice(0, 16) || `#${snapshotId}`}
                   {itemCount ? ` • ${itemCount} items` : ''}
                 </p>
@@ -101,7 +101,7 @@ export default function RestoreDialog({
 
               {/* Restore type */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Restore Type</label>
+                <label className="block text-sm font-medium text-foreground/80 mb-2">Restore Type</label>
                 <div className="space-y-2">
                   {[
                     { value: 'full_inplace', label: 'Full Restore (In-Place)', desc: 'Restore all items to original location' },
@@ -111,7 +111,7 @@ export default function RestoreDialog({
                     ] : []),
                   ].map(opt => (
                     <label key={opt.value} className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
-                      restoreType === opt.value ? 'border-green-400 bg-green-50' : 'border-gray-200 hover:border-green-200'
+                      restoreType === opt.value ? 'border-green-400 bg-green-50' : 'border-border hover:border-green-200'
                     }`}>
                       <input
                         type="radio" name="restoreType" value={opt.value}
@@ -120,8 +120,8 @@ export default function RestoreDialog({
                         className="mt-0.5"
                       />
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{opt.label}</p>
-                        <p className="text-xs text-gray-500">{opt.desc}</p>
+                        <p className="text-sm font-medium text-foreground">{opt.label}</p>
+                        <p className="text-xs text-muted-foreground">{opt.desc}</p>
                       </div>
                     </label>
                   ))}
@@ -139,12 +139,12 @@ export default function RestoreDialog({
               {/* Confirmation */}
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)} className="rounded" />
-                <span className="text-sm text-gray-700">I confirm I want to restore this data</span>
+                <span className="text-sm text-foreground/80">I confirm I want to restore this data</span>
               </label>
 
               {/* Actions */}
               <div className="flex gap-3">
-                <button onClick={onClose} className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <button onClick={onClose} className="flex-1 px-4 py-2.5 border border-border rounded-xl text-sm font-medium text-foreground/80 hover:bg-muted/50">
                   Cancel
                 </button>
                 <button

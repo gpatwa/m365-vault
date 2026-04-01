@@ -7,6 +7,7 @@ import { useBranding } from '../contexts/BrandingContext';
 import CommandPalette from './CommandPalette';
 import ProductTour from './ProductTour';
 import FeedbackWidget from './FeedbackWidget';
+import ThemeToggle from './ThemeToggle';
 
 interface NavItem {
   path: string;
@@ -175,7 +176,7 @@ export default function Layout() {
   // Sidebar content (shared between desktop and mobile)
   const sidebarContent = (
     <>
-        <div className="px-4 py-3 border-b border-gray-700">
+        <div className="px-4 py-3 border-b border-sidebar-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {branding.logoUrl ? (
@@ -185,13 +186,13 @@ export default function Layout() {
               )}
               <div>
                 <h1 className="text-base font-bold leading-tight">{branding.companyName}</h1>
-                <p className="text-[10px] text-gray-500">{branding.tagline}</p>
+                <p className="text-[10px] text-muted-foreground">{branding.tagline}</p>
               </div>
             </div>
             <button
               onClick={() => setCommandOpen(true)}
               title="Search (⌘K)"
-              className="p-1.5 rounded-lg text-gray-500 hover:text-gray-300 hover:bg-gray-800 transition-colors"
+              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
             >
               <Search className="w-4 h-4" />
             </button>
@@ -199,11 +200,11 @@ export default function Layout() {
           {/* Search trigger */}
           <button
             onClick={() => setCommandOpen(true)}
-            className="mt-2 w-full flex items-center gap-2 px-2.5 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-xs text-gray-500 hover:text-gray-300 hover:border-gray-600 transition-colors"
+            className="mt-2 w-full flex items-center gap-2 px-2.5 py-1.5 bg-muted border border-border rounded-lg text-xs text-muted-foreground hover:text-foreground hover:border-border transition-colors"
           >
             <Search className="w-3.5 h-3.5" />
             <span className="flex-1 text-left">Search...</span>
-            <kbd className="px-1 py-0.5 bg-gray-700 rounded text-[9px] text-gray-400 font-mono">⌘K</kbd>
+            <kbd className="px-1 py-0.5 bg-secondary rounded text-[9px] text-muted-foreground font-mono">⌘K</kbd>
           </button>
         </div>
 
@@ -213,7 +214,7 @@ export default function Layout() {
               {group.label && (
                 <button
                   onClick={() => toggleGroup(group.label)}
-                  className="flex items-center justify-between w-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-gray-500 hover:text-gray-300 transition-colors"
+                  className="flex items-center justify-between w-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {group.label}
                   <ChevronDown className={`w-3 h-3 transition-transform ${collapsed[group.label] ? '-rotate-90' : ''}`} />
@@ -230,8 +231,8 @@ export default function Layout() {
                         to={item.path}
                         className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
                           active
-                            ? 'bg-blue-600 text-white'
-                            : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-sidebar-foreground/70 hover:bg-accent hover:text-foreground'
                         }`}
                       >
                         <item.icon className="w-4 h-4 flex-shrink-0" />
@@ -245,10 +246,13 @@ export default function Layout() {
           ))}
         </nav>
 
-        <div className="p-2 border-t border-gray-700">
+        <div className="p-2 border-t border-sidebar-border">
+          <div className="flex items-center justify-between px-2.5 py-1">
+            <ThemeToggle />
+          </div>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-2.5 py-1.5 w-full text-xs text-gray-400 hover:text-white rounded-md hover:bg-gray-800 transition-colors"
+            className="flex items-center gap-2 px-2.5 py-1.5 w-full text-xs text-muted-foreground hover:text-foreground rounded-md hover:bg-accent transition-colors"
           >
             <LogOut className="w-3.5 h-3.5" />
             Sign Out
@@ -258,17 +262,17 @@ export default function Layout() {
   );
 
   return (
-    <div className="flex h-screen" style={{ backgroundColor: 'var(--background, #0a0a0a)', color: 'var(--foreground, #fafafa)' }}>
+    <div className="flex h-screen bg-background text-foreground">
       {/* Mobile header — visible on small screens only */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 px-4 py-3 flex items-center justify-between" style={{ backgroundColor: 'var(--card, #171717)', borderBottom: '1px solid var(--border, rgba(255,255,255,0.1))' }}>
-        <button onClick={() => setMobileOpen(true)} className="p-1 text-gray-400 hover:text-white">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 px-4 py-3 flex items-center justify-between bg-card border-b border-border">
+        <button onClick={() => setMobileOpen(true)} className="p-1 text-muted-foreground hover:text-foreground">
           <Menu className="w-6 h-6" />
         </button>
         <div className="flex items-center gap-2">
           <Shield className="w-5 h-5 text-blue-400" />
-          <span className="text-sm font-bold text-white">Shieldio</span>
+          <span className="text-sm font-bold text-foreground">Shieldio</span>
         </div>
-        <button onClick={() => setCommandOpen(true)} className="p-1 text-gray-400 hover:text-white">
+        <button onClick={() => setCommandOpen(true)} className="p-1 text-muted-foreground hover:text-foreground">
           <Search className="w-5 h-5" />
         </button>
       </div>
@@ -277,9 +281,9 @@ export default function Layout() {
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
-          <aside className="relative w-72 h-full bg-gray-900 text-white flex flex-col shadow-xl">
+          <aside className="relative w-72 h-full bg-sidebar text-sidebar-foreground flex flex-col shadow-xl">
             <div className="absolute top-3 right-3">
-              <button onClick={() => setMobileOpen(false)} className="p-1 text-gray-400 hover:text-white">
+              <button onClick={() => setMobileOpen(false)} className="p-1 text-muted-foreground hover:text-foreground">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -289,12 +293,12 @@ export default function Layout() {
       )}
 
       {/* Desktop sidebar — hidden on mobile */}
-      <aside className="hidden lg:flex w-56 flex-col" style={{ backgroundColor: 'var(--sidebar, #171717)', color: 'var(--sidebar-foreground, #fafafa)' }}>
+      <aside className="hidden lg:flex w-56 flex-col bg-sidebar text-sidebar-foreground">
         {sidebarContent}
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto pt-14 lg:pt-0" style={{ backgroundColor: 'var(--background, #0a0a0a)', color: 'var(--foreground, #fafafa)' }}>
+      <main className="flex-1 overflow-auto pt-14 lg:pt-0 bg-background text-foreground">
         <div className="p-4 sm:p-6">
           <Outlet />
         </div>

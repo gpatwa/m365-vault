@@ -18,13 +18,13 @@ export default function StatusFilterBar({ value, onChange, counts }: StatusFilte
             className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 ${
               value === s
                 ? 'bg-blue-100 text-blue-700 ring-1 ring-blue-300'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-muted text-muted-foreground hover:bg-accent'
             }`}
           >
             {s ? s.replace('_', ' ') : 'All'}
             {count !== undefined && count > 0 && (
               <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                value === s ? 'bg-blue-200 text-blue-800' : 'bg-gray-200 text-gray-500'
+                value === s ? 'bg-blue-200 text-blue-800' : 'bg-gray-200 text-muted-foreground'
               }`}>
                 {count}
               </span>

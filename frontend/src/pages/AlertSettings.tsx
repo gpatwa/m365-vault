@@ -27,34 +27,34 @@ export default function AlertSettings() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Alert Settings</h1>
-        <p className="text-gray-500">Configure email and webhook notifications for backup events</p>
+        <h1 className="text-2xl font-bold text-foreground">Alert Settings</h1>
+        <p className="text-muted-foreground">Configure email and webhook notifications for backup events</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Email Configuration */}
-        <div className="bg-white rounded-xl border shadow-sm p-6">
+        <div className="bg-card rounded-xl border shadow-sm p-6">
           <div className="flex items-center gap-2 mb-4">
             <Mail className="w-5 h-5 text-blue-600" />
-            <h3 className="font-semibold text-gray-900">Email Alerts</h3>
+            <h3 className="font-semibold text-foreground">Email Alerts</h3>
             {config?.smtp_configured
               ? <span className="ml-auto px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">Configured</span>
-              : <span className="ml-auto px-2 py-0.5 bg-gray-100 text-gray-500 text-xs rounded-full font-medium">Not Configured</span>
+              : <span className="ml-auto px-2 py-0.5 bg-muted text-muted-foreground text-xs rounded-full font-medium">Not Configured</span>
             }
           </div>
 
           <div className="space-y-3 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-500">SMTP Host</span>
-              <span className="font-mono text-gray-700">{config?.smtp_host || 'Not set'}</span>
+              <span className="text-muted-foreground">SMTP Host</span>
+              <span className="font-mono text-foreground/80">{config?.smtp_host || 'Not set'}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">From Address</span>
-              <span className="font-mono text-gray-700">{config?.smtp_from || 'Not set'}</span>
+              <span className="text-muted-foreground">From Address</span>
+              <span className="font-mono text-foreground/80">{config?.smtp_from || 'Not set'}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">Recipients</span>
-              <span className="font-mono text-gray-700">{config?.email_recipients || 'Not set'}</span>
+              <span className="text-muted-foreground">Recipients</span>
+              <span className="font-mono text-foreground/80">{config?.email_recipients || 'Not set'}</span>
             </div>
           </div>
 
@@ -66,20 +66,20 @@ export default function AlertSettings() {
         </div>
 
         {/* Webhook Configuration */}
-        <div className="bg-white rounded-xl border shadow-sm p-6">
+        <div className="bg-card rounded-xl border shadow-sm p-6">
           <div className="flex items-center gap-2 mb-4">
             <Globe className="w-5 h-5 text-purple-600" />
-            <h3 className="font-semibold text-gray-900">Webhook Alerts</h3>
+            <h3 className="font-semibold text-foreground">Webhook Alerts</h3>
             {config?.webhook_configured
               ? <span className="ml-auto px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">Configured</span>
-              : <span className="ml-auto px-2 py-0.5 bg-gray-100 text-gray-500 text-xs rounded-full font-medium">Not Configured</span>
+              : <span className="ml-auto px-2 py-0.5 bg-muted text-muted-foreground text-xs rounded-full font-medium">Not Configured</span>
             }
           </div>
 
           <div className="space-y-3 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-500">Webhook URL</span>
-              <span className="font-mono text-gray-700 truncate ml-4">{config?.webhook_url || 'Not set'}</span>
+              <span className="text-muted-foreground">Webhook URL</span>
+              <span className="font-mono text-foreground/80 truncate ml-4">{config?.webhook_url || 'Not set'}</span>
             </div>
           </div>
 
@@ -92,8 +92,8 @@ export default function AlertSettings() {
       </div>
 
       {/* Alert Events */}
-      <div className="bg-white rounded-xl border shadow-sm p-6 mt-6">
-        <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+      <div className="bg-card rounded-xl border shadow-sm p-6 mt-6">
+        <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
           <Bell className="w-5 h-5 text-orange-500" /> Alert Events
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
@@ -105,7 +105,7 @@ export default function AlertSettings() {
             { event: 'Storage Warning', desc: 'When storage usage exceeds threshold', severity: 'warning' },
             { event: 'WORM Lock Applied', desc: 'When immutable retention lock is set', severity: 'info' },
           ].map(({ event, desc, severity }) => (
-            <div key={event} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+            <div key={event} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
               <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${
                 severity === 'critical' ? 'bg-red-100 text-red-700' :
                 severity === 'error' ? 'bg-orange-100 text-orange-700' :
@@ -113,8 +113,8 @@ export default function AlertSettings() {
                 'bg-blue-100 text-blue-700'
               }`}>{severity}</span>
               <div>
-                <p className="font-medium text-gray-800">{event}</p>
-                <p className="text-gray-500 text-xs">{desc}</p>
+                <p className="font-medium text-foreground">{event}</p>
+                <p className="text-muted-foreground text-xs">{desc}</p>
               </div>
             </div>
           ))}
@@ -122,11 +122,11 @@ export default function AlertSettings() {
       </div>
 
       {/* Test Alert */}
-      <div className="bg-white rounded-xl border shadow-sm p-6 mt-6">
+      <div className="bg-card rounded-xl border shadow-sm p-6 mt-6">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-semibold text-gray-900">Test Configuration</h3>
-            <p className="text-gray-500 text-sm">Send a test alert to verify your notification channels</p>
+            <h3 className="font-semibold text-foreground">Test Configuration</h3>
+            <p className="text-muted-foreground text-sm">Send a test alert to verify your notification channels</p>
           </div>
           <button
             onClick={() => testMutation.mutate()}

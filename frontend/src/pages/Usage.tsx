@@ -11,10 +11,10 @@ function UsageBar({ label, current, limit, unit = '' }: { label: string; current
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-sm">
-        <span className="font-medium text-gray-700">{label}</span>
-        <span className="text-gray-500">{current}{unit} / {isUnlimited ? 'Unlimited' : `${limit}${unit}`}</span>
+        <span className="font-medium text-foreground/80">{label}</span>
+        <span className="text-muted-foreground">{current}{unit} / {isUnlimited ? 'Unlimited' : `${limit}${unit}`}</span>
       </div>
-      <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+      <div className="h-2.5 bg-muted rounded-full overflow-hidden">
         <div className={`h-full rounded-full transition-all ${isUnlimited ? 'bg-green-400 w-[5%]' : color}`}
           style={{ width: isUnlimited ? '5%' : `${pct}%` }} />
       </div>
@@ -46,13 +46,13 @@ export default function Usage() {
   }
 
   const tierColors: Record<string, string> = {
-    community: 'border-gray-300 bg-gray-50',
+    community: 'border-gray-300 bg-muted/50',
     professional: 'border-blue-300 bg-blue-50',
     enterprise: 'border-purple-300 bg-purple-50',
   };
 
   const tierBadge: Record<string, string> = {
-    community: 'bg-gray-200 text-gray-700',
+    community: 'bg-gray-200 text-foreground/80',
     professional: 'bg-blue-200 text-blue-700',
     enterprise: 'bg-purple-200 text-purple-700',
   };
@@ -63,7 +63,7 @@ export default function Usage() {
         <Gauge className="w-7 h-7 text-indigo-600" />
         <div>
           <h1 className="text-2xl font-bold">Usage & License</h1>
-          <p className="text-sm text-gray-500">Platform usage metrics, license utilization, and growth trends</p>
+          <p className="text-sm text-muted-foreground">Platform usage metrics, license utilization, and growth trends</p>
         </div>
       </div>
 
@@ -75,7 +75,7 @@ export default function Usage() {
               <Crown className="w-6 h-6 text-amber-500" />
               <div>
                 <h2 className="text-lg font-bold">{license.tier_label}</h2>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   Features: {license.features?.join(', ')} | Smart Engine: {license.smart_engine} | Support: {license.support}
                 </p>
               </div>
@@ -104,8 +104,8 @@ export default function Usage() {
           )}
 
           {license.upgrade_available && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <p className="text-sm text-gray-600">Need more capacity? <span className="font-semibold text-indigo-600 cursor-pointer hover:underline">Upgrade to {license.tier === 'community' ? 'Professional' : 'Enterprise'}</span></p>
+            <div className="mt-4 pt-4 border-t border-border">
+              <p className="text-sm text-muted-foreground">Need more capacity? <span className="font-semibold text-indigo-600 cursor-pointer hover:underline">Upgrade to {license.tier === 'community' ? 'Professional' : 'Enterprise'}</span></p>
             </div>
           )}
         </div>
@@ -114,34 +114,34 @@ export default function Usage() {
       {/* Platform Summary */}
       {platform && (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <div className="bg-white rounded-xl border p-4">
-            <div className="flex items-center gap-2 text-gray-500 text-xs mb-1"><Users className="w-3.5 h-3.5" /> Tenants</div>
+          <div className="bg-card rounded-xl border p-4">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1"><Users className="w-3.5 h-3.5" /> Tenants</div>
             <p className="text-2xl font-bold">{platform.total_tenants}</p>
           </div>
-          <div className="bg-white rounded-xl border p-4">
-            <div className="flex items-center gap-2 text-gray-500 text-xs mb-1"><Users className="w-3.5 h-3.5" /> Protected Users</div>
+          <div className="bg-card rounded-xl border p-4">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1"><Users className="w-3.5 h-3.5" /> Protected Users</div>
             <p className="text-2xl font-bold">{platform.total_protected_users}</p>
           </div>
-          <div className="bg-white rounded-xl border p-4">
-            <div className="flex items-center gap-2 text-gray-500 text-xs mb-1"><HardDrive className="w-3.5 h-3.5" /> Storage</div>
+          <div className="bg-card rounded-xl border p-4">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1"><HardDrive className="w-3.5 h-3.5" /> Storage</div>
             <p className="text-2xl font-bold">{platform.total_storage_gb} GB</p>
           </div>
-          <div className="bg-white rounded-xl border p-4">
-            <div className="flex items-center gap-2 text-gray-500 text-xs mb-1"><TrendingUp className="w-3.5 h-3.5" /> Jobs (30d)</div>
+          <div className="bg-card rounded-xl border p-4">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1"><TrendingUp className="w-3.5 h-3.5" /> Jobs (30d)</div>
             <p className="text-2xl font-bold">{platform.backup_jobs_30d}</p>
           </div>
-          <div className="bg-white rounded-xl border p-4">
-            <div className="flex items-center gap-2 text-gray-500 text-xs mb-1">$ Est. Cost</div>
+          <div className="bg-card rounded-xl border p-4">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">$ Est. Cost</div>
             <p className="text-2xl font-bold">${platform.estimated_monthly_cost}</p>
-            <p className="text-[10px] text-gray-400">${platform.cost_per_user}/user</p>
+            <p className="text-[10px] text-muted-foreground">${platform.cost_per_user}/user</p>
           </div>
         </div>
       )}
 
       {/* Growth Trend */}
       {trends?.trend && (
-        <div className="bg-white rounded-xl border p-5">
-          <h3 className="font-semibold text-gray-800 mb-4">Usage Trends (30 days)</h3>
+        <div className="bg-card rounded-xl border p-5">
+          <h3 className="font-semibold text-foreground mb-4">Usage Trends (30 days)</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={trends.trend}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />

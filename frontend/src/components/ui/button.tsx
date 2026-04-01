@@ -3,16 +3,16 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "../../lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        default: "bg-blue-600 text-white hover:bg-blue-500 shadow-sm",
-        destructive: "bg-red-600 text-white hover:bg-red-500 shadow-sm",
-        outline: "border border-gray-600 bg-transparent text-gray-300 hover:bg-gray-800 hover:text-white",
-        secondary: "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white",
-        ghost: "text-gray-400 hover:bg-gray-800 hover:text-white",
-        link: "text-blue-400 underline-offset-4 hover:underline",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
+        destructive: "bg-destructive text-white hover:bg-destructive/90 shadow-sm",
+        outline: "border border-border bg-transparent text-foreground hover:bg-accent hover:text-accent-foreground",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
         success: "bg-green-600 text-white hover:bg-green-500 shadow-sm",
         warning: "bg-amber-600 text-white hover:bg-amber-500 shadow-sm",
       },

@@ -51,7 +51,7 @@ const SEVERITY_COLORS: Record<string, string> = {
   critical: 'border-red-200 bg-red-50',
   high: 'border-amber-200 bg-amber-50',
   medium: 'border-blue-200 bg-blue-50',
-  low: 'border-gray-200 bg-gray-50',
+  low: 'border-border bg-muted/50',
 };
 
 export default function Recovery() {
@@ -89,7 +89,7 @@ export default function Recovery() {
   ];
 
   if (!tenantId) {
-    return <div className="p-8 text-center text-gray-400">Connect a tenant to view recovery dashboard.</div>;
+    return <div className="p-8 text-center text-muted-foreground">Connect a tenant to view recovery dashboard.</div>;
   }
 
   return (
@@ -97,11 +97,11 @@ export default function Recovery() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <RotateCcw className="w-6 h-6 text-green-600" />
             Recovery Dashboard
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Verify recoverability, track RPO/RTO compliance, and prepare for incidents
           </p>
         </div>
@@ -124,7 +124,7 @@ export default function Recovery() {
             className={`px-4 py-2.5 text-sm font-medium flex items-center gap-2 border-b-2 transition-all ${
               activeTab === tab.key
                 ? 'border-green-600 text-green-700'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                : 'border-transparent text-muted-foreground hover:text-foreground/80'
             }`}
           >
             <tab.icon className="w-4 h-4" />
@@ -139,10 +139,10 @@ export default function Recovery() {
           {/* Confidence Score + RPO/RTO side by side */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Confidence Score */}
-            <div className="bg-white rounded-xl border shadow-sm p-6">
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Recovery Confidence</h3>
+            <div className="bg-card rounded-xl border shadow-sm p-6">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Recovery Confidence</h3>
               {loadingConfidence ? (
-                <div className="flex justify-center py-8"><Loader2 className="w-8 h-8 animate-spin text-gray-300" /></div>
+                <div className="flex justify-center py-8"><Loader2 className="w-8 h-8 animate-spin text-foreground/70" /></div>
               ) : confidence ? (
                 <div className="text-center">
                   <div className={`inline-flex items-center justify-center w-24 h-24 rounded-full border-4 ${GRADE_COLORS[confidence.grade] || GRADE_COLORS.C}`}>
@@ -158,10 +158,10 @@ export default function Recovery() {
                     {Object.entries(confidence.factors).map(([key, factor]) => (
                       <div key={key}>
                         <div className="flex justify-between text-xs mb-1">
-                          <span className="text-gray-500 capitalize">{key.replace('_', ' ')}</span>
+                          <span className="text-muted-foreground capitalize">{key.replace('_', ' ')}</span>
                           <span className="font-medium">{factor.score}%</span>
                         </div>
-                        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                           <div
                             className={`h-full rounded-full ${factor.score >= 80 ? 'bg-green-500' : factor.score >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}
                             style={{ width: `${Math.min(factor.score, 100)}%` }}
@@ -175,8 +175,8 @@ export default function Recovery() {
             </div>
 
             {/* RPO/RTO Compliance */}
-            <div className="lg:col-span-2 bg-white rounded-xl border shadow-sm p-6">
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">RPO / RTO Compliance</h3>
+            <div className="lg:col-span-2 bg-card rounded-xl border shadow-sm p-6">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">RPO / RTO Compliance</h3>
               {rpoRto ? (
                 <div>
                   <div className="flex items-center gap-3 mb-4">
@@ -186,48 +186,48 @@ export default function Recovery() {
                       return <Icon className={`w-5 h-5 ${color}`} />;
                     })()}
                     <span className="text-2xl font-bold">{rpoRto.overall_rpo_compliance}%</span>
-                    <span className="text-sm text-gray-500">RPO Compliance</span>
+                    <span className="text-sm text-muted-foreground">RPO Compliance</span>
                   </div>
 
                   <div className="space-y-3">
                     {rpoRto.workloads.map(wl => (
                       <div key={wl.workload} className="flex items-center gap-3">
                         <span className="w-24 text-sm font-medium capitalize">{wl.workload.replace('_', ' ')}</span>
-                        <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                           <div
                             className={`h-full rounded-full ${wl.status === 'compliant' ? 'bg-green-500' : wl.status === 'at_risk' ? 'bg-amber-500' : 'bg-red-500'}`}
                             style={{ width: `${wl.rpo_compliance_pct}%` }}
                           />
                         </div>
                         <span className="w-16 text-xs text-right font-medium">{wl.rpo_compliance_pct}%</span>
-                        <span className="w-20 text-xs text-gray-400">{wl.rpo_met}/{wl.objects} met</span>
+                        <span className="w-20 text-xs text-muted-foreground">{wl.rpo_met}/{wl.objects} met</span>
                       </div>
                     ))}
                   </div>
                 </div>
               ) : (
-                <p className="text-gray-400 text-center py-8">Loading RPO/RTO data...</p>
+                <p className="text-muted-foreground text-center py-8">Loading RPO/RTO data...</p>
               )}
             </div>
           </div>
 
           {/* Recommendations */}
           {confidence?.recommendations && confidence.recommendations.length > 0 && (
-            <div className="bg-white rounded-xl border shadow-sm p-6">
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Recommendations</h3>
+            <div className="bg-card rounded-xl border shadow-sm p-6">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Recommendations</h3>
               <div className="space-y-2">
                 {confidence.recommendations.map((rec, i) => (
                   <div key={i} className={`flex items-start gap-3 p-3 rounded-lg border ${
                     rec.priority === 'high' ? 'border-red-200 bg-red-50' :
                     rec.priority === 'medium' ? 'border-amber-200 bg-amber-50' :
-                    'border-gray-200 bg-gray-50'
+                    'border-border bg-muted/50'
                   }`}>
                     <ArrowRight className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
-                      rec.priority === 'high' ? 'text-red-500' : rec.priority === 'medium' ? 'text-amber-500' : 'text-gray-400'
+                      rec.priority === 'high' ? 'text-red-500' : rec.priority === 'medium' ? 'text-amber-500' : 'text-muted-foreground'
                     }`} />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{rec.action}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{rec.detail}</p>
+                      <p className="text-sm font-medium text-foreground">{rec.action}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{rec.detail}</p>
                     </div>
                   </div>
                 ))}
@@ -241,27 +241,27 @@ export default function Recovery() {
       {activeTab === 'runbooks' && (
         <div className="space-y-4">
           {runbooks?.runbooks.map(rb => (
-            <div key={rb.id} className={`bg-white rounded-xl border shadow-sm overflow-hidden ${SEVERITY_COLORS[rb.severity] || ''}`}>
+            <div key={rb.id} className={`bg-card rounded-xl border shadow-sm overflow-hidden ${SEVERITY_COLORS[rb.severity] || ''}`}>
               <button
                 onClick={() => setExpandedRunbook(expandedRunbook === rb.id ? null : rb.id)}
-                className="w-full p-5 text-left flex items-center justify-between hover:bg-gray-50/50 transition-colors"
+                className="w-full p-5 text-left flex items-center justify-between hover:bg-muted/50/50 transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <ShieldAlert className={`w-5 h-5 ${
                     rb.severity === 'critical' ? 'text-red-500' :
                     rb.severity === 'high' ? 'text-amber-500' :
-                    rb.severity === 'medium' ? 'text-blue-500' : 'text-gray-400'
+                    rb.severity === 'medium' ? 'text-blue-500' : 'text-muted-foreground'
                   }`} />
                   <div>
-                    <p className="font-semibold text-gray-900">{rb.name}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{rb.description}</p>
+                    <p className="font-semibold text-foreground">{rb.name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{rb.description}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-gray-400 flex items-center gap-1">
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
                     <Clock className="w-3 h-3" /> {rb.estimated_time}
                   </span>
-                  <ArrowRight className={`w-4 h-4 text-gray-400 transition-transform ${expandedRunbook === rb.id ? 'rotate-90' : ''}`} />
+                  <ArrowRight className={`w-4 h-4 text-muted-foreground transition-transform ${expandedRunbook === rb.id ? 'rotate-90' : ''}`} />
                 </div>
               </button>
 
@@ -270,12 +270,12 @@ export default function Recovery() {
                   <div className="mt-4 space-y-3">
                     {rb.steps.map(step => (
                       <div key={step.order} className="flex gap-3">
-                        <div className="w-7 h-7 rounded-full bg-white border-2 border-green-300 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-7 h-7 rounded-full bg-card border-2 border-green-300 flex items-center justify-center flex-shrink-0 mt-0.5">
                           <span className="text-xs font-bold text-green-600">{step.order}</span>
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-gray-900">{step.action}</p>
-                          <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{step.detail}</p>
+                          <p className="text-sm font-semibold text-foreground">{step.action}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{step.detail}</p>
                         </div>
                       </div>
                     ))}
@@ -290,11 +290,11 @@ export default function Recovery() {
       {/* ── Test Restore Tab ── */}
       {activeTab === 'test' && (
         <div className="space-y-4">
-          <div className="bg-white rounded-xl border shadow-sm p-6">
+          <div className="bg-card rounded-xl border shadow-sm p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="font-semibold text-gray-900">Test Restore Validation</h3>
-                <p className="text-xs text-gray-500 mt-1">
+                <h3 className="font-semibold text-foreground">Test Restore Validation</h3>
+                <p className="text-xs text-muted-foreground mt-1">
                   Verifies that backup data can be decrypted and read — proving recoverability without actually restoring to M365.
                 </p>
               </div>
@@ -342,10 +342,10 @@ export default function Recovery() {
                            <XCircle className="w-4 h-4 text-red-500" />}
                           <div>
                             <p className="text-sm font-medium">{r.object}</p>
-                            <p className="text-xs text-gray-500 capitalize">{r.workload}</p>
+                            <p className="text-xs text-muted-foreground capitalize">{r.workload}</p>
                           </div>
                         </div>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-muted-foreground">
                           {r.items_verified}/{r.items_tested} items verified
                         </span>
                       </div>
@@ -356,8 +356,8 @@ export default function Recovery() {
             })()}
 
             {!testMutation.data && !testMutation.isPending && (
-              <div className="text-center py-8 text-gray-400">
-                <PlayCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+              <div className="text-center py-8 text-muted-foreground">
+                <PlayCircle className="w-12 h-12 mx-auto mb-3 text-foreground/70" />
                 <p>Click "Run Test" to verify backup recoverability</p>
                 <p className="text-xs mt-1">Tests decrypt and validate backup data without restoring to M365</p>
               </div>

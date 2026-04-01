@@ -39,7 +39,7 @@
 }
 
 /* Dark mode — shadcn/ui official neutral dark + Shieldio blue brand */
-.dark, [data-theme="dark"], :root {
+[data-theme="dark"] {
   --background: #0a0a0a;
   --foreground: #fafafa;
   --card: #171717;

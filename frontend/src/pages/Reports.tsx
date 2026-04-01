@@ -78,13 +78,13 @@ export default function Reports() {
           <BarChart3 className="w-7 h-7 text-indigo-600" />
           <div>
             <h1 className="text-2xl font-bold">Reports & Analytics</h1>
-            <p className="text-sm text-gray-500">Comprehensive backup performance, storage, and compliance reporting</p>
+            <p className="text-sm text-muted-foreground">Comprehensive backup performance, storage, and compliance reporting</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           {PERIODS.map(p => (
             <button key={p} onClick={() => setPeriod(p)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${period === p ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${period === p ? 'bg-indigo-600 text-white' : 'bg-muted text-muted-foreground hover:bg-accent'}`}>
               {p}
             </button>
           ))}
@@ -92,10 +92,10 @@ export default function Reports() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+      <div className="flex gap-1 bg-muted rounded-xl p-1">
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${tab === t ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${tab === t ? 'bg-card text-indigo-700 shadow-sm' : 'text-muted-foreground hover:text-foreground/80'}`}>
             {t}
           </button>
         ))}
@@ -115,9 +115,9 @@ export default function Reports() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl border p-5">
+            <div className="bg-card rounded-xl border p-5">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-800">Success Rate Trend</h3>
+                <h3 className="font-semibold text-foreground">Success Rate Trend</h3>
                 <button onClick={() => handleExport('backup-performance')} className="text-xs text-indigo-600 hover:underline flex items-center gap-1"><Download className="w-3 h-3" /> CSV</button>
               </div>
               <ResponsiveContainer width="100%" height={250}>
@@ -131,8 +131,8 @@ export default function Reports() {
               </ResponsiveContainer>
             </div>
 
-            <div className="bg-white rounded-xl border p-5">
-              <h3 className="font-semibold text-gray-800 mb-4">Jobs by Workload</h3>
+            <div className="bg-card rounded-xl border p-5">
+              <h3 className="font-semibold text-foreground mb-4">Jobs by Workload</h3>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={Object.entries(perfData.by_workload).map(([wl, d]: [string, any]) => ({ workload: wl, ...d }))}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -160,8 +160,8 @@ export default function Reports() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl border p-5">
-              <h3 className="font-semibold text-gray-800 mb-4">Storage Growth (30d)</h3>
+            <div className="bg-card rounded-xl border p-5">
+              <h3 className="font-semibold text-foreground mb-4">Storage Growth (30d)</h3>
               <ResponsiveContainer width="100%" height={250}>
                 <AreaChart data={storageData.growth_trend}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -173,8 +173,8 @@ export default function Reports() {
               </ResponsiveContainer>
             </div>
 
-            <div className="bg-white rounded-xl border p-5">
-              <h3 className="font-semibold text-gray-800 mb-4">Storage by Workload</h3>
+            <div className="bg-card rounded-xl border p-5">
+              <h3 className="font-semibold text-foreground mb-4">Storage by Workload</h3>
               <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
                   <Pie data={Object.entries(storageData.by_workload).map(([wl, d]: [string, any]) => ({ name: wl, value: d.size_bytes }))}
@@ -200,9 +200,9 @@ export default function Reports() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl border p-5">
+            <div className="bg-card rounded-xl border p-5">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-800">Errors by Category</h3>
+                <h3 className="font-semibold text-foreground">Errors by Category</h3>
                 <button onClick={() => handleExport('failure-analysis')} className="text-xs text-indigo-600 hover:underline flex items-center gap-1"><Download className="w-3 h-3" /> CSV</button>
               </div>
               <ResponsiveContainer width="100%" height={250}>
@@ -216,8 +216,8 @@ export default function Reports() {
               </ResponsiveContainer>
             </div>
 
-            <div className="bg-white rounded-xl border p-5">
-              <h3 className="font-semibold text-gray-800 mb-4">Failed Jobs Trend</h3>
+            <div className="bg-card rounded-xl border p-5">
+              <h3 className="font-semibold text-foreground mb-4">Failed Jobs Trend</h3>
               <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={failureData.trend}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -243,17 +243,17 @@ export default function Reports() {
           </div>
 
           {/* Per-policy breakdown */}
-          <div className="bg-white rounded-xl border p-5">
-            <h3 className="font-semibold text-gray-800 mb-4">Compliance by SLA Policy</h3>
+          <div className="bg-card rounded-xl border p-5">
+            <h3 className="font-semibold text-foreground mb-4">Compliance by SLA Policy</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50">
+                <thead className="bg-muted/50">
                   <tr>
-                    <th className="text-left px-4 py-2 font-medium text-gray-600">Policy</th>
-                    <th className="text-center px-4 py-2 font-medium text-gray-600">Objects</th>
-                    <th className="text-center px-4 py-2 font-medium text-gray-600">Compliant</th>
-                    <th className="text-center px-4 py-2 font-medium text-gray-600">Rate</th>
-                    <th className="text-center px-4 py-2 font-medium text-gray-600">Frequency</th>
+                    <th className="text-left px-4 py-2 font-medium text-muted-foreground">Policy</th>
+                    <th className="text-center px-4 py-2 font-medium text-muted-foreground">Objects</th>
+                    <th className="text-center px-4 py-2 font-medium text-muted-foreground">Compliant</th>
+                    <th className="text-center px-4 py-2 font-medium text-muted-foreground">Rate</th>
+                    <th className="text-center px-4 py-2 font-medium text-muted-foreground">Frequency</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -267,7 +267,7 @@ export default function Reports() {
                           {p.compliance_rate}%
                         </span>
                       </td>
-                      <td className="px-4 py-2 text-center text-gray-500">Every {p.frequency_hours}h</td>
+                      <td className="px-4 py-2 text-center text-muted-foreground">Every {p.frequency_hours}h</td>
                     </tr>
                   ))}
                 </tbody>
@@ -277,9 +277,9 @@ export default function Reports() {
 
           {/* Violations */}
           {complianceData.violations?.length > 0 && (
-            <div className="bg-white rounded-xl border p-5">
+            <div className="bg-card rounded-xl border p-5">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-800">SLA Violations</h3>
+                <h3 className="font-semibold text-foreground">SLA Violations</h3>
                 <button onClick={() => handleExport('sla-compliance')} className="text-xs text-indigo-600 hover:underline flex items-center gap-1"><Download className="w-3 h-3" /> CSV</button>
               </div>
               <div className="overflow-x-auto">
@@ -320,38 +320,38 @@ export default function Reports() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-xl border p-5">
+            <div className="bg-card rounded-xl border p-5">
               <div className="flex items-center gap-2 mb-3">
                 <ShieldCheck className="w-5 h-5 text-green-600" />
-                <h3 className="font-semibold text-gray-800">Malware Scans</h3>
+                <h3 className="font-semibold text-foreground">Malware Scans</h3>
               </div>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-gray-500">Total Scanned</span><span className="font-medium">{securityData.malware_scans?.total_scanned || 0}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Clean</span><span className="font-medium text-green-600">{securityData.malware_scans?.clean || 0}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Blocked</span><span className="font-medium text-red-600">{securityData.malware_scans?.blocked || 0}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Total Scanned</span><span className="font-medium">{securityData.malware_scans?.total_scanned || 0}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Clean</span><span className="font-medium text-green-600">{securityData.malware_scans?.clean || 0}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Blocked</span><span className="font-medium text-red-600">{securityData.malware_scans?.blocked || 0}</span></div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl border p-5">
+            <div className="bg-card rounded-xl border p-5">
               <div className="flex items-center gap-2 mb-3">
                 <Lock className="w-5 h-5 text-blue-600" />
-                <h3 className="font-semibold text-gray-800">WORM / Legal Hold</h3>
+                <h3 className="font-semibold text-foreground">WORM / Legal Hold</h3>
               </div>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-gray-500">WORM Policies</span><span className="font-medium">{securityData.worm?.policies_enabled || 0}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Legal Hold</span><span className="font-medium">{securityData.worm?.legal_hold_policies || 0}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Immutable Snapshots</span><span className="font-medium text-blue-600">{securityData.worm?.locked_snapshots || 0}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">WORM Policies</span><span className="font-medium">{securityData.worm?.policies_enabled || 0}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Legal Hold</span><span className="font-medium">{securityData.worm?.legal_hold_policies || 0}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Immutable Snapshots</span><span className="font-medium text-blue-600">{securityData.worm?.locked_snapshots || 0}</span></div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl border p-5">
+            <div className="bg-card rounded-xl border p-5">
               <div className="flex items-center gap-2 mb-3">
                 <AlertTriangle className="w-5 h-5 text-amber-600" />
-                <h3 className="font-semibold text-gray-800">Anomalies</h3>
+                <h3 className="font-semibold text-foreground">Anomalies</h3>
               </div>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-gray-500">Active</span><span className="font-medium">{securityData.anomalies?.active || 0}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Critical</span><span className="font-medium text-red-600">{securityData.anomalies?.critical || 0}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Active</span><span className="font-medium">{securityData.anomalies?.active || 0}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Critical</span><span className="font-medium text-red-600">{securityData.anomalies?.critical || 0}</span></div>
               </div>
             </div>
           </div>

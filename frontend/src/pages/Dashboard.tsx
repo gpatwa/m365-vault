@@ -19,7 +19,7 @@ import type { ActionItem } from '../components/design-system/ActionBanner';
 import type { WorkloadStat } from '../components/design-system/PlatformCard';
 import type { DashboardSummary, ActivityData } from '../types';
 
-// ═══ Stripe-style Onboarding Checklist ═══
+// Stripe-style Onboarding Checklist
 
 const CHECKLIST_STEPS: {
   key: OnboardingStep;
@@ -65,7 +65,7 @@ const CHECKLIST_STEPS: {
     key: 'first_backup',
     title: 'Run your first backup',
     description: 'Pick a workload and verify your first backup works. Exchange is fastest.',
-    action: 'inline', // Special: renders workload picker inline
+    action: 'inline',
     path: '',
     icon: Database,
   },
@@ -103,7 +103,6 @@ function OnboardingChecklist() {
     try {
       await api.post(`${workload.endpoint}?tenant_id=${tenantId}`);
       setBackupRunning(prev => ({ ...prev, [workload.key]: 'done' }));
-      // If any backup succeeded, mark step as done
       completeStep('first_backup');
     } catch {
       setBackupRunning(prev => ({ ...prev, [workload.key]: 'error' }));
@@ -120,17 +119,16 @@ function OnboardingChecklist() {
   };
 
   return (
-    <div className="mb-6 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-      {/* Header — always visible */}
+    <div className="mb-6 bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+      {/* Header */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
       >
         <div className="flex items-center gap-3">
           <div className="relative">
-            {/* Circular progress */}
             <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
-              <circle cx="18" cy="18" r="15" fill="none" stroke="#e5e7eb" strokeWidth="3" />
+              <circle cx="18" cy="18" r="15" fill="none" stroke="var(--border)" strokeWidth="3" />
               <circle
                 cx="18" cy="18" r="15" fill="none"
                 stroke={isComplete ? '#22c55e' : '#3b82f6'}
@@ -139,15 +137,15 @@ function OnboardingChecklist() {
                 strokeLinecap="round"
               />
             </svg>
-            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-gray-700">
+            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-foreground/80">
               {completedCount}/{totalSteps}
             </span>
           </div>
           <div className="text-left">
-            <h3 className="font-semibold text-gray-900 text-sm">
+            <h3 className="font-semibold text-foreground text-sm">
               {isComplete ? 'Setup complete! 🎉' : 'Getting started with Shieldio'}
             </h3>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               {isComplete
                 ? 'Your data is fully protected.'
                 : `${completedCount} of ${totalSteps} steps complete`}
@@ -158,30 +156,30 @@ function OnboardingChecklist() {
           {isComplete && (
             <button
               onClick={(e) => { e.stopPropagation(); handleDismiss(); }}
-              className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1"
+              className="text-xs text-muted-foreground hover:text-foreground px-2 py-1"
             >
               Dismiss
             </button>
           )}
           {expanded ? (
-            <ChevronUp className="w-4 h-4 text-gray-400" />
+            <ChevronUp className="w-4 h-4 text-muted-foreground" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-gray-400" />
+            <ChevronDown className="w-4 h-4 text-muted-foreground" />
           )}
         </div>
       </button>
 
       {/* Expanded checklist */}
       {expanded && (
-        <div className="border-t border-gray-100">
+        <div className="border-t border-border">
           {CHECKLIST_STEPS.map((step, i) => {
             const done = steps[step.key];
             const isCurrent = !done && CHECKLIST_STEPS.slice(0, i).every(s => steps[s.key]);
             return (
               <div
                 key={step.key}
-                className={`flex items-center gap-3 px-4 py-3 border-b border-gray-50 last:border-0 transition-colors ${
-                  isCurrent ? 'bg-blue-50/50' : ''
+                className={`flex items-center gap-3 px-4 py-3 border-b border-border/50 last:border-0 transition-colors ${
+                  isCurrent ? 'bg-blue-500/5' : ''
                 }`}
               >
                 {/* Status indicator */}
@@ -189,27 +187,27 @@ function OnboardingChecklist() {
                   {done ? (
                     <CheckCircle className="w-5 h-5 text-green-500" />
                   ) : isCurrent ? (
-                    <div className="w-5 h-5 rounded-full border-2 border-blue-500 bg-blue-100 flex items-center justify-center">
+                    <div className="w-5 h-5 rounded-full border-2 border-blue-500 bg-blue-500/10 flex items-center justify-center">
                       <div className="w-2 h-2 bg-blue-500 rounded-full" />
                     </div>
                   ) : (
-                    <Circle className="w-5 h-5 text-gray-300" />
+                    <Circle className="w-5 h-5 text-muted-foreground/40" />
                   )}
                 </div>
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <div className={`text-sm font-medium ${done ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                  <div className={`text-sm font-medium ${done ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
                     {step.title}
                   </div>
                   {isCurrent && step.key !== 'first_backup' && (
-                    <p className="text-xs text-gray-500 mt-0.5">{step.description}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{step.description}</p>
                   )}
 
                   {/* Inline workload picker for first_backup step */}
                   {isCurrent && step.key === 'first_backup' && (
                     <div className="mt-2">
-                      <p className="text-xs text-gray-500 mb-2">{step.description}</p>
+                      <p className="text-xs text-muted-foreground mb-2">{step.description}</p>
                       <div className="flex flex-wrap gap-2">
                         {BACKUP_WORKLOADS.map(wl => {
                           const status = backupRunning[wl.key] || 'idle';
@@ -220,27 +218,27 @@ function OnboardingChecklist() {
                               disabled={status === 'running' || status === 'done'}
                               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                                 status === 'done'
-                                  ? 'bg-green-100 text-green-700 border border-green-200'
+                                  ? 'bg-green-500/10 text-green-400 border border-green-500/20'
                                   : status === 'running'
-                                  ? 'bg-blue-100 text-blue-700 border border-blue-200 animate-pulse'
+                                  ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20 animate-pulse'
                                   : status === 'error'
-                                  ? 'bg-red-100 text-red-700 border border-red-200 hover:bg-red-200'
-                                  : 'bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200 hover:border-gray-300'
+                                  ? 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20'
+                                  : 'bg-muted text-foreground/80 border border-border hover:bg-accent'
                               }`}
                             >
                               <span>{wl.icon}</span>
                               <span>{wl.label}</span>
                               {status === 'running' && <Loader2 className="w-3 h-3 animate-spin" />}
-                              {status === 'done' && <CheckCircle className="w-3 h-3 text-green-600" />}
+                              {status === 'done' && <CheckCircle className="w-3 h-3 text-green-400" />}
                               {wl.fast && status === 'idle' && (
-                                <span className="text-[9px] text-gray-400 ml-0.5">fast</span>
+                                <span className="text-[9px] text-muted-foreground ml-0.5">fast</span>
                               )}
                             </button>
                           );
                         })}
                       </div>
                       {anyBackupDone && (
-                        <p className="text-[10px] text-green-600 mt-1.5 flex items-center gap-1">
+                        <p className="text-[10px] text-green-400 mt-1.5 flex items-center gap-1">
                           <CheckCircle className="w-3 h-3" /> Backup verified — your data is protected!
                         </p>
                       )}
@@ -248,20 +246,20 @@ function OnboardingChecklist() {
                   )}
                 </div>
 
-                {/* Action button (for non-inline steps) */}
+                {/* Action button */}
                 {!done && isCurrent && step.action !== 'inline' && (
                   <button
                     onClick={() => {
                       if (step.key === 'explore_recovery') completeStep('explore_recovery');
                       navigate(step.path);
                     }}
-                    className="flex-shrink-0 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition-colors flex items-center gap-1"
+                    className="flex-shrink-0 px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-semibold hover:bg-primary/90 transition-colors flex items-center gap-1"
                   >
                     {step.action} <ArrowRight className="w-3 h-3" />
                   </button>
                 )}
                 {done && (
-                  <span className="text-[10px] text-green-600 font-medium flex-shrink-0">Done</span>
+                  <span className="text-[10px] text-green-400 font-medium flex-shrink-0">Done</span>
                 )}
               </div>
             );
@@ -276,7 +274,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const tenantId = useTenantId();
 
-  // ── Data Fetching ──
+  // Data Fetching
 
   const { data: summary } = useQuery({
     queryKey: ['dashboard-summary'],
@@ -313,7 +311,7 @@ export default function Dashboard() {
     staleTime: 60000,
   });
 
-  // ── Computed: Hero Stats ──
+  // Computed: Hero Stats
 
   const heroStats: HeroStat[] = useMemo(() => {
     const totalProtected = summary?.total_protected ?? 0;
@@ -360,7 +358,7 @@ export default function Dashboard() {
     ];
   }, [summary, healthData, unprotectedData, navigate]);
 
-  // ── Computed: Action Banners ──
+  // Computed: Action Banners
 
   const actionItems: ActionItem[] = useMemo(() => {
     const items: ActionItem[] = [];
@@ -400,7 +398,7 @@ export default function Dashboard() {
     return items;
   }, [unprotectedData, summary, healthData, navigate]);
 
-  // ── Computed: Platform Card ──
+  // Computed: Platform Card
 
   const workloadStats: WorkloadStat[] = useMemo(() => {
     if (!summary?.workloads) return [];
@@ -410,11 +408,11 @@ export default function Dashboard() {
         key: wl.key,
         label: wl.label,
         icon: wl.icon,
-        iconColor: wl.iconColor || 'text-gray-500',
+        iconColor: wl.iconColor || 'text-muted-foreground',
         protected: data.protected || 0,
         total: data.total || 0,
-        lastBackup: null, // TODO: from jobs API
-        itemCount: 0, // TODO: from snapshots API
+        lastBackup: null,
+        itemCount: 0,
         path: `/${wl.key.replace('_', '-')}`,
       };
     });
@@ -423,11 +421,10 @@ export default function Dashboard() {
   const platformTotalProtected = workloadStats.reduce((s, w) => s + w.protected, 0);
   const platformTotalObjects = workloadStats.reduce((s, w) => s + w.total, 0);
 
-  // ── Computed: Trend chart data ──
+  // Computed: Trend chart data
 
   const trendData = useMemo(() => {
     if (!activityData?.activity) return [];
-    // Group by day
     const days: Record<string, { day: string; success: number; failed: number }> = {};
     const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     for (let i = 6; i >= 0; i--) {
@@ -446,9 +443,8 @@ export default function Dashboard() {
     return Object.values(days);
   }, [activityData]);
 
-  // ── Render ──
+  // Render
 
-  // ── Determine dashboard state ──
   const noTenants = !summary || summary.tenants === 0;
   const hasTenantsNoBackups = summary && summary.tenants > 0 && summary.total_protected === 0;
   const [connecting, setConnecting] = useState(false);
@@ -464,41 +460,41 @@ export default function Dashboard() {
     }
   };
 
-  // ═══ STATE 1: No tenants — Full onboarding experience ═══
+  // STATE 1: No tenants — Full onboarding experience
   if (noTenants) {
     return (
       <div className="max-w-3xl mx-auto py-4">
         {/* Hero */}
         <div className="text-center mb-10">
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-blue-200">
-            <Shield className="w-10 h-10 text-white" />
+          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-blue-500/20">
+            <Shield className="w-10 h-10 text-foreground" />
           </div>
-          <h1 className="text-3xl font-extrabold text-gray-900 mb-3">Welcome to Shieldio</h1>
-          <p className="text-lg text-gray-500 max-w-lg mx-auto">
+          <h1 className="text-3xl font-extrabold text-foreground mb-3">Welcome to Shieldio</h1>
+          <p className="text-lg text-muted-foreground max-w-lg mx-auto">
             Protect your SaaS data in minutes. Connect your platform, discover workloads, and start backing up automatically.
           </p>
         </div>
 
         {/* Connect platform */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 mb-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-1">Step 1: Connect Your Platform</h2>
-          <p className="text-sm text-gray-500 mb-6">One-click OAuth — no credentials to copy or paste.</p>
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-8 mb-6">
+          <h2 className="text-lg font-bold text-foreground mb-1">Step 1: Connect Your Platform</h2>
+          <p className="text-sm text-muted-foreground mb-6">One-click OAuth — no credentials to copy or paste.</p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Microsoft 365 — active */}
             <button
               onClick={() => handleConnect('microsoft365')}
               disabled={connecting}
-              className="relative p-5 rounded-xl border-2 border-blue-200 bg-blue-50 hover:border-blue-400 hover:shadow-md transition-all text-left group"
+              className="relative p-5 rounded-xl border-2 border-blue-500/30 bg-blue-500/5 hover:border-blue-500/50 hover:shadow-md transition-all text-left group"
             >
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-white border border-gray-100 flex items-center justify-center shadow-sm">
+                <div className="w-12 h-12 rounded-xl bg-card border border-border flex items-center justify-center shadow-sm">
                   <svg className="w-6 h-6" viewBox="0 0 21 21"><path d="M0 0h10v10H0z" fill="#f25022"/><path d="M11 0h10v10H11z" fill="#7fba00"/><path d="M0 11h10v10H0z" fill="#00a4ef"/><path d="M11 11h10v10H11z" fill="#ffb900"/></svg>
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-gray-900">Microsoft 365</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">Exchange, OneDrive, SharePoint, Teams, Entra ID</p>
-                  <div className="mt-2 flex items-center gap-1 text-sm font-medium text-blue-600">
+                  <h3 className="font-bold text-foreground">Microsoft 365</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">Exchange, OneDrive, SharePoint, Teams, Entra ID</p>
+                  <div className="mt-2 flex items-center gap-1 text-sm font-medium text-primary">
                     {connecting ? (
                       <><Loader2 className="w-4 h-4 animate-spin" /> Connecting...</>
                     ) : (
@@ -515,15 +511,15 @@ export default function Dashboard() {
               { name: 'Salesforce', desc: 'Accounts, Contacts, Opportunities', icon: Database, color: 'sky' },
               { name: 'Slack', desc: 'Channels, Messages, Files', icon: MessageSquare, color: 'purple' },
             ].map(p => (
-              <div key={p.name} className="p-5 rounded-xl border-2 border-gray-100 bg-gray-50 opacity-60 text-left relative">
-                <span className="absolute top-3 right-3 px-2 py-0.5 bg-gray-200 text-gray-500 text-[9px] font-semibold rounded-full">Coming Soon</span>
+              <div key={p.name} className="p-5 rounded-xl border-2 border-border bg-muted/50 opacity-60 text-left relative">
+                <span className="absolute top-3 right-3 px-2 py-0.5 bg-muted text-muted-foreground text-[9px] font-semibold rounded-full">Coming Soon</span>
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-white border border-gray-100 flex items-center justify-center">
-                    <p.icon className="w-6 h-6 text-gray-400" />
+                  <div className="w-12 h-12 rounded-xl bg-card border border-border flex items-center justify-center">
+                    <p.icon className="w-6 h-6 text-muted-foreground" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-700">{p.name}</h3>
-                    <p className="text-xs text-gray-400 mt-0.5">{p.desc}</p>
+                    <h3 className="font-bold text-foreground/80">{p.name}</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">{p.desc}</p>
                   </div>
                 </div>
               </div>
@@ -532,8 +528,8 @@ export default function Dashboard() {
         </div>
 
         {/* What happens after connecting */}
-        <div className="bg-gray-50 rounded-2xl border border-gray-200 p-6">
-          <h3 className="font-bold text-gray-900 mb-4">What happens when you connect?</h3>
+        <div className="bg-muted rounded-2xl border border-border p-6">
+          <h3 className="font-bold text-foreground mb-4">What happens when you connect?</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
               { step: '1', title: 'Discover', desc: 'We find all your mailboxes, drives, sites, teams, and identity objects.', icon: Eye, color: 'blue' },
@@ -541,53 +537,52 @@ export default function Dashboard() {
               { step: '3', title: 'Recover', desc: 'Instant restore if anything is deleted, corrupted, or encrypted.', icon: Activity, color: 'purple' },
             ].map(s => (
               <div key={s.step} className="flex items-start gap-3">
-                <div className={`w-8 h-8 rounded-lg bg-${s.color}-100 flex items-center justify-center flex-shrink-0`}>
-                  <s.icon className={`w-4 h-4 text-${s.color}-600`} />
+                <div className={`w-8 h-8 rounded-lg bg-${s.color}-500/10 flex items-center justify-center flex-shrink-0`}>
+                  <s.icon className={`w-4 h-4 text-${s.color}-400`} />
                 </div>
                 <div>
-                  <div className="font-semibold text-gray-900 text-sm">{s.title}</div>
-                  <div className="text-xs text-gray-500 mt-0.5">{s.desc}</div>
+                  <div className="font-semibold text-foreground text-sm">{s.title}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{s.desc}</div>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
+        <p className="text-center text-xs text-muted-foreground mt-6">
           Shieldio uses OAuth admin consent — your credentials are never stored. Only read-only permissions for backup.
         </p>
       </div>
     );
   }
 
-  // ═══ STATE 2: Tenants exist but no backups — nudge to protect ═══
-  // (falls through to normal dashboard below, with action banner)
+  // STATE 2+3: Tenants exist
 
   return (
     <div>
       {/* Action banner for unprotected state */}
       {hasTenantsNoBackups && (
-        <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
-          <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+        <div className="mb-6 bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-center gap-3">
+          <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0" />
           <div className="flex-1">
-            <p className="font-semibold text-amber-800 text-sm">Your data isn't protected yet</p>
-            <p className="text-xs text-amber-600">Assign an SLA policy to start automatic backups.</p>
+            <p className="font-semibold text-amber-400 text-sm">Your data isn't protected yet</p>
+            <p className="text-xs text-amber-400/70">Assign an SLA policy to start automatic backups.</p>
           </div>
-          <button onClick={() => navigate('/sla-policies')} className="px-3 py-1.5 bg-amber-600 text-white rounded-lg text-xs font-semibold hover:bg-amber-700">
+          <button onClick={() => navigate('/sla-policies')} className="px-3 py-1.5 bg-amber-600 text-white rounded-lg text-xs font-semibold hover:bg-amber-500">
             Protect Now →
           </button>
         </div>
       )}
 
-      {/* ═══ Stripe-style Onboarding Checklist ═══ */}
+      {/* Stripe-style Onboarding Checklist */}
       <OnboardingChecklist />
 
-      {/* ═══ STATE 3: Normal operational dashboard ═══ */}
+      {/* STATE 3: Normal operational dashboard */}
 
       {/* Page Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-sm text-gray-500">SaaS Data Protection Overview</p>
+        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+        <p className="text-sm text-muted-foreground">SaaS Data Protection Overview</p>
       </div>
 
       {/* Row 1: Hero Stats */}
@@ -601,7 +596,7 @@ export default function Dashboard() {
         <PlatformCard
           name={getActivePlatformLabel()}
           icon={
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
               <svg className="w-6 h-6" viewBox="0 0 21 21">
                 <path d="M0 0h10v10H0z" fill="#f25022"/>
                 <path d="M11 0h10v10H11z" fill="#7fba00"/>
@@ -621,16 +616,16 @@ export default function Dashboard() {
       {/* Row 3: License/Usage + 7-Day Trend */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* License & Usage */}
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
-          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+        <div className="bg-card border border-border rounded-xl shadow-sm">
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <CreditCard className="w-4 h-4 text-blue-500" />
-              <h3 className="text-sm font-semibold text-gray-800">License & Usage</h3>
+              <CreditCard className="w-4 h-4 text-blue-400" />
+              <h3 className="text-sm font-semibold text-foreground">License & Usage</h3>
             </div>
             <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
-              licenseData?.tier === 'enterprise' ? 'bg-purple-100 text-purple-700' :
-              licenseData?.tier === 'professional' ? 'bg-blue-100 text-blue-700' :
-              'bg-gray-100 text-gray-600'
+              licenseData?.tier === 'enterprise' ? 'bg-purple-500/10 text-purple-400' :
+              licenseData?.tier === 'professional' ? 'bg-blue-500/10 text-blue-400' :
+              'bg-muted text-muted-foreground'
             }`}>
               {licenseData?.tier_label || 'Community'}
             </span>
@@ -639,13 +634,13 @@ export default function Dashboard() {
             {(licenseData?.usage || []).map((u: any, i: number) => (
               <div key={i}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-gray-600">{u.name}</span>
-                  <span className="text-xs font-semibold text-gray-800">
+                  <span className="text-xs text-muted-foreground">{u.name}</span>
+                  <span className="text-xs font-semibold text-foreground">
                     {u.current}{u.limit > 0 ? ` / ${u.limit}` : ''}
                   </span>
                 </div>
                 {u.limit > 0 && (
-                  <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all ${
                         u.usage_percent >= 90 ? 'bg-red-500' :
@@ -659,11 +654,11 @@ export default function Dashboard() {
               </div>
             ))}
             {licenseData?.features && (
-              <div className="pt-2 border-t border-gray-100">
-                <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">Included Workloads</p>
+              <div className="pt-2 border-t border-border">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">Included Workloads</p>
                 <div className="flex flex-wrap gap-1">
                   {licenseData.features.map((f: string) => (
-                    <span key={f} className="text-[10px] px-1.5 py-0.5 bg-gray-50 border border-gray-100 rounded text-gray-500 capitalize">
+                    <span key={f} className="text-[10px] px-1.5 py-0.5 bg-muted border border-border rounded text-muted-foreground capitalize">
                       {f.replace('_', ' ')}
                     </span>
                   ))}
@@ -672,35 +667,35 @@ export default function Dashboard() {
             )}
             <button
               onClick={() => navigate('/usage')}
-              className="w-full text-xs text-blue-600 hover:text-blue-800 font-medium pt-1"
+              className="w-full text-xs text-primary hover:text-primary/80 font-medium pt-1"
             >
               View full usage details →
             </button>
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
-          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-gray-800">7-Day Backup Trend</h3>
-            <TrendingUp className="w-4 h-4 text-gray-400" />
+        <div className="bg-card border border-border rounded-xl shadow-sm">
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-foreground">7-Day Backup Trend</h3>
+            <TrendingUp className="w-4 h-4 text-muted-foreground" />
           </div>
           <div className="p-4 h-64">
             {trendData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={trendData} barCategoryGap="20%">
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                  <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                  <XAxis dataKey="day" tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
                   <Tooltip
-                    contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }}
-                    cursor={{ fill: '#f9fafb' }}
+                    contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--foreground)' }}
+                    cursor={{ fill: 'var(--muted)' }}
                   />
                   <Bar dataKey="success" fill="#22c55e" radius={[3, 3, 0, 0]} name="Successful" />
                   <Bar dataKey="failed" fill="#ef4444" radius={[3, 3, 0, 0]} name="Failed" />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-full text-sm text-gray-400">
+              <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
                 No backup data yet
               </div>
             )}
@@ -711,62 +706,62 @@ export default function Dashboard() {
       {/* Row 4: Storage + Compliance */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         {/* Storage */}
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+        <div className="bg-card border border-border rounded-xl shadow-sm p-5">
           <div className="flex items-center gap-2 mb-4">
-            <Database className="w-4 h-4 text-blue-500" />
-            <h3 className="text-sm font-semibold text-gray-800">Storage</h3>
+            <Database className="w-4 h-4 text-blue-400" />
+            <h3 className="text-sm font-semibold text-foreground">Storage</h3>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-gray-500">Total Size</p>
-              <p className="text-xl font-bold text-gray-900">{summary?.snapshots?.total_size_gb ?? 0} GB</p>
+              <p className="text-xs text-muted-foreground">Total Size</p>
+              <p className="text-xl font-bold text-foreground">{summary?.snapshots?.total_size_gb ?? 0} GB</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Snapshots</p>
-              <p className="text-xl font-bold text-gray-900">{summary?.snapshots?.total ?? 0}</p>
+              <p className="text-xs text-muted-foreground">Snapshots</p>
+              <p className="text-xl font-bold text-foreground">{summary?.snapshots?.total ?? 0}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Dedup Savings</p>
-              <p className="text-lg font-semibold text-green-600">42%</p>
+              <p className="text-xs text-muted-foreground">Dedup Savings</p>
+              <p className="text-lg font-semibold text-green-400">42%</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Compression</p>
-              <p className="text-lg font-semibold text-green-600">2.9x</p>
+              <p className="text-xs text-muted-foreground">Compression</p>
+              <p className="text-lg font-semibold text-green-400">2.9x</p>
             </div>
           </div>
         </div>
 
         {/* Compliance */}
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+        <div className="bg-card border border-border rounded-xl shadow-sm p-5">
           <div className="flex items-center gap-2 mb-4">
-            <FileCheck className="w-4 h-4 text-green-500" />
-            <h3 className="text-sm font-semibold text-gray-800">Compliance</h3>
+            <FileCheck className="w-4 h-4 text-green-400" />
+            <h3 className="text-sm font-semibold text-foreground">Compliance</h3>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-gray-500">SLA Adherence</p>
-              <p className={`text-xl font-bold ${(compliance?.compliance_rate ?? 100) === 100 ? 'text-green-600' : 'text-amber-600'}`}>
+              <p className="text-xs text-muted-foreground">SLA Adherence</p>
+              <p className={`text-xl font-bold ${(compliance?.compliance_rate ?? 100) === 100 ? 'text-green-400' : 'text-amber-400'}`}>
                 {compliance?.compliance_rate ?? 100}%
               </p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Violations</p>
-              <p className={`text-xl font-bold ${(compliance?.non_compliant ?? 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+              <p className="text-xs text-muted-foreground">Violations</p>
+              <p className={`text-xl font-bold ${(compliance?.non_compliant ?? 0) > 0 ? 'text-red-400' : 'text-green-400'}`}>
                 {compliance?.non_compliant ?? 0}
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Lock className="w-3.5 h-3.5 text-blue-500" />
+              <Lock className="w-3.5 h-3.5 text-blue-400" />
               <div>
-                <p className="text-xs text-gray-500">WORM Locked</p>
-                <p className="text-sm font-semibold text-gray-700">Active</p>
+                <p className="text-xs text-muted-foreground">WORM Locked</p>
+                <p className="text-sm font-semibold text-foreground/80">Active</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Eye className="w-3.5 h-3.5 text-purple-500" />
+              <Eye className="w-3.5 h-3.5 text-purple-400" />
               <div>
-                <p className="text-xs text-gray-500">Sensitive Data</p>
-                <p className="text-sm font-semibold text-gray-700">Monitored</p>
+                <p className="text-xs text-muted-foreground">Sensitive Data</p>
+                <p className="text-sm font-semibold text-foreground/80">Monitored</p>
               </div>
             </div>
           </div>

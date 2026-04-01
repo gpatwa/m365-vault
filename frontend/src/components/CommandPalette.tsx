@@ -214,11 +214,11 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh]" onClick={onClose}>
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
-      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border overflow-hidden" onClick={e => e.stopPropagation()}>
+      <div className="relative w-full max-w-2xl bg-card rounded-2xl shadow-2xl border overflow-hidden" onClick={e => e.stopPropagation()}>
 
         {/* Search Input */}
         <div className="flex items-center px-4 border-b">
-          <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
+          <Search className="w-5 h-5 text-muted-foreground flex-shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -236,7 +236,7 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
               {workloadFilter.replace('_', ' ')} ×
             </button>
           )}
-          <kbd className="hidden sm:inline-flex px-2 py-0.5 text-[10px] text-gray-400 bg-gray-100 rounded font-mono">ESC</kbd>
+          <kbd className="hidden sm:inline-flex px-2 py-0.5 text-[10px] text-muted-foreground bg-muted rounded font-mono">ESC</kbd>
         </div>
 
         {/* Results Area */}
@@ -244,23 +244,23 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
 
           {/* Intent indicator */}
           {searchData?.intent && query.length >= 2 && (
-            <div className="px-4 py-2 text-[10px] text-gray-400 border-b border-gray-50">
+            <div className="px-4 py-2 text-[10px] text-muted-foreground border-b border-gray-50">
               {INTENT_LABELS[searchData.intent] || searchData.intent}
-              {searchData.total > 0 && <span className="ml-2 text-gray-500 font-medium">{searchData.total} results</span>}
+              {searchData.total > 0 && <span className="ml-2 text-muted-foreground font-medium">{searchData.total} results</span>}
             </div>
           )}
 
           {/* Navigation results */}
           {searchData?.navigation && searchData.navigation.length > 0 && (
             <div className="p-2">
-              <p className="px-2 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Pages</p>
+              <p className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Pages</p>
               {searchData.navigation.map((nav) => (
                 <button
                   key={nav.path}
                   onClick={() => goToLink(nav.path)}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left hover:bg-gray-50 text-gray-700"
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left hover:bg-muted/50 text-foreground/80"
                 >
-                  <ArrowRight className="w-4 h-4 text-gray-300" />
+                  <ArrowRight className="w-4 h-4 text-foreground/70" />
                   <span className="text-sm flex-1">{nav.label}</span>
                 </button>
               ))}
@@ -271,9 +271,9 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
           {allCategories.map(([category, data]) => (
             <div key={category} className="p-2">
               <div className="flex items-center gap-2 px-2 py-1">
-                {(() => { const CatIcon = CATEGORY_ICONS[category] || FileText; return <CatIcon className="w-3 h-3 text-gray-400" />; })()}
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{category}</p>
-                <span className="text-[10px] text-gray-300">{data.items.length}</span>
+                {(() => { const CatIcon = CATEGORY_ICONS[category] || FileText; return <CatIcon className="w-3 h-3 text-muted-foreground" />; })()}
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{category}</p>
+                <span className="text-[10px] text-foreground/70">{data.items.length}</span>
               </div>
               {data.items.slice(0, 5).map((item, i) => {
                 const ItemIcon = TYPE_ICONS[item.type] || FileText;
@@ -281,14 +281,14 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
                 return (
                   <div
                     key={`${category}-${item.id}-${i}`}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 group"
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted/50 group"
                   >
-                    <div className={`p-1.5 rounded-md ${wl?.bgColor || 'bg-gray-100'}`}>
-                      <ItemIcon className={`w-4 h-4 ${wl?.iconColor || 'text-gray-500'}`} />
+                    <div className={`p-1.5 rounded-md ${wl?.bgColor || 'bg-muted'}`}>
+                      <ItemIcon className={`w-4 h-4 ${wl?.iconColor || 'text-muted-foreground'}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate text-gray-800">{item.name}</p>
-                      <p className="text-[11px] text-gray-400 truncate">
+                      <p className="text-sm font-medium truncate text-foreground">{item.name}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">
                         {item.subtitle || ''}
                         {item.date && ` · ${new Date(item.date).toLocaleDateString()}`}
                         {item.size_bytes ? ` · ${formatSize(item.size_bytes)}` : ''}
@@ -321,8 +321,8 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
           {query.length >= 2 && !loading && !hasResults && (
             <div className="p-8 text-center">
               <Search className="w-8 h-8 text-gray-200 mx-auto mb-3" />
-              <p className="text-sm text-gray-400">No results for "{query}"</p>
-              <p className="text-[11px] text-gray-300 mt-1">Try different keywords or check spelling</p>
+              <p className="text-sm text-muted-foreground">No results for "{query}"</p>
+              <p className="text-[11px] text-foreground/70 mt-1">Try different keywords or check spelling</p>
             </div>
           )}
 
@@ -331,30 +331,30 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
             <div className="p-2">
               {recentSearches.length > 0 && !query && (
                 <>
-                  <p className="px-2 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Recent</p>
+                  <p className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Recent</p>
                   {recentSearches.map(s => (
                     <button key={s} onClick={() => setQuery(s)}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left hover:bg-gray-50 text-gray-600">
-                      <Clock className="w-4 h-4 text-gray-300" />
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left hover:bg-muted/50 text-muted-foreground">
+                      <Clock className="w-4 h-4 text-foreground/70" />
                       <span className="text-sm">{s}</span>
                     </button>
                   ))}
                   <div className="border-t my-1" />
                 </>
               )}
-              <p className="px-2 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Quick Navigation</p>
+              <p className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Quick Navigation</p>
               {filteredLinks.map((link, i) => (
                 <button
                   key={link.path}
                   data-idx={i}
                   onClick={() => goToLink(link.path)}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                    selectedIdx === i ? 'bg-blue-50 text-blue-900' : 'hover:bg-gray-50 text-gray-700'
+                    selectedIdx === i ? 'bg-blue-50 text-blue-900' : 'hover:bg-muted/50 text-foreground/80'
                   }`}
                 >
-                  <ArrowRight className="w-4 h-4 text-gray-300" />
+                  <ArrowRight className="w-4 h-4 text-foreground/70" />
                   <span className="text-sm flex-1">{link.label}</span>
-                  <kbd className="px-1.5 py-0.5 text-[10px] text-gray-400 bg-gray-100 rounded font-mono">{link.shortcut}</kbd>
+                  <kbd className="px-1.5 py-0.5 text-[10px] text-muted-foreground bg-muted rounded font-mono">{link.shortcut}</kbd>
                 </button>
               ))}
             </div>
@@ -362,10 +362,10 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
         </div>
 
         {/* Footer */}
-        <div className="border-t px-4 py-2 flex items-center gap-4 text-[10px] text-gray-400">
-          <span className="flex items-center gap-1"><kbd className="px-1 bg-gray-100 rounded">↑↓</kbd> navigate</span>
-          <span className="flex items-center gap-1"><kbd className="px-1 bg-gray-100 rounded">↵</kbd> select</span>
-          <span className="flex items-center gap-1"><kbd className="px-1 bg-gray-100 rounded">esc</kbd> close</span>
+        <div className="border-t px-4 py-2 flex items-center gap-4 text-[10px] text-muted-foreground">
+          <span className="flex items-center gap-1"><kbd className="px-1 bg-muted rounded">↑↓</kbd> navigate</span>
+          <span className="flex items-center gap-1"><kbd className="px-1 bg-muted rounded">↵</kbd> select</span>
+          <span className="flex items-center gap-1"><kbd className="px-1 bg-muted rounded">esc</kbd> close</span>
           <span className="ml-auto flex items-center gap-1"><Command className="w-3 h-3" />K</span>
         </div>
       </div>

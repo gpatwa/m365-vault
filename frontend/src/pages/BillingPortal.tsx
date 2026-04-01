@@ -25,7 +25,7 @@ interface BillingData {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: 'bg-gray-500/10 text-gray-400',
+  draft: 'bg-muted/500/10 text-muted-foreground',
   invoiced: 'bg-blue-500/10 text-blue-400',
   paid: 'bg-green-500/10 text-green-400',
 };
@@ -55,21 +55,21 @@ export default function BillingPortal() {
   }
 
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-[50vh] text-gray-400 animate-pulse">Loading billing...</div>;
+    return <div className="flex items-center justify-center min-h-[50vh] text-muted-foreground animate-pulse">Loading billing...</div>;
   }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Billing Portal</h1>
-          <p className="text-sm text-gray-400">Per-tenant usage and cost breakdown</p>
+          <h1 className="text-2xl font-bold text-foreground">Billing Portal</h1>
+          <p className="text-sm text-muted-foreground">Per-tenant usage and cost breakdown</p>
         </div>
         <div className="flex items-center gap-3">
           <select
             value={month}
             onChange={e => setMonth(e.target.value)}
-            className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-blue-500"
+            className="px-3 py-2 bg-card border border-border rounded-lg text-sm text-foreground focus:outline-none focus:border-ring"
           >
             {monthOptions.map(m => (
               <option key={m} value={m}>{m}</option>
@@ -87,47 +87,47 @@ export default function BillingPortal() {
       {/* Summary cards */}
       {data && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+          <div className="bg-card rounded-xl p-4 border border-border">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
                 <DollarSign className="w-5 h-5 text-green-400" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-white">${data.total_cost.toFixed(2)}</div>
-                <div className="text-xs text-gray-400">Total Cost</div>
+                <div className="text-2xl font-bold text-foreground">${data.total_cost.toFixed(2)}</div>
+                <div className="text-xs text-muted-foreground">Total Cost</div>
               </div>
             </div>
           </div>
-          <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+          <div className="bg-card rounded-xl p-4 border border-border">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
                 <Users className="w-5 h-5 text-blue-400" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-white">{data.total_users}</div>
-                <div className="text-xs text-gray-400">Total Users</div>
+                <div className="text-2xl font-bold text-foreground">{data.total_users}</div>
+                <div className="text-xs text-muted-foreground">Total Users</div>
               </div>
             </div>
           </div>
-          <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+          <div className="bg-card rounded-xl p-4 border border-border">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
                 <TrendingUp className="w-5 h-5 text-purple-400" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-white">${data.unit_price.toFixed(2)}</div>
-                <div className="text-xs text-gray-400">Per User Price</div>
+                <div className="text-2xl font-bold text-foreground">${data.unit_price.toFixed(2)}</div>
+                <div className="text-xs text-muted-foreground">Per User Price</div>
               </div>
             </div>
           </div>
-          <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+          <div className="bg-card rounded-xl p-4 border border-border">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
                 <Calendar className="w-5 h-5 text-amber-400" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-white">{data.total_tenants}</div>
-                <div className="text-xs text-gray-400">Active Tenants</div>
+                <div className="text-2xl font-bold text-foreground">{data.total_tenants}</div>
+                <div className="text-xs text-muted-foreground">Active Tenants</div>
               </div>
             </div>
           </div>
@@ -136,8 +136,8 @@ export default function BillingPortal() {
 
       {/* Wholesale tier info */}
       {data?.tiers && (
-        <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700 mb-6">
-          <div className="text-xs font-medium text-gray-400 mb-2">Wholesale Pricing Tiers</div>
+        <div className="bg-card/50 rounded-xl p-4 border border-border mb-6">
+          <div className="text-xs font-medium text-muted-foreground mb-2">Wholesale Pricing Tiers</div>
           <div className="flex items-center gap-4">
             {data.tiers.map((tier, i) => (
               <div
@@ -145,7 +145,7 @@ export default function BillingPortal() {
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
                   data.unit_price === tier.price
                     ? 'bg-blue-500/20 text-blue-300 ring-1 ring-blue-500/50'
-                    : 'bg-gray-700/50 text-gray-500'
+                    : 'bg-secondary/50 text-muted-foreground'
                 }`}
               >
                 {tier.max_users ? `${tier.min_users}-${tier.max_users}` : `${tier.min_users}+`} users: ${tier.price.toFixed(2)}
@@ -156,26 +156,26 @@ export default function BillingPortal() {
       )}
 
       {/* Billing table */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+      <div className="bg-card rounded-xl border border-border overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-700 bg-gray-800/50">
-              <th className="text-left px-4 py-3 font-medium text-gray-400">Tenant</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-400">Users</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-400">Storage</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-400">Unit Price</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-400">Monthly Cost</th>
-              <th className="text-center px-4 py-3 font-medium text-gray-400">Status</th>
+            <tr className="border-b border-border bg-card/50">
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Tenant</th>
+              <th className="text-right px-4 py-3 font-medium text-muted-foreground">Users</th>
+              <th className="text-right px-4 py-3 font-medium text-muted-foreground">Storage</th>
+              <th className="text-right px-4 py-3 font-medium text-muted-foreground">Unit Price</th>
+              <th className="text-right px-4 py-3 font-medium text-muted-foreground">Monthly Cost</th>
+              <th className="text-center px-4 py-3 font-medium text-muted-foreground">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-700/50">
+          <tbody className="divide-y divide-border/50">
             {data?.line_items.map(item => (
-              <tr key={item.tenant_id} className="hover:bg-gray-700/30">
-                <td className="px-4 py-3 text-white font-medium">{item.tenant_name}</td>
-                <td className="px-4 py-3 text-right text-gray-300">{item.user_count}</td>
-                <td className="px-4 py-3 text-right text-gray-300">{item.storage_gb} GB</td>
-                <td className="px-4 py-3 text-right text-gray-300">${item.unit_price.toFixed(2)}</td>
-                <td className="px-4 py-3 text-right text-white font-semibold">${item.monthly_cost.toFixed(2)}</td>
+              <tr key={item.tenant_id} className="hover:bg-secondary/30">
+                <td className="px-4 py-3 text-foreground font-medium">{item.tenant_name}</td>
+                <td className="px-4 py-3 text-right text-foreground/70">{item.user_count}</td>
+                <td className="px-4 py-3 text-right text-foreground/70">{item.storage_gb} GB</td>
+                <td className="px-4 py-3 text-right text-foreground/70">${item.unit_price.toFixed(2)}</td>
+                <td className="px-4 py-3 text-right text-foreground font-semibold">${item.monthly_cost.toFixed(2)}</td>
                 <td className="px-4 py-3 text-center">
                   <span className={`px-2 py-0.5 rounded text-[10px] font-medium uppercase ${STATUS_COLORS[item.status] || STATUS_COLORS.draft}`}>
                     {item.status}
@@ -184,16 +184,16 @@ export default function BillingPortal() {
               </tr>
             ))}
             {(!data?.line_items || data.line_items.length === 0) && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-500">No billing data for this month</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No billing data for this month</td></tr>
             )}
           </tbody>
           {data && data.line_items.length > 0 && (
             <tfoot>
-              <tr className="border-t border-gray-600 bg-gray-800/80">
-                <td className="px-4 py-3 text-white font-semibold">Total</td>
-                <td className="px-4 py-3 text-right text-white font-semibold">{data.total_users}</td>
-                <td className="px-4 py-3 text-right text-gray-400">—</td>
-                <td className="px-4 py-3 text-right text-gray-400">—</td>
+              <tr className="border-t border-border bg-card/80">
+                <td className="px-4 py-3 text-foreground font-semibold">Total</td>
+                <td className="px-4 py-3 text-right text-foreground font-semibold">{data.total_users}</td>
+                <td className="px-4 py-3 text-right text-muted-foreground">—</td>
+                <td className="px-4 py-3 text-right text-muted-foreground">—</td>
                 <td className="px-4 py-3 text-right text-green-400 font-bold text-base">${data.total_cost.toFixed(2)}</td>
                 <td className="px-4 py-3"></td>
               </tr>

@@ -39,43 +39,43 @@ function renderMarkdown(md: string): string {
   });
 
   // 3. Extract inline code
-  text = text.replace(/`([^`]+)`/g, '<code class="bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded text-xs font-mono">$1</code>');
+  text = text.replace(/`([^`]+)`/g, '<code class="bg-muted text-foreground px-1.5 py-0.5 rounded text-xs font-mono">$1</code>');
 
   // 4. Markdown transforms (safe — no code blocks to corrupt)
   text = text
     // Headers
-    .replace(/^#### (.+)$/gm, '<h4 class="text-base font-semibold text-gray-800 mt-6 mb-2">$1</h4>')
-    .replace(/^### (.+)$/gm, '<h3 class="text-lg font-semibold text-gray-800 mt-8 mb-3">$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold text-gray-900 mt-10 mb-4 pb-2 border-b border-gray-200">$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold text-gray-900 mt-8 mb-4">$1</h1>')
+    .replace(/^#### (.+)$/gm, '<h4 class="text-base font-semibold text-foreground mt-6 mb-2">$1</h4>')
+    .replace(/^### (.+)$/gm, '<h3 class="text-lg font-semibold text-foreground mt-8 mb-3">$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold text-foreground mt-10 mb-4 pb-2 border-b border-border">$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold text-foreground mt-8 mb-4">$1</h1>')
     // Bold + italic
     .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong class="text-gray-900">$1</strong>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong class="text-foreground">$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
     // Links
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-600 hover:underline" target="_blank" rel="noopener">$1</a>')
     // Horizontal rules
-    .replace(/^---$/gm, '<hr class="my-8 border-gray-200" />')
+    .replace(/^---$/gm, '<hr class="my-8 border-border" />')
     // Tables: convert | rows to HTML
     .replace(/^(\|.+\|)$/gm, (line) => {
       if (/^\|[\s:-]+\|$/.test(line)) return '';
       const cells = line.split('|').filter(c => c.trim() !== '');
-      return '<tr class="hover:bg-gray-50">' + cells.map(c =>
-        `<td class="px-4 py-2.5 text-sm text-gray-700 border-b border-gray-100">${c.trim()}</td>`
+      return '<tr class="hover:bg-muted/50">' + cells.map(c =>
+        `<td class="px-4 py-2.5 text-sm text-foreground/80 border-b border-border">${c.trim()}</td>`
       ).join('') + '</tr>';
     })
     // Wrap table rows
     .replace(/(<tr[^>]*>.*<\/tr>\n?)+/g, (block) => {
       const rows = block.trim().split('\n');
-      const header = rows[0]?.replace(/<td/g, '<th').replace(/<\/td>/g, '</th>').replace(/text-gray-700/g, 'text-gray-600 font-medium') || '';
+      const header = rows[0]?.replace(/<td/g, '<th').replace(/<\/td>/g, '</th>').replace(/text-foreground\/80/g, 'text-muted-foreground font-medium') || '';
       const body = rows.slice(1).join('\n');
-      return `<div class="overflow-x-auto my-6 rounded-xl border border-gray-200"><table class="w-full text-sm"><thead class="bg-gray-50">${header}</thead><tbody>${body}</tbody></table></div>`;
+      return `<div class="overflow-x-auto my-6 rounded-xl border border-border"><table class="w-full text-sm"><thead class="bg-muted/50">${header}</thead><tbody>${body}</tbody></table></div>`;
     })
     // Lists
-    .replace(/^- (.+)$/gm, '<li class="text-sm text-gray-700 leading-relaxed">$1</li>')
+    .replace(/^- (.+)$/gm, '<li class="text-sm text-foreground/80 leading-relaxed">$1</li>')
     .replace(/(<li[^>]*>.*<\/li>\n?)+/g, '<ul class="list-disc ml-5 space-y-1.5 my-3">$&</ul>')
     // Paragraphs (lines not already HTML)
-    .replace(/^(?!<[a-z/]|%%|$|\s*$)(.+)$/gm, '<p class="text-sm text-gray-700 leading-relaxed my-2">$1</p>');
+    .replace(/^(?!<[a-z/]|%%|$|\s*$)(.+)$/gm, '<p class="text-sm text-foreground/80 leading-relaxed my-2">$1</p>');
 
   // 5. Restore placeholders
   text = text.replace(/%%PLACEHOLDER_(\d+)%%/g, (_, idxStr) => {
@@ -85,13 +85,13 @@ function renderMarkdown(md: string): string {
 
     if (block.type === 'mermaid') {
       const id = `mermaid-${Date.now()}-${idx}`;
-      return `<div class="my-8 p-6 bg-gray-50 rounded-xl border border-gray-200 overflow-x-auto"><pre class="mermaid" id="${id}">${block.content}</pre></div>`;
+      return `<div class="my-8 p-6 bg-muted/50 rounded-xl border border-border overflow-x-auto"><pre class="mermaid" id="${id}">${block.content}</pre></div>`;
     }
 
     // Regular code block
     const hasBoxChars = /[┌┐└┘├┤┬┴─│═╔╗╚╝╠╣╦╩]/.test(block.content);
     const cls = hasBoxChars ? 'text-xs leading-relaxed whitespace-pre' : 'text-sm';
-    return `<div class="my-4 bg-gray-900 rounded-xl p-4 overflow-x-auto"><pre class="${cls} text-gray-100 font-mono">${block.content}</pre></div>`;
+    return `<div class="my-4 bg-muted rounded-xl p-4 overflow-x-auto"><pre class="${cls} text-gray-100 font-mono">${block.content}</pre></div>`;
   });
 
   return text;
@@ -127,15 +127,15 @@ export default function DocViewer() {
   const title = filename?.replace('.md', '').replace(/_/g, ' ') || 'Document';
 
   return (
-    <div className="min-h-screen bg-white">
-      <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-sm border-b border-gray-100">
+    <div className="min-h-screen bg-card">
+      <nav className="fixed top-0 w-full z-50 bg-card/80 backdrop-blur-sm border-b border-border">
         <div className="max-w-4xl mx-auto px-6 py-3 flex items-center justify-between">
           <Link to="/welcome" className="flex items-center gap-2">
             <Shield className="w-6 h-6 text-blue-600" />
-            <span className="font-bold text-gray-900">Shieldio</span>
+            <span className="font-bold text-foreground">Shieldio</span>
           </Link>
           <div className="flex items-center gap-3">
-            <Link to="/docs" className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1">
+            <Link to="/docs" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
               <ArrowLeft className="w-3.5 h-3.5" /> All Docs
             </Link>
             <Link to="/login" className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">Start Free</Link>
@@ -159,10 +159,10 @@ export default function DocViewer() {
 
         {data && (
           <>
-            <div className="flex items-center gap-2 text-sm text-gray-400 mt-4 mb-6">
-              <Link to="/docs" className="hover:text-gray-600">Docs</Link>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-4 mb-6">
+              <Link to="/docs" className="hover:text-muted-foreground">Docs</Link>
               <span>/</span>
-              <span className="text-gray-700 flex items-center gap-1"><FileText className="w-3.5 h-3.5" /> {title}</span>
+              <span className="text-foreground/80 flex items-center gap-1"><FileText className="w-3.5 h-3.5" /> {title}</span>
             </div>
 
             <article

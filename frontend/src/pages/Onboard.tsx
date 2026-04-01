@@ -62,12 +62,12 @@ export default function Onboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white px-4 py-6">
+    <div className="min-h-screen bg-background text-foreground px-4 py-6">
     <div className="max-w-3xl mx-auto">
       {/* Sign out link */}
       <div className="flex justify-end mb-4">
         <button onClick={() => { logout(); window.location.href = '/'; }}
-          className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 transition-colors">
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-muted-foreground transition-colors">
           <LogOut className="w-4 h-4" /> Sign Out
         </button>
       </div>
@@ -75,8 +75,8 @@ export default function Onboard() {
         <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-2xl mb-4">
           <Shield className="w-8 h-8 text-blue-600" />
         </div>
-        <h1 className="text-3xl font-bold text-white mb-2">Connect Your SaaS Platform</h1>
-        <p className="text-gray-500 text-lg">
+        <h1 className="text-3xl font-bold text-foreground mb-2">Connect Your SaaS Platform</h1>
+        <p className="text-muted-foreground text-lg">
           Select a platform to protect. One-click OAuth — no credentials to copy.
         </p>
       </div>
@@ -84,7 +84,7 @@ export default function Onboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {platforms.map(platform => {
           const Icon = PLATFORM_ICONS[platform.icon] || Shield;
-          const colors = PLATFORM_COLORS[platform.key] || 'border-gray-500/30 bg-gray-500/10';
+          const colors = PLATFORM_COLORS[platform.key] || 'border-gray-500/30 bg-muted/500/10';
           const isConnecting = connecting === platform.key;
 
           return (
@@ -95,17 +95,17 @@ export default function Onboard() {
               className={`relative p-6 rounded-2xl border-2 transition-all text-left ${
                 platform.available
                   ? `${colors} cursor-pointer shadow-sm hover:shadow-md`
-                  : 'border-gray-700 bg-gray-800/50 cursor-not-allowed opacity-60'
+                  : 'border-border bg-card/50 cursor-not-allowed opacity-60'
               }`}
             >
               {!platform.available && (
-                <span className="absolute top-3 right-3 px-2 py-0.5 bg-gray-700 text-gray-400 text-[10px] font-semibold rounded-full">
+                <span className="absolute top-3 right-3 px-2 py-0.5 bg-secondary text-muted-foreground text-[10px] font-semibold rounded-full">
                   Coming Soon
                 </span>
               )}
 
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center shadow-sm">
+                <div className="w-12 h-12 rounded-xl bg-card border border-border flex items-center justify-center shadow-sm">
                   {platform.key === 'microsoft365' ? (
                     <svg className="w-6 h-6" viewBox="0 0 21 21">
                       <path d="M0 0h10v10H0z" fill="#f25022"/>
@@ -114,12 +114,12 @@ export default function Onboard() {
                       <path d="M11 11h10v10H11z" fill="#ffb900"/>
                     </svg>
                   ) : (
-                    <Icon className="w-6 h-6 text-gray-600" />
+                    <Icon className="w-6 h-6 text-muted-foreground" />
                   )}
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-white text-lg">{platform.name}</h3>
-                  <p className="text-sm text-gray-500 mt-0.5">{platform.description}</p>
+                  <h3 className="font-bold text-foreground text-lg">{platform.name}</h3>
+                  <p className="text-sm text-muted-foreground mt-0.5">{platform.description}</p>
 
                   {platform.available && (
                     <div className="mt-3 flex items-center gap-1.5 text-sm font-medium text-blue-600">
@@ -143,7 +143,7 @@ export default function Onboard() {
       </div>
 
       <div className="mt-8 text-center">
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-muted-foreground">
           Shieldio uses OAuth admin consent — your credentials are never stored.
           <br />
           Only read-only permissions are requested for backup.
@@ -187,17 +187,17 @@ const ENTRA_TYPE_LABELS: Record<string, { label: string; critical?: boolean }> =
 };
 
 const GapRow = ({ m365, shieldio }: { m365: string; shieldio: string }) => (
-  <div className="bg-gray-800 border border-gray-700 rounded-xl p-3 space-y-1">
-    <div className="flex items-center gap-2 text-sm"><span className="text-gray-400 w-16 flex-shrink-0">M365:</span> <span className="text-red-500 font-medium">{m365}</span></div>
-    <div className="flex items-center gap-2 text-sm"><span className="text-gray-400 w-16 flex-shrink-0">Shieldio:</span> <span className="text-green-600 font-medium">{shieldio}</span></div>
+  <div className="bg-card border border-border rounded-xl p-3 space-y-1">
+    <div className="flex items-center gap-2 text-sm"><span className="text-muted-foreground w-16 flex-shrink-0">M365:</span> <span className="text-red-500 font-medium">{m365}</span></div>
+    <div className="flex items-center gap-2 text-sm"><span className="text-muted-foreground w-16 flex-shrink-0">Shieldio:</span> <span className="text-green-600 font-medium">{shieldio}</span></div>
   </div>
 );
 
 const Shimmer = () => (
   <div className="space-y-3 animate-pulse">
-    <div className="h-20 bg-gray-700 rounded-xl" />
-    <div className="h-4 bg-gray-700 rounded w-3/4 mx-auto" />
-    <div className="h-16 bg-gray-700 rounded-xl" />
+    <div className="h-20 bg-secondary rounded-xl" />
+    <div className="h-4 bg-secondary rounded w-3/4 mx-auto" />
+    <div className="h-16 bg-secondary rounded-xl" />
   </div>
 );
 
@@ -419,7 +419,7 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc, onComplete, simSc
 
   const renderScene2 = () => loading ? <Shimmer /> : (
     <div className="space-y-3">
-      <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
+      <div className="bg-card border border-border rounded-xl p-4">
         <div className="flex items-center gap-5">
           <div className="relative w-20 h-20 flex-shrink-0">
             <svg viewBox="0 0 80 80" className="w-20 h-20 -rotate-90">
@@ -433,7 +433,7 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc, onComplete, simSc
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-xl font-bold">{animScore}</span>
-              <span className="text-[10px] text-gray-400">/ 100</span>
+              <span className="text-[10px] text-muted-foreground">/ 100</span>
             </div>
           </div>
           <div className="flex-1">
@@ -441,15 +441,15 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc, onComplete, simSc
               <span className={`text-lg font-bold ${conf.color === 'green' ? 'text-green-600' : conf.color === 'blue' ? 'text-blue-600' : conf.color === 'amber' ? 'text-amber-600' : 'text-red-600'}`}>
                 Grade {conf.grade || '—'}
               </span>
-              <span className="text-sm text-gray-500">{conf.label}</span>
+              <span className="text-sm text-muted-foreground">{conf.label}</span>
             </div>
             {conf.factors && Object.entries(conf.factors).map(([key, f]: [string, any], i) => (
               <div key={key} className="mb-1">
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-gray-500 capitalize">{key.replace('_', ' ')}</span>
+                  <span className="text-muted-foreground capitalize">{key.replace('_', ' ')}</span>
                   <span className="font-medium">{Math.round(f.score)}%</span>
                 </div>
-                <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
                   <div className="h-full rounded-full"
                     style={{
                       width: scoreRevealed ? `${f.score}%` : '0%',
@@ -477,7 +477,7 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc, onComplete, simSc
     <div className="space-y-3">
       {!recoveryPlan ? (
         <div className="text-center py-6">
-          <p className="text-sm text-gray-500 mb-4">Generate a full recovery plan from your backed-up data — no data is modified.</p>
+          <p className="text-sm text-muted-foreground mb-4">Generate a full recovery plan from your backed-up data — no data is modified.</p>
           <button onClick={generatePlan} disabled={sceneLoading}
             className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2 mx-auto text-sm">
             {sceneLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</> : 'Generate Recovery Plan'}
@@ -501,7 +501,7 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc, onComplete, simSc
           ).map(([wl, items]: [string, any]) => (
             <div key={wl} className="mb-2">
               <div className="flex items-center gap-2 mb-1">
-                <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold text-white ${
+                <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold text-foreground ${
                   wl === 'entra_id' ? 'bg-red-500/100' : wl === 'exchange' ? 'bg-amber-500/100' : 'bg-blue-500/100'
                 }`}>
                   {wl === 'entra_id' ? 'P1' : wl === 'exchange' ? 'P2' : 'P3'}
@@ -522,7 +522,7 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc, onComplete, simSc
               <p className="text-sm font-semibold text-blue-800">
                 Total: {recoveryPlan.plan.length} objects, {fmtBytes(recoveryPlan.plan.reduce((s: number, p: any) => s + (p.size_bytes || 0), 0))} recoverable
               </p>
-              <button disabled className="mt-2 px-4 py-2 bg-gray-200 text-gray-500 rounded-lg text-xs cursor-not-allowed" title="Available from Recovery Dashboard">
+              <button disabled className="mt-2 px-4 py-2 bg-muted text-muted-foreground rounded-lg text-xs cursor-not-allowed" title="Available from Recovery Dashboard">
                 Execute Recovery (available in Recovery Dashboard)
               </button>
             </div>
@@ -550,8 +550,8 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc, onComplete, simSc
   return (
     <div>
       <div className="text-center mb-4">
-        <h2 className="text-xl font-bold text-white">Your Cyber Recovery Playbook</h2>
-        <p className="text-gray-500 text-sm">Try each step with your real data</p>
+        <h2 className="text-xl font-bold text-foreground">Your Cyber Recovery Playbook</h2>
+        <p className="text-muted-foreground text-sm">Try each step with your real data</p>
       </div>
 
       {/* Step progress */}
@@ -559,20 +559,20 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc, onComplete, simSc
         {scenes.map((s, i) => (
           <button key={s.key} onClick={() => setSimScene(i)}
             className={`w-2.5 h-2.5 rounded-full transition-all ${
-              i === simScene ? 'w-8 bg-blue-500/100' : engaged[i] ? 'bg-green-500/100' : i < simScene ? 'bg-blue-300' : 'bg-gray-200'
+              i === simScene ? 'w-8 bg-blue-500/100' : engaged[i] ? 'bg-green-500/100' : i < simScene ? 'bg-blue-300' : 'bg-muted'
             }`} />
         ))}
       </div>
 
       {/* Step content */}
-      <div className="bg-gray-800 rounded-2xl border border-gray-700 shadow-sm overflow-hidden">
-        <div className="bg-gray-50 border-b border-gray-700 px-5 py-3">
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+        <div className="bg-muted/50 border-b border-border px-5 py-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-gray-400">Step {simScene + 1} of {STEP_COUNT}</span>
+            <span className="text-xs font-semibold text-muted-foreground">Step {simScene + 1} of {STEP_COUNT}</span>
             {engaged[simScene] && <span className="text-xs font-semibold text-green-600 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Done</span>}
           </div>
-          <h3 className="text-lg font-bold text-white mt-1">{scene.title}</h3>
-          <p className="text-sm text-gray-500">{scene.subtitle}</p>
+          <h3 className="text-lg font-bold text-foreground mt-1">{scene.title}</h3>
+          <p className="text-sm text-muted-foreground">{scene.subtitle}</p>
         </div>
 
         {scene.problem && (
@@ -584,19 +584,19 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc, onComplete, simSc
         <div className="px-5 py-4">{scene.render()}</div>
 
         {/* Footer: Next + Explore link */}
-        <div className="px-5 py-4 border-t border-gray-100 bg-gray-50">
+        <div className="px-5 py-4 border-t border-border bg-muted/50">
           <div className="flex items-center justify-between">
             {!isLastStep ? (
               <button onClick={() => setSimScene(simScene + 1)} disabled={!canAdvance}
                 className={`px-5 py-2.5 rounded-xl font-semibold text-sm flex items-center gap-1.5 transition-all ${
-                  canAdvance ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  canAdvance ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-muted text-muted-foreground cursor-not-allowed'
                 }`}>
                 Next <ArrowRight className="w-3.5 h-3.5" />
               </button>
             ) : (
               <button onClick={onComplete} disabled={!canAdvance}
                 className={`px-5 py-2.5 rounded-xl font-semibold text-sm flex items-center gap-2 transition-all ${
-                  canAdvance ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  canAdvance ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-muted text-muted-foreground cursor-not-allowed'
                 }`}>
                 Go to Dashboard <ArrowRight className="w-4 h-4" />
               </button>
@@ -606,16 +606,16 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc, onComplete, simSc
               {scene.explore.label} →
             </button>
           </div>
-          {!canAdvance && simScene === 1 && <p className="text-[11px] text-gray-400 mt-1.5">Click "Simulate Identity Attack" above to continue</p>}
-          {!canAdvance && simScene === 3 && <p className="text-[11px] text-gray-400 mt-1.5">Click "Generate Recovery Plan" above to continue</p>}
+          {!canAdvance && simScene === 1 && <p className="text-[11px] text-muted-foreground mt-1.5">Click "Simulate Identity Attack" above to continue</p>}
+          {!canAdvance && simScene === 3 && <p className="text-[11px] text-muted-foreground mt-1.5">Click "Generate Recovery Plan" above to continue</p>}
         </div>
       </div>
 
       {/* Navigation + skip */}
       <div className="flex items-center justify-between mt-3">
         <button onClick={() => setSimScene(Math.max(0, simScene - 1))} disabled={simScene === 0}
-          className="text-xs text-gray-400 hover:text-gray-600 disabled:opacity-30">← Back</button>
-        <button onClick={onComplete} className="text-xs text-gray-400 hover:text-gray-600">Skip → Dashboard</button>
+          className="text-xs text-muted-foreground hover:text-muted-foreground disabled:opacity-30">← Back</button>
+        <button onClick={onComplete} className="text-xs text-muted-foreground hover:text-muted-foreground">Skip → Dashboard</button>
       </div>
     </div>
   );
@@ -927,31 +927,31 @@ export function OnboardCallback() {
         }`}>
           <XCircle className={`w-8 h-8 ${isConfigError ? 'text-amber-600' : 'text-red-600'}`} />
         </div>
-        <h2 className="text-2xl font-bold text-white mb-2">
+        <h2 className="text-2xl font-bold text-foreground mb-2">
           {isPropagation ? 'Almost There' : isConfigError ? 'Setup Required' : 'Connection Failed'}
         </h2>
-        <p className="text-gray-600 mb-2">{error}</p>
+        <p className="text-muted-foreground mb-2">{error}</p>
         {isPropagation && (
-          <p className="text-sm text-gray-400 mb-6">Microsoft can take up to 60 seconds to process admin consent for new tenants.</p>
+          <p className="text-sm text-muted-foreground mb-6">Microsoft can take up to 60 seconds to process admin consent for new tenants.</p>
         )}
         {isConfigError && (
-          <p className="text-sm text-gray-400 mb-6">This is a Shieldio platform issue, not a problem with your M365 tenant.</p>
+          <p className="text-sm text-muted-foreground mb-6">This is a Shieldio platform issue, not a problem with your M365 tenant.</p>
         )}
         {isConsentError && (
-          <p className="text-sm text-gray-400 mb-6">You need to sign in with a Global Administrator account to approve the connection.</p>
+          <p className="text-sm text-muted-foreground mb-6">You need to sign in with a Global Administrator account to approve the connection.</p>
         )}
         <div className="flex items-center justify-center gap-3 mt-4">
           <button onClick={() => navigate('/onboard')} className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700">
             {isPropagation ? 'Try Again (should work now)' : 'Try Again'}
           </button>
-          <button onClick={() => navigate('/')} className="px-6 py-2.5 bg-gray-700 text-gray-300 rounded-xl font-medium hover:bg-gray-200">Dashboard</button>
+          <button onClick={() => navigate('/')} className="px-6 py-2.5 bg-secondary text-foreground/80 rounded-xl font-medium hover:bg-muted">Dashboard</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white px-4">
+    <div className="min-h-screen bg-background text-foreground px-4">
     <div className="max-w-2xl mx-auto py-8">
       {/* Progress bar */}
       <div className="mb-8">
@@ -959,14 +959,14 @@ export function OnboardCallback() {
           {WIZARD_STEPS.map((s, i) => (
             <div key={s.key} className="flex items-center gap-1.5">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                i < step ? 'bg-green-500/100 text-white' :
+                i < step ? 'bg-green-500/100 text-foreground' :
                 i === step ? 'bg-blue-600 text-white ring-4 ring-blue-100' :
-                'bg-gray-200 text-gray-500'
+                'bg-muted text-muted-foreground'
               }`}>
                 {i < step ? <CheckCircle className="w-4 h-4" /> : i + 1}
               </div>
-              <span className={`text-xs font-medium hidden sm:block ${i <= step ? 'text-white' : 'text-gray-400'}`}>{s.label}</span>
-              {i < WIZARD_STEPS.length - 1 && <div className={`w-8 sm:w-16 h-0.5 mx-1 ${i < step ? 'bg-green-500/100' : 'bg-gray-200'}`} />}
+              <span className={`text-xs font-medium hidden sm:block ${i <= step ? 'text-foreground' : 'text-muted-foreground'}`}>{s.label}</span>
+              {i < WIZARD_STEPS.length - 1 && <div className={`w-8 sm:w-16 h-0.5 mx-1 ${i < step ? 'bg-green-500/100' : 'bg-muted'}`} />}
             </div>
           ))}
         </div>
@@ -976,8 +976,8 @@ export function OnboardCallback() {
       {step === 0 && (
         <div className="text-center py-12">
           <Loader2 className="w-12 h-12 animate-spin text-blue-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-white">Connecting to Microsoft 365...</h2>
-          <p className="text-gray-500 mt-2">Setting up secure access and discovering your workloads.</p>
+          <h2 className="text-xl font-bold text-foreground">Connecting to Microsoft 365...</h2>
+          <p className="text-muted-foreground mt-2">Setting up secure access and discovering your workloads.</p>
         </div>
       )}
 
@@ -988,8 +988,8 @@ export function OnboardCallback() {
             <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
               <CheckCircle className="w-7 h-7 text-green-600" />
             </div>
-            <h2 className="text-2xl font-bold text-white">Connected to {tenantName}</h2>
-            <p className="text-gray-500 mt-1">
+            <h2 className="text-2xl font-bold text-foreground">Connected to {tenantName}</h2>
+            <p className="text-muted-foreground mt-1">
               {discoveryResults
                 ? `Found ${totalObjects} objects. Select workloads to discover or add more.`
                 : 'Choose which workloads to discover. Fast workloads are pre-selected.'}
@@ -1022,32 +1022,32 @@ export function OnboardCallback() {
                   className={`w-full p-3 rounded-xl border-2 text-left transition-all flex items-center gap-3 ${
                     isSelected
                       ? 'border-blue-400 bg-blue-500/10/50'
-                      : 'border-gray-700 hover:border-gray-300'
+                      : 'border-border hover:border-border'
                   }`}
                 >
                   <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
                     isSelected ? 'border-blue-500 bg-blue-500/100' : 'border-gray-300'
                   }`}>
-                    {isSelected && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+                    {isSelected && <CheckCircle className="w-3.5 h-3.5 text-foreground" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-white text-sm">{wl.label}</span>
+                      <span className="font-semibold text-foreground text-sm">{wl.label}</span>
                       <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
                         wl.speed === 'fast' ? 'bg-green-100 text-green-700' :
                         wl.speed === 'medium' ? 'bg-amber-100 text-amber-700' :
-                        'bg-gray-700 text-gray-600'
+                        'bg-secondary text-muted-foreground'
                       }`}>
                         {wl.speed === 'fast' ? '⚡ fast' : wl.speed === 'medium' ? '~5s' : '~10s'}
                       </span>
                       {wl.recommended && <span className="text-[10px] text-blue-500 font-medium">Recommended</span>}
                     </div>
-                    <p className="text-xs text-gray-500 mt-0.5">{wl.description}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{wl.description}</p>
                   </div>
                   {discCount !== null && discCount > 0 && (
                     <div className="text-right flex-shrink-0">
                       <div className="text-lg font-bold text-blue-600">{discCount}</div>
-                      <div className="text-[10px] text-gray-400">found</div>
+                      <div className="text-[10px] text-muted-foreground">found</div>
                     </div>
                   )}
                 </button>
@@ -1075,7 +1075,7 @@ export function OnboardCallback() {
                 <button
                   onClick={handleDiscoverSelected}
                   disabled={discovering}
-                  className="px-4 py-3 bg-gray-700 text-gray-300 rounded-xl font-medium hover:bg-gray-200 transition-colors flex items-center gap-2"
+                  className="px-4 py-3 bg-secondary text-foreground/80 rounded-xl font-medium hover:bg-muted transition-colors flex items-center gap-2"
                 >
                   {discovering ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                   Re-discover
@@ -1096,8 +1096,8 @@ export function OnboardCallback() {
       {step === 2 && (
         <div>
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-white">Choose Protection Level</h2>
-            <p className="text-gray-500 mt-1">How often should we back up your data?</p>
+            <h2 className="text-2xl font-bold text-foreground">Choose Protection Level</h2>
+            <p className="text-muted-foreground mt-1">How often should we back up your data?</p>
           </div>
 
           <div className="space-y-3 mb-6">
@@ -1108,13 +1108,13 @@ export function OnboardCallback() {
                 className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
                   selectedSla === sla.id
                     ? 'border-blue-500 bg-blue-500/10 ring-2 ring-blue-200'
-                    : 'border-gray-700 hover:border-gray-300'
+                    : 'border-border hover:border-border'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="font-bold text-white">{sla.name}</div>
-                    <div className="text-sm text-gray-500">
+                    <div className="font-bold text-foreground">{sla.name}</div>
+                    <div className="text-sm text-muted-foreground">
                       Every {sla.backup_frequency_hours}h • {sla.retention_days} day retention
                       {sla.worm_enabled ? ' • WORM locked' : ''}
                     </div>
@@ -1122,13 +1122,13 @@ export function OnboardCallback() {
                   <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                     selectedSla === sla.id ? 'border-blue-500 bg-blue-500/100' : 'border-gray-300'
                   }`}>
-                    {selectedSla === sla.id && <CheckCircle className="w-4 h-4 text-white" />}
+                    {selectedSla === sla.id && <CheckCircle className="w-4 h-4 text-foreground" />}
                   </div>
                 </div>
               </button>
             )) : (
               <div className="text-center py-4">
-                <p className="text-gray-500 text-sm">No SLA policies found. We'll create a default daily backup policy.</p>
+                <p className="text-muted-foreground text-sm">No SLA policies found. We'll create a default daily backup policy.</p>
                 <button
                   onClick={() => { setSelectedSla(-1); }}
                   className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
@@ -1157,8 +1157,8 @@ export function OnboardCallback() {
       {step === 3 && (
         <div>
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-white">Smart Backup Intelligence</h2>
-            <p className="text-gray-500 mt-1">
+            <h2 className="text-2xl font-bold text-foreground">Smart Backup Intelligence</h2>
+            <p className="text-muted-foreground mt-1">
               Shieldio auto-detects your organizational context to prioritize what matters most.
             </p>
           </div>
@@ -1166,35 +1166,35 @@ export function OnboardCallback() {
             <div className="p-4 rounded-xl border border-blue-500/30 bg-blue-500/10/50">
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">1</div>
-                <div className="font-semibold text-white">Org Context Detection</div>
+                <div className="font-semibold text-foreground">Org Context Detection</div>
               </div>
-              <p className="text-sm text-gray-600 ml-11">Auto-discovers reporting hierarchy, department structure, VIP groups, and privileged roles from your Microsoft 365 tenant.</p>
+              <p className="text-sm text-muted-foreground ml-11">Auto-discovers reporting hierarchy, department structure, VIP groups, and privileged roles from your Microsoft 365 tenant.</p>
             </div>
             <div className="p-4 rounded-xl border border-purple-500/30 bg-purple-500/10">
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center text-sm font-bold">2</div>
-                <div className="font-semibold text-white">Criticality Scoring</div>
+                <div className="font-semibold text-foreground">Criticality Scoring</div>
               </div>
-              <p className="text-sm text-gray-600 ml-11">Each user and site gets a 4-factor criticality score: role weight, direct reports, sign-in recency, and VIP group membership. Critical assets are prioritized for faster RPO.</p>
+              <p className="text-sm text-muted-foreground ml-11">Each user and site gets a 4-factor criticality score: role weight, direct reports, sign-in recency, and VIP group membership. Critical assets are prioritized for faster RPO.</p>
             </div>
             <div className="p-4 rounded-xl border border-green-500/30 bg-green-500/10/50">
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center text-sm font-bold">3</div>
-                <div className="font-semibold text-white">MVB Recovery Plans</div>
+                <div className="font-semibold text-foreground">MVB Recovery Plans</div>
               </div>
-              <p className="text-sm text-gray-600 ml-11">Pre-computed 4-phase NIST-ordered recovery plans ensure your CEO, CFO, and critical infrastructure are restored first — automatically, not manually.</p>
+              <p className="text-sm text-muted-foreground ml-11">Pre-computed 4-phase NIST-ordered recovery plans ensure your CEO, CFO, and critical infrastructure are restored first — automatically, not manually.</p>
             </div>
             <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/10/50">
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-8 h-8 rounded-full bg-amber-600 text-white flex items-center justify-center text-sm font-bold">4</div>
-                <div className="font-semibold text-white">Confidence Scoring</div>
+                <div className="font-semibold text-foreground">Confidence Scoring</div>
               </div>
-              <p className="text-sm text-gray-600 ml-11">Criticality-weighted recovery confidence tells you not just "90% backed up" but "your most important 10 users have 100% coverage."</p>
+              <p className="text-sm text-muted-foreground ml-11">Criticality-weighted recovery confidence tells you not just "90% backed up" but "your most important 10 users have 100% coverage."</p>
             </div>
           </div>
-          <div className="bg-gray-900 rounded-xl p-4 mb-6 text-center">
-            <p className="text-gray-400 text-xs mb-1">What competitors require you to configure manually</p>
-            <p className="text-white font-semibold">Shieldio detects automatically from your Microsoft Graph data</p>
+          <div className="bg-muted rounded-xl p-4 mb-6 text-center">
+            <p className="text-muted-foreground text-xs mb-1">What competitors require you to configure manually</p>
+            <p className="text-foreground font-semibold">Shieldio detects automatically from your Microsoft Graph data</p>
           </div>
           <button
             onClick={() => setStep(4)}
@@ -1208,15 +1208,15 @@ export function OnboardCallback() {
       {step === 4 && (
         <div>
           <div className="text-center mb-5">
-            <h2 className="text-2xl font-bold text-white">Smart Backup Storyline</h2>
-            <p className="text-gray-500 mt-1">Watch Shieldio discover, prioritize, and protect your data — live.</p>
+            <h2 className="text-2xl font-bold text-foreground">Smart Backup Storyline</h2>
+            <p className="text-muted-foreground mt-1">Watch Shieldio discover, prioritize, and protect your data — live.</p>
           </div>
 
           {/* ── Phase 1: Discovery Storyline ── */}
           {backupStatus === 'pending' && (
             <div className="space-y-4">
               {/* Animated discovery cards — objects appearing */}
-              <div className="bg-gray-800 rounded-xl border border-gray-700 p-4">
+              <div className="bg-card rounded-xl border border-border p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
                   <span className="text-xs font-semibold text-green-400 uppercase tracking-wider">Discovered from {tenantName}</span>
@@ -1231,15 +1231,15 @@ export function OnboardCallback() {
                     { wl: 'entra_id', count: disc?.entra_objects || 1, label: 'Entra ID Config', icon: '🔑', color: 'text-amber-400 border-amber-500/30', detail: 'Users, roles, CA policies, OAuth grants' },
                   ].filter(item => selectedWorkloads.has(item.wl) && item.count > 0).map((item, i) => (
                     <div key={item.wl}
-                      className={`flex items-center gap-3 p-3 rounded-lg border bg-gray-900/50 ${item.color} transition-all duration-500`}
+                      className={`flex items-center gap-3 p-3 rounded-lg border bg-muted/50 ${item.color} transition-all duration-500`}
                       style={{ opacity: 1, transitionDelay: `${i * 150}ms` }}>
                       <span className="text-xl">{item.icon}</span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className={`text-sm font-bold ${item.color.split(' ')[0]}`}>{item.count}</span>
-                          <span className="text-sm font-medium text-white">{item.label}</span>
+                          <span className="text-sm font-medium text-foreground">{item.label}</span>
                         </div>
-                        <div className="text-[10px] text-gray-500">{item.detail}</div>
+                        <div className="text-[10px] text-muted-foreground">{item.detail}</div>
                       </div>
                     </div>
                   ))}
@@ -1247,8 +1247,8 @@ export function OnboardCallback() {
               </div>
 
               {/* Visual pipeline */}
-              <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-4">
-                <div className="text-xs font-medium text-gray-400 mb-3">Backup Pipeline — what happens to each object:</div>
+              <div className="bg-card/50 rounded-xl border border-border p-4">
+                <div className="text-xs font-medium text-muted-foreground mb-3">Backup Pipeline — what happens to each object:</div>
                 <div className="flex items-center justify-between gap-1">
                   {[
                     { icon: <Globe className="w-4 h-4" />, label: 'Read', color: 'bg-blue-500/20 text-blue-400', desc: 'Graph API' },
@@ -1263,7 +1263,7 @@ export function OnboardCallback() {
                         <span className="text-[9px] font-bold">{stage.label}</span>
                         <span className="text-[8px] opacity-60">{stage.desc}</span>
                       </div>
-                      {i < 4 && <ArrowRight className="w-3 h-3 text-gray-600 shrink-0" />}
+                      {i < 4 && <ArrowRight className="w-3 h-3 text-muted-foreground shrink-0" />}
                     </div>
                   ))}
                 </div>
@@ -1289,7 +1289,7 @@ export function OnboardCallback() {
                   <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
                   <span className="text-sm font-medium text-blue-300">Protecting {totalObjects} objects...</span>
                 </div>
-                <div className="w-full bg-gray-700 rounded-full h-2">
+                <div className="w-full bg-secondary rounded-full h-2">
                   <div className="bg-blue-500 rounded-full h-2 transition-all duration-1000"
                     style={{ width: `${Math.round(Object.values(backupProgress).filter(s => s === 'done').length / Math.max(Object.keys(backupProgress).length, 1) * 100)}%` }} />
                 </div>
@@ -1303,17 +1303,17 @@ export function OnboardCallback() {
                   <div key={wl} className={`rounded-xl border transition-all overflow-hidden ${
                     status === 'running' ? 'border-blue-500/50 bg-blue-500/5' :
                     status === 'done' ? 'border-green-500/30 bg-green-500/5' :
-                    status === 'failed' ? 'border-red-500/30 bg-red-500/5' : 'border-gray-700 bg-gray-800/30'
+                    status === 'failed' ? 'border-red-500/30 bg-red-500/5' : 'border-border bg-card/30'
                   }`}>
                     <div className="flex items-center gap-3 p-3">
-                      {status === 'pending' && <div className="w-6 h-6 rounded-full border-2 border-gray-600 flex items-center justify-center text-[9px] text-gray-600">—</div>}
+                      {status === 'pending' && <div className="w-6 h-6 rounded-full border-2 border-border flex items-center justify-center text-[9px] text-muted-foreground">—</div>}
                       {status === 'running' && <Loader2 className="w-6 h-6 animate-spin text-blue-400" />}
                       {status === 'done' && <CheckCircle className="w-6 h-6 text-green-400" />}
                       {status === 'failed' && <XCircle className="w-6 h-6 text-red-400" />}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-sm text-white capitalize">{wl.replace('_', ' ')}</span>
-                          <span className="text-[10px] text-gray-500">{objectCount} objects</span>
+                          <span className="font-semibold text-sm text-foreground capitalize">{wl.replace('_', ' ')}</span>
+                          <span className="text-[10px] text-muted-foreground">{objectCount} objects</span>
                         </div>
                         {status === 'running' && (
                           <div className="text-[10px] text-blue-300 mt-0.5 animate-pulse">{pipelineStage}...</div>
@@ -1322,7 +1322,7 @@ export function OnboardCallback() {
                       <div className="text-right">
                         {status === 'done' && <span className="text-xs font-medium text-green-400">Protected ✓</span>}
                         {status === 'running' && <span className="text-xs font-medium text-blue-400">In progress</span>}
-                        {status === 'pending' && <span className="text-xs text-gray-500">Next</span>}
+                        {status === 'pending' && <span className="text-xs text-muted-foreground">Next</span>}
                         {status === 'failed' && <span className="text-xs font-medium text-red-400">Failed</span>}
                       </div>
                     </div>
@@ -1351,13 +1351,13 @@ export function OnboardCallback() {
                 <div className="w-14 h-14 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-3">
                   <Shield className="w-7 h-7 text-green-400" />
                 </div>
-                <div className="text-xl font-bold text-white">{totalObjects} Objects Protected</div>
+                <div className="text-xl font-bold text-foreground">{totalObjects} Objects Protected</div>
                 <div className="text-xs text-green-300 mt-1">AES-256-GCM encrypted • Unique key per snapshot • Point-in-time restore ready</div>
               </div>
 
               {/* Protection map — visual summary of what's protected */}
-              <div className="bg-gray-800 rounded-xl border border-gray-700 p-4">
-                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Protection Map</div>
+              <div className="bg-card rounded-xl border border-border p-4">
+                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Protection Map</div>
                 <div className="space-y-2">
                   {Object.entries(backupProgress).filter(([, s]) => s === 'done').map(([wl]) => {
                     const count = wl === 'exchange' ? disc?.mailboxes : wl === 'onedrive' ? disc?.onedrives : wl === 'sharepoint' ? disc?.sites : wl === 'teams' ? disc?.teams : 1;
@@ -1365,8 +1365,8 @@ export function OnboardCallback() {
                       <div key={wl} className="flex items-center gap-3 p-2 rounded-lg bg-green-500/5 border border-green-500/20">
                         <Shield className="w-4 h-4 text-green-400 shrink-0" />
                         <div className="flex-1">
-                          <span className="text-sm font-medium text-white capitalize">{wl.replace('_', ' ')}</span>
-                          <span className="text-[10px] text-gray-500 ml-2">{count} {count === 1 ? 'object' : 'objects'}</span>
+                          <span className="text-sm font-medium text-foreground capitalize">{wl.replace('_', ' ')}</span>
+                          <span className="text-[10px] text-muted-foreground ml-2">{count} {count === 1 ? 'object' : 'objects'}</span>
                         </div>
                         <span className="text-[10px] font-medium text-green-400">Encrypted ✓</span>
                       </div>
@@ -1379,9 +1379,9 @@ export function OnboardCallback() {
               <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Star className="w-4 h-4 text-blue-400" />
-                  <span className="text-sm font-semibold text-white">What happens next</span>
+                  <span className="text-sm font-semibold text-foreground">What happens next</span>
                 </div>
-                <div className="text-xs text-gray-400 space-y-1.5">
+                <div className="text-xs text-muted-foreground space-y-1.5">
                   <div className="flex items-start gap-2">
                     <span className="text-blue-400 mt-0.5">1.</span>
                     <span>Shieldio analyzes your org to score each user by criticality</span>
@@ -1404,7 +1404,7 @@ export function OnboardCallback() {
           )}
 
           {backupStatus !== 'complete' && (
-            <button onClick={() => setStep(5)} className="mt-4 w-full text-sm text-gray-500 hover:text-gray-300 text-center">
+            <button onClick={() => setStep(5)} className="mt-4 w-full text-sm text-muted-foreground hover:text-foreground/80 text-center">
               Skip — I'll run it later
             </button>
           )}
@@ -1430,12 +1430,12 @@ export function OnboardCallback() {
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
             <CheckCircle className="w-10 h-10 text-green-600" />
           </div>
-          <h2 className="text-3xl font-bold text-white mb-2">You're Protected! 🎉</h2>
-          <p className="text-gray-500 mb-2">{tenantName} is now backed up with Shieldio.</p>
+          <h2 className="text-3xl font-bold text-foreground mb-2">You're Protected! 🎉</h2>
+          <p className="text-muted-foreground mb-2">{tenantName} is now backed up with Shieldio.</p>
 
-          <div className="bg-gray-50 rounded-xl p-4 mb-6 text-sm text-left max-w-md mx-auto">
-            <div className="font-semibold text-white mb-2">What happens next:</div>
-            <div className="space-y-2 text-gray-600">
+          <div className="bg-muted/50 rounded-xl p-4 mb-6 text-sm text-left max-w-md mx-auto">
+            <div className="font-semibold text-foreground mb-2">What happens next:</div>
+            <div className="space-y-2 text-muted-foreground">
               <div className="flex items-start gap-2">
                 <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
                 <span>Automatic backups run on your chosen schedule</span>
@@ -1464,7 +1464,7 @@ export function OnboardCallback() {
             </button>
             <button
               onClick={() => navigate('/recovery')}
-              className="px-6 py-3 bg-gray-700 text-gray-300 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+              className="px-6 py-3 bg-secondary text-foreground/80 rounded-xl font-medium hover:bg-muted transition-colors"
             >
               Recovery Dashboard
             </button>

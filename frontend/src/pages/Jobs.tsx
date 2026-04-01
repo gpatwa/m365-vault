@@ -24,10 +24,10 @@ const statusBadge = (status: string) => {
     in_progress: 'bg-blue-100 text-blue-700',
     queued: 'bg-yellow-100 text-yellow-700',
     partial: 'bg-orange-100 text-orange-700',
-    cancelled: 'bg-gray-100 text-gray-600',
+    cancelled: 'bg-muted text-muted-foreground',
   };
   return (
-    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors[status] || 'bg-gray-100 text-gray-600'}`}>
+    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors[status] || 'bg-muted text-muted-foreground'}`}>
       {status.replace('_', ' ')}
     </span>
   );
@@ -39,7 +39,7 @@ const allJobsColumns: Column<BackupJob>[] = [
     label: 'ID',
     sortable: true,
     width: 'w-16',
-    render: (row) => <span className="font-mono text-xs text-gray-500">#{row.id}</span>,
+    render: (row) => <span className="font-mono text-xs text-muted-foreground">#{row.id}</span>,
   },
   {
     key: 'workload_type',
@@ -84,13 +84,13 @@ const allJobsColumns: Column<BackupJob>[] = [
     key: 'started_at',
     label: 'Duration',
     sortable: true,
-    render: (row) => <span className="text-gray-500">{formatDuration(row.started_at, row.completed_at)}</span>,
+    render: (row) => <span className="text-muted-foreground">{formatDuration(row.started_at, row.completed_at)}</span>,
   },
   {
     key: 'created_at',
     label: 'Created',
     sortable: true,
-    render: (row) => <span className="text-gray-500">{row.started_at ? timeAgo(row.started_at) : '\u2014'}</span>,
+    render: (row) => <span className="text-muted-foreground">{row.started_at ? timeAgo(row.started_at) : '\u2014'}</span>,
   },
 ];
 
@@ -280,8 +280,8 @@ export default function Jobs() {
             <Briefcase className="w-6 h-6 text-indigo-600" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Jobs</h1>
-            <p className="text-xs text-gray-500">
+            <h1 className="text-xl font-bold text-foreground">Jobs</h1>
+            <p className="text-xs text-muted-foreground">
               {totalStats.total} total
               {totalStats.in_progress > 0 && <span className="text-blue-600 ml-2">{totalStats.in_progress} running</span>}
               {totalStats.failed > 0 && <span className="text-red-600 ml-2">{totalStats.failed} failed</span>}
@@ -298,7 +298,7 @@ export default function Jobs() {
             <button
               onClick={() => retryAllMutation.mutate()}
               disabled={retryAllMutation.isPending || failedSummary.ready_now === 0}
-              className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 flex items-center gap-2 disabled:opacity-50"
+              className="px-4 py-2 bg-orange-600 text-foreground rounded-lg text-sm font-medium hover:bg-orange-700 flex items-center gap-2 disabled:opacity-50"
             >
               {retryAllMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
               {retryAllMutation.isPending ? 'Retrying...' : 'Retry All'}
@@ -318,11 +318,11 @@ export default function Jobs() {
       <HeroSummaryBar stats={heroStats} />
 
       {/* View Tabs */}
-      <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit mb-6">
+      <div className="flex gap-1 bg-muted rounded-lg p-1 w-fit mb-6">
         <button
           onClick={() => setActiveTab('swimlanes')}
           className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'swimlanes' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'
+            activeTab === 'swimlanes' ? 'bg-card shadow text-foreground' : 'text-muted-foreground hover:text-foreground/80'
           }`}
         >
           By Workload
@@ -330,7 +330,7 @@ export default function Jobs() {
         <button
           onClick={() => setActiveTab('all')}
           className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'all' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'
+            activeTab === 'all' ? 'bg-card shadow text-foreground' : 'text-muted-foreground hover:text-foreground/80'
           }`}
         >
           All Jobs
@@ -360,7 +360,7 @@ export default function Jobs() {
 
           {/* Loading state */}
           {loadingBackup && !allBackupJobs && (
-            <div className="flex items-center justify-center py-12 text-gray-400">
+            <div className="flex items-center justify-center py-12 text-muted-foreground">
               <Loader2 className="w-6 h-6 animate-spin mr-2" />
               Loading jobs...
             </div>

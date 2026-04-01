@@ -114,14 +114,14 @@ export default function Exchange() {
       label: 'Last Backup',
       sortable: true,
       render: (row) => (
-        <span className="text-gray-500">{row.last_backup_at ? timeAgo(row.last_backup_at) : 'Never'}</span>
+        <span className="text-muted-foreground">{row.last_backup_at ? timeAgo(row.last_backup_at) : 'Never'}</span>
       ),
     },
     {
       key: 'criticality_tier',
       label: 'Criticality',
       sortable: true,
-      render: (row) => row.criticality_tier ? <CriticalityBadge tier={row.criticality_tier} score={row.criticality_score} /> : <span className="text-gray-300">—</span>,
+      render: (row) => row.criticality_tier ? <CriticalityBadge tier={row.criticality_tier} score={row.criticality_score} /> : <span className="text-foreground/70">—</span>,
     },
     { key: 'total_items', label: 'Items', sortable: true },
     {
@@ -149,30 +149,30 @@ export default function Exchange() {
         <h2 className="text-xl font-bold mb-4">
           Browse Snapshot — {selectedSnapshot.started_at?.slice(0, 16)}
         </h2>
-        <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+        <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-muted/50 border-b">
               <tr>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Type</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Subject / Name</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Sender</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Date</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Size</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Type</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Subject / Name</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Sender</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Date</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Size</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {browseData?.items?.map((item, i) => (
-                <tr key={i} className="hover:bg-gray-50">
+                <tr key={i} className="hover:bg-muted/50">
                   <td className="px-4 py-3"><StatusBadge status={item.item_type} /></td>
                   <td className="px-4 py-3 font-medium">{item.subject || item.name}</td>
-                  <td className="px-4 py-3 text-gray-500">{item.sender || '—'}</td>
-                  <td className="px-4 py-3 text-gray-500">{item.received_at?.slice(0, 16) || item.last_modified?.slice(0, 16) || '—'}</td>
-                  <td className="px-4 py-3 text-gray-500">{formatSize(item.size_bytes)}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{item.sender || '—'}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{item.received_at?.slice(0, 16) || item.last_modified?.slice(0, 16) || '—'}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{formatSize(item.size_bytes)}</td>
                 </tr>
               ))}
               {(!browseData?.items?.length) && (
-                <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-400">No items in this snapshot</td></tr>
+                <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">No items in this snapshot</td></tr>
               )}
             </tbody>
           </table>
@@ -197,7 +197,7 @@ export default function Exchange() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div className="min-w-0">
             <h2 className="text-xl font-bold truncate">{selectedMailbox.display_name}</h2>
-            <p className="text-gray-500 truncate">{selectedMailbox.email}</p>
+            <p className="text-muted-foreground truncate">{selectedMailbox.email}</p>
           </div>
           <div className="flex gap-2 flex-shrink-0">
             <button
@@ -222,25 +222,25 @@ export default function Exchange() {
             {backupMsg}
           </div>
         )}
-        <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-          <div className="p-4 border-b bg-gray-50">
+        <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
+          <div className="p-4 border-b bg-muted/50">
             <h3 className="font-semibold">Snapshots ({snapshots?.length || 0})</h3>
           </div>
           <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-muted/50 border-b">
               <tr>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Date</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Type</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Status</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Items</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Size</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Actions</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Date</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Type</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Items</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Size</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {snapshots?.map(s => (
-                <tr key={s.id} className="hover:bg-gray-50">
+                <tr key={s.id} className="hover:bg-muted/50">
                   <td className="px-4 py-3">{s.started_at?.slice(0, 16)}</td>
                   <td className="px-4 py-3 capitalize">{s.snapshot_type}</td>
                   <td className="px-4 py-3"><StatusBadge status={s.status} /></td>
@@ -257,7 +257,7 @@ export default function Exchange() {
                 </tr>
               ))}
               {(!snapshots?.length) && (
-                <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">No snapshots yet</td></tr>
+                <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No snapshots yet</td></tr>
               )}
             </tbody>
           </table>

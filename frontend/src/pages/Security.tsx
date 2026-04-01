@@ -7,7 +7,7 @@ const CATEGORY_CONFIG: Record<string, { label: string; icon: typeof Shield; colo
   data_protection: { label: 'Data Protection', icon: ShieldCheck, color: 'text-green-600', bg: 'bg-green-50' },
   authentication: { label: 'Authentication', icon: Key, color: 'text-purple-600', bg: 'bg-purple-50' },
   monitoring: { label: 'Monitoring', icon: Eye, color: 'text-amber-600', bg: 'bg-amber-50' },
-  infrastructure: { label: 'Infrastructure', icon: Server, color: 'text-gray-600', bg: 'bg-gray-50' },
+  infrastructure: { label: 'Infrastructure', icon: Server, color: 'text-muted-foreground', bg: 'bg-muted/50' },
 };
 
 const COMPLIANCE_CONFIG: Record<string, { label: string; full: string; color: string }> = {
@@ -41,72 +41,72 @@ export default function SecurityPage() {
     <div>
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Security Posture</h1>
-        <p className="text-sm text-gray-500">Encryption, compliance, and data protection status</p>
+        <h1 className="text-2xl font-bold text-foreground">Security Posture</h1>
+        <p className="text-sm text-muted-foreground">Encryption, compliance, and data protection status</p>
       </div>
 
       {/* Security Score + Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         {/* Score */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col items-center justify-center">
+        <div className="bg-card rounded-xl border border-border p-6 flex flex-col items-center justify-center">
           <div className={`text-5xl font-extrabold ${
             score?.grade === 'A' ? 'text-green-600' : score?.grade === 'B' ? 'text-blue-600' : 'text-amber-600'
           }`}>
             {score?.grade || '-'}
           </div>
-          <div className="text-sm text-gray-500 mt-1">Security Grade</div>
-          <div className="text-xs text-gray-400 mt-0.5">{score?.active_features}/{score?.total_features} controls active</div>
+          <div className="text-sm text-muted-foreground mt-1">Security Grade</div>
+          <div className="text-xs text-muted-foreground mt-0.5">{score?.active_features}/{score?.total_features} controls active</div>
         </div>
 
         {/* Encryption */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="bg-card rounded-xl border border-border p-5">
           <div className="flex items-center gap-2 mb-3">
             <div className="p-2 bg-blue-50 rounded-lg"><Lock className="w-4 h-4 text-blue-600" /></div>
-            <span className="text-sm font-semibold text-gray-800">Encryption</span>
+            <span className="text-sm font-semibold text-foreground">Encryption</span>
           </div>
           <div className="space-y-1.5">
-            <div className="flex items-center gap-1.5 text-xs text-gray-600">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> {data?.encryption?.algorithm}
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-gray-600">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> Per-tenant key isolation
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-gray-600">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> {data?.encryption?.transit} in transit
             </div>
           </div>
         </div>
 
         {/* Immutability */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="bg-card rounded-xl border border-border p-5">
           <div className="flex items-center gap-2 mb-3">
             <div className="p-2 bg-green-50 rounded-lg"><ShieldCheck className="w-4 h-4 text-green-600" /></div>
-            <span className="text-sm font-semibold text-gray-800">Immutability</span>
+            <span className="text-sm font-semibold text-foreground">Immutability</span>
           </div>
           <div className="space-y-1.5">
-            <div className="flex items-center gap-1.5 text-xs text-gray-600">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> {data?.immutability?.worm_policies || 0} WORM policies
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-gray-600">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> {data?.immutability?.locked_snapshots || 0} locked snapshots
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-gray-600">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               {data?.immutability?.legal_hold_policies > 0
                 ? <><CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> Legal hold active</>
-                : <><XCircle className="w-3.5 h-3.5 text-gray-300" /> No legal holds</>}
+                : <><XCircle className="w-3.5 h-3.5 text-foreground/70" /> No legal holds</>}
             </div>
           </div>
         </div>
 
         {/* Coverage */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="bg-card rounded-xl border border-border p-5">
           <div className="flex items-center gap-2 mb-3">
             <div className="p-2 bg-purple-50 rounded-lg"><Users className="w-4 h-4 text-purple-600" /></div>
-            <span className="text-sm font-semibold text-gray-800">Coverage</span>
+            <span className="text-sm font-semibold text-foreground">Coverage</span>
           </div>
-          <div className="text-2xl font-bold text-gray-900">{data?.coverage?.coverage_percent || 0}%</div>
-          <div className="text-xs text-gray-500">{data?.coverage?.protected || 0} / {data?.coverage?.total_objects || 0} objects protected</div>
-          <div className="mt-2 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+          <div className="text-2xl font-bold text-foreground">{data?.coverage?.coverage_percent || 0}%</div>
+          <div className="text-xs text-muted-foreground">{data?.coverage?.protected || 0} / {data?.coverage?.total_objects || 0} objects protected</div>
+          <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
             <div
               className="h-full bg-green-500 rounded-full transition-all"
               style={{ width: `${data?.coverage?.coverage_percent || 0}%` }}
@@ -116,8 +116,8 @@ export default function SecurityPage() {
       </div>
 
       {/* Compliance Badges */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
-        <h2 className="text-sm font-semibold text-gray-800 mb-4">Compliance Readiness</h2>
+      <div className="bg-card rounded-xl border border-border p-5 mb-6">
+        <h2 className="text-sm font-semibold text-foreground mb-4">Compliance Readiness</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {Object.entries(data?.compliance || {}).map(([key, info]: [string, any]) => {
             const config = COMPLIANCE_CONFIG[key];
@@ -137,27 +137,27 @@ export default function SecurityPage() {
       </div>
 
       {/* Security Features by Category */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
-        <h2 className="text-sm font-semibold text-gray-800 mb-4">Security Controls ({score?.active_features}/{score?.total_features} active)</h2>
+      <div className="bg-card rounded-xl border border-border p-5 mb-6">
+        <h2 className="text-sm font-semibold text-foreground mb-4">Security Controls ({score?.active_features}/{score?.total_features} active)</h2>
         <div className="space-y-4">
           {Object.entries(grouped).map(([category, items]) => {
-            const config = CATEGORY_CONFIG[category] || { label: category, icon: Shield, color: 'text-gray-600', bg: 'bg-gray-50' };
+            const config = CATEGORY_CONFIG[category] || { label: category, icon: Shield, color: 'text-muted-foreground', bg: 'bg-muted/50' };
             const Icon = config.icon;
             return (
               <div key={category}>
                 <div className="flex items-center gap-2 mb-2">
                   <div className={`p-1.5 ${config.bg} rounded-lg`}><Icon className={`w-3.5 h-3.5 ${config.color}`} /></div>
-                  <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">{config.label}</span>
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{config.label}</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 ml-8">
                   {items.map((f: any) => (
-                    <div key={f.name} className="flex items-start gap-2 p-2.5 bg-gray-50 rounded-lg">
+                    <div key={f.name} className="flex items-start gap-2 p-2.5 bg-muted/50 rounded-lg">
                       {f.status === 'active'
                         ? <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                        : <XCircle className="w-4 h-4 text-gray-300 flex-shrink-0 mt-0.5" />}
+                        : <XCircle className="w-4 h-4 text-foreground/70 flex-shrink-0 mt-0.5" />}
                       <div>
-                        <div className="text-xs font-medium text-gray-800">{f.name}</div>
-                        <div className="text-[10px] text-gray-500 mt-0.5">{f.description}</div>
+                        <div className="text-xs font-medium text-foreground">{f.name}</div>
+                        <div className="text-[10px] text-muted-foreground mt-0.5">{f.description}</div>
                       </div>
                     </div>
                   ))}
@@ -173,13 +173,13 @@ export default function SecurityPage() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-bold">Security Documentation Pack</h2>
-            <p className="text-sm text-gray-300 mt-1">Download our security architecture and compliance mapping for your procurement review.</p>
+            <p className="text-sm text-foreground/70 mt-1">Download our security architecture and compliance mapping for your procurement review.</p>
           </div>
           <div className="flex gap-3">
-            <a href="/docs/SECURITY.md" target="_blank" className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
+            <a href="/docs/SECURITY.md" target="_blank" className="px-4 py-2 bg-card/10 hover:bg-card/20 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
               <FileText className="w-4 h-4" /> Security Architecture
             </a>
-            <a href="/docs/COMPLIANCE_MAPPING.md" target="_blank" className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
+            <a href="/docs/COMPLIANCE_MAPPING.md" target="_blank" className="px-4 py-2 bg-card/10 hover:bg-card/20 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
               <Shield className="w-4 h-4" /> Compliance Mapping
             </a>
           </div>

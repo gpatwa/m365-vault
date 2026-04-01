@@ -14,7 +14,7 @@ const typeConfig = {
   failure: { Icon: XCircle, color: 'text-red-500', bg: 'bg-red-50' },
   warning: { Icon: AlertTriangle, color: 'text-amber-500', bg: 'bg-amber-50' },
   running: { Icon: Loader2, color: 'text-blue-500', bg: 'bg-blue-50', animate: true },
-  queued: { Icon: Clock, color: 'text-gray-400', bg: 'bg-gray-50' },
+  queued: { Icon: Clock, color: 'text-muted-foreground', bg: 'bg-muted/50' },
 };
 
 function timeAgo(dateStr: string): string {
@@ -29,22 +29,22 @@ function timeAgo(dateStr: string): string {
 
 export default function ActivityFeed({ items, maxItems = 8 }: { items: ActivityItem[]; maxItems?: number }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
-      <div className="px-4 py-3 border-b border-gray-100">
-        <h3 className="text-sm font-semibold text-gray-800">Recent Activity</h3>
+    <div className="bg-card border border-border rounded-xl shadow-sm">
+      <div className="px-4 py-3 border-b border-border">
+        <h3 className="text-sm font-semibold text-foreground">Recent Activity</h3>
       </div>
-      <div className="divide-y divide-gray-50">
+      <div className="divide-y divide-border/50">
         {items.slice(0, maxItems).map(item => {
           const config = typeConfig[item.type];
           const Icon = config.Icon;
           return (
-            <div key={item.id} className="px-4 py-2.5 flex items-center gap-3 hover:bg-gray-50 transition-colors">
+            <div key={item.id} className="px-4 py-2.5 flex items-center gap-3 hover:bg-muted/50 transition-colors">
               <div className={`p-1 rounded-full ${config.bg}`}>
                 <Icon className={`w-3.5 h-3.5 ${config.color} ${(config as any).animate ? 'animate-spin' : ''}`} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-800 truncate">{item.message}</p>
-                <p className="text-[10px] text-gray-400">{item.workload} • {timeAgo(item.time)}</p>
+                <p className="text-xs text-foreground truncate">{item.message}</p>
+                <p className="text-[10px] text-muted-foreground">{item.workload} • {timeAgo(item.time)}</p>
               </div>
               {item.action && (
                 <button
@@ -58,7 +58,7 @@ export default function ActivityFeed({ items, maxItems = 8 }: { items: ActivityI
           );
         })}
         {items.length === 0 && (
-          <div className="px-4 py-8 text-center text-xs text-gray-400">
+          <div className="px-4 py-8 text-center text-xs text-muted-foreground">
             No recent activity
           </div>
         )}

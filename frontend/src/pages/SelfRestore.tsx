@@ -102,23 +102,23 @@ export default function SelfRestore() {
             <DownloadCloud className="w-6 h-6 text-blue-600" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Restore Items</h1>
-            <p className="text-xs text-gray-500">Search and restore deleted or modified items from backup</p>
+            <h1 className="text-xl font-bold text-foreground">Restore Items</h1>
+            <p className="text-xs text-muted-foreground">Search and restore deleted or modified items from backup</p>
           </div>
         </div>
       </div>
 
       {/* Search Card */}
-      <div className="bg-white rounded-xl border shadow-sm p-5 mb-6">
+      <div className="bg-card rounded-xl border shadow-sm p-5 mb-6">
         <form onSubmit={handleSearch} className="flex gap-3 mb-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Search for emails, files, documents..."
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              className="w-full pl-10 pr-4 py-2.5 border border-border rounded-xl focus:ring-2 focus:ring-ring focus:border-ring text-sm"
             />
           </div>
           <button
@@ -140,7 +140,7 @@ export default function SelfRestore() {
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   workload === tab.key
                     ? 'bg-blue-100 text-blue-700 ring-1 ring-blue-300'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-muted text-muted-foreground hover:bg-accent'
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" /> {tab.label}
@@ -162,50 +162,50 @@ export default function SelfRestore() {
 
       {/* Results */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-12 bg-white rounded-xl border shadow-sm">
+        <div className="flex items-center justify-center py-12 bg-card rounded-xl border shadow-sm">
           <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
-          <span className="ml-2 text-sm text-gray-500">Searching...</span>
+          <span className="ml-2 text-sm text-muted-foreground">Searching...</span>
         </div>
       ) : searchQuery && data ? (
-        <div className="bg-white rounded-xl border shadow-sm">
+        <div className="bg-card rounded-xl border shadow-sm">
           <div className="px-5 py-3 border-b flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-semibold text-gray-900">
+              <h2 className="text-sm font-semibold text-foreground">
                 {data.total} result{data.total !== 1 ? 's' : ''} for "{searchQuery}"
               </h2>
               {workload && (
-                <p className="text-xs text-gray-400">Filtered to {WORKLOAD_TABS.find(t => t.key === workload)?.label}</p>
+                <p className="text-xs text-muted-foreground">Filtered to {WORKLOAD_TABS.find(t => t.key === workload)?.label}</p>
               )}
             </div>
           </div>
           {data.items.length === 0 ? (
             <div className="py-12 text-center">
               <Search className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-              <p className="text-sm text-gray-400">No items found. Try a different search term.</p>
+              <p className="text-sm text-muted-foreground">No items found. Try a different search term.</p>
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="bg-gray-50">
+              <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                  <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider">Workload</th>
-                  <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
-                  <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider">Backed Up</th>
-                  <th className="text-right px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                  <th className="text-left px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Item</th>
+                  <th className="text-left px-3 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Workload</th>
+                  <th className="text-left px-3 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Size</th>
+                  <th className="text-left px-3 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Backed Up</th>
+                  <th className="text-right px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-border">
                 {data.items.map(item => {
                   const Icon = ITEM_ICONS[item.item_type] || FileText;
-                  const wlColor = WORKLOAD_COLORS[item.workload] || 'text-gray-500';
+                  const wlColor = WORKLOAD_COLORS[item.workload] || 'text-muted-foreground';
                   return (
-                    <tr key={`${item.snapshot_id}-${item.id}`} className="hover:bg-gray-50 transition-colors">
+                    <tr key={`${item.snapshot_id}-${item.id}`} className="hover:bg-muted/50 transition-colors">
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-3">
-                          <Icon className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                          <Icon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                           <div>
-                            <p className="font-medium text-gray-900 truncate max-w-md">{item.subject || item.name}</p>
-                            <p className="text-xs text-gray-400 truncate max-w-md">
+                            <p className="font-medium text-foreground truncate max-w-md">{item.subject || item.name}</p>
+                            <p className="text-xs text-muted-foreground truncate max-w-md">
                               {item.sender ? `From: ${item.sender}` : item.path}
                             </p>
                           </div>
@@ -214,8 +214,8 @@ export default function SelfRestore() {
                       <td className="px-3 py-3">
                         <span className={`text-xs font-medium capitalize ${wlColor}`}>{item.workload.replace('_', ' ')}</span>
                       </td>
-                      <td className="px-3 py-3 text-xs text-gray-500">{formatSize(item.size_bytes)}</td>
-                      <td className="px-3 py-3 text-xs text-gray-500">{item.backed_up_at ? timeAgo(item.backed_up_at) : '—'}</td>
+                      <td className="px-3 py-3 text-xs text-muted-foreground">{formatSize(item.size_bytes)}</td>
+                      <td className="px-3 py-3 text-xs text-muted-foreground">{item.backed_up_at ? timeAgo(item.backed_up_at) : '—'}</td>
                       <td className="px-5 py-3 text-right">
                         <button
                           onClick={() => restoreMutation.mutate({ snapshotId: item.snapshot_id, itemIds: String(item.id) })}
@@ -233,12 +233,12 @@ export default function SelfRestore() {
           )}
         </div>
       ) : !searchQuery ? (
-        <div className="text-center py-16 bg-white rounded-xl border shadow-sm">
+        <div className="text-center py-16 bg-card rounded-xl border shadow-sm">
           <div className="p-4 bg-blue-50 rounded-2xl w-fit mx-auto mb-4">
             <Search className="w-10 h-10 text-blue-300" />
           </div>
-          <p className="text-sm font-medium text-gray-600">Search your backup archive</p>
-          <p className="text-xs text-gray-400 mt-1">Try searching for email subjects, file names, or document titles</p>
+          <p className="text-sm font-medium text-muted-foreground">Search your backup archive</p>
+          <p className="text-xs text-muted-foreground mt-1">Try searching for email subjects, file names, or document titles</p>
         </div>
       ) : null}
     </div>

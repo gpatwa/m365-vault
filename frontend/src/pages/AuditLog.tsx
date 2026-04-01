@@ -9,7 +9,7 @@ export default function AuditLog() {
       label: 'Timestamp',
       sortable: true,
       render: (row) => (
-        <span className="text-gray-500 text-xs font-mono">{row.timestamp?.slice(0, 19)}</span>
+        <span className="text-muted-foreground text-xs font-mono">{row.timestamp?.slice(0, 19)}</span>
       ),
     },
     {
@@ -29,7 +29,7 @@ export default function AuditLog() {
       label: 'Resource',
       sortable: true,
       render: (row) => (
-        <span className="text-gray-500">
+        <span className="text-muted-foreground">
           {row.resource_type} {row.resource_id ? `#${row.resource_id}` : ''}
         </span>
       ),
@@ -38,7 +38,7 @@ export default function AuditLog() {
       key: 'details',
       label: 'Details',
       render: (row) => (
-        <span className="text-gray-500 text-xs max-w-[300px] truncate block">
+        <span className="text-muted-foreground text-xs max-w-[300px] truncate block">
           {row.details || '—'}
         </span>
       ),
@@ -47,15 +47,15 @@ export default function AuditLog() {
       key: 'user_id',
       label: 'User',
       sortable: true,
-      render: (row) => <span className="text-gray-500">User #{row.user_id || '—'}</span>,
+      render: (row) => <span className="text-muted-foreground">User #{row.user_id || '—'}</span>,
     },
   ];
 
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Audit Log</h1>
-        <p className="text-gray-500">Track all system operations and changes</p>
+        <h1 className="text-2xl font-bold text-foreground">Audit Log</h1>
+        <p className="text-muted-foreground">Track all system operations and changes</p>
       </div>
 
       <DataTable<AuditLogEntry>

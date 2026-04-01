@@ -59,20 +59,20 @@ function ToastItem({ t, onDismiss }: { t: Toast; onDismiss: (id: string) => void
   return (
     <div
       className={`flex items-start gap-3 px-4 py-3 rounded-lg border shadow-lg backdrop-blur-sm
-        ${BG[t.type]} text-white max-w-sm w-full
+        ${BG[t.type]} text-foreground max-w-sm w-full
         transition-all duration-300 ${exiting ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0'}`}
     >
       {ICONS[t.type]}
       <div className="flex-1 min-w-0">
         <p className="font-medium text-sm">{t.title}</p>
-        {t.message && <p className="text-xs text-gray-300 mt-0.5">{t.message}</p>}
+        {t.message && <p className="text-xs text-foreground/70 mt-0.5">{t.message}</p>}
         {t.correlationId && (
-          <p className="text-[10px] text-gray-500 mt-1 font-mono">ID: {t.correlationId}</p>
+          <p className="text-[10px] text-muted-foreground mt-1 font-mono">ID: {t.correlationId}</p>
         )}
       </div>
       <button
         onClick={() => { setExiting(true); setTimeout(() => onDismiss(t.id), 300); }}
-        className="text-gray-400 hover:text-white shrink-0"
+        className="text-muted-foreground hover:text-foreground shrink-0"
       >
         <X className="w-4 h-4" />
       </button>

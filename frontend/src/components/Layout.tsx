@@ -258,9 +258,9 @@ export default function Layout() {
   );
 
   return (
-    <div className="flex h-screen bg-gray-950">
+    <div className="flex h-screen" style={{ backgroundColor: 'var(--color-bg, #0d1117)' }}>
       {/* Mobile header — visible on small screens only */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-gray-900 border-b border-gray-700 px-4 py-3 flex items-center justify-between">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 px-4 py-3 flex items-center justify-between" style={{ backgroundColor: 'var(--color-bg-card, #161b22)', borderBottom: '1px solid var(--color-border, #30363d)' }}>
         <button onClick={() => setMobileOpen(true)} className="p-1 text-gray-400 hover:text-white">
           <Menu className="w-6 h-6" />
         </button>
@@ -289,12 +289,12 @@ export default function Layout() {
       )}
 
       {/* Desktop sidebar — hidden on mobile */}
-      <aside className="hidden lg:flex w-56 bg-gray-900 text-white flex-col">
+      <aside className="hidden lg:flex w-56 flex-col" style={{ backgroundColor: 'var(--color-bg-sidebar, #010409)', color: 'var(--color-text, #e6edf3)' }}>
         {sidebarContent}
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto pt-14 lg:pt-0 bg-gray-950 text-white">
+      <main className="flex-1 overflow-auto pt-14 lg:pt-0" style={{ backgroundColor: 'var(--color-bg, #0d1117)', color: 'var(--color-text, #e6edf3)' }}>
         <div className="p-4 sm:p-6">
           <Outlet />
         </div>

@@ -1,19 +1,24 @@
-/* Shieldio Design Tokens — CSS Custom Properties */
+/* Shieldio Design Tokens — Professional Dark Theme
+ *
+ * Inspired by: GitHub Primer, Linear, Vercel Geist, CrowdStrike Falcon
+ * Principles: Muted semantic colors, subtle elevation, off-white text, no pure black
+ */
 
 :root {
   /* Brand */
-  --color-primary: #3b82f6;
-  --color-primary-hover: #2563eb;
-  --color-primary-muted: rgba(59, 130, 246, 0.1);
+  --color-primary: #4f8ff7;           /* Softer blue (not #3b82f6 which is too bright on dark) */
+  --color-primary-hover: #3a7ce6;
+  --color-primary-muted: rgba(79, 143, 247, 0.12);
 
-  /* Semantic */
-  --color-success: #22c55e;
-  --color-success-muted: rgba(34, 197, 94, 0.1);
-  --color-warning: #f59e0b;
-  --color-warning-muted: rgba(245, 158, 11, 0.1);
-  --color-danger: #ef4444;
-  --color-danger-muted: rgba(239, 68, 68, 0.1);
-  --color-info: #06b6d4;
+  /* Semantic — muted for dark mode (lower saturation, adjusted lightness) */
+  --color-success: #3fb950;           /* GitHub-style muted green */
+  --color-success-muted: rgba(63, 185, 80, 0.12);
+  --color-warning: #d29922;           /* Muted gold (not bright amber) */
+  --color-warning-muted: rgba(210, 153, 34, 0.12);
+  --color-danger: #f85149;            /* Muted rose-red (not bright red) */
+  --color-danger-muted: rgba(248, 81, 73, 0.12);
+  --color-info: #58a6ff;              /* Soft sky blue */
+  --color-info-muted: rgba(88, 166, 255, 0.12);
 
   /* Typography */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -25,30 +30,40 @@
   --radius-xl: 1rem;
 }
 
-/* Dark theme (default) */
+/* Dark theme (default) — GitHub Primer inspired */
 [data-theme="dark"], :root {
-  --color-bg: #0f172a;
-  --color-bg-card: #1e293b;
-  --color-bg-elevated: #334155;
-  --color-bg-sidebar: #111827;
-  --color-border: #334155;
-  --color-border-subtle: rgba(51, 65, 85, 0.5);
-  --color-text: #f8fafc;
-  --color-text-secondary: #94a3b8;
-  --color-text-muted: #64748b;
+  --color-bg: #0d1117;               /* GitHub dark default — NOT pure black */
+  --color-bg-card: #161b22;          /* Elevated surface — slightly lighter */
+  --color-bg-elevated: #1c2333;      /* Higher elevation (modals, dropdowns) */
+  --color-bg-sidebar: #010409;       /* Deepest — sidebar anchor */
+  --color-bg-inset: #0d1117;         /* Inset/sunken areas */
+
+  --color-border: #30363d;           /* Default border — subtle, not harsh */
+  --color-border-subtle: #21262d;    /* Subtle separator */
+  --color-border-emphasis: #3d444d;  /* Emphasized border (hover, focus) */
+
+  --color-text: #e6edf3;             /* Primary text — off-white, easy on eyes */
+  --color-text-secondary: #8b949e;   /* Secondary text — GitHub muted */
+  --color-text-muted: #6e7681;       /* Tertiary — labels, timestamps */
+  --color-text-on-emphasis: #ffffff; /* Text on colored backgrounds */
 }
 
 /* Light theme */
 [data-theme="light"] {
   --color-bg: #ffffff;
-  --color-bg-card: #f8fafc;
-  --color-bg-elevated: #f1f5f9;
-  --color-bg-sidebar: #1e293b;
-  --color-border: #e2e8f0;
-  --color-border-subtle: rgba(226, 232, 240, 0.5);
-  --color-text: #0f172a;
-  --color-text-secondary: #475569;
-  --color-text-muted: #94a3b8;
+  --color-bg-card: #f6f8fa;
+  --color-bg-elevated: #ffffff;
+  --color-bg-sidebar: #f6f8fa;
+  --color-bg-inset: #f0f1f3;
+
+  --color-border: #d0d7de;
+  --color-border-subtle: #d8dee4;
+  --color-border-emphasis: #a8b1ba;
+
+  --color-text: #1f2328;
+  --color-text-secondary: #656d76;
+  --color-text-muted: #8b949e;
+  --color-text-on-emphasis: #ffffff;
 }
 
 /* Mobile touch targets */

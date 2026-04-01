@@ -16,6 +16,9 @@ COPY . .
 # Docs are copied during build via Makefile or manually
 RUN mkdir -p /app/docs
 
+# Copy benchmark results if they exist
+RUN mkdir -p /app/tests/benchmarks
+
 EXPOSE 8000
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

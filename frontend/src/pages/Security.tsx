@@ -93,7 +93,7 @@ export default function SecurityPage() {
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               {data?.immutability?.legal_hold_policies > 0
                 ? <><CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> Legal hold active</>
-                : <><XCircle className="w-3.5 h-3.5 text-foreground/70" /> No legal holds</>}
+                : <><XCircle className="w-3.5 h-3.5 text-muted-foreground" /> No legal holds</>}
             </div>
           </div>
         </div>
@@ -154,7 +154,7 @@ export default function SecurityPage() {
                     <div key={f.name} className="flex items-start gap-2 p-2.5 bg-muted/50 rounded-lg">
                       {f.status === 'active'
                         ? <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                        : <XCircle className="w-4 h-4 text-foreground/70 flex-shrink-0 mt-0.5" />}
+                        : <XCircle className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />}
                       <div>
                         <div className="text-xs font-medium text-foreground">{f.name}</div>
                         <div className="text-[10px] text-muted-foreground mt-0.5">{f.description}</div>
@@ -173,7 +173,7 @@ export default function SecurityPage() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-bold">Security Documentation Pack</h2>
-            <p className="text-sm text-foreground/70 mt-1">Download our security architecture and compliance mapping for your procurement review.</p>
+            <p className="text-sm text-muted-foreground mt-1">Download our security architecture and compliance mapping for your procurement review.</p>
           </div>
           <div className="flex gap-3">
             <a href="/docs/SECURITY.md" target="_blank" className="px-4 py-2 bg-card/10 hover:bg-card/20 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">

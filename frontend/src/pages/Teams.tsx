@@ -133,7 +133,7 @@ export default function Teams() {
       key: 'criticality_tier',
       label: 'Criticality',
       sortable: true,
-      render: (row: any) => row.criticality_tier ? <CriticalityBadge tier={row.criticality_tier} score={row.criticality_score} /> : <span className="text-foreground/70">—</span>,
+      render: (row: any) => row.criticality_tier ? <CriticalityBadge tier={row.criticality_tier} score={row.criticality_score} /> : <span className="text-muted-foreground">—</span>,
     },
     { key: 'total_items_backed_up', label: 'Items', sortable: true },
     {
@@ -157,7 +157,7 @@ export default function Teams() {
   if (!tenantId) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-        <MessageSquare className="w-12 h-12 mb-3 text-foreground/70" />
+        <MessageSquare className="w-12 h-12 mb-3 text-muted-foreground" />
         <p className="text-lg font-medium text-muted-foreground">No Tenant Connected</p>
         <p className="text-sm mt-1">Connect a SaaS platform from the <a href="/tenants" className="text-blue-600 hover:underline">Tenants</a> page.</p>
       </div>

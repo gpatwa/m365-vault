@@ -69,9 +69,9 @@ export default function ObjectDetail() {
     <div>
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-4">
-        <button onClick={() => navigate('/')} className="hover:text-foreground/80">Dashboard</button>
+        <button onClick={() => navigate('/')} className="hover:text-muted-foreground">Dashboard</button>
         <ChevronRight className="w-3.5 h-3.5" />
-        <button onClick={() => navigate(`/${workload?.replace('_', '-')}`)} className="hover:text-foreground/80">
+        <button onClick={() => navigate(`/${workload?.replace('_', '-')}`)} className="hover:text-muted-foreground">
           {workloadLabel}
         </button>
         <ChevronRight className="w-3.5 h-3.5" />
@@ -114,7 +114,7 @@ export default function ObjectDetail() {
               <p className="text-[10px] text-muted-foreground uppercase">Size</p>
             </div>
             <div>
-              <p className="text-sm font-semibold text-foreground/80">{object?.last_backup_at ? timeAgo(object.last_backup_at) : 'Never'}</p>
+              <p className="text-sm font-semibold text-muted-foreground">{object?.last_backup_at ? timeAgo(object.last_backup_at) : 'Never'}</p>
               <p className="text-[10px] text-muted-foreground uppercase">Last Backup</p>
             </div>
           </div>
@@ -135,7 +135,7 @@ export default function ObjectDetail() {
             </div>
             <div className="divide-y divide-border/50 max-h-[500px] overflow-y-auto">
               {loadingSnapshots ? (
-                <div className="p-4 text-center"><Loader2 className="w-5 h-5 animate-spin text-foreground/70 mx-auto" /></div>
+                <div className="p-4 text-center"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground mx-auto" /></div>
               ) : (snapshots?.items || []).length === 0 ? (
                 <div className="p-6 text-center text-sm text-muted-foreground">No backups yet</div>
               ) : (
@@ -154,7 +154,7 @@ export default function ObjectDetail() {
                           snap.status === 'in_progress' ? 'bg-blue-400 animate-pulse' :
                           'bg-gray-300'
                         }`} />
-                        <span className="text-xs font-medium text-foreground/80">
+                        <span className="text-xs font-medium text-muted-foreground">
                           #{snap.id}
                         </span>
                         <span className="text-[10px] px-1.5 py-0.5 bg-muted rounded text-muted-foreground">
@@ -194,7 +194,7 @@ export default function ObjectDetail() {
             </div>
             <div className="max-h-[500px] overflow-y-auto">
               {loadingItems ? (
-                <div className="p-8 text-center"><Loader2 className="w-5 h-5 animate-spin text-foreground/70 mx-auto" /></div>
+                <div className="p-8 text-center"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground mx-auto" /></div>
               ) : (items?.items || []).length === 0 ? (
                 <div className="p-8 text-center text-sm text-muted-foreground">
                   {latestSnapshotId ? 'No items in this snapshot' : 'Run a backup to see items here'}

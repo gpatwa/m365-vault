@@ -179,14 +179,14 @@ export default function WorkloadSwimlane({
 
         {/* Metrics row */}
         <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
-          <span>Last: <strong className="text-foreground/80">{timeAgo(stats.lastBackup)}</strong></span>
-          <span className="text-foreground/70">|</span>
-          <span>Avg: <strong className="text-foreground/80">{formatAvgDuration(stats.avgDurationSec)}</strong></span>
-          <span className="text-foreground/70">|</span>
-          <span>Size: <strong className="text-foreground/80">{formatSize(stats.totalSize)}</strong></span>
+          <span>Last: <strong className="text-muted-foreground">{timeAgo(stats.lastBackup)}</strong></span>
+          <span className="text-muted-foreground">|</span>
+          <span>Avg: <strong className="text-muted-foreground">{formatAvgDuration(stats.avgDurationSec)}</strong></span>
+          <span className="text-muted-foreground">|</span>
+          <span>Size: <strong className="text-muted-foreground">{formatSize(stats.totalSize)}</strong></span>
           {stats.total > 0 && (
             <>
-              <span className="text-foreground/70">|</span>
+              <span className="text-muted-foreground">|</span>
               <span>Success: <strong className={progressPercent >= 90 ? 'text-green-700' : progressPercent >= 70 ? 'text-yellow-700' : 'text-red-700'}>{progressPercent}%</strong></span>
             </>
           )}
@@ -202,7 +202,7 @@ export default function WorkloadSwimlane({
               <button
                 onClick={() => { setTab('backup'); setStatusFilter(''); setExpandedJob(null); }}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  tab === 'backup' ? 'bg-card shadow text-foreground' : 'text-muted-foreground hover:text-foreground/80'
+                  tab === 'backup' ? 'bg-card shadow text-foreground' : 'text-muted-foreground hover:text-muted-foreground'
                 }`}
               >
                 Backup Jobs ({backupJobs.length})
@@ -210,7 +210,7 @@ export default function WorkloadSwimlane({
               <button
                 onClick={() => { setTab('restore'); setStatusFilter(''); setExpandedJob(null); }}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  tab === 'restore' ? 'bg-card shadow text-foreground' : 'text-muted-foreground hover:text-foreground/80'
+                  tab === 'restore' ? 'bg-card shadow text-foreground' : 'text-muted-foreground hover:text-muted-foreground'
                 }`}
               >
                 Restore Jobs ({restoreJobs.length})

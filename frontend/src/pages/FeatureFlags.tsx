@@ -149,7 +149,7 @@ export default function FeatureFlags() {
             <tbody className="divide-y divide-border/50">
               {Object.entries(tiers.comparison || {}).map(([feature, tierMap]) => (
                 <tr key={feature} className="hover:bg-secondary/30">
-                  <td className="px-4 py-2 text-foreground/70 capitalize">{feature.replace(/_/g, ' ')}</td>
+                  <td className="px-4 py-2 text-muted-foreground capitalize">{feature.replace(/_/g, ' ')}</td>
                   {Object.keys(TIER_LABELS).map(tier => (
                     <td key={tier} className="text-center px-3 py-2">
                       {(tierMap as Record<string, boolean>)[tier] ?

@@ -131,7 +131,7 @@ export default function SmartEngine() {
                   <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${
                     a.severity === 'critical' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
                   }`}>{a.severity}</span>
-                  <span className="text-xs font-medium text-foreground/80 capitalize">{a.workload}</span>
+                  <span className="text-xs font-medium text-muted-foreground capitalize">{a.workload}</span>
                   <span className="text-xs text-muted-foreground">{a.metric}</span>
                   {a.resolved && <span className="ml-auto text-xs text-green-600 font-medium">Resolved</span>}
                 </div>
@@ -172,7 +172,7 @@ export default function SmartEngine() {
                 )}
                 {baselines?.items.map((b, i) => (
                   <tr key={i} className="hover:bg-muted/50">
-                    <td className="px-3 py-2 capitalize font-medium text-foreground/80">{b.workload.replace('_', ' ')}</td>
+                    <td className="px-3 py-2 capitalize font-medium text-muted-foreground">{b.workload.replace('_', ' ')}</td>
                     <td className="px-3 py-2 text-muted-foreground">{b.metric}</td>
                     <td className="px-3 py-2 text-right font-mono">{formatMetric(b.metric, b.avg)}</td>
                     <td className="px-3 py-2 text-right font-mono text-muted-foreground">{formatMetric(b.metric, b.std_dev)}</td>

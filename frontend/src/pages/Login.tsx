@@ -128,7 +128,7 @@ export default function Login() {
                     <div className="w-11 h-11 bg-card border border-border rounded-xl flex items-center justify-center group-hover:border-border group-hover:bg-muted transition-all">
                       <app.icon className={`w-5 h-5 ${app.color}`} />
                     </div>
-                    <span className="text-[10px] text-muted-foreground group-hover:text-foreground/70 transition-colors">{app.label}</span>
+                    <span className="text-[10px] text-muted-foreground group-hover:text-muted-foreground transition-colors">{app.label}</span>
                   </div>
                 ))}
               </div>
@@ -147,14 +147,14 @@ export default function Login() {
 
           {/* Bottom: testimonial placeholder */}
           <div className="bg-card/30 border border-border rounded-xl p-5">
-            <p className="text-sm text-foreground/80 italic leading-relaxed">
+            <p className="text-sm text-muted-foreground italic leading-relaxed">
               "We needed a backup solution we could host ourselves for compliance.
               Shieldio gave us enterprise-grade protection with full data sovereignty."
             </p>
             <div className="flex items-center gap-3 mt-3">
               <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-xs font-bold">IT</div>
               <div>
-                <p className="text-xs text-foreground/80 font-medium">IT Director</p>
+                <p className="text-xs text-muted-foreground font-medium">IT Director</p>
                 <p className="text-[11px] text-muted-foreground">Enterprise Customer</p>
               </div>
             </div>
@@ -214,7 +214,7 @@ export default function Login() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-foreground/80 mb-1.5">
+              <label className="block text-sm font-medium text-muted-foreground mb-1.5">
                 {isRegister ? 'Work Email' : 'Email or Username'}
               </label>
               <input
@@ -237,7 +237,7 @@ export default function Login() {
 
             {isRegister && (
               <div>
-                <label className="block text-sm font-medium text-foreground/80 mb-1.5">Full Name <span className="text-muted-foreground font-normal">(optional)</span></label>
+                <label className="block text-sm font-medium text-muted-foreground mb-1.5">Full Name <span className="text-muted-foreground font-normal">(optional)</span></label>
                 <input
                   type="text"
                   value={fullName}
@@ -250,7 +250,7 @@ export default function Login() {
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-sm font-medium text-foreground/80">Password</label>
+                <label className="block text-sm font-medium text-muted-foreground">Password</label>
                 {!isRegister && (
                   <button type="button" className="text-xs text-primary hover:text-primary/80 font-medium">
                     Forgot password?

@@ -124,7 +124,7 @@ export default function Recovery() {
             className={`px-4 py-2.5 text-sm font-medium flex items-center gap-2 border-b-2 transition-all ${
               activeTab === tab.key
                 ? 'border-green-600 text-green-700'
-                : 'border-transparent text-muted-foreground hover:text-foreground/80'
+                : 'border-transparent text-muted-foreground hover:text-muted-foreground'
             }`}
           >
             <tab.icon className="w-4 h-4" />
@@ -142,7 +142,7 @@ export default function Recovery() {
             <div className="bg-card rounded-xl border shadow-sm p-6">
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Recovery Confidence</h3>
               {loadingConfidence ? (
-                <div className="flex justify-center py-8"><Loader2 className="w-8 h-8 animate-spin text-foreground/70" /></div>
+                <div className="flex justify-center py-8"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>
               ) : confidence ? (
                 <div className="text-center">
                   <div className={`inline-flex items-center justify-center w-24 h-24 rounded-full border-4 ${GRADE_COLORS[confidence.grade] || GRADE_COLORS.C}`}>
@@ -357,7 +357,7 @@ export default function Recovery() {
 
             {!testMutation.data && !testMutation.isPending && (
               <div className="text-center py-8 text-muted-foreground">
-                <PlayCircle className="w-12 h-12 mx-auto mb-3 text-foreground/70" />
+                <PlayCircle className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
                 <p>Click "Run Test" to verify backup recoverability</p>
                 <p className="text-xs mt-1">Tests decrypt and validate backup data without restoring to M365</p>
               </div>

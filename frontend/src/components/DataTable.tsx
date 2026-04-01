@@ -315,7 +315,7 @@ export default function DataTable<T extends Record<string, any>>({
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="flex items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground/80 hover:bg-muted rounded-md transition-colors"
+              className="flex items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground hover:text-muted-foreground hover:bg-muted rounded-md transition-colors"
             >
               <X className="w-3 h-3" /> Clear filters
             </button>
@@ -340,7 +340,7 @@ export default function DataTable<T extends Record<string, any>>({
                   <th
                     key={col.key}
                     className={`text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider ${col.width || ''} ${
-                      col.sortable ? 'cursor-pointer select-none hover:text-foreground/80 hover:bg-muted transition-colors' : ''
+                      col.sortable ? 'cursor-pointer select-none hover:text-muted-foreground hover:bg-muted transition-colors' : ''
                     } ${col.className || ''}`}
                     onClick={col.sortable ? () => handleSort(col.key) : undefined}
                   >
@@ -384,7 +384,7 @@ export default function DataTable<T extends Record<string, any>>({
                     onClick={onRowClick ? () => onRowClick(row) : undefined}
                   >
                     {columns.map(col => (
-                      <td key={col.key} className={`px-4 py-3 text-sm text-foreground/80 ${col.className || ''}`}>
+                      <td key={col.key} className={`px-4 py-3 text-sm text-muted-foreground ${col.className || ''}`}>
                         {col.render ? col.render(row) : (row[col.key] ?? '—')}
                       </td>
                     ))}

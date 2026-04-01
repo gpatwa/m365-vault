@@ -153,10 +153,10 @@ export default function Settings() {
                 <p className="text-sm text-muted-foreground">This action is irreversible</p>
               </div>
             </div>
-            <p className="text-sm text-foreground/80 mb-4">
+            <p className="text-sm text-muted-foreground mb-4">
               This will permanently delete <strong>{purgeConfirm.name}</strong> and ALL associated data including backups, snapshots, jobs, and storage blobs.
             </p>
-            <p className="text-sm text-foreground/80 mb-2">
+            <p className="text-sm text-muted-foreground mb-2">
               Type <strong className="font-mono bg-muted px-1 rounded">{purgeConfirm.name}</strong> to confirm:
             </p>
             <input
@@ -190,7 +190,7 @@ export default function Settings() {
             <p className="text-sm text-muted-foreground mb-4">Update your Azure AD App Registration credentials. Leave blank to keep current value.</p>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-foreground/80 mb-1">Application (Client) ID</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Application (Client) ID</label>
                 <input
                   type="text" value={credForm.client_id}
                   onChange={e => setCredForm({ ...credForm, client_id: e.target.value })}
@@ -199,7 +199,7 @@ export default function Settings() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground/80 mb-1">Client Secret</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Client Secret</label>
                 <input
                   type="password" value={credForm.client_secret}
                   onChange={e => setCredForm({ ...credForm, client_secret: e.target.value })}
@@ -250,10 +250,10 @@ export default function Settings() {
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   {/* Common actions */}
-                  <button onClick={() => testMutation.mutate(t.id)} className="px-3 py-1.5 bg-muted text-foreground/80 rounded-lg text-sm hover:bg-accent flex items-center gap-1">
+                  <button onClick={() => testMutation.mutate(t.id)} className="px-3 py-1.5 bg-muted text-muted-foreground rounded-lg text-sm hover:bg-accent flex items-center gap-1">
                     <Wifi className="w-4 h-4" /> Test
                   </button>
-                  <button onClick={() => setCredentialsEdit({ id: t.id })} className="px-3 py-1.5 bg-muted text-foreground/80 rounded-lg text-sm hover:bg-accent flex items-center gap-1">
+                  <button onClick={() => setCredentialsEdit({ id: t.id })} className="px-3 py-1.5 bg-muted text-muted-foreground rounded-lg text-sm hover:bg-accent flex items-center gap-1">
                     <KeyRound className="w-4 h-4" />
                   </button>
 
@@ -313,7 +313,7 @@ export default function Settings() {
                 <button
                   onClick={() => checkPerms(t.id)}
                   disabled={permsLoading && permsTenant === t.id}
-                  className="px-3 py-1.5 border border-border text-foreground/80 rounded-lg text-xs font-medium hover:bg-muted/50 flex items-center gap-1"
+                  className="px-3 py-1.5 border border-border text-muted-foreground rounded-lg text-xs font-medium hover:bg-muted/50 flex items-center gap-1"
                 >
                   {permsLoading && permsTenant === t.id
                     ? <><Loader2 className="w-3 h-3 animate-spin" /> Checking...</>
@@ -363,7 +363,7 @@ export default function Settings() {
                                   : <XCircle className="w-4 h-4 text-red-500 mx-auto" />}
                               </td>
                               <td className="px-4 py-2 text-center">
-                                {status.restore === null ? <span className="text-foreground/70">N/A</span>
+                                {status.restore === null ? <span className="text-muted-foreground">N/A</span>
                                   : status.restore
                                     ? <CheckCircle className="w-4 h-4 text-green-500 mx-auto" />
                                     : <XCircle className="w-4 h-4 text-red-500 mx-auto" />}
@@ -450,7 +450,7 @@ export default function Settings() {
         {isLoading && <p className="text-muted-foreground text-center py-8">Loading...</p>}
         {!isLoading && !tenants?.length && (
           <div className="text-center py-12 text-muted-foreground">
-            <Building2 className="w-12 h-12 mx-auto mb-3 text-foreground/70" />
+            <Building2 className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
             <p className="text-lg font-medium">No tenants configured</p>
             <p className="text-sm">Add your first SaaS platform to get started</p>
           </div>

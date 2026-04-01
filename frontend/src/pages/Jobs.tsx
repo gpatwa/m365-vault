@@ -322,7 +322,7 @@ export default function Jobs() {
         <button
           onClick={() => setActiveTab('swimlanes')}
           className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'swimlanes' ? 'bg-card shadow text-foreground' : 'text-muted-foreground hover:text-foreground/80'
+            activeTab === 'swimlanes' ? 'bg-card shadow text-foreground' : 'text-muted-foreground hover:text-muted-foreground'
           }`}
         >
           By Workload
@@ -330,7 +330,7 @@ export default function Jobs() {
         <button
           onClick={() => setActiveTab('all')}
           className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'all' ? 'bg-card shadow text-foreground' : 'text-muted-foreground hover:text-foreground/80'
+            activeTab === 'all' ? 'bg-card shadow text-foreground' : 'text-muted-foreground hover:text-muted-foreground'
           }`}
         >
           All Jobs

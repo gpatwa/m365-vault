@@ -97,7 +97,7 @@ export default function OrgContext() {
           <div className="text-xs text-blue-600 font-medium">Total Scored</div>
         </div>
         <div className="bg-muted/50 border border-border rounded-xl p-4">
-          <div className="text-2xl font-bold text-foreground/80">{summary?.vip_groups_count || 0}</div>
+          <div className="text-2xl font-bold text-muted-foreground">{summary?.vip_groups_count || 0}</div>
           <div className="text-xs text-muted-foreground font-medium">VIP Groups</div>
         </div>
       </div>
@@ -105,7 +105,7 @@ export default function OrgContext() {
       {/* Top critical users */}
       {summary?.top_critical_users?.length > 0 && (
         <div className="bg-card border border-border rounded-xl p-4 mb-6">
-          <h3 className="text-sm font-semibold text-foreground/80 mb-3 flex items-center gap-1.5">
+          <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-1.5">
             <Crown className="w-4 h-4 text-amber-500" /> Most Critical Users
           </h3>
           <div className="flex flex-wrap gap-3">
@@ -129,7 +129,7 @@ export default function OrgContext() {
         {TABS.map(t => (
           <button key={t} onClick={() => { setTab(t); setTierFilter(''); setSearch(''); }}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-              tab === t ? 'border-blue-600 text-blue-600' : 'border-transparent text-muted-foreground hover:text-foreground/80'
+              tab === t ? 'border-blue-600 text-blue-600' : 'border-transparent text-muted-foreground hover:text-muted-foreground'
             }`}>
             {t === 'Users' && <Users className="w-4 h-4 inline mr-1.5" />}
             {t === 'Sites' && <Globe className="w-4 h-4 inline mr-1.5" />}
@@ -194,7 +194,7 @@ export default function OrgContext() {
                           background: u.criticality_score >= 80 ? '#dc2626' : u.criticality_score >= 60 ? '#ea580c' : u.criticality_score >= 40 ? '#2563eb' : '#6b7280',
                         }} />
                       </div>
-                      <span className="text-xs font-medium text-foreground/80 w-6">{u.criticality_score}</span>
+                      <span className="text-xs font-medium text-muted-foreground w-6">{u.criticality_score}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-center"><CriticalityBadge tier={u.criticality_tier} /></td>
@@ -203,7 +203,7 @@ export default function OrgContext() {
                       <span className="text-[10px] px-1.5 py-0.5 bg-red-100 text-red-700 rounded font-semibold">Global Admin</span>
                     ) : u.has_privileged_role ? (
                       <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-semibold">Privileged</span>
-                    ) : <span className="text-foreground/70">—</span>}
+                    ) : <span className="text-muted-foreground">—</span>}
                   </td>
                   <td className="px-4 py-3 text-center text-sm text-muted-foreground">{u.direct_reports_count || '—'}</td>
                 </tr>
@@ -257,7 +257,7 @@ export default function OrgContext() {
                   <td className="px-4 py-3 text-center">
                     {s.external_sharing_enabled ? (
                       <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-semibold">External</span>
-                    ) : <span className="text-foreground/70">—</span>}
+                    ) : <span className="text-muted-foreground">—</span>}
                   </td>
                 </tr>
               ))}
@@ -271,7 +271,7 @@ export default function OrgContext() {
         <div className="space-y-4">
           {vipData?.groups?.length === 0 && (
             <div className="bg-card border border-border rounded-xl p-8 text-center">
-              <ShieldAlert className="w-10 h-10 text-foreground/70 mx-auto mb-3" />
+              <ShieldAlert className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
               <p className="text-sm text-muted-foreground">No VIP groups defined yet.</p>
               <p className="text-xs text-muted-foreground mt-1">VIP groups boost criticality scores for important users.</p>
             </div>

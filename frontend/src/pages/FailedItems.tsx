@@ -16,14 +16,14 @@ import HeroSummaryBar, { type HeroStat } from '../components/design-system/HeroS
 
 const CATEGORY_COLORS: Record<string, string> = {
   permission_denied: 'bg-red-100 text-red-800 border-red-200',
-  not_found: 'bg-muted text-foreground/80 border-border',
+  not_found: 'bg-muted text-muted-foreground border-border',
   throttled: 'bg-yellow-100 text-yellow-800 border-yellow-200',
   timeout: 'bg-yellow-100 text-yellow-800 border-yellow-200',
   quota_exceeded: 'bg-orange-100 text-orange-800 border-orange-200',
   file_too_large: 'bg-purple-100 text-purple-800 border-purple-200',
   encryption_error: 'bg-red-100 text-red-800 border-red-200',
   storage_error: 'bg-red-100 text-red-800 border-red-200',
-  invalid_data: 'bg-muted text-foreground/80 border-border',
+  invalid_data: 'bg-muted text-muted-foreground border-border',
   auth_expired: 'bg-red-100 text-red-800 border-red-200',
   server_error: 'bg-yellow-100 text-yellow-800 border-yellow-200',
   network_error: 'bg-yellow-100 text-yellow-800 border-yellow-200',
@@ -265,7 +265,7 @@ export default function FailedItems() {
         <button
           onClick={() => setShowResolved(!showResolved)}
           className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
-            showResolved ? 'bg-muted border-gray-300 text-foreground/80' : 'bg-card border-border text-muted-foreground hover:bg-muted/50'
+            showResolved ? 'bg-muted border-gray-300 text-muted-foreground' : 'bg-card border-border text-muted-foreground hover:bg-muted/50'
           }`}
         >
           {showResolved ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}

@@ -46,15 +46,15 @@ export default function AlertSettings() {
           <div className="space-y-3 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">SMTP Host</span>
-              <span className="font-mono text-foreground/80">{config?.smtp_host || 'Not set'}</span>
+              <span className="font-mono text-muted-foreground">{config?.smtp_host || 'Not set'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">From Address</span>
-              <span className="font-mono text-foreground/80">{config?.smtp_from || 'Not set'}</span>
+              <span className="font-mono text-muted-foreground">{config?.smtp_from || 'Not set'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Recipients</span>
-              <span className="font-mono text-foreground/80">{config?.email_recipients || 'Not set'}</span>
+              <span className="font-mono text-muted-foreground">{config?.email_recipients || 'Not set'}</span>
             </div>
           </div>
 
@@ -79,7 +79,7 @@ export default function AlertSettings() {
           <div className="space-y-3 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Webhook URL</span>
-              <span className="font-mono text-foreground/80 truncate ml-4">{config?.webhook_url || 'Not set'}</span>
+              <span className="font-mono text-muted-foreground truncate ml-4">{config?.webhook_url || 'Not set'}</span>
             </div>
           </div>
 

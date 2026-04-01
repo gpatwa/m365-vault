@@ -65,7 +65,7 @@ function ToastItem({ t, onDismiss }: { t: Toast; onDismiss: (id: string) => void
       {ICONS[t.type]}
       <div className="flex-1 min-w-0">
         <p className="font-medium text-sm">{t.title}</p>
-        {t.message && <p className="text-xs text-foreground/70 mt-0.5">{t.message}</p>}
+        {t.message && <p className="text-xs text-muted-foreground mt-0.5">{t.message}</p>}
         {t.correlationId && (
           <p className="text-[10px] text-muted-foreground mt-1 font-mono">ID: {t.correlationId}</p>
         )}

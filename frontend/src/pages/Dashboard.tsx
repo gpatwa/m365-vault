@@ -137,7 +137,7 @@ function OnboardingChecklist() {
                 strokeLinecap="round"
               />
             </svg>
-            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-foreground/80">
+            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-muted-foreground">
               {completedCount}/{totalSteps}
             </span>
           </div>
@@ -223,7 +223,7 @@ function OnboardingChecklist() {
                                   ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20 animate-pulse'
                                   : status === 'error'
                                   ? 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20'
-                                  : 'bg-muted text-foreground/80 border border-border hover:bg-accent'
+                                  : 'bg-muted text-muted-foreground border border-border hover:bg-accent'
                               }`}
                             >
                               <span>{wl.icon}</span>
@@ -518,7 +518,7 @@ export default function Dashboard() {
                     <p.icon className="w-6 h-6 text-muted-foreground" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-foreground/80">{p.name}</h3>
+                    <h3 className="font-bold text-muted-foreground">{p.name}</h3>
                     <p className="text-xs text-muted-foreground mt-0.5">{p.desc}</p>
                   </div>
                 </div>
@@ -754,14 +754,14 @@ export default function Dashboard() {
               <Lock className="w-3.5 h-3.5 text-blue-400" />
               <div>
                 <p className="text-xs text-muted-foreground">WORM Locked</p>
-                <p className="text-sm font-semibold text-foreground/80">Active</p>
+                <p className="text-sm font-semibold text-muted-foreground">Active</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Eye className="w-3.5 h-3.5 text-purple-400" />
               <div>
                 <p className="text-xs text-muted-foreground">Sensitive Data</p>
-                <p className="text-sm font-semibold text-foreground/80">Monitored</p>
+                <p className="text-sm font-semibold text-muted-foreground">Monitored</p>
               </div>
             </div>
           </div>

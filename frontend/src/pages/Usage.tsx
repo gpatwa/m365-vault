@@ -11,7 +11,7 @@ function UsageBar({ label, current, limit, unit = '' }: { label: string; current
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-sm">
-        <span className="font-medium text-foreground/80">{label}</span>
+        <span className="font-medium text-muted-foreground">{label}</span>
         <span className="text-muted-foreground">{current}{unit} / {isUnlimited ? 'Unlimited' : `${limit}${unit}`}</span>
       </div>
       <div className="h-2.5 bg-muted rounded-full overflow-hidden">
@@ -52,7 +52,7 @@ export default function Usage() {
   };
 
   const tierBadge: Record<string, string> = {
-    community: 'bg-gray-200 text-foreground/80',
+    community: 'bg-gray-200 text-muted-foreground',
     professional: 'bg-blue-200 text-blue-700',
     enterprise: 'bg-purple-200 text-purple-700',
   };

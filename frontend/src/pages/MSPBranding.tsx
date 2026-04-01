@@ -67,7 +67,7 @@ export default function MSPBranding() {
         {/* Form */}
         <div className="bg-card rounded-xl p-6 border border-border space-y-5">
           <div>
-            <label className="block text-sm font-medium text-foreground/70 mb-1">Company Name</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-1">Company Name</label>
             <input
               type="text" value={form.company_name}
               onChange={e => setForm(f => ({ ...f, company_name: e.target.value }))}
@@ -75,7 +75,7 @@ export default function MSPBranding() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-foreground/70 mb-1">Tagline</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-1">Tagline</label>
             <input
               type="text" value={form.tagline}
               onChange={e => setForm(f => ({ ...f, tagline: e.target.value }))}
@@ -83,7 +83,7 @@ export default function MSPBranding() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-foreground/70 mb-1">Logo URL</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-1">Logo URL</label>
             <input
               type="url" value={form.logo_url} placeholder="https://example.com/logo.png"
               onChange={e => setForm(f => ({ ...f, logo_url: e.target.value }))}
@@ -93,7 +93,7 @@ export default function MSPBranding() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-foreground/70 mb-1">Primary Color</label>
+              <label className="block text-sm font-medium text-muted-foreground mb-1">Primary Color</label>
               <div className="flex items-center gap-2">
                 <input
                   type="color" value={form.primary_color}
@@ -108,7 +108,7 @@ export default function MSPBranding() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground/70 mb-1">Secondary Color</label>
+              <label className="block text-sm font-medium text-muted-foreground mb-1">Secondary Color</label>
               <div className="flex items-center gap-2">
                 <input
                   type="color" value={form.secondary_color}
@@ -135,7 +135,7 @@ export default function MSPBranding() {
             </button>
             <button
               onClick={handleReset}
-              className="flex items-center gap-2 px-4 py-2 bg-secondary text-foreground/70 rounded-lg text-sm font-medium hover:bg-accent transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-secondary text-muted-foreground rounded-lg text-sm font-medium hover:bg-accent transition-colors"
             >
               <RotateCcw className="w-4 h-4" /> Reset to Defaults
             </button>

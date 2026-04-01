@@ -89,7 +89,7 @@ export default function ComplianceReport({ tenantId, tenantName, onClose }: Comp
 
             {/* Backup Coverage */}
             <div>
-              <h3 className="text-sm font-semibold text-foreground/70 print:text-black mb-3">Backup Coverage</h3>
+              <h3 className="text-sm font-semibold text-muted-foreground print:text-black mb-3">Backup Coverage</h3>
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-card print:bg-muted rounded-lg p-3 text-center">
                   <div className="text-2xl font-bold text-green-400 print:text-green-600">{data.backup_coverage.coverage_pct}%</div>
@@ -108,7 +108,7 @@ export default function ComplianceReport({ tenantId, tenantName, onClose }: Comp
                 <div className="mt-2 space-y-1">
                   {data.backup_coverage.workloads.map(wl => (
                     <div key={wl.workload} className="flex items-center justify-between text-xs px-2 py-1 bg-card/50 print:bg-muted/50 rounded">
-                      <span className="text-foreground/70 print:text-black capitalize">{wl.workload}</span>
+                      <span className="text-muted-foreground print:text-black capitalize">{wl.workload}</span>
                       <span className="text-muted-foreground">{wl.protected_objects} objects | Last: {wl.last_backup ? new Date(wl.last_backup).toLocaleDateString() : 'Never'}</span>
                     </div>
                   ))}
@@ -118,13 +118,13 @@ export default function ComplianceReport({ tenantId, tenantName, onClose }: Comp
 
             {/* Encryption */}
             <div>
-              <h3 className="text-sm font-semibold text-foreground/70 print:text-black mb-3">Encryption Status</h3>
+              <h3 className="text-sm font-semibold text-muted-foreground print:text-black mb-3">Encryption Status</h3>
               <div className="space-y-2">
                 {Object.entries(data.encryption).map(([key, val]) => (
                   <div key={key} className="flex items-start gap-2 text-xs">
                     <CheckCircle className="w-3.5 h-3.5 text-green-400 print:text-green-600 mt-0.5 shrink-0" />
                     <div>
-                      <span className="text-foreground/70 print:text-black font-medium capitalize">{key.replace(/_/g, ' ')}: </span>
+                      <span className="text-muted-foreground print:text-black font-medium capitalize">{key.replace(/_/g, ' ')}: </span>
                       <span className="text-muted-foreground print:text-muted-foreground">{val}</span>
                     </div>
                   </div>
@@ -134,7 +134,7 @@ export default function ComplianceReport({ tenantId, tenantName, onClose }: Comp
 
             {/* Backup Reliability */}
             <div>
-              <h3 className="text-sm font-semibold text-foreground/70 print:text-black mb-3">Backup Reliability ({data.backup_reliability.period})</h3>
+              <h3 className="text-sm font-semibold text-muted-foreground print:text-black mb-3">Backup Reliability ({data.backup_reliability.period})</h3>
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-card print:bg-muted rounded-lg p-3 text-center">
                   <div className="text-2xl font-bold text-foreground print:text-black">{data.backup_reliability.total_jobs}</div>
@@ -153,7 +153,7 @@ export default function ComplianceReport({ tenantId, tenantName, onClose }: Comp
 
             {/* Framework Controls */}
             <div>
-              <h3 className="text-sm font-semibold text-foreground/70 print:text-black mb-3">{data.framework} — Controls</h3>
+              <h3 className="text-sm font-semibold text-muted-foreground print:text-black mb-3">{data.framework} — Controls</h3>
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-border print:border-gray-300">
@@ -166,8 +166,8 @@ export default function ComplianceReport({ tenantId, tenantName, onClose }: Comp
                 <tbody className="divide-y divide-border/50 print:divide-border">
                   {data.controls.map(c => (
                     <tr key={c.id}>
-                      <td className="py-2 text-foreground/70 print:text-black font-mono">{c.id}</td>
-                      <td className="py-2 text-foreground/70 print:text-black">{c.name}</td>
+                      <td className="py-2 text-muted-foreground print:text-black font-mono">{c.id}</td>
+                      <td className="py-2 text-muted-foreground print:text-black">{c.name}</td>
                       <td className="py-2 text-muted-foreground print:text-muted-foreground">{c.control}</td>
                       <td className="py-2 text-center"><CheckCircle className="w-4 h-4 text-green-400 print:text-green-600 mx-auto" /></td>
                     </tr>
@@ -179,11 +179,11 @@ export default function ComplianceReport({ tenantId, tenantName, onClose }: Comp
             {/* SLA Policies */}
             {data.sla_policies.length > 0 && (
               <div>
-                <h3 className="text-sm font-semibold text-foreground/70 print:text-black mb-3">Retention Policies</h3>
+                <h3 className="text-sm font-semibold text-muted-foreground print:text-black mb-3">Retention Policies</h3>
                 <div className="space-y-1">
                   {data.sla_policies.map(p => (
                     <div key={p.name} className="flex items-center justify-between text-xs px-2 py-1.5 bg-card/50 print:bg-muted/50 rounded">
-                      <span className="text-foreground/70 print:text-black font-medium">{p.name}</span>
+                      <span className="text-muted-foreground print:text-black font-medium">{p.name}</span>
                       <span className="text-muted-foreground">Every {p.frequency_hours}h | {p.retention_days}d retention{p.worm_enabled ? ' | WORM' : ''}</span>
                     </div>
                   ))}

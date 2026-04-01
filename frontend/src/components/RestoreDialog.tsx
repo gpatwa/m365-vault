@@ -54,7 +54,7 @@ export default function RestoreDialog({
             <Download className="w-5 h-5" />
             <h3 className="font-semibold text-lg">Restore Data</h3>
           </div>
-          <button onClick={onClose} className="text-foreground/70 hover:text-foreground">
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -101,7 +101,7 @@ export default function RestoreDialog({
 
               {/* Restore type */}
               <div>
-                <label className="block text-sm font-medium text-foreground/80 mb-2">Restore Type</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">Restore Type</label>
                 <div className="space-y-2">
                   {[
                     { value: 'full_inplace', label: 'Full Restore (In-Place)', desc: 'Restore all items to original location' },
@@ -139,12 +139,12 @@ export default function RestoreDialog({
               {/* Confirmation */}
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)} className="rounded" />
-                <span className="text-sm text-foreground/80">I confirm I want to restore this data</span>
+                <span className="text-sm text-muted-foreground">I confirm I want to restore this data</span>
               </label>
 
               {/* Actions */}
               <div className="flex gap-3">
-                <button onClick={onClose} className="flex-1 px-4 py-2.5 border border-border rounded-xl text-sm font-medium text-foreground/80 hover:bg-muted/50">
+                <button onClick={onClose} className="flex-1 px-4 py-2.5 border border-border rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted/50">
                   Cancel
                 </button>
                 <button

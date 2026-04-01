@@ -105,7 +105,7 @@ export default function PlatformCard({
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <Icon className={`w-4 h-4 ${wl.iconColor}`} />
-                    <span className="text-xs font-semibold text-foreground/80">{wl.label}</span>
+                    <span className="text-xs font-semibold text-muted-foreground">{wl.label}</span>
                     <span className={`text-[9px] px-1 rounded ${wlStatus.bg} ${wlStatus.text} font-bold ml-auto`}>
                       {wl.protected}/{wl.total}
                     </span>

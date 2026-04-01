@@ -227,7 +227,7 @@ export default function SharePoint() {
       key: 'criticality_tier',
       label: 'Criticality',
       sortable: true,
-      render: (row) => row.criticality_tier ? <CriticalityBadge tier={row.criticality_tier} score={row.criticality_score} /> : <span className="text-foreground/70">—</span>,
+      render: (row) => row.criticality_tier ? <CriticalityBadge tier={row.criticality_tier} score={row.criticality_score} /> : <span className="text-muted-foreground">—</span>,
     },
     { key: 'total_items', label: 'Items', sortable: true },
     {

@@ -176,7 +176,7 @@ export default function ProductTour({ onComplete }: ProductTourProps) {
 
               <div className="flex gap-2">
                 {step > 0 && (
-                  <button onClick={prev} className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground/80 flex items-center gap-1 transition-colors">
+                  <button onClick={prev} className="px-3 py-1.5 text-sm text-muted-foreground hover:text-muted-foreground flex items-center gap-1 transition-colors">
                     <ArrowLeft className="w-3.5 h-3.5" /> Back
                   </button>
                 )}

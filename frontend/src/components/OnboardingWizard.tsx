@@ -243,7 +243,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
             <form onSubmit={handleStep1Submit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-foreground/80 mb-1">Organization Name</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">Organization Name</label>
                   <input
                     type="text" required value={form.name}
                     onChange={e => setForm({ ...form, name: e.target.value })}
@@ -252,7 +252,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground/80 mb-1">Azure AD Tenant ID</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">Azure AD Tenant ID</label>
                   <input
                     type="text" required value={form.ms_tenant_id}
                     onChange={e => setForm({ ...form, ms_tenant_id: e.target.value })}
@@ -261,7 +261,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground/80 mb-1">Application (Client) ID</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">Application (Client) ID</label>
                   <input
                     type="text" required value={form.client_id}
                     onChange={e => setForm({ ...form, client_id: e.target.value })}
@@ -270,7 +270,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground/80 mb-1">Client Secret</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">Client Secret</label>
                   <input
                     type="password" required value={form.client_secret}
                     onChange={e => setForm({ ...form, client_secret: e.target.value })}
@@ -312,7 +312,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
             {discovering ? (
               <div className="text-center py-12">
                 <Loader2 className="w-10 h-10 animate-spin text-blue-600 mx-auto mb-4" />
-                <p className="text-lg font-medium text-foreground/80">Discovering workloads...</p>
+                <p className="text-lg font-medium text-muted-foreground">Discovering workloads...</p>
                 <p className="text-sm text-muted-foreground mt-1">Scanning mailboxes, drives, sites, and directory objects</p>
               </div>
             ) : discovery ? (
@@ -347,9 +347,9 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                             {selected && <CheckCircle className="w-4 h-4 text-foreground" />}
                           </div>
                         )}
-                        <Icon className={`w-6 h-6 mb-2 ${count > 0 ? c.text : 'text-foreground/70'}`} />
-                        <p className={`text-2xl font-bold ${count > 0 ? 'text-foreground' : 'text-foreground/70'}`}>{count}</p>
-                        <p className="text-sm font-medium text-foreground/80">{w.label}</p>
+                        <Icon className={`w-6 h-6 mb-2 ${count > 0 ? c.text : 'text-muted-foreground'}`} />
+                        <p className={`text-2xl font-bold ${count > 0 ? 'text-foreground' : 'text-muted-foreground'}`}>{count}</p>
+                        <p className="text-sm font-medium text-muted-foreground">{w.label}</p>
                         <p className="text-xs text-muted-foreground">{w.desc}</p>
                       </button>
                     );
@@ -425,7 +425,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
             ) : (
               <div className="text-center py-12">
                 <XCircle className="w-10 h-10 text-red-400 mx-auto mb-4" />
-                <p className="text-foreground/80">Discovery failed. Please go back and check your credentials.</p>
+                <p className="text-muted-foreground">Discovery failed. Please go back and check your credentials.</p>
                 <button onClick={() => setStep(1)} className="mt-4 px-4 py-2 bg-muted rounded-lg text-sm hover:bg-accent">
                   Back to Credentials
                 </button>
@@ -443,7 +443,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
 
             {/* Frequency Selection */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-foreground/80 mb-2">Backup Frequency</label>
+              <label className="block text-sm font-medium text-muted-foreground mb-2">Backup Frequency</label>
               <div className="grid grid-cols-3 gap-3">
                 {FREQUENCIES.map(f => {
                   const Icon = f.icon;
@@ -470,7 +470,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
 
             {/* Retention */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-foreground/80 mb-2">Retention Period</label>
+              <label className="block text-sm font-medium text-muted-foreground mb-2">Retention Period</label>
               <div className="flex gap-2">
                 {RETENTION_OPTIONS.map(days => (
                   <button
@@ -479,7 +479,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                       retention === days
                         ? 'bg-blue-600 text-white'
-                        : 'bg-muted text-foreground/80 hover:bg-accent'
+                        : 'bg-muted text-muted-foreground hover:bg-accent'
                     }`}
                   >
                     {days} days
@@ -495,12 +495,12 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                 onChange={e => setAutoBackup(e.target.checked)}
                 className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-ring"
               />
-              <span className="text-sm text-foreground/80">Start first backup immediately after setup</span>
+              <span className="text-sm text-muted-foreground">Start first backup immediately after setup</span>
             </label>
 
             {/* Summary */}
             <div className="bg-muted/50 rounded-lg border p-4 mb-6">
-              <p className="text-sm font-medium text-foreground/80 mb-2">Protection Summary</p>
+              <p className="text-sm font-medium text-muted-foreground mb-2">Protection Summary</p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                 {WORKLOADS.filter(w => selectedWorkloads.has(w.key)).map(w => {
                   const Icon = w.icon;

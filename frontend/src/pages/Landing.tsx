@@ -131,7 +131,7 @@ function CyberRecoveryStory() {
             }`}>
               {phase >= p.num ? p.emoji : <span className="text-xs text-muted-foreground">{p.num}</span>}
             </div>
-            <span className={`text-[10px] font-bold tracking-wider transition-colors ${phase >= p.num ? 'text-foreground' : 'text-foreground/50'}`}>
+            <span className={`text-[10px] font-bold tracking-wider transition-colors ${phase >= p.num ? 'text-foreground' : 'text-muted-foreground'}`}>
               {p.label}
             </span>
           </button>
@@ -303,7 +303,7 @@ export default function Landing() {
               Start Free <ArrowRight className="w-4 h-4" />
             </Link>
             <a href="https://github.com/gpatwa/m365-vault" target="_blank" rel="noopener noreferrer"
-              className="px-6 py-3 bg-muted text-foreground/80 font-medium rounded-xl hover:bg-accent transition-colors flex items-center gap-2">
+              className="px-6 py-3 bg-muted text-muted-foreground font-medium rounded-xl hover:bg-accent transition-colors flex items-center gap-2">
               <Server className="w-4 h-4" /> View Source
             </a>
           </div>
@@ -352,7 +352,7 @@ export default function Landing() {
           <FadeUp>
             <div className="text-center mb-10">
               <h2 className="text-3xl font-bold text-foreground">Why not just use Microsoft?</h2>
-              <p className="text-foreground/80 mt-2">Microsoft 365 has built-in retention. Here's why it's not enough.</p>
+              <p className="text-muted-foreground mt-2">Microsoft 365 has built-in retention. Here's why it's not enough.</p>
             </div>
           </FadeUp>
           <FadeUp delay={200}>
@@ -360,7 +360,7 @@ export default function Landing() {
               <table className="w-full text-sm min-w-[480px]">
                 <thead>
                   <tr className="border-b bg-muted/50">
-                    <th className="text-left px-5 py-3 font-medium text-foreground/90">Capability</th>
+                    <th className="text-left px-5 py-3 font-medium text-foreground">Capability</th>
                     <th className="text-center px-5 py-3 font-medium text-foreground">Microsoft 365</th>
                     <th className="text-center px-5 py-3 font-semibold text-blue-600">Shieldio</th>
                   </tr>
@@ -376,7 +376,7 @@ export default function Landing() {
                   ].map(row => (
                     <tr key={row.cap} className="hover:bg-muted/50">
                       <td className="px-5 py-3 font-medium text-foreground">{row.cap}</td>
-                      <td className="px-5 py-3 text-center text-foreground/90">{row.m365}</td>
+                      <td className="px-5 py-3 text-center text-foreground">{row.m365}</td>
                       <td className="px-5 py-3 text-center text-green-400 font-medium">{row.shieldio}</td>
                     </tr>
                   ))}
@@ -498,7 +498,7 @@ export default function Landing() {
               <table className="w-full text-sm min-w-[480px]">
                 <thead>
                   <tr className="border-b bg-muted/50">
-                    <th className="text-left px-5 py-3 font-medium text-foreground/90">Feature</th>
+                    <th className="text-left px-5 py-3 font-medium text-foreground">Feature</th>
                     <th className="text-center px-5 py-3 font-semibold text-blue-400">Shieldio</th>
                     <th className="text-center px-5 py-3 font-medium text-foreground">Others</th>
                   </tr>
@@ -512,8 +512,8 @@ export default function Landing() {
                           : f.us ? <Check className="w-5 h-5 text-green-500 mx-auto" /> : <X className="w-5 h-5 text-red-400/60 mx-auto" />}
                       </td>
                       <td className="px-5 py-3 text-center">
-                        {'themVal' in f ? <span className="text-foreground/90">{f.themVal}</span>
-                          : f.them ? <Check className="w-5 h-5 text-foreground/60 mx-auto" /> : <X className="w-5 h-5 text-red-400/60 mx-auto" />}
+                        {'themVal' in f ? <span className="text-foreground">{f.themVal}</span>
+                          : f.them ? <Check className="w-5 h-5 text-muted-foreground mx-auto" /> : <X className="w-5 h-5 text-red-400/60 mx-auto" />}
                       </td>
                     </tr>
                   ))}
@@ -537,12 +537,12 @@ export default function Landing() {
             {PRICING.map((tier, i) => (
               <FadeUp key={tier.name} delay={i * 100}>
                 <div className={`rounded-xl p-6 ${tier.primary ? 'bg-blue-600 text-white ring-2 ring-blue-600 ring-offset-2 ring-offset-background' : 'bg-card border border-border text-foreground'}`}>
-                  <div className={`text-sm font-semibold ${tier.primary ? 'text-blue-200' : 'text-foreground/80'}`}>{tier.name}</div>
+                  <div className={`text-sm font-semibold ${tier.primary ? 'text-blue-200' : 'text-muted-foreground'}`}>{tier.name}</div>
                   <div className="flex items-baseline gap-1 mt-2">
                     <span className="text-3xl font-extrabold">{tier.price}</span>
-                    <span className={`text-sm ${tier.primary ? 'text-blue-200' : 'text-foreground/60'}`}>{tier.period}</span>
+                    <span className={`text-sm ${tier.primary ? 'text-blue-200' : 'text-muted-foreground'}`}>{tier.period}</span>
                   </div>
-                  <p className={`text-sm mt-1 ${tier.primary ? 'text-blue-200' : 'text-foreground/60'}`}>{tier.desc}</p>
+                  <p className={`text-sm mt-1 ${tier.primary ? 'text-blue-200' : 'text-muted-foreground'}`}>{tier.desc}</p>
                   <ul className="mt-5 space-y-2">
                     {tier.features.map(f => (
                       <li key={f} className="flex items-center gap-2 text-sm">
@@ -552,7 +552,7 @@ export default function Landing() {
                     ))}
                   </ul>
                   <Link to="/login" className={`block mt-6 text-center py-2.5 rounded-lg font-medium text-sm transition-colors ${
-                    tier.primary ? 'bg-white text-blue-600 hover:bg-blue-50' : 'bg-muted text-foreground/80 hover:bg-accent'
+                    tier.primary ? 'bg-white text-blue-600 hover:bg-blue-50' : 'bg-muted text-muted-foreground hover:bg-accent'
                   }`}>
                     {tier.cta}
                   </Link>
@@ -610,7 +610,7 @@ export default function Landing() {
               </p>
             </div>
             <div>
-              <div className="text-xs font-semibold text-foreground/90 uppercase tracking-wider mb-3">Product</div>
+              <div className="text-xs font-semibold text-foreground uppercase tracking-wider mb-3">Product</div>
               <div className="space-y-2 text-sm">
                 <a href="#workloads" className="block hover:text-foreground">Workloads</a>
                 <a href="#pricing" className="block hover:text-foreground">Pricing</a>
@@ -618,14 +618,14 @@ export default function Landing() {
               </div>
             </div>
             <div>
-              <div className="text-xs font-semibold text-foreground/90 uppercase tracking-wider mb-3">Resources</div>
+              <div className="text-xs font-semibold text-foreground uppercase tracking-wider mb-3">Resources</div>
               <div className="space-y-2 text-sm">
                 <a href="https://github.com/gpatwa/m365-vault" className="block hover:text-foreground">GitHub</a>
                 <a href="/docs" className="block hover:text-foreground">Documentation</a>
               </div>
             </div>
             <div>
-              <div className="text-xs font-semibold text-foreground/90 uppercase tracking-wider mb-3">Legal</div>
+              <div className="text-xs font-semibold text-foreground uppercase tracking-wider mb-3">Legal</div>
               <div className="space-y-2 text-sm">
                 <Link to="/legal?tab=tos" className="block hover:text-foreground">Terms of Service</Link>
                 <Link to="/legal?tab=privacy" className="block hover:text-foreground">Privacy Policy</Link>

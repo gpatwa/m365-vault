@@ -95,7 +95,7 @@ export default function Reports() {
       <div className="flex gap-1 bg-muted rounded-xl p-1">
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${tab === t ? 'bg-card text-indigo-700 shadow-sm' : 'text-muted-foreground hover:text-foreground/80'}`}>
+            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${tab === t ? 'bg-card text-indigo-700 shadow-sm' : 'text-muted-foreground hover:text-muted-foreground'}`}>
             {t}
           </button>
         ))}

@@ -113,7 +113,7 @@ export default function BulkOnboard() {
         </div>
         {step === 'upload' && (
           <div className="flex items-center gap-2">
-            <button onClick={downloadTemplate} className="flex items-center gap-2 px-3 py-2 bg-secondary text-foreground/70 rounded-lg text-sm hover:bg-accent transition-colors">
+            <button onClick={downloadTemplate} className="flex items-center gap-2 px-3 py-2 bg-secondary text-muted-foreground rounded-lg text-sm hover:bg-accent transition-colors">
               <Download className="w-4 h-4" /> CSV Template
             </button>
             <button onClick={addManualRow} className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-500 transition-colors">
@@ -140,7 +140,7 @@ export default function BulkOnboard() {
           ) : (
             <>
               <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-              <p className="text-foreground/70 font-medium">Drop a CSV file here or click to upload</p>
+              <p className="text-muted-foreground font-medium">Drop a CSV file here or click to upload</p>
               <p className="text-xs text-muted-foreground mt-1">Format: name, ms_tenant_id, client_id, client_secret</p>
             </>
           )}
@@ -204,10 +204,10 @@ export default function BulkOnboard() {
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <button onClick={addManualRow} className="flex items-center gap-1 px-3 py-2 bg-secondary text-foreground/70 rounded-lg text-xs hover:bg-accent">
+              <button onClick={addManualRow} className="flex items-center gap-1 px-3 py-2 bg-secondary text-muted-foreground rounded-lg text-xs hover:bg-accent">
                 <Plus className="w-3 h-3" /> Add Row
               </button>
-              <button onClick={() => { setStep('upload'); setEntries([]); }} className="px-3 py-2 text-muted-foreground text-xs hover:text-foreground/70">
+              <button onClick={() => { setStep('upload'); setEntries([]); }} className="px-3 py-2 text-muted-foreground text-xs hover:text-muted-foreground">
                 Start Over
               </button>
             </div>
@@ -282,7 +282,7 @@ export default function BulkOnboard() {
 
           <div className="flex items-center gap-3">
             <button onClick={() => { setStep('upload'); setEntries([]); setResults([]); }}
-              className="px-4 py-2 bg-secondary text-foreground/70 rounded-lg text-sm hover:bg-accent">
+              className="px-4 py-2 bg-secondary text-muted-foreground rounded-lg text-sm hover:bg-accent">
               Onboard More
             </button>
             <a href="/msp" className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-500 flex items-center gap-2">

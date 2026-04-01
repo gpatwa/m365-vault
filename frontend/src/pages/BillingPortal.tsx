@@ -172,9 +172,9 @@ export default function BillingPortal() {
             {data?.line_items.map(item => (
               <tr key={item.tenant_id} className="hover:bg-secondary/30">
                 <td className="px-4 py-3 text-foreground font-medium">{item.tenant_name}</td>
-                <td className="px-4 py-3 text-right text-foreground/70">{item.user_count}</td>
-                <td className="px-4 py-3 text-right text-foreground/70">{item.storage_gb} GB</td>
-                <td className="px-4 py-3 text-right text-foreground/70">${item.unit_price.toFixed(2)}</td>
+                <td className="px-4 py-3 text-right text-muted-foreground">{item.user_count}</td>
+                <td className="px-4 py-3 text-right text-muted-foreground">{item.storage_gb} GB</td>
+                <td className="px-4 py-3 text-right text-muted-foreground">${item.unit_price.toFixed(2)}</td>
                 <td className="px-4 py-3 text-right text-foreground font-semibold">${item.monthly_cost.toFixed(2)}</td>
                 <td className="px-4 py-3 text-center">
                   <span className={`px-2 py-0.5 rounded text-[10px] font-medium uppercase ${STATUS_COLORS[item.status] || STATUS_COLORS.draft}`}>

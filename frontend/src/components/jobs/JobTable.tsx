@@ -157,7 +157,7 @@ export default function JobTable({
                     ) : j.retry_count > 0 ? (
                       <span className="text-xs text-muted-foreground">retried {j.retry_count}x</span>
                     ) : (
-                      <span className="text-foreground/70">—</span>
+                      <span className="text-muted-foreground">—</span>
                     )}
                   </td>
                 </tr>

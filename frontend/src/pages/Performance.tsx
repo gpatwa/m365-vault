@@ -81,7 +81,7 @@ export default function Performance() {
 
       {noResults ? (
         <div className="bg-muted/50 border border-border rounded-xl p-8 text-center">
-          <Server className="w-10 h-10 text-foreground/70 mx-auto mb-3" />
+          <Server className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
           <p className="text-muted-foreground font-medium">No benchmark results available</p>
           <p className="text-sm text-muted-foreground mt-1">Run <code className="bg-gray-200 px-2 py-0.5 rounded text-xs">make benchmark</code> to generate performance data</p>
         </div>
@@ -161,7 +161,7 @@ export default function Performance() {
                   <tbody className="divide-y divide-border">
                     {Object.entries(b.api_latency || {}).map(([name, v]) => (
                       <tr key={name} className="hover:bg-muted/50">
-                        <td className="px-2 py-1.5 text-foreground/80">{name}</td>
+                        <td className="px-2 py-1.5 text-muted-foreground">{name}</td>
                         <td className="px-2 py-1.5 text-right font-mono">{v.avg_ms.toFixed(1)}</td>
                         <td className="px-2 py-1.5 text-right font-mono">{v.p50_ms.toFixed(1)}</td>
                         <td className="px-2 py-1.5 text-right font-mono">{v.p95_ms.toFixed(1)}</td>

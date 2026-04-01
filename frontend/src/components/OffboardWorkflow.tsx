@@ -75,7 +75,7 @@ export default function OffboardWorkflow({ tenantId, tenantName, onClose, onComp
               {step === 'review' && (
                 <div className="space-y-5">
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground/70 mb-3">Data Inventory</h3>
+                    <h3 className="text-sm font-semibold text-muted-foreground mb-3">Data Inventory</h3>
                     <div className="grid grid-cols-3 gap-3 mb-4">
                       <div className="bg-card rounded-lg p-3 text-center">
                         <div className="text-xl font-bold text-foreground">{inventory.total_objects || 0}</div>
@@ -92,7 +92,7 @@ export default function OffboardWorkflow({ tenantId, tenantName, onClose, onComp
                     </div>
                     {(inventory.workloads || []).map((wl: any) => (
                       <div key={wl.workload} className="flex items-center justify-between py-2 px-3 bg-card/50 rounded-lg mb-1 text-xs">
-                        <span className="text-foreground/70 capitalize font-medium">{wl.workload}</span>
+                        <span className="text-muted-foreground capitalize font-medium">{wl.workload}</span>
                         <span className="text-muted-foreground">{wl.objects} objects | {wl.snapshots} snapshots | {wl.storage_gb} GB</span>
                       </div>
                     ))}
@@ -125,7 +125,7 @@ export default function OffboardWorkflow({ tenantId, tenantName, onClose, onComp
               {step === 'retention' && (
                 <div className="space-y-5">
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground/70 mb-3">Data Retention Timeline</h3>
+                    <h3 className="text-sm font-semibold text-muted-foreground mb-3">Data Retention Timeline</h3>
                     <p className="text-xs text-muted-foreground mb-4">After offboarding, backup data is retained per SLA policy. No data is immediately deleted.</p>
 
                     {timeline.length > 0 ? timeline.map((rt: any, i: number) => (
@@ -140,7 +140,7 @@ export default function OffboardWorkflow({ tenantId, tenantName, onClose, onComp
                         </div>
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-muted-foreground">Retention: {rt.retention_days} days</span>
-                          <span className="text-foreground/70 font-medium">Data purge: {rt.data_purge_date}</span>
+                          <span className="text-muted-foreground font-medium">Data purge: {rt.data_purge_date}</span>
                         </div>
                         <div className="mt-2 w-full bg-secondary rounded-full h-1.5">
                           <div className="bg-blue-500 rounded-full h-1.5" style={{ width: '100%' }} />
@@ -156,7 +156,7 @@ export default function OffboardWorkflow({ tenantId, tenantName, onClose, onComp
                   </div>
 
                   <div className="bg-card/50 rounded-lg p-3 space-y-2">
-                    <div className="text-xs font-medium text-foreground/70 mb-2">After offboarding, you can still:</div>
+                    <div className="text-xs font-medium text-muted-foreground mb-2">After offboarding, you can still:</div>
                     {[
                       { icon: Shield, text: 'View and browse existing backups', ok: postOffboard.backups_accessible },
                       { icon: Download, text: 'Export data during retention period', ok: postOffboard.data_export_available },
@@ -193,16 +193,16 @@ export default function OffboardWorkflow({ tenantId, tenantName, onClose, onComp
                       You are about to deactivate <strong className="text-foreground">{tenantName}</strong>.
                     </p>
                     <div className="mt-4 text-left max-w-sm mx-auto space-y-2 text-xs">
-                      <div className="flex items-start gap-2 text-foreground/70">
+                      <div className="flex items-start gap-2 text-muted-foreground">
                         <span className="text-amber-400 mt-0.5">1.</span> All scheduled backups will stop immediately
                       </div>
-                      <div className="flex items-start gap-2 text-foreground/70">
+                      <div className="flex items-start gap-2 text-muted-foreground">
                         <span className="text-amber-400 mt-0.5">2.</span> Existing backup data retained per SLA ({timeline[0]?.retention_days || 30}+ days)
                       </div>
-                      <div className="flex items-start gap-2 text-foreground/70">
+                      <div className="flex items-start gap-2 text-muted-foreground">
                         <span className="text-amber-400 mt-0.5">3.</span> You can still access and export data during retention
                       </div>
-                      <div className="flex items-start gap-2 text-foreground/70">
+                      <div className="flex items-start gap-2 text-muted-foreground">
                         <span className="text-amber-400 mt-0.5">4.</span> Tenant can be reactivated if needed
                       </div>
                     </div>
@@ -230,7 +230,7 @@ export default function OffboardWorkflow({ tenantId, tenantName, onClose, onComp
                   </div>
 
                   <div className="bg-card rounded-xl p-4 text-left space-y-2">
-                    <div className="text-xs font-medium text-foreground/70 mb-2">What happens next:</div>
+                    <div className="text-xs font-medium text-muted-foreground mb-2">What happens next:</div>
                     {(offboardMutation.data?.what_happened || [
                       'Tenant status set to INACTIVE',
                       'Scheduled backups stopped',

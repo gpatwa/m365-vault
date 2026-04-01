@@ -80,7 +80,7 @@ export default function Docs() {
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <h3 className="font-semibold text-foreground group-hover:text-blue-600 transition-colors">{doc.title}</h3>
-                        <ExternalLink className="w-4 h-4 text-foreground/70 group-hover:text-blue-400 transition-colors" />
+                        <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-blue-400 transition-colors" />
                       </div>
                       <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{doc.desc}</p>
                       <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
@@ -105,7 +105,7 @@ export default function Docs() {
               <Zap className="w-4 h-4" /> Swagger UI
             </a>
             <a href="https://m365vault-backend-dev.happyflower-239d5857.centralus.azurecontainerapps.io/redoc" target="_blank" rel="noopener noreferrer"
-              className="px-4 py-2 bg-gray-200 text-foreground/80 text-sm font-medium rounded-lg hover:bg-gray-300 flex items-center gap-2 transition-colors">
+              className="px-4 py-2 bg-gray-200 text-muted-foreground text-sm font-medium rounded-lg hover:bg-gray-300 flex items-center gap-2 transition-colors">
               <BookOpen className="w-4 h-4" /> ReDoc
             </a>
           </div>

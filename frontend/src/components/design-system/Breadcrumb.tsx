@@ -21,7 +21,7 @@ export default function Breadcrumb({ items, rightSlot }: BreadcrumbProps) {
         </Link>
         {items.map((item, i) => (
           <span key={i} className="flex items-center gap-1">
-            <ChevronRight className="w-3.5 h-3.5 text-foreground/70" />
+            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
             {item.path ? (
               <Link
                 to={item.path}

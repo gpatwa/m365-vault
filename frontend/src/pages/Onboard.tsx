@@ -944,7 +944,7 @@ export function OnboardCallback() {
           <button onClick={() => navigate('/onboard')} className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700">
             {isPropagation ? 'Try Again (should work now)' : 'Try Again'}
           </button>
-          <button onClick={() => navigate('/')} className="px-6 py-2.5 bg-secondary text-foreground/80 rounded-xl font-medium hover:bg-muted">Dashboard</button>
+          <button onClick={() => navigate('/')} className="px-6 py-2.5 bg-secondary text-muted-foreground rounded-xl font-medium hover:bg-muted">Dashboard</button>
         </div>
       </div>
     );
@@ -1075,7 +1075,7 @@ export function OnboardCallback() {
                 <button
                   onClick={handleDiscoverSelected}
                   disabled={discovering}
-                  className="px-4 py-3 bg-secondary text-foreground/80 rounded-xl font-medium hover:bg-muted transition-colors flex items-center gap-2"
+                  className="px-4 py-3 bg-secondary text-muted-foreground rounded-xl font-medium hover:bg-muted transition-colors flex items-center gap-2"
                 >
                   {discovering ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                   Re-discover
@@ -1404,7 +1404,7 @@ export function OnboardCallback() {
           )}
 
           {backupStatus !== 'complete' && (
-            <button onClick={() => setStep(5)} className="mt-4 w-full text-sm text-muted-foreground hover:text-foreground/80 text-center">
+            <button onClick={() => setStep(5)} className="mt-4 w-full text-sm text-muted-foreground hover:text-muted-foreground text-center">
               Skip — I'll run it later
             </button>
           )}
@@ -1464,7 +1464,7 @@ export function OnboardCallback() {
             </button>
             <button
               onClick={() => navigate('/recovery')}
-              className="px-6 py-3 bg-secondary text-foreground/80 rounded-xl font-medium hover:bg-muted transition-colors"
+              className="px-6 py-3 bg-secondary text-muted-foreground rounded-xl font-medium hover:bg-muted transition-colors"
             >
               Recovery Dashboard
             </button>

@@ -161,7 +161,7 @@ export default function EntraID() {
   if (!tenantId) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-        <KeyRound className="w-12 h-12 mb-3 text-foreground/70" />
+        <KeyRound className="w-12 h-12 mb-3 text-muted-foreground" />
         <p className="text-lg font-medium text-muted-foreground">No Tenant Connected</p>
         <p className="text-sm mt-1">Connect a SaaS platform from the <a href="/tenants" className="text-blue-600 hover:underline">Tenants</a> page to get started.</p>
       </div>
@@ -179,8 +179,8 @@ export default function EntraID() {
   if (!summary?.protected) {
     return (
       <div className="text-center py-16">
-        <Shield className="w-16 h-16 mx-auto mb-4 text-foreground/70" />
-        <h2 className="text-xl font-semibold text-foreground/80 mb-2">Entra ID Not Discovered</h2>
+        <Shield className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+        <h2 className="text-xl font-semibold text-muted-foreground mb-2">Entra ID Not Discovered</h2>
         <p className="text-muted-foreground">Run discovery on your tenant from the Settings page to enable Entra ID backup.</p>
       </div>
     );

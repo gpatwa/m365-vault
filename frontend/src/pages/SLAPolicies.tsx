@@ -109,27 +109,27 @@ export default function SLAPolicies() {
           <h3 className="text-lg font-semibold mb-4">{editPolicy ? 'Edit Policy' : 'Create New SLA Policy'}</h3>
           <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-foreground/80 mb-1">Name</label>
+              <label className="block text-sm font-medium text-muted-foreground mb-1">Name</label>
               <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground/80 mb-1">Priority (1=highest)</label>
+              <label className="block text-sm font-medium text-muted-foreground mb-1">Priority (1=highest)</label>
               <input type="number" value={form.priority} onChange={e => setForm({ ...form, priority: +e.target.value })} min={1} max={10}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground/80 mb-1">Backup Frequency (hours)</label>
+              <label className="block text-sm font-medium text-muted-foreground mb-1">Backup Frequency (hours)</label>
               <input type="number" value={form.backup_frequency_hours} onChange={e => setForm({ ...form, backup_frequency_hours: +e.target.value })} min={1}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground/80 mb-1">Retention (days)</label>
+              <label className="block text-sm font-medium text-muted-foreground mb-1">Retention (days)</label>
               <input type="number" value={form.retention_days} onChange={e => setForm({ ...form, retention_days: +e.target.value })} min={1}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring" />
             </div>
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-foreground/80 mb-1">Description</label>
+              <label className="block text-sm font-medium text-muted-foreground mb-1">Description</label>
               <input type="text" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring" />
             </div>
@@ -151,7 +151,7 @@ export default function SLAPolicies() {
               <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
                 {editPolicy ? 'Update' : 'Create'} Policy
               </button>
-              <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-muted text-foreground/80 rounded-lg text-sm font-medium hover:bg-accent">
+              <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-muted text-muted-foreground rounded-lg text-sm font-medium hover:bg-accent">
                 Cancel
               </button>
             </div>

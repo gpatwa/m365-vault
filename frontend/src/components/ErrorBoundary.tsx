@@ -63,7 +63,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   </p>
                   <button
                     onClick={this.handleCopy}
-                    className="text-muted-foreground hover:text-foreground/70 transition-colors"
+                    className="text-muted-foreground hover:text-muted-foreground transition-colors"
                     title="Copy error details"
                   >
                     {this.state.copied

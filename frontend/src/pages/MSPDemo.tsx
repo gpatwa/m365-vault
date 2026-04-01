@@ -189,7 +189,7 @@ export default function MSPDemo() {
       </div>
       <div className="grid grid-cols-2 gap-6">
         <div className="bg-card rounded-xl p-5 border border-border space-y-4">
-          <div className="text-sm font-medium text-foreground/70">Preview: Your Sidebar</div>
+          <div className="text-sm font-medium text-muted-foreground">Preview: Your Sidebar</div>
           <div className="bg-slate-900 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-7 h-7 rounded bg-blue-500 flex items-center justify-center"><Shield className="w-4 h-4 text-foreground" /></div>
@@ -201,7 +201,7 @@ export default function MSPDemo() {
           </div>
         </div>
         <div className="bg-card rounded-xl p-5 border border-border space-y-4">
-          <div className="text-sm font-medium text-foreground/70">What You Can Customize</div>
+          <div className="text-sm font-medium text-muted-foreground">What You Can Customize</div>
           {[
             { label: 'Company Name', example: 'Acme Cyber Solutions' },
             { label: 'Logo', example: 'Upload your logo (SVG/PNG)' },
@@ -210,7 +210,7 @@ export default function MSPDemo() {
           ].map(item => (
             <div key={item.label} className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground">{item.label}</span>
-              <span className="text-foreground/70 font-mono text-[10px]">{item.example}</span>
+              <span className="text-muted-foreground font-mono text-[10px]">{item.example}</span>
             </div>
           ))}
           <button onClick={() => markEngaged(2)} className="w-full py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-500">
@@ -437,7 +437,7 @@ export default function MSPDemo() {
         </div>
         <div className="text-center">
           <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Scene {scene + 1} of {SCENES.length}: </span>
-          <span className="text-xs text-foreground/70 font-medium">{SCENES[scene].label}</span>
+          <span className="text-xs text-muted-foreground font-medium">{SCENES[scene].label}</span>
         </div>
       </div>
 

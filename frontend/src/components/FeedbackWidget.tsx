@@ -52,13 +52,13 @@ export default function FeedbackWidget() {
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 flex items-center justify-between">
           <span className="text-foreground text-sm font-semibold">Share Feedback</span>
-          <button onClick={() => setIsOpen(false)} className="text-foreground/70 hover:text-foreground"><X className="w-4 h-4" /></button>
+          <button onClick={() => setIsOpen(false)} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
         </div>
 
         <div className="p-5">
           {step === 'rating' && (
             <div>
-              <p className="text-sm text-foreground/80 font-medium mb-3">How's your experience with Shieldio?</p>
+              <p className="text-sm text-muted-foreground font-medium mb-3">How's your experience with Shieldio?</p>
               <div className="flex justify-center gap-1 mb-4">
                 {[1, 2, 3, 4, 5].map(n => (
                   <button key={n} onClick={() => setRating(n)} className="p-1 transition-transform hover:scale-110">
@@ -100,7 +100,7 @@ export default function FeedbackWidget() {
                 value={message}
                 onChange={e => setMessage(e.target.value)}
                 placeholder="Tell us more... What's working well? What could be better?"
-                className="w-full px-3 py-2 border border-border rounded-xl text-sm resize-none h-24 focus:ring-2 focus:ring-ring focus:border-ring placeholder:text-foreground/70"
+                className="w-full px-3 py-2 border border-border rounded-xl text-sm resize-none h-24 focus:ring-2 focus:ring-ring focus:border-ring placeholder:text-muted-foreground"
                 autoFocus
               />
               <div className="flex justify-between items-center mt-3">

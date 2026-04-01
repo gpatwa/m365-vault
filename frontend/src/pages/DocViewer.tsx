@@ -61,7 +61,7 @@ function renderMarkdown(md: string): string {
       if (/^\|[\s:-]+\|$/.test(line)) return '';
       const cells = line.split('|').filter(c => c.trim() !== '');
       return '<tr class="hover:bg-muted/50">' + cells.map(c =>
-        `<td class="px-4 py-2.5 text-sm text-foreground/80 border-b border-border">${c.trim()}</td>`
+        `<td class="px-4 py-2.5 text-sm text-muted-foreground border-b border-border">${c.trim()}</td>`
       ).join('') + '</tr>';
     })
     // Wrap table rows
@@ -72,10 +72,10 @@ function renderMarkdown(md: string): string {
       return `<div class="overflow-x-auto my-6 rounded-xl border border-border"><table class="w-full text-sm"><thead class="bg-muted/50">${header}</thead><tbody>${body}</tbody></table></div>`;
     })
     // Lists
-    .replace(/^- (.+)$/gm, '<li class="text-sm text-foreground/80 leading-relaxed">$1</li>')
+    .replace(/^- (.+)$/gm, '<li class="text-sm text-muted-foreground leading-relaxed">$1</li>')
     .replace(/(<li[^>]*>.*<\/li>\n?)+/g, '<ul class="list-disc ml-5 space-y-1.5 my-3">$&</ul>')
     // Paragraphs (lines not already HTML)
-    .replace(/^(?!<[a-z/]|%%|$|\s*$)(.+)$/gm, '<p class="text-sm text-foreground/80 leading-relaxed my-2">$1</p>');
+    .replace(/^(?!<[a-z/]|%%|$|\s*$)(.+)$/gm, '<p class="text-sm text-muted-foreground leading-relaxed my-2">$1</p>');
 
   // 5. Restore placeholders
   text = text.replace(/%%PLACEHOLDER_(\d+)%%/g, (_, idxStr) => {
@@ -162,7 +162,7 @@ export default function DocViewer() {
             <div className="flex items-center gap-2 text-sm text-muted-foreground mt-4 mb-6">
               <Link to="/docs" className="hover:text-muted-foreground">Docs</Link>
               <span>/</span>
-              <span className="text-foreground/80 flex items-center gap-1"><FileText className="w-3.5 h-3.5" /> {title}</span>
+              <span className="text-muted-foreground flex items-center gap-1"><FileText className="w-3.5 h-3.5" /> {title}</span>
             </div>
 
             <article

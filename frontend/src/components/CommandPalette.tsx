@@ -258,9 +258,9 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
                 <button
                   key={nav.path}
                   onClick={() => goToLink(nav.path)}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left hover:bg-muted/50 text-foreground/80"
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left hover:bg-muted/50 text-muted-foreground"
                 >
-                  <ArrowRight className="w-4 h-4 text-foreground/70" />
+                  <ArrowRight className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm flex-1">{nav.label}</span>
                 </button>
               ))}
@@ -273,7 +273,7 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
               <div className="flex items-center gap-2 px-2 py-1">
                 {(() => { const CatIcon = CATEGORY_ICONS[category] || FileText; return <CatIcon className="w-3 h-3 text-muted-foreground" />; })()}
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{category}</p>
-                <span className="text-[10px] text-foreground/70">{data.items.length}</span>
+                <span className="text-[10px] text-muted-foreground">{data.items.length}</span>
               </div>
               {data.items.slice(0, 5).map((item, i) => {
                 const ItemIcon = TYPE_ICONS[item.type] || FileText;
@@ -322,7 +322,7 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
             <div className="p-8 text-center">
               <Search className="w-8 h-8 text-gray-200 mx-auto mb-3" />
               <p className="text-sm text-muted-foreground">No results for "{query}"</p>
-              <p className="text-[11px] text-foreground/70 mt-1">Try different keywords or check spelling</p>
+              <p className="text-[11px] text-muted-foreground mt-1">Try different keywords or check spelling</p>
             </div>
           )}
 
@@ -335,7 +335,7 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
                   {recentSearches.map(s => (
                     <button key={s} onClick={() => setQuery(s)}
                       className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left hover:bg-muted/50 text-muted-foreground">
-                      <Clock className="w-4 h-4 text-foreground/70" />
+                      <Clock className="w-4 h-4 text-muted-foreground" />
                       <span className="text-sm">{s}</span>
                     </button>
                   ))}
@@ -349,10 +349,10 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
                   data-idx={i}
                   onClick={() => goToLink(link.path)}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                    selectedIdx === i ? 'bg-blue-50 text-blue-900' : 'hover:bg-muted/50 text-foreground/80'
+                    selectedIdx === i ? 'bg-blue-50 text-blue-900' : 'hover:bg-muted/50 text-muted-foreground'
                   }`}
                 >
-                  <ArrowRight className="w-4 h-4 text-foreground/70" />
+                  <ArrowRight className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm flex-1">{link.label}</span>
                   <kbd className="px-1.5 py-0.5 text-[10px] text-muted-foreground bg-muted rounded font-mono">{link.shortcut}</kbd>
                 </button>

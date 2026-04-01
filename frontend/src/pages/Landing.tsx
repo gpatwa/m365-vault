@@ -125,7 +125,7 @@ function CyberRecoveryStory() {
           >
             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all duration-500 ${
               phase >= p.num
-                ? `bg-gradient-to-br ${p.color} shadow-lg ${p.glow} ring-2 ring-offset-2 ring-offset-gray-900 ${p.border}`
+                ? `bg-gradient-to-br ${p.color} shadow-lg ${p.glow} ring-2 ring-offset-2 ring-offset-background ${p.border}`
                 : 'bg-card border border-border'
             }`}>
               {phase >= p.num ? p.emoji : <span className="text-xs text-muted-foreground">{p.num}</span>}
@@ -212,11 +212,11 @@ function CyberRecoveryStory() {
 
 // ── Workload icons ──
 const WORKLOADS = [
-  { icon: Mail, label: 'Exchange', desc: 'Email, Calendar, Contacts', color: 'text-blue-600 bg-blue-50 border-blue-200' },
-  { icon: HardDrive, label: 'OneDrive', desc: 'Files & Folders', color: 'text-purple-600 bg-purple-50 border-purple-200' },
-  { icon: Globe, label: 'SharePoint', desc: 'Sites, Lists, Documents', color: 'text-green-600 bg-green-50 border-green-200' },
-  { icon: MessageSquare, label: 'Teams', desc: 'Chats, Channels, Files', color: 'text-pink-600 bg-pink-50 border-pink-200' },
-  { icon: KeyRound, label: 'Entra ID', desc: '12 object types, Config drift', color: 'text-amber-600 bg-amber-50 border-amber-200' },
+  { icon: Mail, label: 'Exchange', desc: 'Email, Calendar, Contacts', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
+  { icon: HardDrive, label: 'OneDrive', desc: 'Files & Folders', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
+  { icon: Globe, label: 'SharePoint', desc: 'Sites, Lists, Documents', color: 'text-green-400 bg-green-500/10 border-green-500/20' },
+  { icon: MessageSquare, label: 'Teams', desc: 'Chats, Channels, Files', color: 'text-pink-400 bg-pink-500/10 border-pink-500/20' },
+  { icon: KeyRound, label: 'Entra ID', desc: '12 object types, Config drift', color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
 ];
 
 // ── Competitor comparison (CISO-focused) ──
@@ -247,7 +247,7 @@ export default function Landing() {
   useEffect(() => { setTimeout(() => setHeroReady(true), 100); }, []);
 
   return (
-    <div className="min-h-screen bg-card">
+    <div className="min-h-screen bg-background">
 
       {/* ═══ NAV ═══ */}
       <nav className="fixed top-0 w-full z-50 bg-card/80 backdrop-blur-sm border-b border-border">
@@ -275,7 +275,7 @@ export default function Landing() {
       <section className="pt-24 pb-16 px-6">
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
-          <div className={`inline-flex items-center gap-2 px-3 py-1 bg-red-50 text-red-700 rounded-full text-xs font-medium mb-6 transition-all duration-500 ${heroReady ? 'opacity-100' : 'opacity-0'}`}>
+          <div className={`inline-flex items-center gap-2 px-3 py-1 bg-red-500/10 text-red-400 rounded-full text-xs font-medium mb-6 transition-all duration-500 ${heroReady ? 'opacity-100' : 'opacity-0'}`}>
             <AlertTriangle className="w-3.5 h-3.5" />
             Microsoft doesn't back up your M365 data
           </div>
@@ -329,7 +329,7 @@ export default function Landing() {
       </section>
 
       {/* ═══ SECTION 2: CYBER RECOVERY STORY — Cinematic Animation ═══ */}
-      <section id="how-it-works" className="py-20 px-6 bg-gradient-to-b from-gray-900 via-gray-900 to-gray-950">
+      <section id="how-it-works" className="py-20 px-6 bg-gradient-to-b from-background via-background to-muted">
         <div className="max-w-5xl mx-auto">
           <FadeUp>
             <div className="text-center mb-12">
@@ -375,7 +375,7 @@ export default function Landing() {
                     <tr key={row.cap} className="hover:bg-muted/50">
                       <td className="px-5 py-3 font-medium text-foreground/80">{row.cap}</td>
                       <td className="px-5 py-3 text-center text-muted-foreground">{row.m365}</td>
-                      <td className="px-5 py-3 text-center text-green-700 font-medium">{row.shieldio}</td>
+                      <td className="px-5 py-3 text-center text-green-400 font-medium">{row.shieldio}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -432,7 +432,7 @@ export default function Landing() {
               <FadeUp key={f.title} delay={i * 150}>
                 <div className="bg-card rounded-xl p-6 border border-border hover:border-border transition-colors">
                   <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${f.color} flex items-center justify-center mb-4`}>
-                    <f.icon className="w-5 h-5 text-foreground" />
+                    <f.icon className="w-5 h-5 text-white" />
                   </div>
                   <h3 className="font-semibold mb-2">{f.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
@@ -506,7 +506,7 @@ export default function Landing() {
                     <tr key={f.feature} className="hover:bg-muted/50">
                       <td className="px-5 py-3 text-foreground/80">{f.feature}</td>
                       <td className="px-5 py-3 text-center">
-                        {'usVal' in f ? <span className="font-semibold text-green-600">{f.usVal}</span>
+                        {'usVal' in f ? <span className="font-semibold text-green-400">{f.usVal}</span>
                           : f.us ? <Check className="w-5 h-5 text-green-500 mx-auto" /> : <X className="w-5 h-5 text-foreground/70 mx-auto" />}
                       </td>
                       <td className="px-5 py-3 text-center">
@@ -534,7 +534,7 @@ export default function Landing() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
             {PRICING.map((tier, i) => (
               <FadeUp key={tier.name} delay={i * 100}>
-                <div className={`rounded-xl p-6 ${tier.primary ? 'bg-blue-600 text-white ring-2 ring-blue-600 ring-offset-2' : 'bg-card border border-border'}`}>
+                <div className={`rounded-xl p-6 ${tier.primary ? 'bg-blue-600 text-white ring-2 ring-blue-600 ring-offset-2 ring-offset-background' : 'bg-card border border-border text-foreground'}`}>
                   <div className={`text-sm font-semibold ${tier.primary ? 'text-blue-200' : 'text-muted-foreground'}`}>{tier.name}</div>
                   <div className="flex items-baseline gap-1 mt-2">
                     <span className="text-3xl font-extrabold">{tier.price}</span>
@@ -550,7 +550,7 @@ export default function Landing() {
                     ))}
                   </ul>
                   <Link to="/login" className={`block mt-6 text-center py-2.5 rounded-lg font-medium text-sm transition-colors ${
-                    tier.primary ? 'bg-card text-blue-600 hover:bg-blue-50' : 'bg-muted text-foreground/80 hover:bg-accent'
+                    tier.primary ? 'bg-white text-blue-600 hover:bg-blue-50' : 'bg-muted text-foreground/80 hover:bg-accent'
                   }`}>
                     {tier.cta}
                   </Link>
@@ -582,11 +582,11 @@ export default function Landing() {
 
       {/* ═══ SECTION 9: FINAL CTA ═══ */}
       <section className="py-20 px-6 bg-gradient-to-br from-blue-600 to-indigo-700">
-        <div className="max-w-3xl mx-auto text-center text-foreground">
+        <div className="max-w-3xl mx-auto text-center text-white">
           <FadeUp>
             <h2 className="text-3xl font-bold mb-4">Ready to prove you can recover?</h2>
             <p className="text-blue-100 mb-8">Most backup vendors prove you can back up. Shieldio proves you can recover.</p>
-            <Link to="/login" className="inline-flex items-center gap-2 px-8 py-3.5 bg-card text-blue-700 font-semibold rounded-xl hover:bg-blue-50 transition-colors text-lg">
+            <Link to="/login" className="inline-flex items-center gap-2 px-8 py-3.5 bg-white text-blue-700 font-semibold rounded-xl hover:bg-blue-50 transition-colors text-lg">
               Get Started Free <ArrowRight className="w-5 h-5" />
             </Link>
           </FadeUp>
@@ -630,7 +630,7 @@ export default function Landing() {
               </div>
             </div>
           </div>
-          <div className="border-t border-gray-800 pt-6 text-center text-xs text-muted-foreground">
+          <div className="border-t border-border pt-6 text-center text-xs text-muted-foreground">
             &copy; {new Date().getFullYear()} Shieldio. Open source under Apache 2.0 License.
           </div>
         </div>

@@ -352,7 +352,7 @@ export default function Landing() {
           <FadeUp>
             <div className="text-center mb-10">
               <h2 className="text-3xl font-bold text-foreground">Why not just use Microsoft?</h2>
-              <p className="text-muted-foreground mt-2">Microsoft 365 has built-in retention. Here's why it's not enough.</p>
+              <p className="text-foreground/80 mt-2">Microsoft 365 has built-in retention. Here's why it's not enough.</p>
             </div>
           </FadeUp>
           <FadeUp delay={200}>
@@ -361,7 +361,7 @@ export default function Landing() {
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="text-left px-5 py-3 font-medium text-foreground/90">Capability</th>
-                    <th className="text-center px-5 py-3 font-medium text-foreground/70">Microsoft 365</th>
+                    <th className="text-center px-5 py-3 font-medium text-foreground">Microsoft 365</th>
                     <th className="text-center px-5 py-3 font-semibold text-blue-600">Shieldio</th>
                   </tr>
                 </thead>
@@ -376,7 +376,7 @@ export default function Landing() {
                   ].map(row => (
                     <tr key={row.cap} className="hover:bg-muted/50">
                       <td className="px-5 py-3 font-medium text-foreground">{row.cap}</td>
-                      <td className="px-5 py-3 text-center text-foreground/70">{row.m365}</td>
+                      <td className="px-5 py-3 text-center text-foreground/90">{row.m365}</td>
                       <td className="px-5 py-3 text-center text-green-400 font-medium">{row.shieldio}</td>
                     </tr>
                   ))}
@@ -500,7 +500,7 @@ export default function Landing() {
                   <tr className="border-b bg-muted/50">
                     <th className="text-left px-5 py-3 font-medium text-foreground/90">Feature</th>
                     <th className="text-center px-5 py-3 font-semibold text-blue-400">Shieldio</th>
-                    <th className="text-center px-5 py-3 font-medium text-foreground/70">Others</th>
+                    <th className="text-center px-5 py-3 font-medium text-foreground">Others</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -512,7 +512,7 @@ export default function Landing() {
                           : f.us ? <Check className="w-5 h-5 text-green-500 mx-auto" /> : <X className="w-5 h-5 text-red-400/60 mx-auto" />}
                       </td>
                       <td className="px-5 py-3 text-center">
-                        {'themVal' in f ? <span className="text-foreground/70">{f.themVal}</span>
+                        {'themVal' in f ? <span className="text-foreground/90">{f.themVal}</span>
                           : f.them ? <Check className="w-5 h-5 text-foreground/60 mx-auto" /> : <X className="w-5 h-5 text-red-400/60 mx-auto" />}
                       </td>
                     </tr>
@@ -537,12 +537,12 @@ export default function Landing() {
             {PRICING.map((tier, i) => (
               <FadeUp key={tier.name} delay={i * 100}>
                 <div className={`rounded-xl p-6 ${tier.primary ? 'bg-blue-600 text-white ring-2 ring-blue-600 ring-offset-2 ring-offset-background' : 'bg-card border border-border text-foreground'}`}>
-                  <div className={`text-sm font-semibold ${tier.primary ? 'text-blue-200' : 'text-muted-foreground'}`}>{tier.name}</div>
+                  <div className={`text-sm font-semibold ${tier.primary ? 'text-blue-200' : 'text-foreground/80'}`}>{tier.name}</div>
                   <div className="flex items-baseline gap-1 mt-2">
                     <span className="text-3xl font-extrabold">{tier.price}</span>
-                    <span className={`text-sm ${tier.primary ? 'text-blue-200' : 'text-muted-foreground'}`}>{tier.period}</span>
+                    <span className={`text-sm ${tier.primary ? 'text-blue-200' : 'text-foreground/60'}`}>{tier.period}</span>
                   </div>
-                  <p className={`text-sm mt-1 ${tier.primary ? 'text-blue-200' : 'text-muted-foreground'}`}>{tier.desc}</p>
+                  <p className={`text-sm mt-1 ${tier.primary ? 'text-blue-200' : 'text-foreground/60'}`}>{tier.desc}</p>
                   <ul className="mt-5 space-y-2">
                     {tier.features.map(f => (
                       <li key={f} className="flex items-center gap-2 text-sm">

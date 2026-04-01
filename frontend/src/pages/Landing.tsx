@@ -131,7 +131,7 @@ function CyberRecoveryStory() {
             }`}>
               {phase >= p.num ? p.emoji : <span className="text-xs text-muted-foreground">{p.num}</span>}
             </div>
-            <span className={`text-[10px] font-bold tracking-wider transition-colors ${phase >= p.num ? 'text-foreground/70' : 'text-muted-foreground'}`}>
+            <span className={`text-[10px] font-bold tracking-wider transition-colors ${phase >= p.num ? 'text-foreground' : 'text-foreground/50'}`}>
               {p.label}
             </span>
           </button>
@@ -177,7 +177,7 @@ function CyberRecoveryStory() {
               {current.items.map((item, idx) => (
                 <div
                   key={idx}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-lg bg-card/5 border border-white/10 text-sm text-foreground/70 transition-all duration-500`}
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-lg bg-card/5 border border-white/10 text-sm text-foreground transition-all duration-500`}
                   style={{ transitionDelay: `${idx * 150}ms`, opacity: phase >= current.num ? 1 : 0, transform: phase >= current.num ? 'translateX(0)' : 'translateX(-10px)' }}
                 >
                   {item}
@@ -360,8 +360,8 @@ export default function Landing() {
               <table className="w-full text-sm min-w-[480px]">
                 <thead>
                   <tr className="border-b bg-muted/50">
-                    <th className="text-left px-5 py-3 font-medium text-muted-foreground">Capability</th>
-                    <th className="text-center px-5 py-3 font-medium text-muted-foreground">Microsoft 365</th>
+                    <th className="text-left px-5 py-3 font-medium text-foreground/90">Capability</th>
+                    <th className="text-center px-5 py-3 font-medium text-foreground/70">Microsoft 365</th>
                     <th className="text-center px-5 py-3 font-semibold text-blue-600">Shieldio</th>
                   </tr>
                 </thead>
@@ -375,8 +375,8 @@ export default function Landing() {
                     { cap: 'Recovery confidence', m365: 'Unknown until you try', shieldio: 'Scored 0-100 with evidence' },
                   ].map(row => (
                     <tr key={row.cap} className="hover:bg-muted/50">
-                      <td className="px-5 py-3 font-medium text-foreground/80">{row.cap}</td>
-                      <td className="px-5 py-3 text-center text-muted-foreground">{row.m365}</td>
+                      <td className="px-5 py-3 font-medium text-foreground">{row.cap}</td>
+                      <td className="px-5 py-3 text-center text-foreground/70">{row.m365}</td>
                       <td className="px-5 py-3 text-center text-green-400 font-medium">{row.shieldio}</td>
                     </tr>
                   ))}
@@ -498,22 +498,22 @@ export default function Landing() {
               <table className="w-full text-sm min-w-[480px]">
                 <thead>
                   <tr className="border-b bg-muted/50">
-                    <th className="text-left px-5 py-3 font-medium text-muted-foreground">Feature</th>
-                    <th className="text-center px-5 py-3 font-semibold text-blue-600">Shieldio</th>
-                    <th className="text-center px-5 py-3 font-medium text-muted-foreground">Others</th>
+                    <th className="text-left px-5 py-3 font-medium text-foreground/90">Feature</th>
+                    <th className="text-center px-5 py-3 font-semibold text-blue-400">Shieldio</th>
+                    <th className="text-center px-5 py-3 font-medium text-foreground/70">Others</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {COMPARE_FEATURES.map(f => (
                     <tr key={f.feature} className="hover:bg-muted/50">
-                      <td className="px-5 py-3 text-foreground/80">{f.feature}</td>
+                      <td className="px-5 py-3 text-foreground">{f.feature}</td>
                       <td className="px-5 py-3 text-center">
                         {'usVal' in f ? <span className="font-semibold text-green-400">{f.usVal}</span>
-                          : f.us ? <Check className="w-5 h-5 text-green-500 mx-auto" /> : <X className="w-5 h-5 text-foreground/70 mx-auto" />}
+                          : f.us ? <Check className="w-5 h-5 text-green-500 mx-auto" /> : <X className="w-5 h-5 text-red-400/60 mx-auto" />}
                       </td>
                       <td className="px-5 py-3 text-center">
-                        {'themVal' in f ? <span className="text-muted-foreground">{f.themVal}</span>
-                          : f.them ? <Check className="w-5 h-5 text-muted-foreground mx-auto" /> : <X className="w-5 h-5 text-foreground/70 mx-auto" />}
+                        {'themVal' in f ? <span className="text-foreground/70">{f.themVal}</span>
+                          : f.them ? <Check className="w-5 h-5 text-foreground/60 mx-auto" /> : <X className="w-5 h-5 text-red-400/60 mx-auto" />}
                       </td>
                     </tr>
                   ))}
@@ -573,7 +573,7 @@ export default function Landing() {
               <Link to="/login" className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all hover:shadow-lg hover:shadow-blue-900 flex items-center gap-2">
                 Start Free <ArrowRight className="w-4 h-4" />
               </Link>
-              <Link to="/login" className="px-6 py-3 bg-card text-foreground/70 font-medium rounded-xl hover:bg-secondary transition-colors border border-border">
+              <Link to="/login" className="px-6 py-3 bg-card text-foreground font-medium rounded-xl hover:bg-secondary transition-colors border border-border">
                 Book a Demo
               </Link>
             </div>
@@ -610,7 +610,7 @@ export default function Landing() {
               </p>
             </div>
             <div>
-              <div className="text-xs font-semibold text-foreground/70 uppercase tracking-wider mb-3">Product</div>
+              <div className="text-xs font-semibold text-foreground/90 uppercase tracking-wider mb-3">Product</div>
               <div className="space-y-2 text-sm">
                 <a href="#workloads" className="block hover:text-foreground">Workloads</a>
                 <a href="#pricing" className="block hover:text-foreground">Pricing</a>
@@ -618,14 +618,14 @@ export default function Landing() {
               </div>
             </div>
             <div>
-              <div className="text-xs font-semibold text-foreground/70 uppercase tracking-wider mb-3">Resources</div>
+              <div className="text-xs font-semibold text-foreground/90 uppercase tracking-wider mb-3">Resources</div>
               <div className="space-y-2 text-sm">
                 <a href="https://github.com/gpatwa/m365-vault" className="block hover:text-foreground">GitHub</a>
                 <a href="/docs" className="block hover:text-foreground">Documentation</a>
               </div>
             </div>
             <div>
-              <div className="text-xs font-semibold text-foreground/70 uppercase tracking-wider mb-3">Legal</div>
+              <div className="text-xs font-semibold text-foreground/90 uppercase tracking-wider mb-3">Legal</div>
               <div className="space-y-2 text-sm">
                 <Link to="/legal?tab=tos" className="block hover:text-foreground">Terms of Service</Link>
                 <Link to="/legal?tab=privacy" className="block hover:text-foreground">Privacy Policy</Link>

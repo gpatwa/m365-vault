@@ -5,6 +5,7 @@ import {
   AlertTriangle, ArrowRight, Server, Check, X,
   Eye, Brain, ShieldCheck, ChevronRight,
 } from 'lucide-react';
+import ThemeToggle from '../components/ThemeToggle';
 
 // ── Scroll animation hook ──
 function useInView(threshold = 0.15) {
@@ -263,6 +264,7 @@ export default function Landing() {
             <a href="#security" className="hover:text-foreground">Security</a>
           </div>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">Sign In</Link>
             <Link to="/login?register=true" className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
               Start Free

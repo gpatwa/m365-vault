@@ -63,6 +63,7 @@ function RootRoute() {
 /** Smart redirect: checks user state and routes to the right experience */
 function SmartHome() {
   const [checked, setChecked] = useState(false);
+  const [redirect, setRedirect] = useState<string | null>(null);
 
   useEffect(() => {
     console.log('[Shieldio:SmartHome] mounted, token:', !!api.getToken());
@@ -72,12 +73,12 @@ function SmartHome() {
       .then(user => {
         if ((user?.username === 'demo' || user?.username === 'prospect') && !sessionStorage.getItem('demo_onboard_complete')) {
           console.log('[Shieldio:SmartHome] → demo/prospect user, redirect /onboard/demo');
-          window.location.replace('/onboard/demo');
+          setRedirect('/onboard/demo');
           return;
         }
         if (user?.username === 'msp' || user?.role === 'msp_admin') {
           console.log('[Shieldio:SmartHome] → MSP user, redirect /msp');
-          window.location.replace('/msp');
+          setRedirect('/msp');
           return;
         }
         // Normal user (admin/operator/viewer) — check tenants
@@ -87,17 +88,18 @@ function SmartHome() {
         if (!tenants) return; // demo user already redirected
         console.log('[Shieldio:SmartHome] tenants:', tenants?.length);
         if (!tenants || tenants.length === 0) {
-          window.location.replace('/onboard');
+          setRedirect('/onboard');
         } else {
           setChecked(true);
         }
       })
       .catch((err) => {
         console.error('[Shieldio:SmartHome] catch:', err?.message);
-        window.location.replace('/onboard');
+        setRedirect('/onboard');
       });
   }, []);
 
+  if (redirect) return <Navigate to={redirect} replace />;
   if (!checked) return null;
   return <Dashboard />;
 }

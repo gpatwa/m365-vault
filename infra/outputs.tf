@@ -14,8 +14,8 @@ output "acr_login_server" {
 }
 
 output "postgresql_fqdn" {
-  value       = module.postgresql.fqdn
-  description = "PostgreSQL server FQDN"
+  value       = "postgres-${var.environment} (Container App)"
+  description = "PostgreSQL container hostname"
 }
 
 output "storage_account" {

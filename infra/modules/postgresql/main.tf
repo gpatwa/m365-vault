@@ -1,30 +1,73 @@
-resource "azurerm_postgresql_flexible_server" "this" {
-  name                          = "psql-m365vault-${var.environment}"
-  resource_group_name           = var.resource_group_name
-  location                      = var.location
-  version                       = "16"
-  administrator_login           = var.admin_username
-  administrator_password        = var.admin_password
-  sku_name                      = var.sku_name
-  storage_mb                    = var.storage_mb
-  backup_retention_days         = var.backup_retention_days
-  geo_redundant_backup_enabled  = var.geo_redundant_backup
-  zone                          = "1"
+# PostgreSQL as a Container App — avoids Flexible Server quota restrictions
+# Uses Azure Container Apps with a persistent Azure Files volume for data
+
+resource "azurerm_storage_share" "pgdata" {
+  name               = "pgdata-${var.environment}"
+  storage_account_name = var.storage_account_name
+  quota              = 5 # GB
+}
+
+resource "azurerm_container_app" "postgres" {
+  name                         = "postgres-${var.environment}"
+  container_app_environment_id = var.container_app_environment_id
+  resource_group_name          = var.resource_group_name
+  revision_mode                = "Single"
+
+  template {
+    min_replicas = 1
+    max_replicas = 1
+
+    container {
+      name   = "postgres"
+      image  = "postgres:16-alpine"
+      cpu    = 0.5
+      memory = "1Gi"
+
+      env {
+        name  = "POSTGRES_DB"
+        value = var.database_name
+      }
+      env {
+        name  = "POSTGRES_USER"
+        value = var.admin_username
+      }
+      env {
+        name        = "POSTGRES_PASSWORD"
+        secret_name = "db-password"
+      }
+      env {
+        name  = "PGDATA"
+        value = "/var/lib/postgresql/data/pgdata"
+      }
+
+      volume_mounts {
+        name = "pgdata"
+        path = "/var/lib/postgresql/data"
+      }
+    }
+
+    volume {
+      name         = "pgdata"
+      storage_name = "pgdata-${var.environment}"
+      storage_type = "AzureFile"
+    }
+  }
+
+  secret {
+    name  = "db-password"
+    value = var.admin_password
+  }
+
+  ingress {
+    external_traffic = false
+    target_port      = 5432
+    transport        = "tcp"
+
+    traffic_weight {
+      latest_revision = true
+      percentage      = 100
+    }
+  }
 
   tags = var.tags
-}
-
-resource "azurerm_postgresql_flexible_server_database" "m365vault" {
-  name      = var.database_name
-  server_id = azurerm_postgresql_flexible_server.this.id
-  charset   = "UTF8"
-  collation = "en_US.utf8"
-}
-
-# Allow Azure services (Container Apps) to connect
-resource "azurerm_postgresql_flexible_server_firewall_rule" "azure_services" {
-  name             = "AllowAzureServices"
-  server_id        = azurerm_postgresql_flexible_server.this.id
-  start_ip_address = "0.0.0.0"
-  end_ip_address   = "0.0.0.0"
 }

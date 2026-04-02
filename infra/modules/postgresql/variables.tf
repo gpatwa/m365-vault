@@ -10,6 +10,16 @@ variable "location" {
   type = string
 }
 
+variable "container_app_environment_id" {
+  type        = string
+  description = "Container App Environment ID to deploy PostgreSQL into"
+}
+
+variable "storage_account_name" {
+  type        = string
+  description = "Storage account for persistent PostgreSQL data volume"
+}
+
 variable "admin_username" {
   type    = string
   default = "m365vault_admin"
@@ -20,6 +30,11 @@ variable "admin_password" {
   sensitive = true
 }
 
+variable "database_name" {
+  type    = string
+  default = "m365vault"
+}
+
 variable "sku_name" {
   type    = string
   default = "B_Standard_B1ms"
@@ -27,12 +42,7 @@ variable "sku_name" {
 
 variable "storage_mb" {
   type    = number
-  default = 32768 # 32 GB
-}
-
-variable "database_name" {
-  type    = string
-  default = "m365vault"
+  default = 32768
 }
 
 variable "backup_retention_days" {

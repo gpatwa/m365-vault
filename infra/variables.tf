@@ -17,6 +17,12 @@ variable "location" {
   default = "eastus"
 }
 
+variable "postgresql_location" {
+  description = "Override location for PostgreSQL (if restricted in primary region)"
+  type        = string
+  default     = ""
+}
+
 variable "image_tag" {
   type    = string
   default = "latest"

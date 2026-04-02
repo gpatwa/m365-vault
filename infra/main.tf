@@ -74,16 +74,12 @@ module "storage" {
   tags                = local.tags
 }
 
-module "postgresql" {
-  source              = "./modules/postgresql"
-  environment         = var.environment
-  resource_group_name = module.resource_group.name
-  location            = module.resource_group.location
-  admin_password      = random_password.db_password.result
-  sku_name            = var.postgresql_sku
-  storage_mb          = var.postgresql_storage_mb
-  geo_redundant_backup = var.environment == "prod"
-  tags                = local.tags
+# PostgreSQL runs as a Container App (avoids Flexible Server quota restrictions)
+locals {
+  db_username = "m365vault_admin"
+  db_name     = "m365vault"
+  # Connection URL for container-to-container communication within the Container App Environment
+  database_url = "postgresql+asyncpg://${local.db_username}:${random_password.db_password.result}@postgres-${var.environment}:5432/${local.db_name}"
 }
 
 module "keyvault" {
@@ -93,7 +89,7 @@ module "keyvault" {
   location                  = module.resource_group.location
   app_secret_key            = random_password.secret_key.result
   encryption_master_key     = random_password.encryption_key.result
-  database_url              = module.postgresql.connection_string
+  database_url              = local.database_url
   storage_connection_string = module.storage.connection_string
   tags                      = local.tags
 }
@@ -118,7 +114,12 @@ module "container_apps" {
   acr_admin_username        = module.acr.admin_username
   acr_admin_password        = module.acr.admin_password
   image_tag                 = var.image_tag
-  database_url              = module.postgresql.connection_string
+  database_url              = local.database_url
+  db_password               = random_password.db_password.result
+  db_username               = local.db_username
+  db_name                   = local.db_name
+  storage_account_name      = module.storage.account_name
+  storage_account_key       = module.storage.primary_access_key
   app_secret_key            = random_password.secret_key.result
   encryption_master_key     = random_password.encryption_key.result
   storage_connection_string = module.storage.connection_string

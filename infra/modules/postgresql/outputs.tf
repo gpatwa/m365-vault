@@ -1,16 +1,16 @@
 output "connection_string" {
-  value     = "postgresql+asyncpg://${var.admin_username}:${var.admin_password}@${azurerm_postgresql_flexible_server.this.fqdn}:5432/${var.database_name}?ssl=require"
+  value     = "postgresql+asyncpg://${var.admin_username}:${var.admin_password}@postgres-${var.environment}:5432/${var.database_name}"
   sensitive = true
 }
 
 output "fqdn" {
-  value = azurerm_postgresql_flexible_server.this.fqdn
+  value = "postgres-${var.environment}"
 }
 
 output "server_name" {
-  value = azurerm_postgresql_flexible_server.this.name
+  value = azurerm_container_app.postgres.name
 }
 
 output "id" {
-  value = azurerm_postgresql_flexible_server.this.id
+  value = azurerm_container_app.postgres.id
 }

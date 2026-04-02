@@ -17,6 +17,90 @@ resource "azurerm_container_app_environment" "this" {
   tags = var.tags
 }
 
+# ── Storage for PostgreSQL data persistence ──────────────────────────
+
+resource "azurerm_container_app_environment_storage" "pgdata" {
+  name                         = "pgdata"
+  container_app_environment_id = azurerm_container_app_environment.this.id
+  account_name                 = var.storage_account_name
+  share_name                   = "pgdata-${var.environment}"
+  access_key                   = var.storage_account_key
+  access_mode                  = "ReadWrite"
+}
+
+resource "azurerm_storage_share" "pgdata" {
+  name               = "pgdata-${var.environment}"
+  storage_account_name = var.storage_account_name
+  quota              = 5
+}
+
+# ── PostgreSQL Container App ─────────────────────────────────────────
+
+resource "azurerm_container_app" "postgres" {
+  name                         = "postgres-${var.environment}"
+  container_app_environment_id = azurerm_container_app_environment.this.id
+  resource_group_name          = var.resource_group_name
+  revision_mode                = "Single"
+
+  template {
+    min_replicas = 1
+    max_replicas = 1
+
+    container {
+      name   = "postgres"
+      image  = "postgres:16-alpine"
+      cpu    = 0.5
+      memory = "1Gi"
+
+      env {
+        name  = "POSTGRES_DB"
+        value = var.db_name
+      }
+      env {
+        name  = "POSTGRES_USER"
+        value = var.db_username
+      }
+      env {
+        name        = "POSTGRES_PASSWORD"
+        secret_name = "db-password"
+      }
+      env {
+        name  = "PGDATA"
+        value = "/var/lib/postgresql/data/pgdata"
+      }
+
+      volume_mounts {
+        name = "pgdata"
+        path = "/var/lib/postgresql/data"
+      }
+    }
+
+    volume {
+      name         = "pgdata"
+      storage_name = azurerm_container_app_environment_storage.pgdata.name
+      storage_type = "AzureFile"
+    }
+  }
+
+  secret {
+    name  = "db-password"
+    value = var.db_password
+  }
+
+  ingress {
+    target_port = 5432
+    transport   = "tcp"
+    exposed_port = 5432
+
+    traffic_weight {
+      latest_revision = true
+      percentage      = 100
+    }
+  }
+
+  tags = var.tags
+}
+
 # ── Backend Container App ────────────────────────────────────────────
 
 resource "azurerm_container_app" "backend" {

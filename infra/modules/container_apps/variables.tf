@@ -33,6 +33,33 @@ variable "database_url" {
   sensitive = true
 }
 
+variable "db_password" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+variable "db_username" {
+  type    = string
+  default = "m365vault_admin"
+}
+
+variable "db_name" {
+  type    = string
+  default = "m365vault"
+}
+
+variable "storage_account_name" {
+  type    = string
+  default = ""
+}
+
+variable "storage_account_key" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
 variable "app_secret_key" {
   type      = string
   sensitive = true

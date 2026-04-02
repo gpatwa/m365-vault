@@ -266,7 +266,7 @@ export default function Landing() {
           <div className="flex items-center gap-3">
             <ThemeToggle />
             <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">Sign In</Link>
-            <Link to="/login?register=true" className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+            <Link to="/login?register=true" className="px-4 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium rounded-lg hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg shadow-blue-500/20">
               Start Free
             </Link>
           </div>
@@ -411,7 +411,7 @@ export default function Landing() {
       </section>
 
       {/* ═══ SECTION 4: INTELLIGENCE — AI-Powered Protection ═══ */}
-      <section className="py-20 px-6 bg-muted text-foreground">
+      <section className="py-20 px-6 bg-gradient-to-b from-muted via-muted to-background text-foreground">
         <div className="max-w-5xl mx-auto">
           <FadeUp>
             <div className="text-center mb-12">
@@ -432,7 +432,7 @@ export default function Landing() {
               { icon: AlertTriangle, title: 'Anomaly Detection', desc: 'Z-score baselines detect mass encryption, data exfiltration, and unusual deletions while backups are running. Not after the incident.', color: 'from-rose-500 to-red-500' },
             ].map((f, i) => (
               <FadeUp key={f.title} delay={i * 150}>
-                <div className="bg-card rounded-xl p-6 border border-border hover:border-border transition-colors">
+                <div className="bg-card rounded-xl p-6 border border-border hover:border-blue-500/30 transition-all hover:shadow-lg hover:shadow-blue-500/5">
                   <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${f.color} flex items-center justify-center mb-4`}>
                     <f.icon className="w-5 h-5 text-white" />
                   </div>
@@ -466,7 +466,7 @@ export default function Landing() {
               { icon: '📋', label: 'Audit Trail', desc: 'Full Logging' },
             ].map(b => (
               <FadeUp key={b.label}>
-                <div className="flex items-center gap-2.5 px-4 py-3 bg-muted/50 border border-border rounded-xl hover:border-border hover:shadow-sm transition-all">
+                <div className="flex items-center gap-2.5 px-4 py-3 bg-card/50 backdrop-blur-sm border border-border rounded-xl hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/5 transition-all">
                   <span className="text-lg">{b.icon}</span>
                   <div>
                     <div className="text-xs font-semibold text-foreground">{b.label}</div>
@@ -536,7 +536,12 @@ export default function Landing() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
             {PRICING.map((tier, i) => (
               <FadeUp key={tier.name} delay={i * 100}>
-                <div className={`rounded-xl p-6 ${tier.primary ? 'bg-blue-600 text-white ring-2 ring-blue-600 ring-offset-2 ring-offset-background' : 'bg-card border border-border text-foreground'}`}>
+                <div className={`relative rounded-xl p-6 ${tier.primary ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white ring-2 ring-blue-500/50 ring-offset-2 ring-offset-background shadow-xl shadow-blue-500/20' : 'bg-card border border-border text-foreground hover:border-blue-500/20 hover:shadow-lg hover:shadow-blue-500/5 transition-all'}`}>
+                  {tier.primary && (
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-gradient-to-r from-amber-400 to-orange-400 text-black text-[10px] font-bold rounded-full shadow-md">
+                      Recommended
+                    </span>
+                  )}
                   <div className={`text-sm font-semibold ${tier.primary ? 'text-blue-200' : 'text-muted-foreground'}`}>{tier.name}</div>
                   <div className="flex items-baseline gap-1 mt-2">
                     <span className="text-3xl font-extrabold">{tier.price}</span>
@@ -570,7 +575,7 @@ export default function Landing() {
             <h2 className="text-2xl font-bold mb-3">See it live with your data in 10 minutes</h2>
             <p className="text-muted-foreground text-sm mb-6">Connect your M365 tenant. Watch Shieldio discover your org, score criticality, and build a recovery plan — in real time.</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link to="/login" className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all hover:shadow-lg hover:shadow-blue-900 flex items-center gap-2">
+              <Link to="/login" className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 flex items-center gap-2">
                 Start Free <ArrowRight className="w-4 h-4" />
               </Link>
               <Link to="/login" className="px-6 py-3 bg-card text-foreground font-medium rounded-xl hover:bg-secondary transition-colors border border-border">
@@ -582,7 +587,40 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ═══ SECTION 9: FINAL CTA ═══ */}
+      {/* ═══ SECTION 9: FAQ ═══ */}
+      <section className="py-20 px-6">
+        <div className="max-w-3xl mx-auto">
+          <FadeUp>
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold text-foreground">Frequently Asked Questions</h2>
+            </div>
+          </FadeUp>
+          <div className="space-y-3">
+            {[
+              { q: 'How is Shieldio different from Microsoft\'s built-in backup?', a: 'Microsoft 365 has a 93-day recycle bin — not a backup. Shieldio provides unlimited point-in-time restore, criticality-ordered recovery plans, and anomaly detection that Microsoft doesn\'t offer.' },
+              { q: 'Do you store my Microsoft credentials?', a: 'No. Shieldio uses OAuth admin consent — your Global Admin approves read-only access via Microsoft\'s consent flow. We never see or store your password. Only a scoped API token is used.' },
+              { q: 'What happens during a ransomware attack?', a: 'Shieldio detects anomalies in real-time during backup (mass encryption, unusual deletions). It auto-pauses backups, isolates the clean snapshot, and provides a one-click recovery plan — identity first, then critical users, then everyone else.' },
+              { q: 'How does criticality-ordered backup work?', a: 'Shieldio reads your Microsoft Graph to discover org hierarchy, VIP groups, and privileged roles. Each user gets a 4-factor criticality score. Your CEO is backed up first, then VPs, then directors, then everyone else — automatically.' },
+              { q: 'Can I self-host Shieldio?', a: 'Yes. Shieldio is open source under Apache 2.0. Deploy to your own Azure subscription, AWS, or on-premises infrastructure. Your data never leaves your environment.' },
+              { q: 'What\'s included in the free tier?', a: 'Up to 25 objects across Exchange, OneDrive, and SharePoint. Basic Smart Engine, 30-day retention, and community support. No credit card required.' },
+            ].map((faq, i) => (
+              <FadeUp key={i} delay={i * 50}>
+                <details className="group bg-card border border-border rounded-xl overflow-hidden hover:border-blue-500/20 transition-all">
+                  <summary className="flex items-center justify-between px-5 py-4 cursor-pointer text-foreground font-medium text-sm">
+                    {faq.q}
+                    <ChevronRight className="w-4 h-4 text-muted-foreground transition-transform group-open:rotate-90" />
+                  </summary>
+                  <div className="px-5 pb-4 text-sm text-muted-foreground leading-relaxed">
+                    {faq.a}
+                  </div>
+                </details>
+              </FadeUp>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 10: FINAL CTA ═══ */}
       <section className="py-20 px-6 bg-gradient-to-br from-blue-600 to-indigo-700">
         <div className="max-w-3xl mx-auto text-center text-white">
           <FadeUp>

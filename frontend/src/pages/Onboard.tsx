@@ -96,7 +96,7 @@ export default function Onboard() {
         </p>
       </div>
 
-      {/* ═══ Pre-flight Briefing — connected data flow graph ═══ */}
+      {/* ═══ Pre-flight Briefing — SVG animated data flow pipeline ═══ */}
       {showPreflight && (
         <div className="max-w-3xl mx-auto mb-8">
           <div className="text-center mb-8">
@@ -104,91 +104,110 @@ export default function Onboard() {
             <p className="text-muted-foreground mt-1">Secure, read-only access. Your credentials are never stored.</p>
           </div>
 
-          {/* ── Connected data flow graph ── */}
-          <div className="relative">
-            {/* Row 1: Source → Auth → Permissions */}
-            <div className="flex items-stretch gap-0 mb-2">
-              {/* Block 1: Your M365 Tenant */}
-              <div className={`flex-1 p-4 rounded-l-xl border border-blue-500/40 bg-blue-500/10 transition-all duration-700 ${preflightStep >= 1 ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
-                <div className="flex items-center gap-2 mb-2">
-                  <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 21 21"><path d="M0 0h10v10H0z" fill="#f25022"/><path d="M11 0h10v10H11z" fill="#7fba00"/><path d="M0 11h10v10H0z" fill="#00a4ef"/><path d="M11 11h10v10H11z" fill="#ffb900"/></svg>
+          {/* SVG flow with animated paths + glassmorphism nodes */}
+          <style>{`
+            @keyframes flowDash { to { stroke-dashoffset: -20; } }
+            @keyframes flowDot { 0% { offset-distance: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { offset-distance: 100%; opacity: 0; } }
+            @keyframes pulseGlow { 0%, 100% { filter: drop-shadow(0 0 3px var(--glow)); } 50% { filter: drop-shadow(0 0 8px var(--glow)); } }
+            .flow-line { stroke-dasharray: 6 4; animation: flowDash 0.8s linear infinite; }
+            .flow-dot { offset-path: path(var(--path)); animation: flowDot 2s ease-in-out infinite; }
+            .node-glow { animation: pulseGlow 3s ease-in-out infinite; }
+          `}</style>
+
+          <div className="relative" style={{ minHeight: 420 }}>
+            {/* SVG connecting lines behind nodes */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 700 420" preserveAspectRatio="xMidYMid meet">
+              {/* Row 1 horizontal lines */}
+              <path d={`M 165 85 L 260 85`} className={`flow-line transition-opacity duration-1000 ${preflightStep >= 2 ? 'opacity-100' : 'opacity-0'}`} stroke="url(#grad1)" strokeWidth="2" fill="none" />
+              <path d={`M 440 85 L 535 85`} className={`flow-line transition-opacity duration-1000 ${preflightStep >= 3 ? 'opacity-100' : 'opacity-0'}`} stroke="url(#grad2)" strokeWidth="2" fill="none" />
+              {/* Vertical connector */}
+              <path d={`M 350 170 L 350 250`} className={`flow-line transition-opacity duration-1000 ${preflightStep >= 4 ? 'opacity-100' : 'opacity-0'}`} stroke="url(#grad3)" strokeWidth="2" fill="none" />
+              {/* Row 2 horizontal lines */}
+              <path d={`M 165 335 L 260 335`} className={`flow-line transition-opacity duration-1000 ${preflightStep >= 5 ? 'opacity-100' : 'opacity-0'}`} stroke="url(#grad4)" strokeWidth="2" fill="none" />
+              <path d={`M 440 335 L 535 335`} className={`flow-line transition-opacity duration-1000 ${preflightStep >= 5 ? 'opacity-100' : 'opacity-0'}`} stroke="url(#grad5)" strokeWidth="2" fill="none" />
+
+              {/* Flow label badges on lines */}
+              <text x="212" y="75" textAnchor="middle" className={`text-[9px] font-bold fill-blue-400 transition-opacity duration-500 ${preflightStep >= 2 ? 'opacity-100' : 'opacity-0'}`}>OAUTH</text>
+              <text x="487" y="75" textAnchor="middle" className={`text-[9px] font-bold fill-green-400 transition-opacity duration-500 ${preflightStep >= 3 ? 'opacity-100' : 'opacity-0'}`}>SCOPED</text>
+              <text x="365" y="215" textAnchor="middle" className={`text-[9px] font-bold fill-amber-400 transition-opacity duration-500 ${preflightStep >= 4 ? 'opacity-100' : 'opacity-0'}`}>ENCRYPTED</text>
+              <text x="212" y="325" textAnchor="middle" className={`text-[9px] font-bold fill-cyan-400 transition-opacity duration-500 ${preflightStep >= 5 ? 'opacity-100' : 'opacity-0'}`}>ANALYZE</text>
+              <text x="487" y="325" textAnchor="middle" className={`text-[9px] font-bold fill-emerald-400 transition-opacity duration-500 ${preflightStep >= 5 ? 'opacity-100' : 'opacity-0'}`}>PROTECT</text>
+
+              {/* Animated flowing dots on paths */}
+              {preflightStep >= 2 && <circle r="3" fill="#3b82f6"><animateMotion dur="1.5s" repeatCount="indefinite" path="M 165 85 L 260 85" /></circle>}
+              {preflightStep >= 3 && <circle r="3" fill="#22c55e"><animateMotion dur="1.5s" repeatCount="indefinite" path="M 440 85 L 535 85" /></circle>}
+              {preflightStep >= 4 && <circle r="3" fill="#f59e0b"><animateMotion dur="2s" repeatCount="indefinite" path="M 350 170 L 350 250" /></circle>}
+              {preflightStep >= 5 && <circle r="3" fill="#06b6d4"><animateMotion dur="1.5s" repeatCount="indefinite" path="M 165 335 L 260 335" /></circle>}
+              {preflightStep >= 5 && <circle r="3" fill="#10b981"><animateMotion dur="1.5s" repeatCount="indefinite" path="M 440 335 L 535 335" /></circle>}
+
+              {/* Gradient defs */}
+              <defs>
+                <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#3b82f6" /><stop offset="100%" stopColor="#a855f7" /></linearGradient>
+                <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#a855f7" /><stop offset="100%" stopColor="#22c55e" /></linearGradient>
+                <linearGradient id="grad3" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#22c55e" /><stop offset="100%" stopColor="#f59e0b" /></linearGradient>
+                <linearGradient id="grad4" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#f59e0b" /><stop offset="100%" stopColor="#06b6d4" /></linearGradient>
+                <linearGradient id="grad5" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#06b6d4" /><stop offset="100%" stopColor="#10b981" /></linearGradient>
+              </defs>
+            </svg>
+
+            {/* Row 1: Glassmorphism node cards */}
+            <div className="relative flex items-start justify-between gap-6 mb-16">
+              {/* Node 1: M365 Tenant */}
+              <div className={`flex-1 p-4 rounded-xl border backdrop-blur-sm transition-all duration-1000 ease-out ${preflightStep >= 1 ? 'opacity-100 translate-y-0 border-blue-500/40 bg-blue-500/10 shadow-lg shadow-blue-500/5' : 'opacity-0 translate-y-6 border-transparent bg-transparent'}`}>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                    <svg className="w-4 h-4" viewBox="0 0 21 21"><path d="M0 0h10v10H0z" fill="#f25022"/><path d="M11 0h10v10H11z" fill="#7fba00"/><path d="M0 11h10v10H0z" fill="#00a4ef"/><path d="M11 11h10v10H11z" fill="#ffb900"/></svg>
+                  </div>
                   <span className="font-bold text-foreground text-sm">Your M365 Tenant</span>
                 </div>
-                <div className="text-[10px] text-muted-foreground space-y-0.5">
-                  <div>📧 Exchange Mailboxes</div>
-                  <div>📁 OneDrive Files</div>
-                  <div>🌐 SharePoint Sites</div>
-                  <div>💬 Teams Channels</div>
-                  <div>🔑 Entra ID Config</div>
+                <div className="text-[11px] text-muted-foreground space-y-1">
+                  <div className="flex items-center gap-1.5">📧 <span>Exchange Mailboxes</span></div>
+                  <div className="flex items-center gap-1.5">📁 <span>OneDrive Files</span></div>
+                  <div className="flex items-center gap-1.5">🌐 <span>SharePoint Sites</span></div>
+                  <div className="flex items-center gap-1.5">💬 <span>Teams Channels</span></div>
+                  <div className="flex items-center gap-1.5">🔑 <span>Entra ID Config</span></div>
                 </div>
               </div>
 
-              {/* Arrow 1→2 */}
-              <div className={`flex items-center px-1 transition-all duration-500 ${preflightStep >= 2 ? 'opacity-100' : 'opacity-0'}`}>
-                <div className="relative">
-                  <div className="w-8 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500" />
-                  <ArrowRight className="w-3 h-3 text-purple-400 absolute -right-1.5 -top-[5px]" />
-                  <div className={`absolute -top-5 left-0 right-0 text-center text-[8px] text-blue-400 font-semibold whitespace-nowrap ${preflightStep >= 2 ? 'opacity-100' : 'opacity-0'}`}>OAUTH</div>
-                </div>
-              </div>
-
-              {/* Block 2: Microsoft Identity */}
-              <div className={`flex-1 p-4 border border-purple-500/40 bg-purple-500/10 transition-all duration-700 ${preflightStep >= 2 ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-lg">🔐</span>
+              {/* Node 2: Admin Consent */}
+              <div className={`flex-1 p-4 rounded-xl border backdrop-blur-sm transition-all duration-1000 ease-out ${preflightStep >= 2 ? 'opacity-100 translate-y-0 border-purple-500/40 bg-purple-500/10 shadow-lg shadow-purple-500/5' : 'opacity-0 translate-y-6 border-transparent bg-transparent'}`} style={{ transitionDelay: '200ms' }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center text-lg">🔐</div>
                   <span className="font-bold text-foreground text-sm">Admin Consent</span>
                 </div>
-                <div className="text-[10px] text-muted-foreground space-y-0.5">
+                <div className="text-[11px] text-muted-foreground space-y-1">
                   <div>✓ Global Admin signs in</div>
-                  <div>✓ Reviews permissions</div>
+                  <div>✓ Reviews all permissions</div>
                   <div>✓ Approves read-only access</div>
-                  <div className="text-purple-400 font-semibold mt-1">No passwords stored</div>
+                  <div className="text-purple-400 font-semibold mt-1.5">⚡ No passwords stored</div>
                 </div>
               </div>
 
-              {/* Arrow 2→3 */}
-              <div className={`flex items-center px-1 transition-all duration-500 ${preflightStep >= 3 ? 'opacity-100' : 'opacity-0'}`}>
-                <div className="relative">
-                  <div className="w-8 h-0.5 bg-gradient-to-r from-purple-500 to-green-500" />
-                  <ArrowRight className="w-3 h-3 text-green-400 absolute -right-1.5 -top-[5px]" />
-                  <div className={`absolute -top-5 left-0 right-0 text-center text-[8px] text-green-400 font-semibold whitespace-nowrap ${preflightStep >= 3 ? 'opacity-100' : 'opacity-0'}`}>SCOPED</div>
-                </div>
-              </div>
-
-              {/* Block 3: Read-Only Token */}
-              <div className={`flex-1 p-4 rounded-r-xl border border-green-500/40 bg-green-500/10 transition-all duration-700 ${preflightStep >= 3 ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-lg">📋</span>
+              {/* Node 3: Read-Only Token */}
+              <div className={`flex-1 p-4 rounded-xl border backdrop-blur-sm transition-all duration-1000 ease-out ${preflightStep >= 3 ? 'opacity-100 translate-y-0 border-green-500/40 bg-green-500/10 shadow-lg shadow-green-500/5' : 'opacity-0 translate-y-6 border-transparent bg-transparent'}`} style={{ transitionDelay: '400ms' }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center text-lg">📋</div>
                   <span className="font-bold text-foreground text-sm">Read-Only Token</span>
                 </div>
-                <div className="text-[10px] space-y-0.5">
+                <div className="text-[11px] space-y-1">
                   <div className="text-green-400">✓ Mail.Read</div>
                   <div className="text-green-400">✓ Files.Read.All</div>
                   <div className="text-green-400">✓ Sites.Read.All</div>
                   <div className="text-green-400">✓ Directory.Read.All</div>
-                  <div className="text-red-400 font-semibold mt-1">✗ No write/delete</div>
+                  <div className="text-red-400 font-semibold mt-1.5">✗ No write or delete</div>
                 </div>
               </div>
             </div>
 
-            {/* Animated flow line connecting Row 1 → Row 2 */}
-            <div className={`flex justify-center my-2 transition-all duration-700 ${preflightStep >= 4 ? 'opacity-100' : 'opacity-0'}`}>
-              <div className="flex flex-col items-center">
-                <div className="w-0.5 h-6 bg-gradient-to-b from-green-500 to-amber-500" />
-                <div className="text-[8px] text-amber-400 font-semibold">ENCRYPTED CHANNEL</div>
-                <div className="w-0.5 h-4 bg-gradient-to-b from-amber-500 to-cyan-500" />
-              </div>
-            </div>
-
-            {/* Row 2: Shieldio Security → Smart Engine → Protected Storage */}
-            <div className="flex items-stretch gap-0">
-              {/* Block 4: Shieldio Security Layer */}
-              <div className={`flex-1 p-4 rounded-l-xl border border-amber-500/40 bg-amber-500/10 transition-all duration-700 ${preflightStep >= 4 ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
-                <div className="flex items-center gap-2 mb-2">
-                  <Shield className="w-5 h-5 text-amber-400" />
+            {/* Row 2: Shieldio processing nodes */}
+            <div className="relative flex items-start justify-between gap-6">
+              {/* Node 4: Security Layer */}
+              <div className={`flex-1 p-4 rounded-xl border backdrop-blur-sm transition-all duration-1000 ease-out ${preflightStep >= 4 ? 'opacity-100 translate-y-0 border-amber-500/40 bg-amber-500/10 shadow-lg shadow-amber-500/5' : 'opacity-0 translate-y-6 border-transparent bg-transparent'}`}>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center"><Shield className="w-4 h-4 text-amber-400" /></div>
                   <span className="font-bold text-foreground text-sm">Security Layer</span>
                 </div>
-                <div className="text-[10px] text-muted-foreground space-y-0.5">
+                <div className="text-[11px] text-muted-foreground space-y-1">
                   <div>🔒 AES-256-GCM encryption</div>
                   <div>🏷️ Per-tenant key isolation</div>
                   <div>📝 Full audit trail</div>
@@ -196,58 +215,41 @@ export default function Onboard() {
                 </div>
               </div>
 
-              {/* Arrow 4→5 */}
-              <div className={`flex items-center px-1 transition-all duration-500 ${preflightStep >= 5 ? 'opacity-100' : 'opacity-0'}`}>
-                <div className="relative">
-                  <div className="w-8 h-0.5 bg-gradient-to-r from-amber-500 to-cyan-500" />
-                  <ArrowRight className="w-3 h-3 text-cyan-400 absolute -right-1.5 -top-[5px]" />
-                  <div className={`absolute -top-5 left-0 right-0 text-center text-[8px] text-cyan-400 font-semibold whitespace-nowrap`}>ANALYZE</div>
-                </div>
-              </div>
-
-              {/* Block 5: Smart Engine */}
-              <div className={`flex-1 p-4 border border-cyan-500/40 bg-cyan-500/10 transition-all duration-700 ${preflightStep >= 5 ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
-                <div className="flex items-center gap-2 mb-2">
-                  <Brain className="w-5 h-5 text-cyan-400" />
+              {/* Node 5: Smart Engine */}
+              <div className={`flex-1 p-4 rounded-xl border backdrop-blur-sm transition-all duration-1000 ease-out ${preflightStep >= 5 ? 'opacity-100 translate-y-0 border-cyan-500/40 bg-cyan-500/10 shadow-lg shadow-cyan-500/5' : 'opacity-0 translate-y-6 border-transparent bg-transparent'}`} style={{ transitionDelay: '200ms' }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center"><Brain className="w-4 h-4 text-cyan-400" /></div>
                   <span className="font-bold text-foreground text-sm">Smart Engine</span>
                 </div>
-                <div className="text-[10px] text-muted-foreground space-y-0.5">
+                <div className="text-[11px] text-muted-foreground space-y-1">
                   <div>🧠 Org context discovery</div>
                   <div>📊 Criticality scoring</div>
                   <div>🎯 CEO → VPs → All</div>
-                  <div className="text-cyan-400 font-semibold mt-1">Priority-ordered backup</div>
+                  <div className="text-cyan-400 font-semibold mt-1.5">Priority-ordered backup</div>
                 </div>
               </div>
 
-              {/* Arrow 5→6 */}
-              <div className={`flex items-center px-1 transition-all duration-500 ${preflightStep >= 5 ? 'opacity-100' : 'opacity-0'}`}>
-                <div className="relative">
-                  <div className="w-8 h-0.5 bg-gradient-to-r from-cyan-500 to-emerald-500" />
-                  <ArrowRight className="w-3 h-3 text-emerald-400 absolute -right-1.5 -top-[5px]" />
-                  <div className={`absolute -top-5 left-0 right-0 text-center text-[8px] text-emerald-400 font-semibold whitespace-nowrap`}>PROTECT</div>
-                </div>
-              </div>
-
-              {/* Block 6: Protected */}
-              <div className={`flex-1 p-4 rounded-r-xl border border-emerald-500/40 bg-emerald-500/10 transition-all duration-700 ${preflightStep >= 5 ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-lg">✅</span>
+              {/* Node 6: Protected */}
+              <div className={`flex-1 p-4 rounded-xl border backdrop-blur-sm transition-all duration-1000 ease-out ${preflightStep >= 5 ? 'opacity-100 translate-y-0 border-emerald-500/40 bg-emerald-500/10 shadow-lg shadow-emerald-500/5' : 'opacity-0 translate-y-6 border-transparent bg-transparent'}`} style={{ transitionDelay: '400ms' }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-lg">✅</div>
                   <span className="font-bold text-foreground text-sm">Protected</span>
                 </div>
-                <div className="text-[10px] text-muted-foreground space-y-0.5">
+                <div className="text-[11px] text-muted-foreground space-y-1">
                   <div>💾 Point-in-time snapshots</div>
                   <div>🔄 Automated daily backups</div>
                   <div>⚡ One-click recovery</div>
-                  <div className="text-emerald-400 font-semibold mt-1">Recovery in minutes</div>
+                  <div className="text-emerald-400 font-semibold mt-1.5">Recovery in minutes</div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Security compliance bar */}
-          <div className={`flex flex-wrap items-center justify-center gap-2 mt-6 mb-6 transition-all duration-700 ${preflightStep >= 5 ? 'opacity-100' : 'opacity-0'}`}>
-            {['AES-256', 'Per-Tenant Keys', 'Read-Only', 'SOC 2', 'GDPR', 'HIPAA', 'Zero Trust'].map(badge => (
-              <span key={badge} className="text-[9px] px-2 py-0.5 bg-card border border-border rounded-full text-muted-foreground">
+          {/* Security compliance badges */}
+          <div className={`flex flex-wrap items-center justify-center gap-2 mt-4 mb-6 transition-all duration-1000 ${preflightStep >= 5 ? 'opacity-100' : 'opacity-0'}`}>
+            {['AES-256', 'Per-Tenant Keys', 'Read-Only', 'SOC 2', 'GDPR', 'HIPAA', 'Zero Trust'].map((badge, i) => (
+              <span key={badge} className="text-[9px] px-2 py-0.5 bg-card border border-border rounded-full text-muted-foreground transition-all duration-500"
+                style={{ transitionDelay: `${i * 100}ms` }}>
                 {badge}
               </span>
             ))}

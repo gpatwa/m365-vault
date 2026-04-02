@@ -639,55 +639,9 @@ const WIZARD_STEPS = [
  * is already connected but you want to show the full discovery → backup → recovery flow.
  */
 export function DemoOnboard() {
-  const [tenantId, setTenantId] = useState<number | null>(null);
-  const [tenantName, setTenantName] = useState('');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    api.get<any[]>('/tenants/')
-      .then(tenants => {
-        if (!tenants?.length) return;
-        // For demo user: prefer a non-active tenant (fresh onboard experience).
-        // If all tenants are active, pick the last one and start fresh from discover.
-        const pending = tenants.find((t: any) => t.status !== 'active');
-        const chosen = pending || tenants[tenants.length - 1];
-        if (chosen) {
-          setTenantId(chosen.id);
-          setTenantName(chosen.name);
-        }
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-      </div>
-    );
-  }
-
-  if (!tenantId) {
-    // No tenant — fall back to regular onboarding
-    return <Onboard />;
-  }
-
-  // Render OnboardCallback with pre-set tenant data via URL params trick
-  // We navigate to the callback with fake params that simulate a successful connection
-  return <OnboardCallbackWithTenant tenantId={tenantId} tenantName={tenantName} />;
-}
-
-/** OnboardCallback variant that starts with an existing tenant (skips OAuth step 0) */
-function OnboardCallbackWithTenant({ tenantId, tenantName }: { tenantId: number; tenantName: string }) {
-  const navigate = useNavigate();
-  // Redirect to the callback URL with demo flag — always start at step=1 (discover)
-  // Clear any previous onboard session state so demo always gets a fresh experience
-  useEffect(() => {
-    sessionStorage.removeItem('shieldio_onboard_state');
-    navigate(`/onboard/callback?demo=true&db_tenant_id=${tenantId}&tenant_name=${encodeURIComponent(tenantName)}&step=1`, { replace: true });
-  }, [tenantId, tenantName, navigate]);
-  return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>;
+  // Demo user always gets the full onboarding experience from step 0
+  // (platform selection → connect → discover → protect → backup → ready)
+  return <Onboard />;
 }
 
 // ── Session persistence helpers ──

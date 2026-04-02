@@ -653,6 +653,26 @@ export default function Dashboard() {
                 )}
               </div>
             ))}
+
+            {/* Storage — merged into license card */}
+            <div className="pt-2 border-t border-border">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Storage</p>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <p className="text-lg font-bold text-foreground">{summary?.snapshots?.total_size_gb ?? 0} GB</p>
+                  <p className="text-[10px] text-muted-foreground">Backup Size</p>
+                </div>
+                <div>
+                  <p className="text-lg font-bold text-foreground">{summary?.snapshots?.total ?? 0}</p>
+                  <p className="text-[10px] text-muted-foreground">Snapshots</p>
+                </div>
+                <div>
+                  <p className="text-lg font-bold text-foreground">{licenseData?.retention_days ?? 30}d</p>
+                  <p className="text-[10px] text-muted-foreground">Retention</p>
+                </div>
+              </div>
+            </div>
+
             {licenseData?.features && (
               <div className="pt-2 border-t border-border">
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">Included Workloads</p>
@@ -703,35 +723,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Row 4: Storage + Compliance */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        {/* Storage */}
-        <div className="bg-card border border-border rounded-xl shadow-sm p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Database className="w-4 h-4 text-blue-400" />
-            <h3 className="text-sm font-semibold text-foreground">Storage</h3>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs text-muted-foreground">Total Size</p>
-              <p className="text-xl font-bold text-foreground">{summary?.snapshots?.total_size_gb ?? 0} GB</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Snapshots</p>
-              <p className="text-xl font-bold text-foreground">{summary?.snapshots?.total ?? 0}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Dedup Savings</p>
-              <p className="text-lg font-semibold text-green-400">42%</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Compression</p>
-              <p className="text-lg font-semibold text-green-400">2.9x</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Compliance */}
+      {/* Row 4: Compliance */}
+      <div className="mb-6">
         <div className="bg-card border border-border rounded-xl shadow-sm p-5">
           <div className="flex items-center gap-2 mb-4">
             <FileCheck className="w-4 h-4 text-green-400" />

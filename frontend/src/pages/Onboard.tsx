@@ -96,47 +96,159 @@ export default function Onboard() {
         </p>
       </div>
 
-      {/* ═══ Pre-flight Briefing — animated overview before OAuth redirect ═══ */}
+      {/* ═══ Pre-flight Briefing — connected data flow graph ═══ */}
       {showPreflight && (
-        <div className="max-w-2xl mx-auto mb-8">
-          <div className="text-center mb-6">
+        <div className="max-w-3xl mx-auto mb-8">
+          <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-foreground">How Shieldio Connects to Microsoft 365</h2>
             <p className="text-muted-foreground mt-1">Secure, read-only access. Your credentials are never stored.</p>
           </div>
 
-          {/* Animated flow diagram */}
-          <div className="space-y-3 mb-6">
-            {[
-              { icon: '🏢', label: 'Your M365 Tenant', desc: 'Sign in with your Global Admin account', detail: 'Microsoft verifies your identity — Shieldio never sees your password', color: 'border-blue-500/40 bg-blue-500/10' },
-              { icon: '🔐', label: 'Admin Consent', desc: 'Microsoft shows which permissions Shieldio needs', detail: 'You review and approve read-only access to your data — no write permissions', color: 'border-purple-500/40 bg-purple-500/10' },
-              { icon: '📋', label: 'Read-Only Permissions', desc: 'Mail.Read, Files.Read, Sites.Read, Directory.Read', detail: 'Shieldio can only read your data for backup — cannot modify, delete, or send', color: 'border-green-500/40 bg-green-500/10' },
-              { icon: '🔑', label: 'Secure Token Exchange', desc: 'Microsoft issues a scoped API token to Shieldio', detail: 'Per-tenant isolation — token only works for your organization', color: 'border-amber-500/40 bg-amber-500/10' },
-              { icon: '🧠', label: 'Smart Discovery & Backup', desc: 'Shieldio discovers workloads, scores criticality, starts protection', detail: 'CEO backed up first, then VPs, then everyone — automatically prioritized', color: 'border-cyan-500/40 bg-cyan-500/10' },
-            ].map((step, i) => (
-              <div key={i} className={`flex items-start gap-4 p-4 rounded-xl border transition-all duration-500 ${step.color} ${
-                preflightStep > i ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[-20px]'
-              }`} style={{ transitionDelay: `${i * 100}ms` }}>
-                <div className="text-2xl flex-shrink-0 mt-0.5">{step.icon}</div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-muted-foreground">STEP {i + 1}</span>
-                    <span className="font-semibold text-foreground text-sm">{step.label}</span>
-                  </div>
-                  <p className="text-sm text-foreground mt-0.5">{step.desc}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{step.detail}</p>
+          {/* ── Connected data flow graph ── */}
+          <div className="relative">
+            {/* Row 1: Source → Auth → Permissions */}
+            <div className="flex items-stretch gap-0 mb-2">
+              {/* Block 1: Your M365 Tenant */}
+              <div className={`flex-1 p-4 rounded-l-xl border border-blue-500/40 bg-blue-500/10 transition-all duration-700 ${preflightStep >= 1 ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 21 21"><path d="M0 0h10v10H0z" fill="#f25022"/><path d="M11 0h10v10H11z" fill="#7fba00"/><path d="M0 11h10v10H0z" fill="#00a4ef"/><path d="M11 11h10v10H11z" fill="#ffb900"/></svg>
+                  <span className="font-bold text-foreground text-sm">Your M365 Tenant</span>
                 </div>
-                {preflightStep > i && <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-1" />}
+                <div className="text-[10px] text-muted-foreground space-y-0.5">
+                  <div>📧 Exchange Mailboxes</div>
+                  <div>📁 OneDrive Files</div>
+                  <div>🌐 SharePoint Sites</div>
+                  <div>💬 Teams Channels</div>
+                  <div>🔑 Entra ID Config</div>
+                </div>
               </div>
-            ))}
 
-            {/* Connection lines between steps */}
+              {/* Arrow 1→2 */}
+              <div className={`flex items-center px-1 transition-all duration-500 ${preflightStep >= 2 ? 'opacity-100' : 'opacity-0'}`}>
+                <div className="relative">
+                  <div className="w-8 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500" />
+                  <ArrowRight className="w-3 h-3 text-purple-400 absolute -right-1.5 -top-[5px]" />
+                  <div className={`absolute -top-5 left-0 right-0 text-center text-[8px] text-blue-400 font-semibold whitespace-nowrap ${preflightStep >= 2 ? 'opacity-100' : 'opacity-0'}`}>OAUTH</div>
+                </div>
+              </div>
+
+              {/* Block 2: Microsoft Identity */}
+              <div className={`flex-1 p-4 border border-purple-500/40 bg-purple-500/10 transition-all duration-700 ${preflightStep >= 2 ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-lg">🔐</span>
+                  <span className="font-bold text-foreground text-sm">Admin Consent</span>
+                </div>
+                <div className="text-[10px] text-muted-foreground space-y-0.5">
+                  <div>✓ Global Admin signs in</div>
+                  <div>✓ Reviews permissions</div>
+                  <div>✓ Approves read-only access</div>
+                  <div className="text-purple-400 font-semibold mt-1">No passwords stored</div>
+                </div>
+              </div>
+
+              {/* Arrow 2→3 */}
+              <div className={`flex items-center px-1 transition-all duration-500 ${preflightStep >= 3 ? 'opacity-100' : 'opacity-0'}`}>
+                <div className="relative">
+                  <div className="w-8 h-0.5 bg-gradient-to-r from-purple-500 to-green-500" />
+                  <ArrowRight className="w-3 h-3 text-green-400 absolute -right-1.5 -top-[5px]" />
+                  <div className={`absolute -top-5 left-0 right-0 text-center text-[8px] text-green-400 font-semibold whitespace-nowrap ${preflightStep >= 3 ? 'opacity-100' : 'opacity-0'}`}>SCOPED</div>
+                </div>
+              </div>
+
+              {/* Block 3: Read-Only Token */}
+              <div className={`flex-1 p-4 rounded-r-xl border border-green-500/40 bg-green-500/10 transition-all duration-700 ${preflightStep >= 3 ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-lg">📋</span>
+                  <span className="font-bold text-foreground text-sm">Read-Only Token</span>
+                </div>
+                <div className="text-[10px] space-y-0.5">
+                  <div className="text-green-400">✓ Mail.Read</div>
+                  <div className="text-green-400">✓ Files.Read.All</div>
+                  <div className="text-green-400">✓ Sites.Read.All</div>
+                  <div className="text-green-400">✓ Directory.Read.All</div>
+                  <div className="text-red-400 font-semibold mt-1">✗ No write/delete</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Animated flow line connecting Row 1 → Row 2 */}
+            <div className={`flex justify-center my-2 transition-all duration-700 ${preflightStep >= 4 ? 'opacity-100' : 'opacity-0'}`}>
+              <div className="flex flex-col items-center">
+                <div className="w-0.5 h-6 bg-gradient-to-b from-green-500 to-amber-500" />
+                <div className="text-[8px] text-amber-400 font-semibold">ENCRYPTED CHANNEL</div>
+                <div className="w-0.5 h-4 bg-gradient-to-b from-amber-500 to-cyan-500" />
+              </div>
+            </div>
+
+            {/* Row 2: Shieldio Security → Smart Engine → Protected Storage */}
+            <div className="flex items-stretch gap-0">
+              {/* Block 4: Shieldio Security Layer */}
+              <div className={`flex-1 p-4 rounded-l-xl border border-amber-500/40 bg-amber-500/10 transition-all duration-700 ${preflightStep >= 4 ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <Shield className="w-5 h-5 text-amber-400" />
+                  <span className="font-bold text-foreground text-sm">Security Layer</span>
+                </div>
+                <div className="text-[10px] text-muted-foreground space-y-0.5">
+                  <div>🔒 AES-256-GCM encryption</div>
+                  <div>🏷️ Per-tenant key isolation</div>
+                  <div>📝 Full audit trail</div>
+                  <div>🛡️ WORM immutable storage</div>
+                </div>
+              </div>
+
+              {/* Arrow 4→5 */}
+              <div className={`flex items-center px-1 transition-all duration-500 ${preflightStep >= 5 ? 'opacity-100' : 'opacity-0'}`}>
+                <div className="relative">
+                  <div className="w-8 h-0.5 bg-gradient-to-r from-amber-500 to-cyan-500" />
+                  <ArrowRight className="w-3 h-3 text-cyan-400 absolute -right-1.5 -top-[5px]" />
+                  <div className={`absolute -top-5 left-0 right-0 text-center text-[8px] text-cyan-400 font-semibold whitespace-nowrap`}>ANALYZE</div>
+                </div>
+              </div>
+
+              {/* Block 5: Smart Engine */}
+              <div className={`flex-1 p-4 border border-cyan-500/40 bg-cyan-500/10 transition-all duration-700 ${preflightStep >= 5 ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <Brain className="w-5 h-5 text-cyan-400" />
+                  <span className="font-bold text-foreground text-sm">Smart Engine</span>
+                </div>
+                <div className="text-[10px] text-muted-foreground space-y-0.5">
+                  <div>🧠 Org context discovery</div>
+                  <div>📊 Criticality scoring</div>
+                  <div>🎯 CEO → VPs → All</div>
+                  <div className="text-cyan-400 font-semibold mt-1">Priority-ordered backup</div>
+                </div>
+              </div>
+
+              {/* Arrow 5→6 */}
+              <div className={`flex items-center px-1 transition-all duration-500 ${preflightStep >= 5 ? 'opacity-100' : 'opacity-0'}`}>
+                <div className="relative">
+                  <div className="w-8 h-0.5 bg-gradient-to-r from-cyan-500 to-emerald-500" />
+                  <ArrowRight className="w-3 h-3 text-emerald-400 absolute -right-1.5 -top-[5px]" />
+                  <div className={`absolute -top-5 left-0 right-0 text-center text-[8px] text-emerald-400 font-semibold whitespace-nowrap`}>PROTECT</div>
+                </div>
+              </div>
+
+              {/* Block 6: Protected */}
+              <div className={`flex-1 p-4 rounded-r-xl border border-emerald-500/40 bg-emerald-500/10 transition-all duration-700 ${preflightStep >= 5 ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-lg">✅</span>
+                  <span className="font-bold text-foreground text-sm">Protected</span>
+                </div>
+                <div className="text-[10px] text-muted-foreground space-y-0.5">
+                  <div>💾 Point-in-time snapshots</div>
+                  <div>🔄 Automated daily backups</div>
+                  <div>⚡ One-click recovery</div>
+                  <div className="text-emerald-400 font-semibold mt-1">Recovery in minutes</div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Security badges */}
-          <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
-            {['AES-256 Encryption', 'Per-Tenant Isolation', 'No Write Access', 'SOC 2 Ready', 'GDPR Compliant'].map(badge => (
-              <span key={badge} className="text-[10px] px-2.5 py-1 bg-card border border-border rounded-full text-muted-foreground flex items-center gap-1">
-                <Lock className="w-3 h-3" /> {badge}
+          {/* Security compliance bar */}
+          <div className={`flex flex-wrap items-center justify-center gap-2 mt-6 mb-6 transition-all duration-700 ${preflightStep >= 5 ? 'opacity-100' : 'opacity-0'}`}>
+            {['AES-256', 'Per-Tenant Keys', 'Read-Only', 'SOC 2', 'GDPR', 'HIPAA', 'Zero Trust'].map(badge => (
+              <span key={badge} className="text-[9px] px-2 py-0.5 bg-card border border-border rounded-full text-muted-foreground">
+                {badge}
               </span>
             ))}
           </div>
@@ -145,12 +257,12 @@ export default function Onboard() {
           {preflightStep >= 5 && (
             <div className="flex gap-3">
               <button onClick={() => { setShowPreflight(false); setPreflightStep(0); }}
-                className="flex-1 py-3 bg-muted text-foreground rounded-xl font-medium hover:bg-accent transition-colors text-sm">
+                className="py-3 px-6 bg-muted text-foreground rounded-xl font-medium hover:bg-accent transition-colors text-sm">
                 ← Back
               </button>
               <button onClick={() => handleConnect('microsoft365')}
                 disabled={!!connecting}
-                className="flex-2 py-3 px-8 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-500 transition-colors flex items-center justify-center gap-2">
+                className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-500 transition-colors flex items-center justify-center gap-2">
                 {connecting ? (
                   <><Loader2 className="w-4 h-4 animate-spin" /> Redirecting to Microsoft...</>
                 ) : (

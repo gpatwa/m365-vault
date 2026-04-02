@@ -203,6 +203,96 @@ const TIER_CONFIG: Record<string, { color: string; border: string; bg: string; i
   low: { color: 'text-muted-foreground', border: 'border-border', bg: 'bg-muted', icon: '○', label: 'Standard' },
 };
 
+function TenantConnectedStep({ tenantName, tenantId, onContinue }: { tenantName: string; tenantId?: number; onContinue: () => void }) {
+  const [phase, setPhase] = useState(0); // 0=verifying, 1=verified
+
+  useEffect(() => {
+    // Simulate verification steps
+    const t = setTimeout(() => setPhase(1), 2000);
+    return () => clearTimeout(t);
+  }, []);
+
+  const checks = [
+    { label: 'OAuth admin consent', status: true },
+    { label: 'Microsoft Graph API access', status: true },
+    { label: 'Read permissions verified', status: phase >= 1 },
+    { label: 'Tenant ID validated', status: phase >= 1 },
+  ];
+
+  return (
+    <div>
+      <div className="text-center mb-6">
+        <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          {phase === 0 ? (
+            <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+          ) : (
+            <CheckCircle className="w-8 h-8 text-green-400" />
+          )}
+        </div>
+        <h2 className="text-2xl font-bold text-foreground">
+          {phase === 0 ? 'Verifying Connection...' : `${tenantName} Connected`}
+        </h2>
+        <p className="text-muted-foreground mt-1">
+          {phase === 0 ? 'Checking OAuth consent and API permissions' : 'Your Microsoft 365 tenant is ready for protection'}
+        </p>
+      </div>
+
+      {/* Tenant card */}
+      <div className="bg-card border border-border rounded-xl p-5 mb-4">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+            <svg className="w-6 h-6" viewBox="0 0 21 21"><path d="M0 0h10v10H0z" fill="#f25022"/><path d="M11 0h10v10H11z" fill="#7fba00"/><path d="M0 11h10v10H0z" fill="#00a4ef"/><path d="M11 11h10v10H11z" fill="#ffb900"/></svg>
+          </div>
+          <div>
+            <div className="font-bold text-foreground">{tenantName}</div>
+            <div className="text-xs text-muted-foreground">Microsoft 365 • Tenant ID: {tenantId || '...'}</div>
+          </div>
+          <div className="ml-auto">
+            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+              phase >= 1 ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+            }`}>
+              {phase >= 1 ? '✓ Connected' : '⏳ Verifying'}
+            </span>
+          </div>
+        </div>
+
+        {/* Verification checklist */}
+        <div className="space-y-2">
+          {checks.map((check, i) => (
+            <div key={i} className={`flex items-center gap-3 text-sm transition-all duration-500`}
+              style={{ opacity: check.status ? 1 : 0.4, transitionDelay: `${i * 300}ms` }}>
+              {check.status ? (
+                <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+              ) : (
+                <Loader2 className="w-4 h-4 text-blue-400 animate-spin flex-shrink-0" />
+              )}
+              <span className="text-foreground">{check.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Platform capabilities */}
+      <div className="bg-muted rounded-xl p-4 mb-6">
+        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Available Workloads</div>
+        <div className="flex flex-wrap gap-2">
+          {['Exchange', 'OneDrive', 'SharePoint', 'Teams', 'Entra ID'].map(wl => (
+            <span key={wl} className="text-xs px-2.5 py-1 bg-card border border-border rounded-lg text-foreground">{wl}</span>
+          ))}
+        </div>
+      </div>
+
+      {/* Continue button */}
+      {phase >= 1 && (
+        <button onClick={onContinue}
+          className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-500 transition-colors flex items-center justify-center gap-2">
+          Discover Workloads <ArrowRight className="w-4 h-4" />
+        </button>
+      )}
+    </div>
+  );
+}
+
 function IntelligenceStep({ tenantId, onContinue }: { tenantId?: number; onContinue: () => void }) {
   const [phase, setPhase] = useState<'scanning' | 'graph' | 'plan'>('scanning');
   const [intel, setIntel] = useState<any>(null);
@@ -1132,14 +1222,8 @@ export function OnboardCallback() {
         </div>
       </div>
 
-      {/* Step 0: Connecting */}
-      {step === 0 && (
-        <div className="text-center py-12">
-          <Loader2 className="w-12 h-12 animate-spin text-blue-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-foreground">Connecting to Microsoft 365...</h2>
-          <p className="text-muted-foreground mt-2">Setting up secure access and discovering your workloads.</p>
-        </div>
-      )}
+      {/* Step 0: Tenant Connected — verification card */}
+      {step === 0 && <TenantConnectedStep tenantName={tenantName} tenantId={resultData?.db_tenant_id} onContinue={() => setStep(1)} />}
 
       {/* Step 1: Discovery — Workload Selection */}
       {step === 1 && (

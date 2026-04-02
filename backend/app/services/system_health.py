@@ -136,6 +136,11 @@ class SystemHealthService:
                     return HealthCheck("connector_secret_test", True,
                         f"Multi-tenant app ready (no SP in home tenant, which is normal) — latency: {latency}ms",
                         latency_ms=latency)
+                # AADSTS53003 = Conditional Access blocking — secret is valid but policy blocks
+                if "AADSTS53003" in error_desc:
+                    return HealthCheck("connector_secret_test", True,
+                        f"Credentials valid (CA policy active in home tenant) — latency: {latency}ms",
+                        latency_ms=latency)
                 return HealthCheck("connector_secret_test", False,
                     f"Token error: {error_desc[:150]}", "Check Azure AD app configuration", latency)
 

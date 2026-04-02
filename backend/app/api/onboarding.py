@@ -120,24 +120,7 @@ async def start_connection(
     Returns the authorization URL to redirect the customer to.
     For demo/prospect users, simulates the connection and returns a frontend callback URL.
     """
-    # Demo mode: skip real OAuth, simulate successful connection
-    if current_user.username in ('demo', 'prospect'):
-        from urllib.parse import quote
-        # Pick a demo tenant for this user
-        demo_tenants = {
-            'demo': {'id': 1, 'name': 'Acme Healthcare'},
-            'prospect': {'id': 3, 'name': 'Pacific Finance'},
-        }
-        t = demo_tenants.get(current_user.username, demo_tenants['demo'])
-        # Return frontend callback URL — stays in the onboarding wizard
-        callback_url = f"/onboard/callback?demo=true&db_tenant_id={t['id']}&tenant_name={quote(t['name'])}&step=0"
-        return {
-            "auth_url": callback_url,
-            "state": "demo",
-            "platform": platform,
-            "redirect_uri": callback_url,
-        }
-
+    # All users (including demo) go through real OAuth when connector is configured
     try:
         connector = get_connector(platform)
     except ValueError as e:

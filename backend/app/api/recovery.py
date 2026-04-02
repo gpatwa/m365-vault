@@ -432,6 +432,10 @@ async def mass_restore(
     objects = result.scalars().all()
 
     if not objects:
+        # Demo fallback: generate simulated recovery plan
+        tenant = await db.get(Tenant, req.tenant_id)
+        if tenant and tenant.ms_tenant_id and tenant.ms_tenant_id.startswith("demo-"):
+            return _demo_recovery_plan(req.dry_run)
         raise HTTPException(status_code=404, detail="No protected objects found")
 
     # For each object, find the closest snapshot to the restore point
@@ -458,6 +462,12 @@ async def mass_restore(
                 "criticality_score": obj.criticality_score or 50,
                 "criticality_tier": obj.criticality_tier or "medium",
             })
+
+    # If objects exist but no snapshots, use demo fallback for demo tenants
+    if not restore_plan:
+        tenant = await db.get(Tenant, req.tenant_id)
+        if tenant and tenant.ms_tenant_id and tenant.ms_tenant_id.startswith("demo-"):
+            return _demo_recovery_plan(req.dry_run)
 
     # Sort by criticality: entra_id first (identity), then by score descending
     restore_plan.sort(key=lambda x: (
@@ -1045,4 +1055,35 @@ def _build_confidence_response(
                 "detail": "Snapshot validation pass rate",
             },
         },
+    }
+
+
+def _demo_recovery_plan(dry_run: bool = True) -> dict:
+    """Simulated recovery plan for demo tenants."""
+    from datetime import datetime, timedelta
+    now = datetime.utcnow()
+    plan = [
+        {"object_name": "Entra ID Config", "workload": "entra_id", "snapshot_date": (now - timedelta(hours=2)).isoformat(),
+         "item_count": 43, "size_bytes": 256000, "criticality_score": 98, "criticality_tier": "critical", "priority": "P1"},
+        {"object_name": "Sarah Chen (CEO)", "workload": "exchange", "snapshot_date": (now - timedelta(hours=2)).isoformat(),
+         "item_count": 2847, "size_bytes": 15400000, "criticality_score": 95, "criticality_tier": "critical", "priority": "P1"},
+        {"object_name": "Marcus Johnson (VP Eng)", "workload": "exchange", "snapshot_date": (now - timedelta(hours=3)).isoformat(),
+         "item_count": 1203, "size_bytes": 8200000, "criticality_score": 88, "criticality_tier": "high", "priority": "P2"},
+        {"object_name": "Emily Rodriguez (VP Sales)", "workload": "exchange", "snapshot_date": (now - timedelta(hours=3)).isoformat(),
+         "item_count": 956, "size_bytes": 6100000, "criticality_score": 85, "criticality_tier": "high", "priority": "P2"},
+        {"object_name": "David Kim (CFO)", "workload": "exchange", "snapshot_date": (now - timedelta(hours=3)).isoformat(),
+         "item_count": 1450, "size_bytes": 9300000, "criticality_score": 82, "criticality_tier": "high", "priority": "P2"},
+        {"object_name": "Marketing Hub", "workload": "sharepoint", "snapshot_date": (now - timedelta(hours=4)).isoformat(),
+         "item_count": 342, "size_bytes": 45000000, "criticality_score": 65, "criticality_tier": "medium", "priority": "P3"},
+        {"object_name": "Engineering Wiki", "workload": "sharepoint", "snapshot_date": (now - timedelta(hours=4)).isoformat(),
+         "item_count": 567, "size_bytes": 38000000, "criticality_score": 72, "criticality_tier": "medium", "priority": "P3"},
+        {"object_name": "Lisa Thompson", "workload": "exchange", "snapshot_date": (now - timedelta(hours=5)).isoformat(),
+         "item_count": 892, "size_bytes": 5400000, "criticality_score": 60, "criticality_tier": "medium", "priority": "P3"},
+    ]
+    return {
+        "status": "dry_run" if dry_run else "initiated",
+        "restore_point": now.isoformat(),
+        "jobs_created": 0 if dry_run else len(plan),
+        "objects_restored": len(plan),
+        "plan": plan,
     }

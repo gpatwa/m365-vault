@@ -204,19 +204,34 @@ const TIER_CONFIG: Record<string, { color: string; border: string; bg: string; i
 };
 
 function TenantConnectedStep({ tenantName, tenantId, onContinue }: { tenantName: string; tenantId?: number; onContinue: () => void }) {
-  const [revealed, setRevealed] = useState(0); // 0-6, animates each check
+  const [stage, setStage] = useState<'discovering' | 'verifying' | 'done'>('discovering');
+  const [discoveryStep, setDiscoveryStep] = useState(0); // 0-3 for discovery animation
+  const [revealed, setRevealed] = useState(0); // 0-6, animates each security check
 
+  // Stage 1: Tenant discovery animation
   useEffect(() => {
     const timers = [
-      setTimeout(() => setRevealed(1), 500),
-      setTimeout(() => setRevealed(2), 1200),
-      setTimeout(() => setRevealed(3), 1900),
-      setTimeout(() => setRevealed(4), 2600),
-      setTimeout(() => setRevealed(5), 3300),
-      setTimeout(() => setRevealed(6), 4000),
+      setTimeout(() => setDiscoveryStep(1), 600),
+      setTimeout(() => setDiscoveryStep(2), 1400),
+      setTimeout(() => setDiscoveryStep(3), 2200),
+      setTimeout(() => setStage('verifying'), 3000),
     ];
     return () => timers.forEach(clearTimeout);
   }, []);
+
+  // Stage 2: Security verification animation
+  useEffect(() => {
+    if (stage !== 'verifying') return;
+    const timers = [
+      setTimeout(() => setRevealed(1), 400),
+      setTimeout(() => setRevealed(2), 1000),
+      setTimeout(() => setRevealed(3), 1600),
+      setTimeout(() => setRevealed(4), 2200),
+      setTimeout(() => setRevealed(5), 2800),
+      setTimeout(() => { setRevealed(6); setStage('done'); }, 3400),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [stage]);
 
   const securityChecks = [
     { icon: '🔐', label: 'OAuth 2.0 Admin Consent', detail: 'Delegated via Microsoft identity platform — no passwords stored', color: 'border-blue-500/30 bg-blue-500/10' },
@@ -227,8 +242,78 @@ function TenantConnectedStep({ tenantName, tenantId, onContinue }: { tenantName:
     { icon: '🔒', label: 'Encryption Key Provisioned', detail: 'AES-256-GCM data encryption key wrapped by master KEK — ready for backup', color: 'border-red-500/30 bg-red-500/10' },
   ];
 
-  const allDone = revealed >= 6;
+  const allDone = stage === 'done';
 
+  // ── Stage 1: Tenant Discovery ──
+  if (stage === 'discovering') {
+    const discoverySteps = [
+      { icon: '🌐', label: 'Redirecting to Microsoft login...', detail: 'login.microsoftonline.com' },
+      { icon: '✍️', label: 'Admin consent granted', detail: 'Global Administrator approved read-only access' },
+      { icon: '📋', label: `Tenant discovered: ${tenantName}`, detail: `Tenant ID: ${tenantId || '...'}  •  Microsoft 365 Business` },
+      { icon: '🔑', label: 'OAuth token exchange complete', detail: 'Authorization code → access token + refresh token' },
+    ];
+    return (
+      <div>
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+          </div>
+          <h2 className="text-2xl font-bold text-foreground">Connecting to Microsoft 365</h2>
+          <p className="text-muted-foreground mt-1">Establishing secure OAuth connection to your tenant</p>
+        </div>
+
+        {/* OAuth flow visualization */}
+        <div className="bg-card border border-border rounded-xl p-5 mb-4">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex flex-col items-center gap-1">
+              <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                <svg className="w-5 h-5" viewBox="0 0 21 21"><path d="M0 0h10v10H0z" fill="#f25022"/><path d="M11 0h10v10H11z" fill="#7fba00"/><path d="M0 11h10v10H0z" fill="#00a4ef"/><path d="M11 11h10v10H11z" fill="#ffb900"/></svg>
+              </div>
+              <span className="text-[10px] text-muted-foreground">Microsoft</span>
+            </div>
+            <div className="flex-1 mx-3 relative">
+              <div className="h-0.5 bg-border rounded" />
+              <div className="h-0.5 bg-blue-500 rounded absolute top-0 left-0 transition-all duration-1000"
+                style={{ width: `${Math.min(discoveryStep / 3 * 100, 100)}%` }} />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-2">
+                <Lock className="w-3.5 h-3.5 text-green-400" />
+              </div>
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <div className="w-10 h-10 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center justify-center">
+                <Shield className="w-5 h-5 text-green-400" />
+              </div>
+              <span className="text-[10px] text-muted-foreground">Shieldio</span>
+            </div>
+          </div>
+
+          <div className="space-y-2.5">
+            {discoverySteps.map((s, i) => (
+              <div key={i} className={`flex items-start gap-3 p-2.5 rounded-lg transition-all duration-500 ${
+                discoveryStep > i ? 'bg-green-500/5 border border-green-500/20' :
+                discoveryStep === i ? 'bg-blue-500/5 border border-blue-500/20' :
+                'opacity-30'
+              }`}>
+                {discoveryStep > i ? (
+                  <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                ) : discoveryStep === i ? (
+                  <Loader2 className="w-5 h-5 text-blue-400 animate-spin flex-shrink-0 mt-0.5" />
+                ) : (
+                  <div className="w-5 h-5 rounded-full border-2 border-border flex-shrink-0 mt-0.5" />
+                )}
+                <div>
+                  <div className="text-sm font-medium text-foreground">{s.label}</div>
+                  <div className="text-[11px] text-muted-foreground">{s.detail}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Stage 2 & 3: Security Verification ──
   return (
     <div>
       {/* Header */}
@@ -248,7 +333,7 @@ function TenantConnectedStep({ tenantName, tenantId, onContinue }: { tenantName:
         <p className="text-muted-foreground mt-1">
           {allDone
             ? 'Zero-trust access model verified. Your credentials are never stored.'
-            : 'Establishing secure, read-only access to your Microsoft 365 data'}
+            : 'Verifying security posture and access permissions'}
         </p>
       </div>
 
@@ -259,7 +344,7 @@ function TenantConnectedStep({ tenantName, tenantId, onContinue }: { tenantName:
         </div>
         <div className="flex-1">
           <div className="font-bold text-foreground">{tenantName}</div>
-          <div className="text-xs text-muted-foreground">Microsoft 365 Business</div>
+          <div className="text-xs text-muted-foreground">Microsoft 365 Business • Tenant {tenantId}</div>
         </div>
         <span className={`text-xs font-semibold px-2.5 py-1 rounded-full transition-all duration-500 ${
           allDone ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20 animate-pulse'

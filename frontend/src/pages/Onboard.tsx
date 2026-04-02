@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Shield, Globe, MessageSquare, CheckCircle, XCircle, Loader2, ArrowRight, LogOut, Lock, Shrink, Hash, Star } from 'lucide-react';
+import { Shield, Globe, MessageSquare, CheckCircle, XCircle, Loader2, ArrowRight, LogOut, Lock, Shrink, Hash, Star, Brain } from 'lucide-react';
 import { api } from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -29,7 +29,6 @@ interface Platform {
 
 export default function Onboard() {
   const { logout } = useAuth();
-  const navigate = useNavigate();
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState<string | null>(null);
@@ -46,12 +45,9 @@ export default function Onboard() {
     try {
       const data: any = await api.get(`/onboard/connect/${platformKey}`);
       if (data.auth_url) {
-        // Demo mode returns a relative URL — use React navigation to preserve session
-        if (data.auth_url.startsWith('/')) {
-          navigate(data.auth_url);
-        } else {
-          window.location.href = data.auth_url;
-        }
+        // Navigate immediately — don't wait for React re-render
+        // Session persists in sessionStorage across same-origin navigations
+        setTimeout(() => { window.location.href = data.auth_url; }, 0);
       }
     } catch (err: any) {
       console.error('Connect failed:', err);
@@ -206,6 +202,216 @@ const Shimmer = () => (
     <div className="h-16 bg-secondary rounded-xl" />
   </div>
 );
+
+// ── Intelligence Step: Animated Org Graph + Criticality Priority ──
+
+const TIER_CONFIG: Record<string, { color: string; border: string; bg: string; icon: string; label: string }> = {
+  critical: { color: 'text-red-400', border: 'border-red-500/40', bg: 'bg-red-500/10', icon: '👑', label: 'Critical' },
+  high: { color: 'text-orange-400', border: 'border-orange-500/40', bg: 'bg-orange-500/10', icon: '⭐', label: 'High' },
+  medium: { color: 'text-blue-400', border: 'border-blue-500/30', bg: 'bg-blue-500/10', icon: '●', label: 'Medium' },
+  low: { color: 'text-muted-foreground', border: 'border-border', bg: 'bg-muted', icon: '○', label: 'Standard' },
+};
+
+function IntelligenceStep({ tenantId, onContinue }: { tenantId?: number; onContinue: () => void }) {
+  const [phase, setPhase] = useState<'scanning' | 'graph' | 'plan'>('scanning');
+  const [intel, setIntel] = useState<any>(null);
+  const [revealedTier, setRevealedTier] = useState(-1); // -1=none, 0=critical, 1=high, 2=medium, 3=low
+
+  // Fetch intelligence data
+  useEffect(() => {
+    if (!tenantId) return;
+    api.get<any>(`/onboard/intelligence?tenant_id=${tenantId}`)
+      .then(data => {
+        setIntel(data);
+        // Auto-advance: scanning → graph after 2.5s
+        setTimeout(() => setPhase('graph'), 2500);
+      })
+      .catch(() => {
+        // Fallback: skip to continue
+        setTimeout(() => setPhase('graph'), 1500);
+      });
+  }, [tenantId]);
+
+  // Animate tier reveals when in graph phase
+  useEffect(() => {
+    if (phase !== 'graph' || !intel) return;
+    const timers = [
+      setTimeout(() => setRevealedTier(0), 400),    // critical
+      setTimeout(() => setRevealedTier(1), 1000),   // high
+      setTimeout(() => setRevealedTier(2), 1600),   // medium
+      setTimeout(() => setRevealedTier(3), 2200),   // low — all revealed
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [phase, intel]);
+
+  // Phase A: Scanning animation
+  if (phase === 'scanning') {
+    const scanSteps = [
+      { text: 'Scanning Microsoft Graph API...', delay: 0 },
+      { text: `Found ${intel?.total_users || '...'} users`, delay: 600 },
+      { text: `Detected org hierarchy`, delay: 1200 },
+      { text: `Scoring criticality (4-factor model)`, delay: 1800 },
+    ];
+    return (
+      <div className="text-center py-8">
+        <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-blue-500/10 flex items-center justify-center">
+          <Brain className="w-8 h-8 text-blue-400 animate-pulse" />
+        </div>
+        <h2 className="text-2xl font-bold text-foreground mb-2">Analyzing Your Organization</h2>
+        <p className="text-muted-foreground mb-8">Shieldio is learning who matters most...</p>
+        <div className="max-w-sm mx-auto space-y-3 text-left">
+          {scanSteps.map((s, i) => (
+            <div key={i} className="flex items-center gap-3 transition-all duration-500"
+              style={{ opacity: intel || i < 2 ? 1 : 0.3, transitionDelay: `${s.delay}ms` }}>
+              {intel || i < 2 ? (
+                <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+              ) : (
+                <Loader2 className="w-4 h-4 text-blue-400 animate-spin flex-shrink-0" />
+              )}
+              <span className="text-sm text-foreground">{s.text}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const users = intel?.users || [];
+  const tiers = intel?.tiers || { critical: 0, high: 0, medium: 0, low: 0 };
+  const mvbPlan = intel?.mvb_plan?.phases || [];
+  const tierOrder: Array<'critical' | 'high' | 'medium' | 'low'> = ['critical', 'high', 'medium', 'low'];
+
+  // Phase B: Org Intelligence Graph
+  if (phase === 'graph') {
+    return (
+      <div>
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold text-foreground">Org Intelligence Map</h2>
+          <p className="text-muted-foreground mt-1">Who gets backed up first — and why</p>
+        </div>
+
+        {/* Tier summary bar */}
+        <div className="flex items-center justify-center gap-4 mb-6">
+          {tierOrder.map((tier, i) => {
+            const cfg = TIER_CONFIG[tier];
+            const count = tiers[tier] || 0;
+            return (
+              <div key={tier} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all duration-500 ${
+                revealedTier >= i ? `${cfg.border} ${cfg.bg}` : 'border-transparent opacity-30'
+              }`}>
+                <span className="text-sm">{cfg.icon}</span>
+                <span className={`text-xs font-semibold ${cfg.color}`}>{cfg.label}</span>
+                <span className={`text-xs font-bold ${cfg.color}`}>{count}</span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Tiered user graph — rows by criticality */}
+        <div className="space-y-3 mb-6">
+          {tierOrder.map((tier, tierIdx) => {
+            const cfg = TIER_CONFIG[tier];
+            const tierUsers = users.filter((u: any) => u.tier === tier);
+            if (tierUsers.length === 0) return null;
+            const visible = revealedTier >= tierIdx;
+            return (
+              <div key={tier} className={`transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                {/* Tier label */}
+                <div className="flex items-center gap-2 mb-2">
+                  <div className={`w-2 h-2 rounded-full ${cfg.bg.replace('/10', '')}`} />
+                  <span className={`text-xs font-bold uppercase tracking-wider ${cfg.color}`}>
+                    {tier === 'critical' ? '🛡️ Backed up FIRST' : tier === 'high' ? '⚡ Then high priority' : tier === 'medium' ? '→ Then directors' : '→ Then everyone else'}
+                  </span>
+                </div>
+                {/* User cards row */}
+                <div className="flex flex-wrap gap-2">
+                  {tierUsers.map((user: any, ui: number) => (
+                    <div key={ui} className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${cfg.border} ${cfg.bg} transition-all duration-500`}
+                      style={{ transitionDelay: `${ui * 100}ms` }}>
+                      <div className={`w-8 h-8 rounded-full ${tier === 'critical' ? 'bg-red-600' : tier === 'high' ? 'bg-orange-600' : tier === 'medium' ? 'bg-blue-600' : 'bg-secondary'} text-white flex items-center justify-center text-[10px] font-bold`}>
+                        {user.score}
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-foreground">{user.name}</div>
+                        <div className="text-[10px] text-muted-foreground">{user.title}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {/* Connection line to next tier */}
+                {tierIdx < 3 && <div className="flex justify-center my-1"><div className="w-px h-4 bg-border" /></div>}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Transition to plan view */}
+        {revealedTier >= 3 && (
+          <div className="text-center">
+            <button onClick={() => setPhase('plan')}
+              className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-500 transition-colors flex items-center justify-center gap-2 mx-auto">
+              See Recovery Priority Order <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Phase C: MVB Recovery Plan — backup priority order
+  return (
+    <div>
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold text-foreground">Recovery Priority Order</h2>
+        <p className="text-muted-foreground mt-1">Pre-computed. When ransomware hits, recovery starts instantly.</p>
+      </div>
+
+      {/* 4-phase recovery timeline */}
+      <div className="space-y-3 mb-6">
+        {mvbPlan.map((phase: any, i: number) => {
+          const colors = ['bg-red-600', 'bg-orange-600', 'bg-blue-600', 'bg-secondary'];
+          const borders = ['border-red-500/40', 'border-orange-500/40', 'border-blue-500/30', 'border-border'];
+          return (
+            <div key={i} className={`p-4 rounded-xl border ${borders[i]} bg-card transition-all duration-500`}
+              style={{ transitionDelay: `${i * 300}ms` }}>
+              <div className="flex items-center gap-3 mb-2">
+                <div className={`w-8 h-8 rounded-full ${colors[i]} text-white flex items-center justify-center text-xs font-bold`}>
+                  {i + 1}
+                </div>
+                <div className="flex-1">
+                  <div className="font-semibold text-foreground text-sm">{phase.name}</div>
+                  <div className="text-xs text-muted-foreground">{phase.description}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-bold text-foreground">~{phase.est_minutes} min</div>
+                  <div className="text-[10px] text-muted-foreground">{phase.objects} objects</div>
+                </div>
+              </div>
+              {phase.users && (
+                <div className="flex flex-wrap gap-1.5 ml-11">
+                  {phase.users.map((name: string, j: number) => (
+                    <span key={j} className="text-[10px] px-2 py-0.5 bg-muted rounded-full text-muted-foreground">{name}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Differentiator callout */}
+      <div className="bg-muted rounded-xl p-4 mb-6 text-center border border-border">
+        <p className="text-muted-foreground text-xs mb-1">What competitors require you to configure manually</p>
+        <p className="text-foreground font-semibold">Shieldio computes this automatically from Microsoft Graph</p>
+      </div>
+
+      <button onClick={onContinue}
+        className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-500 transition-colors flex items-center justify-center gap-2">
+        Continue to Backup <ArrowRight className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
 
 /** Animated counter: counts from 0 to target over duration */
 function useCountUp(target: number, active: boolean, duration = 1500) {
@@ -1120,57 +1326,8 @@ export function OnboardCallback() {
         </div>
       )}
 
-      {/* Step 3: First Backup — per-workload selection + live progress */}
-      {step === 3 && (
-        <div>
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-foreground">Smart Backup Intelligence</h2>
-            <p className="text-muted-foreground mt-1">
-              Shieldio auto-detects your organizational context to prioritize what matters most.
-            </p>
-          </div>
-          <div className="space-y-3 mb-6">
-            <div className="p-4 rounded-xl border border-blue-500/30 bg-blue-500/10/50">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">1</div>
-                <div className="font-semibold text-foreground">Org Context Detection</div>
-              </div>
-              <p className="text-sm text-muted-foreground ml-11">Auto-discovers reporting hierarchy, department structure, VIP groups, and privileged roles from your Microsoft 365 tenant.</p>
-            </div>
-            <div className="p-4 rounded-xl border border-purple-500/30 bg-purple-500/10">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center text-sm font-bold">2</div>
-                <div className="font-semibold text-foreground">Criticality Scoring</div>
-              </div>
-              <p className="text-sm text-muted-foreground ml-11">Each user and site gets a 4-factor criticality score: role weight, direct reports, sign-in recency, and VIP group membership. Critical assets are prioritized for faster RPO.</p>
-            </div>
-            <div className="p-4 rounded-xl border border-green-500/30 bg-green-500/10/50">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center text-sm font-bold">3</div>
-                <div className="font-semibold text-foreground">MVB Recovery Plans</div>
-              </div>
-              <p className="text-sm text-muted-foreground ml-11">Pre-computed 4-phase NIST-ordered recovery plans ensure your CEO, CFO, and critical infrastructure are restored first — automatically, not manually.</p>
-            </div>
-            <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/10/50">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 rounded-full bg-amber-600 text-white flex items-center justify-center text-sm font-bold">4</div>
-                <div className="font-semibold text-foreground">Confidence Scoring</div>
-              </div>
-              <p className="text-sm text-muted-foreground ml-11">Criticality-weighted recovery confidence tells you not just "90% backed up" but "your most important 10 users have 100% coverage."</p>
-            </div>
-          </div>
-          <div className="bg-muted rounded-xl p-4 mb-6 text-center">
-            <p className="text-muted-foreground text-xs mb-1">What competitors require you to configure manually</p>
-            <p className="text-foreground font-semibold">Shieldio detects automatically from your Microsoft Graph data</p>
-          </div>
-          <button
-            onClick={() => setStep(4)}
-            className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-          >
-            Continue to Backup <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-      )}
+      {/* Step 3: Smart Intelligence — org graph + criticality-ordered backup priority */}
+      {step === 3 && <IntelligenceStep tenantId={resultData?.db_tenant_id} onContinue={() => setStep(4)} />}
 
       {step === 4 && (
         <div>

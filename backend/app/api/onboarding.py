@@ -122,6 +122,7 @@ async def start_connection(
     """
     # Demo mode: skip real OAuth, simulate successful connection
     if current_user.username in ('demo', 'prospect'):
+        from urllib.parse import quote
         # Pick a demo tenant for this user
         demo_tenants = {
             'demo': {'id': 1, 'name': 'Acme Healthcare'},
@@ -129,7 +130,7 @@ async def start_connection(
         }
         t = demo_tenants.get(current_user.username, demo_tenants['demo'])
         # Return a frontend callback URL that simulates successful OAuth
-        callback_url = f"/onboard/callback?demo=true&db_tenant_id={t['id']}&tenant_name={t['name']}&step=1"
+        callback_url = f"/onboard/callback?demo=true&db_tenant_id={t['id']}&tenant_name={quote(t['name'])}&step=1"
         return {
             "auth_url": callback_url,
             "state": "demo",
@@ -451,3 +452,107 @@ async def check_connection_status(
             "healthy": False,
             "error": str(e),
         }
+
+
+@router.get("/intelligence")
+async def get_onboard_intelligence(
+    tenant_id: int = Query(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Return org intelligence for the onboarding wizard.
+
+    For demo tenants, returns simulated hierarchy with criticality scores.
+    For real tenants, calls the org-context service.
+    """
+    tenant = await db.get(Tenant, tenant_id)
+    if not tenant:
+        raise ShieldioError(CONNECTOR_TENANT_NOT_FOUND, detail="Tenant not found")
+
+    # Demo tenants: return simulated org intelligence
+    if tenant.ms_tenant_id and tenant.ms_tenant_id.startswith("demo-"):
+        return _generate_demo_intelligence(tenant.name)
+
+    # Real tenants: fetch from org-context service
+    from app.models.org_context import UserContext
+    result = await db.execute(
+        select(UserContext).where(UserContext.tenant_id == tenant_id).order_by(UserContext.criticality_score.desc())
+    )
+    users = result.scalars().all()
+    if not users:
+        # No org context yet — return demo-like data as placeholder
+        return _generate_demo_intelligence(tenant.name)
+
+    user_list = []
+    for u in users:
+        tier = "low"
+        if u.criticality_score >= 90: tier = "critical"
+        elif u.criticality_score >= 75: tier = "high"
+        elif u.criticality_score >= 50: tier = "medium"
+        user_list.append({
+            "name": u.display_name or "Unknown",
+            "title": u.job_title or "",
+            "email": u.email or "",
+            "score": u.criticality_score or 0,
+            "tier": tier,
+            "manager": u.manager_display_name or None,
+            "reports_count": u.direct_reports_count or 0,
+        })
+
+    tiers = {"critical": 0, "high": 0, "medium": 0, "low": 0}
+    for u in user_list:
+        tiers[u["tier"]] += 1
+
+    return {
+        "users": user_list[:20],  # Top 20 by criticality
+        "tiers": tiers,
+        "total_users": len(user_list),
+        "mvb_plan": {
+            "phases": [
+                {"name": "Identity Controls", "description": "Entra ID policies, roles, MFA", "objects": tiers["critical"], "est_minutes": 5},
+                {"name": "Critical Users", "description": "CEO, CFO, privileged admins", "objects": tiers["critical"], "est_minutes": 10},
+                {"name": "High Priority", "description": "VPs, directors, key departments", "objects": tiers["high"], "est_minutes": 15},
+                {"name": "Full Recovery", "description": "All remaining users and data", "objects": tiers["medium"] + tiers["low"], "est_minutes": 30},
+            ]
+        },
+    }
+
+
+def _generate_demo_intelligence(tenant_name: str) -> dict:
+    """Generate simulated org intelligence for demo tenants."""
+    domain = tenant_name.lower().replace(" ", "") + ".com"
+    users = [
+        # Critical tier (score 90+)
+        {"name": "Sarah Chen", "title": "Chief Executive Officer", "email": f"sarah.chen@{domain}", "score": 95, "tier": "critical", "manager": None, "reports_count": 4},
+        # High tier (score 75-89)
+        {"name": "Marcus Johnson", "title": "VP Engineering", "email": f"marcus.j@{domain}", "score": 88, "tier": "high", "manager": "Sarah Chen", "reports_count": 3},
+        {"name": "Emily Rodriguez", "title": "VP Sales", "email": f"emily.r@{domain}", "score": 85, "tier": "high", "manager": "Sarah Chen", "reports_count": 2},
+        {"name": "David Kim", "title": "CFO", "email": f"david.k@{domain}", "score": 82, "tier": "high", "manager": "Sarah Chen", "reports_count": 2},
+        # Medium tier (score 50-74)
+        {"name": "Lisa Thompson", "title": "Director of IT", "email": f"lisa.t@{domain}", "score": 72, "tier": "medium", "manager": "Marcus Johnson", "reports_count": 2},
+        {"name": "James Wilson", "title": "Director of Product", "email": f"james.w@{domain}", "score": 68, "tier": "medium", "manager": "Marcus Johnson", "reports_count": 1},
+        {"name": "Priya Patel", "title": "Director of Marketing", "email": f"priya.p@{domain}", "score": 65, "tier": "medium", "manager": "Emily Rodriguez", "reports_count": 1},
+        {"name": "Alex Turner", "title": "Head of Finance", "email": f"alex.t@{domain}", "score": 62, "tier": "medium", "manager": "David Kim", "reports_count": 1},
+        {"name": "Rachel Lee", "title": "Director of HR", "email": f"rachel.l@{domain}", "score": 60, "tier": "medium", "manager": "Sarah Chen", "reports_count": 2},
+        # Low tier (score <50)
+        {"name": "Tom Nakamura", "title": "Senior Engineer", "email": f"tom.n@{domain}", "score": 45, "tier": "low", "manager": "Lisa Thompson", "reports_count": 0},
+        {"name": "Fatima Al-Zahra", "title": "Account Executive", "email": f"fatima.a@{domain}", "score": 42, "tier": "low", "manager": "Emily Rodriguez", "reports_count": 0},
+        {"name": "Ben Cooper", "title": "DevOps Engineer", "email": f"ben.c@{domain}", "score": 40, "tier": "low", "manager": "Lisa Thompson", "reports_count": 0},
+        {"name": "Mia Santos", "title": "Marketing Analyst", "email": f"mia.s@{domain}", "score": 38, "tier": "low", "manager": "Priya Patel", "reports_count": 0},
+        {"name": "Jake Morrison", "title": "Financial Analyst", "email": f"jake.m@{domain}", "score": 35, "tier": "low", "manager": "Alex Turner", "reports_count": 0},
+        {"name": "Olga Petrov", "title": "HR Coordinator", "email": f"olga.p@{domain}", "score": 32, "tier": "low", "manager": "Rachel Lee", "reports_count": 0},
+    ]
+
+    return {
+        "users": users,
+        "tiers": {"critical": 1, "high": 3, "medium": 5, "low": 6},
+        "total_users": 15,
+        "mvb_plan": {
+            "phases": [
+                {"name": "Phase 1: Identity Controls", "description": "Entra ID — roles, policies, MFA configs", "objects": 3, "est_minutes": 5, "users": ["Entra ID Config"]},
+                {"name": "Phase 2: Critical Users", "description": "CEO and executive data restored first", "objects": 1, "est_minutes": 8, "users": ["Sarah Chen"]},
+                {"name": "Phase 3: High Priority", "description": "VPs and key leadership", "objects": 3, "est_minutes": 12, "users": ["Marcus Johnson", "Emily Rodriguez", "David Kim"]},
+                {"name": "Phase 4: Full Recovery", "description": "All directors and staff", "objects": 11, "est_minutes": 25, "users": ["Lisa Thompson", "James Wilson", "Priya Patel", "Alex Turner", "Rachel Lee", "+ 6 more"]},
+            ]
+        },
+    }

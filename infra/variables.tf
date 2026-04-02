@@ -63,13 +63,15 @@ variable "backend_memory" {
 }
 
 variable "backend_min_replicas" {
-  type    = number
-  default = 1
+  description = "Backend always-on (control plane) — min 1 to handle API requests"
+  type        = number
+  default     = 1
 }
 
 variable "backend_max_replicas" {
-  type    = number
-  default = 3
+  description = "Backend autoscales up to 5 on concurrent HTTP requests > 10"
+  type        = number
+  default     = 5
 }
 
 variable "cors_origins" {
@@ -90,13 +92,15 @@ variable "worker_memory" {
 }
 
 variable "worker_min_replicas" {
-  type    = number
-  default = 1
+  description = "Worker scales to zero (data plane) — only runs when backup/restore jobs queued"
+  type        = number
+  default     = 0
 }
 
 variable "worker_max_replicas" {
-  type    = number
-  default = 3
+  description = "Worker autoscales up to 10 during backup windows"
+  type        = number
+  default     = 10
 }
 
 # Redis

@@ -153,6 +153,12 @@ resource "azurerm_container_app" "backend" {
     min_replicas = var.backend_min_replicas
     max_replicas = var.backend_max_replicas
 
+    # Autoscale: scale up when concurrent HTTP requests exceed 10
+    http_scale_rule {
+      name                = "http-scaling"
+      concurrent_requests = "10"
+    }
+
     container {
       name   = "backend"
       image  = "${var.acr_login_server}/m365vault-backend:${var.image_tag}"
@@ -252,8 +258,14 @@ resource "azurerm_container_app" "frontend" {
   }
 
   template {
-    min_replicas = 1
+    min_replicas = 0
     max_replicas = 3
+
+    # Autoscale: scale to zero when no HTTP traffic, scale up on requests
+    http_scale_rule {
+      name                = "http-scaling"
+      concurrent_requests = "15"
+    }
 
     container {
       name   = "frontend"
@@ -329,6 +341,9 @@ resource "azurerm_container_app" "worker" {
   template {
     min_replicas = var.worker_min_replicas
     max_replicas = var.worker_max_replicas
+
+    # Worker scales to zero when no jobs in queue
+    # Scales up when backup/restore jobs are dispatched
 
     container {
       name    = "worker"

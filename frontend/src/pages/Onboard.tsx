@@ -1116,19 +1116,19 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
             </div>
           ))}
           {planVisible >= recoveryPlan.plan.length && (
-            <div className="mt-3 pt-3 border-t border-blue-500/30 text-center">
-              <p className="text-sm font-semibold text-blue-800">
-                Total: {recoveryPlan.plan.length} objects, {fmtBytes(recoveryPlan.plan.reduce((s: number, p: any) => s + (p.size_bytes || 0), 0))} recoverable
-              </p>
-              <button disabled className="mt-2 px-4 py-2 bg-muted text-muted-foreground rounded-lg text-xs cursor-not-allowed" title="Available from Recovery Dashboard">
-                Execute Recovery (available in Recovery Dashboard)
-              </button>
+            <div className="mt-3 pt-3 border-t border-green-500/30">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-green-400">
+                  ✓ {recoveryPlan.plan.length} objects, {fmtBytes(recoveryPlan.plan.reduce((s: number, p: any) => s + (p.size_bytes || 0), 0))} — recovery plan ready
+                </p>
+                <span className="text-[10px] text-muted-foreground">Execute from Recovery Dashboard</span>
+              </div>
             </div>
           )}
         </div>
       ) : (
         <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 text-center">
-          <p className="text-sm text-blue-800 font-medium">No protected objects found for recovery plan</p>
+          <p className="text-sm text-blue-400 font-medium">Generating recovery plan...</p>
         </div>
       )}
       <GapRow m365="Manually restore each mailbox, OneDrive, SharePoint site. Days to weeks."
@@ -1204,8 +1204,8 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
               {scene.explore.label} →
             </button>
           </div>
-          {!canAdvance && simScene === 1 && <p className="text-[11px] text-muted-foreground mt-1.5">Click "Simulate Identity Attack" above to continue</p>}
-          {!canAdvance && simScene === 3 && <p className="text-[11px] text-muted-foreground mt-1.5">Click "Generate Recovery Plan" above to continue</p>}
+          {!canAdvance && simScene === 1 && <p className="text-xs text-red-400 mt-2 animate-pulse font-medium">👆 Click "Simulate Identity Attack" above to continue</p>}
+          {!canAdvance && simScene === 3 && <p className="text-xs text-blue-400 mt-2 animate-pulse font-medium">👆 Click "Generate Recovery Plan" above to continue</p>}
         </div>
       </div>
 

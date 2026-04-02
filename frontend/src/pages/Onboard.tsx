@@ -32,6 +32,8 @@ export default function Onboard() {
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState<string | null>(null);
+  const [showPreflight, setShowPreflight] = useState(false);
+  const [preflightStep, setPreflightStep] = useState(0);
 
   useEffect(() => {
     api.get<{ platforms: Platform[] }>('/onboard/platforms')
@@ -40,13 +42,24 @@ export default function Onboard() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Animate preflight steps
+  useEffect(() => {
+    if (!showPreflight) return;
+    const timers = [
+      setTimeout(() => setPreflightStep(1), 400),
+      setTimeout(() => setPreflightStep(2), 1000),
+      setTimeout(() => setPreflightStep(3), 1600),
+      setTimeout(() => setPreflightStep(4), 2200),
+      setTimeout(() => setPreflightStep(5), 2800),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [showPreflight]);
+
   const handleConnect = async (platformKey: string) => {
     setConnecting(platformKey);
     try {
       const data: any = await api.get(`/onboard/connect/${platformKey}`);
       if (data.auth_url) {
-        // Navigate immediately — don't wait for React re-render
-        // Session persists in sessionStorage across same-origin navigations
         setTimeout(() => { window.location.href = data.auth_url; }, 0);
       }
     } catch (err: any) {
@@ -83,7 +96,73 @@ export default function Onboard() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* ═══ Pre-flight Briefing — animated overview before OAuth redirect ═══ */}
+      {showPreflight && (
+        <div className="max-w-2xl mx-auto mb-8">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-foreground">How Shieldio Connects to Microsoft 365</h2>
+            <p className="text-muted-foreground mt-1">Secure, read-only access. Your credentials are never stored.</p>
+          </div>
+
+          {/* Animated flow diagram */}
+          <div className="space-y-3 mb-6">
+            {[
+              { icon: '🏢', label: 'Your M365 Tenant', desc: 'Sign in with your Global Admin account', detail: 'Microsoft verifies your identity — Shieldio never sees your password', color: 'border-blue-500/40 bg-blue-500/10' },
+              { icon: '🔐', label: 'Admin Consent', desc: 'Microsoft shows which permissions Shieldio needs', detail: 'You review and approve read-only access to your data — no write permissions', color: 'border-purple-500/40 bg-purple-500/10' },
+              { icon: '📋', label: 'Read-Only Permissions', desc: 'Mail.Read, Files.Read, Sites.Read, Directory.Read', detail: 'Shieldio can only read your data for backup — cannot modify, delete, or send', color: 'border-green-500/40 bg-green-500/10' },
+              { icon: '🔑', label: 'Secure Token Exchange', desc: 'Microsoft issues a scoped API token to Shieldio', detail: 'Per-tenant isolation — token only works for your organization', color: 'border-amber-500/40 bg-amber-500/10' },
+              { icon: '🧠', label: 'Smart Discovery & Backup', desc: 'Shieldio discovers workloads, scores criticality, starts protection', detail: 'CEO backed up first, then VPs, then everyone — automatically prioritized', color: 'border-cyan-500/40 bg-cyan-500/10' },
+            ].map((step, i) => (
+              <div key={i} className={`flex items-start gap-4 p-4 rounded-xl border transition-all duration-500 ${step.color} ${
+                preflightStep > i ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[-20px]'
+              }`} style={{ transitionDelay: `${i * 100}ms` }}>
+                <div className="text-2xl flex-shrink-0 mt-0.5">{step.icon}</div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-muted-foreground">STEP {i + 1}</span>
+                    <span className="font-semibold text-foreground text-sm">{step.label}</span>
+                  </div>
+                  <p className="text-sm text-foreground mt-0.5">{step.desc}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{step.detail}</p>
+                </div>
+                {preflightStep > i && <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-1" />}
+              </div>
+            ))}
+
+            {/* Connection lines between steps */}
+          </div>
+
+          {/* Security badges */}
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
+            {['AES-256 Encryption', 'Per-Tenant Isolation', 'No Write Access', 'SOC 2 Ready', 'GDPR Compliant'].map(badge => (
+              <span key={badge} className="text-[10px] px-2.5 py-1 bg-card border border-border rounded-full text-muted-foreground flex items-center gap-1">
+                <Lock className="w-3 h-3" /> {badge}
+              </span>
+            ))}
+          </div>
+
+          {/* Action buttons */}
+          {preflightStep >= 5 && (
+            <div className="flex gap-3">
+              <button onClick={() => { setShowPreflight(false); setPreflightStep(0); }}
+                className="flex-1 py-3 bg-muted text-foreground rounded-xl font-medium hover:bg-accent transition-colors text-sm">
+                ← Back
+              </button>
+              <button onClick={() => handleConnect('microsoft365')}
+                disabled={!!connecting}
+                className="flex-2 py-3 px-8 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-500 transition-colors flex items-center justify-center gap-2">
+                {connecting ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Redirecting to Microsoft...</>
+                ) : (
+                  <>Proceed to Microsoft <ArrowRight className="w-4 h-4" /></>
+                )}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {!showPreflight && (<><div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {platforms.map(platform => {
           const Icon = PLATFORM_ICONS[platform.icon] || Shield;
           const colors = PLATFORM_COLORS[platform.key] || 'border-gray-500/30 bg-muted/500/10';
@@ -92,7 +171,7 @@ export default function Onboard() {
           return (
             <button
               key={platform.key}
-              onClick={() => platform.available && handleConnect(platform.key)}
+              onClick={() => platform.available && (platform.key === 'microsoft365' ? setShowPreflight(true) : handleConnect(platform.key))}
               disabled={!platform.available || !!connecting}
               className={`relative p-6 rounded-2xl border-2 transition-all text-left ${
                 platform.available
@@ -151,6 +230,7 @@ export default function Onboard() {
           Only read-only permissions are requested for backup.
         </p>
       </div>
+      </>)}
     </div>
     </div>
   );

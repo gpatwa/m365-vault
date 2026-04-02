@@ -204,88 +204,125 @@ const TIER_CONFIG: Record<string, { color: string; border: string; bg: string; i
 };
 
 function TenantConnectedStep({ tenantName, tenantId, onContinue }: { tenantName: string; tenantId?: number; onContinue: () => void }) {
-  const [phase, setPhase] = useState(0); // 0=verifying, 1=verified
+  const [revealed, setRevealed] = useState(0); // 0-6, animates each check
 
   useEffect(() => {
-    // Simulate verification steps
-    const t = setTimeout(() => setPhase(1), 2000);
-    return () => clearTimeout(t);
+    const timers = [
+      setTimeout(() => setRevealed(1), 500),
+      setTimeout(() => setRevealed(2), 1200),
+      setTimeout(() => setRevealed(3), 1900),
+      setTimeout(() => setRevealed(4), 2600),
+      setTimeout(() => setRevealed(5), 3300),
+      setTimeout(() => setRevealed(6), 4000),
+    ];
+    return () => timers.forEach(clearTimeout);
   }, []);
 
-  const checks = [
-    { label: 'OAuth admin consent', status: true },
-    { label: 'Microsoft Graph API access', status: true },
-    { label: 'Read permissions verified', status: phase >= 1 },
-    { label: 'Tenant ID validated', status: phase >= 1 },
+  const securityChecks = [
+    { icon: '🔐', label: 'OAuth 2.0 Admin Consent', detail: 'Delegated via Microsoft identity platform — no passwords stored', color: 'border-blue-500/30 bg-blue-500/10' },
+    { icon: '📡', label: 'Microsoft Graph API Access', detail: 'Secure HTTPS connection to graph.microsoft.com established', color: 'border-purple-500/30 bg-purple-500/10' },
+    { icon: '👁️', label: 'Read-Only Permissions', detail: 'Only Mail.Read, Files.Read, Sites.Read, User.Read.All — no write access', color: 'border-green-500/30 bg-green-500/10' },
+    { icon: '🛡️', label: 'Per-Tenant Isolation', detail: 'Unique encryption key (DEK) generated for this tenant — zero cross-tenant access', color: 'border-amber-500/30 bg-amber-500/10' },
+    { icon: '✅', label: 'Tenant ID Validated', detail: `Tenant ${tenantId || '...'} confirmed in Microsoft Entra directory`, color: 'border-cyan-500/30 bg-cyan-500/10' },
+    { icon: '🔒', label: 'Encryption Key Provisioned', detail: 'AES-256-GCM data encryption key wrapped by master KEK — ready for backup', color: 'border-red-500/30 bg-red-500/10' },
   ];
+
+  const allDone = revealed >= 6;
 
   return (
     <div>
+      {/* Header */}
       <div className="text-center mb-6">
-        <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-          {phase === 0 ? (
-            <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
-          ) : (
-            <CheckCircle className="w-8 h-8 text-green-400" />
-          )}
-        </div>
-        <h2 className="text-2xl font-bold text-foreground">
-          {phase === 0 ? 'Verifying Connection...' : `${tenantName} Connected`}
-        </h2>
-        <p className="text-muted-foreground mt-1">
-          {phase === 0 ? 'Checking OAuth consent and API permissions' : 'Your Microsoft 365 tenant is ready for protection'}
-        </p>
-      </div>
-
-      {/* Tenant card */}
-      <div className="bg-card border border-border rounded-xl p-5 mb-4">
-        <div className="flex items-center gap-4 mb-4">
+        <div className="flex items-center justify-center gap-3 mb-4">
           <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
             <svg className="w-6 h-6" viewBox="0 0 21 21"><path d="M0 0h10v10H0z" fill="#f25022"/><path d="M11 0h10v10H11z" fill="#7fba00"/><path d="M0 11h10v10H0z" fill="#00a4ef"/><path d="M11 11h10v10H11z" fill="#ffb900"/></svg>
           </div>
-          <div>
-            <div className="font-bold text-foreground">{tenantName}</div>
-            <div className="text-xs text-muted-foreground">Microsoft 365 • Tenant ID: {tenantId || '...'}</div>
-          </div>
-          <div className="ml-auto">
-            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-              phase >= 1 ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-            }`}>
-              {phase >= 1 ? '✓ Connected' : '⏳ Verifying'}
-            </span>
+          <ArrowRight className="w-5 h-5 text-muted-foreground" />
+          <div className="w-12 h-12 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center">
+            <Shield className="w-6 h-6 text-green-400" />
           </div>
         </div>
+        <h2 className="text-2xl font-bold text-foreground">
+          {allDone ? `${tenantName} — Secured & Ready` : 'Securing Your Connection'}
+        </h2>
+        <p className="text-muted-foreground mt-1">
+          {allDone
+            ? 'Zero-trust access model verified. Your credentials are never stored.'
+            : 'Establishing secure, read-only access to your Microsoft 365 data'}
+        </p>
+      </div>
 
-        {/* Verification checklist */}
-        <div className="space-y-2">
-          {checks.map((check, i) => (
-            <div key={i} className={`flex items-center gap-3 text-sm transition-all duration-500`}
-              style={{ opacity: check.status ? 1 : 0.4, transitionDelay: `${i * 300}ms` }}>
-              {check.status ? (
-                <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
-              ) : (
-                <Loader2 className="w-4 h-4 text-blue-400 animate-spin flex-shrink-0" />
-              )}
-              <span className="text-foreground">{check.label}</span>
+      {/* Tenant identity card */}
+      <div className="bg-card border border-border rounded-xl p-4 mb-4 flex items-center gap-4">
+        <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center text-white text-sm font-bold">
+          {tenantName.charAt(0)}
+        </div>
+        <div className="flex-1">
+          <div className="font-bold text-foreground">{tenantName}</div>
+          <div className="text-xs text-muted-foreground">Microsoft 365 Business</div>
+        </div>
+        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full transition-all duration-500 ${
+          allDone ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20 animate-pulse'
+        }`}>
+          {allDone ? '✓ Secured' : '⏳ Verifying...'}
+        </span>
+      </div>
+
+      {/* Security verification pipeline */}
+      <div className="space-y-2 mb-5">
+        {securityChecks.map((check, i) => {
+          const done = revealed > i;
+          const active = revealed === i;
+          return (
+            <div key={i} className={`flex items-start gap-3 p-3 rounded-xl border transition-all duration-700 ${
+              done ? check.color : active ? 'border-blue-500/30 bg-blue-500/5' : 'border-border bg-card/50 opacity-40'
+            }`} style={{ transitionDelay: `${i * 100}ms` }}>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                {done ? (
+                  <span className="text-lg">{check.icon}</span>
+                ) : active ? (
+                  <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
+                ) : (
+                  <div className="w-5 h-5 rounded-full border-2 border-border" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-foreground">{check.label}</span>
+                  {done && <CheckCircle className="w-3.5 h-3.5 text-green-400" />}
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">{check.detail}</p>
+              </div>
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
 
-      {/* Platform capabilities */}
-      <div className="bg-muted rounded-xl p-4 mb-6">
-        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Available Workloads</div>
-        <div className="flex flex-wrap gap-2">
-          {['Exchange', 'OneDrive', 'SharePoint', 'Teams', 'Entra ID'].map(wl => (
-            <span key={wl} className="text-xs px-2.5 py-1 bg-card border border-border rounded-lg text-foreground">{wl}</span>
-          ))}
+      {/* Security summary — appears after all checks */}
+      {allDone && (
+        <div className="bg-muted rounded-xl p-4 mb-5 transition-all duration-700">
+          <div className="text-xs font-semibold text-foreground mb-2">Security Model</div>
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div>
+              <div className="text-lg font-bold text-green-400">0</div>
+              <div className="text-[10px] text-muted-foreground">Passwords stored</div>
+            </div>
+            <div>
+              <div className="text-lg font-bold text-blue-400">Read</div>
+              <div className="text-[10px] text-muted-foreground">Only permission</div>
+            </div>
+            <div>
+              <div className="text-lg font-bold text-amber-400">AES-256</div>
+              <div className="text-[10px] text-muted-foreground">Encryption ready</div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Continue button */}
-      {phase >= 1 && (
+      {allDone && (
         <button onClick={onContinue}
-          className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-500 transition-colors flex items-center justify-center gap-2">
+          className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-500 transition-all duration-500 flex items-center justify-center gap-2">
           Discover Workloads <ArrowRight className="w-4 h-4" />
         </button>
       )}

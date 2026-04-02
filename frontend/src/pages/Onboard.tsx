@@ -29,6 +29,7 @@ interface Platform {
 
 export default function Onboard() {
   const { logout } = useAuth();
+  const navigate = useNavigate();
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState<string | null>(null);
@@ -45,7 +46,12 @@ export default function Onboard() {
     try {
       const data: any = await api.get(`/onboard/connect/${platformKey}`);
       if (data.auth_url) {
-        window.location.href = data.auth_url;
+        // Demo mode returns a relative URL — use React navigation to preserve session
+        if (data.auth_url.startsWith('/')) {
+          navigate(data.auth_url);
+        } else {
+          window.location.href = data.auth_url;
+        }
       }
     } catch (err: any) {
       console.error('Connect failed:', err);

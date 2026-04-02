@@ -118,7 +118,25 @@ async def start_connection(
     """Start OAuth connection flow for a platform.
 
     Returns the authorization URL to redirect the customer to.
+    For demo/prospect users, simulates the connection and returns a frontend callback URL.
     """
+    # Demo mode: skip real OAuth, simulate successful connection
+    if current_user.username in ('demo', 'prospect'):
+        # Pick a demo tenant for this user
+        demo_tenants = {
+            'demo': {'id': 1, 'name': 'Acme Healthcare'},
+            'prospect': {'id': 3, 'name': 'Pacific Finance'},
+        }
+        t = demo_tenants.get(current_user.username, demo_tenants['demo'])
+        # Return a frontend callback URL that simulates successful OAuth
+        callback_url = f"/onboard/callback?demo=true&db_tenant_id={t['id']}&tenant_name={t['name']}&step=1"
+        return {
+            "auth_url": callback_url,
+            "state": "demo",
+            "platform": platform,
+            "redirect_uri": callback_url,
+        }
+
     try:
         connector = get_connector(platform)
     except ValueError as e:

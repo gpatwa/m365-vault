@@ -1333,7 +1333,29 @@ export function OnboardCallback() {
         <div>
           <div className="text-center mb-5">
             <h2 className="text-2xl font-bold text-foreground">Smart Backup Storyline</h2>
-            <p className="text-muted-foreground mt-1">Watch Shieldio discover, prioritize, and protect your data — live.</p>
+            <p className="text-muted-foreground mt-1">Criticality-ordered: identity first, then critical users, then everyone else.</p>
+          </div>
+
+          {/* Criticality priority banner */}
+          <div className="bg-card border border-border rounded-xl p-3 mb-4">
+            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Backup Priority Order</div>
+            <div className="flex items-center gap-2 text-xs">
+              <span className="flex items-center gap-1 px-2 py-1 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 font-medium">
+                {backupStatus === 'running' ? '🔄' : backupStatus === 'complete' ? '✅' : '1️⃣'} Identity + CEO
+              </span>
+              <ArrowRight className="w-3 h-3 text-muted-foreground" />
+              <span className="flex items-center gap-1 px-2 py-1 bg-orange-500/10 border border-orange-500/20 rounded-lg text-orange-400 font-medium">
+                {backupStatus === 'complete' ? '✅' : '2️⃣'} VPs
+              </span>
+              <ArrowRight className="w-3 h-3 text-muted-foreground" />
+              <span className="flex items-center gap-1 px-2 py-1 bg-blue-500/10 border border-blue-500/20 rounded-lg text-blue-400 font-medium">
+                {backupStatus === 'complete' ? '✅' : '3️⃣'} Directors
+              </span>
+              <ArrowRight className="w-3 h-3 text-muted-foreground" />
+              <span className="flex items-center gap-1 px-2 py-1 bg-muted border border-border rounded-lg text-muted-foreground font-medium">
+                {backupStatus === 'complete' ? '✅' : '4️⃣'} Staff
+              </span>
+            </div>
           </div>
 
           {/* ── Phase 1: Discovery Storyline ── */}
@@ -1476,7 +1498,16 @@ export function OnboardCallback() {
                   <Shield className="w-7 h-7 text-green-400" />
                 </div>
                 <div className="text-xl font-bold text-foreground">{totalObjects} Objects Protected</div>
-                <div className="text-xs text-green-300 mt-1">AES-256-GCM encrypted • Unique key per snapshot • Point-in-time restore ready</div>
+                <div className="text-xs text-green-300 mt-1">Criticality-ordered • AES-256-GCM encrypted • Point-in-time restore ready</div>
+                <div className="flex items-center justify-center gap-3 mt-3 text-[10px]">
+                  <span className="text-red-400">👑 CEO secured first</span>
+                  <span className="text-muted-foreground">→</span>
+                  <span className="text-orange-400">⭐ VPs next</span>
+                  <span className="text-muted-foreground">→</span>
+                  <span className="text-blue-400">Directors</span>
+                  <span className="text-muted-foreground">→</span>
+                  <span className="text-muted-foreground">Everyone</span>
+                </div>
               </div>
 
               {/* Protection map — visual summary of what's protected */}

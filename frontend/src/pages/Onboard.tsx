@@ -956,9 +956,11 @@ export function OnboardCallback() {
   const navigate = useNavigate();
 
   // Restore from sessionStorage or URL step param
-  const saved = loadOnboardState();
+  // For demo mode, always start fresh (clear previous session)
+  const isDemo = searchParams.get('demo') === 'true';
+  const saved = isDemo ? null : loadOnboardState();
   const urlStep = parseInt(searchParams.get('step') || '0');
-  const initialStep = saved?.step ?? (urlStep || 0);
+  const initialStep = saved?.step ?? urlStep;
 
   const [step, _setStep] = useState(initialStep);
   const [simScene, setSimScene] = useState(saved?.simScene || 0);
@@ -1020,7 +1022,6 @@ export function OnboardCallback() {
       return;
     }
 
-    const isDemo = searchParams.get('demo') === 'true';
     const adminConsent = searchParams.get('admin_consent');
     const tenant = searchParams.get('tenant');
     const state = searchParams.get('state');
@@ -1050,7 +1051,8 @@ export function OnboardCallback() {
           db_tenant_id: dbTenantId,
           tenant_name: tenantName,
         });
-        setStep(1); // Jump to discover
+        // Start at step 0 (tenant verification) — not step 1
+        setStep(0);
         api.get<any>('/sla-policies/').then(policies => {
           if (Array.isArray(policies)) setSlaPolicies(policies);
         }).catch(() => {});

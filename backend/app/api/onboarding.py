@@ -129,8 +129,9 @@ async def start_connection(
             'prospect': {'id': 3, 'name': 'Pacific Finance'},
         }
         t = demo_tenants.get(current_user.username, demo_tenants['demo'])
-        # Return a frontend callback URL that simulates successful OAuth
-        callback_url = f"/onboard/callback?demo=true&db_tenant_id={t['id']}&tenant_name={quote(t['name'])}&step=1"
+        # Redirect to tenants page first so user sees tenant management,
+        # then they proceed to onboarding wizard from there
+        callback_url = f"/tenants?connected={t['id']}&tenant_name={quote(t['name'])}"
         return {
             "auth_url": callback_url,
             "state": "demo",

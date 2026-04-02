@@ -1,12 +1,17 @@
 import { useState } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Building2, Plus, CheckCircle, XCircle, RefreshCw, Trash2, Wifi, Pause, Play, KeyRound, AlertTriangle, ExternalLink, ShieldCheck, Loader2 } from 'lucide-react';
+import { Building2, Plus, CheckCircle, XCircle, RefreshCw, Trash2, Wifi, Pause, Play, KeyRound, AlertTriangle, ExternalLink, ShieldCheck, Loader2, ArrowRight } from 'lucide-react';
 import { api } from '../api/client';
 import StatusBadge from '../components/StatusBadge';
 import OnboardingWizard from '../components/OnboardingWizard';
 import type { Tenant } from '../types';
 
 export default function Settings() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const connectedTenantId = searchParams.get('connected');
+  const connectedTenantName = searchParams.get('tenant_name');
   const [showWizard, setShowWizard] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [purgeConfirm, setPurgeConfirm] = useState<{ id: number; name: string } | null>(null);
@@ -107,6 +112,31 @@ export default function Settings() {
         )}
       </div>
 
+      {/* Demo onboarding: tenant just connected banner */}
+      {connectedTenantId && (
+        <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="w-6 h-6 text-green-400" />
+              <div>
+                <div className="font-semibold text-foreground">
+                  {connectedTenantName || 'Tenant'} connected successfully!
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  OAuth admin consent verified. Your tenant is ready for workload discovery.
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate(`/onboard/callback?demo=true&db_tenant_id=${connectedTenantId}&tenant_name=${encodeURIComponent(connectedTenantName || '')}&step=1`)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-500 flex items-center gap-2"
+            >
+              Continue Setup <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {showWizard && (
         <OnboardingWizard
           onComplete={() => {
@@ -122,13 +152,13 @@ export default function Settings() {
       {/* Action messages */}
       {(testResult || actionMsg) && (
         <div className={`rounded-lg p-4 mb-4 flex items-center gap-3 ${
-          testResult ? (testResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200')
-            : 'bg-blue-50 border border-blue-200'
+          testResult ? (testResult.success ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20')
+            : 'bg-blue-500/10 border border-blue-500/20'
         }`}>
           {testResult ? (
             <>
-              {testResult.success ? <CheckCircle className="w-5 h-5 text-green-600" /> : <XCircle className="w-5 h-5 text-red-600" />}
-              <span className={testResult.success ? 'text-green-800' : 'text-red-800'}>{testResult.message}</span>
+              {testResult.success ? <CheckCircle className="w-5 h-5 text-green-400" /> : <XCircle className="w-5 h-5 text-red-400" />}
+              <span className={testResult.success ? 'text-green-400' : 'text-red-400'}>{testResult.message}</span>
             </>
           ) : (
             <>

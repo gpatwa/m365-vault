@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Shield, Plus, Pencil, Trash2, Lock, Clock, Calendar, Link } from 'lucide-react';
 import { api } from '../api/client';
 import { useTenantId } from '../hooks/useTenant';
-import { WORKLOADS, WORKLOAD_KEYS } from '../config/workloads';
+import { PRIORITY_WORKLOADS as WORKLOADS, PRIORITY_WORKLOAD_KEYS as WORKLOAD_KEYS } from '../config/workloads';
 import type { SLAPolicy } from '../types';
 
 export default function SLAPolicies() {

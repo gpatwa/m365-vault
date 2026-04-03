@@ -1,6 +1,10 @@
 /**
  * Central workload configuration — single source of truth.
  *
+ * Priority workloads (Entra ID, Exchange) are shown by default.
+ * Other workloads (SharePoint, OneDrive, Teams) are collapsed/hidden
+ * and available as "More Workloads" for users to enable.
+ *
  * When adding a new workload:
  * 1. Add enum value to backend WorkloadType (backend/app/models/protected_object.py)
  * 2. Add entry here
@@ -21,9 +25,25 @@ export interface WorkloadConfig {
   barColor: string;    // bg-{color}-500
   ringColor: string;   // ring-{color}-400
   iconColor: string;   // text-{color}-600
+  priority: boolean;   // true = shown by default, false = collapsed/hidden
 }
 
 export const WORKLOADS: WorkloadConfig[] = [
+  {
+    key: 'entra_id',
+    label: 'Entra ID',
+    description: 'Users, groups, policies',
+    platform: 'microsoft365',
+    icon: KeyRound,
+    color: 'amber',
+    bgColor: 'bg-amber-500/10',
+    borderColor: 'border-amber-500/20',
+    textColor: 'text-amber-400',
+    barColor: 'bg-amber-500',
+    ringColor: 'ring-amber-400',
+    iconColor: 'text-amber-600',
+    priority: true,
+  },
   {
     key: 'exchange',
     label: 'Exchange',
@@ -37,20 +57,7 @@ export const WORKLOADS: WorkloadConfig[] = [
     barColor: 'bg-blue-500',
     ringColor: 'ring-blue-400',
     iconColor: 'text-blue-600',
-  },
-  {
-    key: 'onedrive',
-    label: 'OneDrive',
-    description: 'Files and folders',
-    platform: 'microsoft365',
-    icon: HardDrive,
-    color: 'purple',
-    bgColor: 'bg-purple-500/10',
-    borderColor: 'border-purple-500/20',
-    textColor: 'text-purple-400',
-    barColor: 'bg-purple-500',
-    ringColor: 'ring-purple-400',
-    iconColor: 'text-purple-600',
+    priority: true,
   },
   {
     key: 'sharepoint',
@@ -65,6 +72,22 @@ export const WORKLOADS: WorkloadConfig[] = [
     barColor: 'bg-green-500',
     ringColor: 'ring-green-400',
     iconColor: 'text-green-600',
+    priority: false,
+  },
+  {
+    key: 'onedrive',
+    label: 'OneDrive',
+    description: 'Files and folders',
+    platform: 'microsoft365',
+    icon: HardDrive,
+    color: 'purple',
+    bgColor: 'bg-purple-500/10',
+    borderColor: 'border-purple-500/20',
+    textColor: 'text-purple-400',
+    barColor: 'bg-purple-500',
+    ringColor: 'ring-purple-400',
+    iconColor: 'text-purple-600',
+    priority: false,
   },
   {
     key: 'teams',
@@ -79,20 +102,7 @@ export const WORKLOADS: WorkloadConfig[] = [
     barColor: 'bg-pink-500',
     ringColor: 'ring-pink-400',
     iconColor: 'text-pink-600',
-  },
-  {
-    key: 'entra_id',
-    label: 'Entra ID',
-    description: 'Users, groups, policies',
-    platform: 'microsoft365',
-    icon: KeyRound,
-    color: 'amber',
-    bgColor: 'bg-amber-500/10',
-    borderColor: 'border-amber-500/20',
-    textColor: 'text-amber-400',
-    barColor: 'bg-amber-500',
-    ringColor: 'ring-amber-400',
-    iconColor: 'text-amber-600',
+    priority: false,
   },
 ];
 
@@ -106,3 +116,11 @@ export const WORKLOAD_MAP = Object.fromEntries(
 
 /** Just the keys array */
 export const WORKLOAD_KEYS = WORKLOADS.map(w => w.key);
+
+/** Priority workloads — shown by default (Entra ID, Exchange) */
+export const PRIORITY_WORKLOADS = WORKLOADS.filter(w => w.priority);
+export const PRIORITY_WORKLOAD_KEYS = PRIORITY_WORKLOADS.map(w => w.key);
+
+/** Non-priority workloads — collapsed/hidden by default */
+export const MORE_WORKLOADS = WORKLOADS.filter(w => !w.priority);
+export const MORE_WORKLOAD_KEYS = MORE_WORKLOADS.map(w => w.key);

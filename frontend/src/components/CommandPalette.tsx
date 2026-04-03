@@ -86,11 +86,9 @@ const ACTION_ICONS: Record<string, typeof Mail> = {
 const QUICK_LINKS = [
   { label: 'Dashboard', path: '/', shortcut: 'D' },
   { label: 'Jobs', path: '/jobs', shortcut: 'J' },
-  { label: 'Exchange', path: '/exchange', shortcut: 'E' },
-  { label: 'OneDrive', path: '/onedrive', shortcut: 'O' },
-  { label: 'SharePoint', path: '/sharepoint', shortcut: 'S' },
-  { label: 'Teams', path: '/teams', shortcut: 'T' },
   { label: 'Entra ID', path: '/entra-id', shortcut: 'I' },
+  { label: 'Exchange', path: '/exchange', shortcut: 'E' },
+  { label: 'Agent Shield', path: '/agent-shield', shortcut: 'G' },
   { label: 'SLA Policies', path: '/sla-policies', shortcut: 'P' },
   { label: 'Smart Engine', path: '/smart-engine', shortcut: 'H' },
   { label: 'Failed Items', path: '/failed-items', shortcut: 'F' },

@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { getActivePlatformLabel } from '../config/platforms';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import {
-  Search, RotateCcw, Mail, HardDrive, Globe, FileText, Calendar, User,
-  Loader2, CheckCircle, XCircle, MessageSquare, KeyRound, DownloadCloud,
+  Search, RotateCcw, Mail, FileText, Calendar, User, Globe, MessageSquare,
+  Loader2, CheckCircle, XCircle, KeyRound, DownloadCloud,
 } from 'lucide-react';
 import { api } from '../api/client';
 import { formatSize, timeAgo } from '../utils/format';
@@ -30,9 +30,6 @@ const WORKLOAD_TABS = [
   { key: '', label: 'All', icon: Search },
   { key: 'entra_id', label: 'Entra ID', icon: KeyRound },
   { key: 'exchange', label: 'Exchange', icon: Mail },
-  { key: 'sharepoint', label: 'SharePoint', icon: Globe },
-  { key: 'onedrive', label: 'OneDrive', icon: HardDrive },
-  { key: 'teams', label: 'Teams', icon: MessageSquare },
 ];
 
 const ITEM_ICONS: Record<string, typeof Mail> = {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Mail, HardDrive, Globe, KeyRound, MessageSquare, Shield, CheckCircle, XCircle, Loader2, ChevronRight, ChevronDown, ExternalLink, Zap, Clock, Calendar, ShieldCheck } from 'lucide-react';
+import { Mail, KeyRound, Shield, CheckCircle, XCircle, Loader2, ChevronRight, ChevronDown, ExternalLink, Zap, Clock, Calendar, ShieldCheck } from 'lucide-react';
 import { api } from '../api/client';
 
 interface OnboardingWizardProps {
@@ -24,11 +24,8 @@ interface PermissionStatus {
 }
 
 const WORKLOADS = [
-  { key: 'exchange', label: 'Exchange', desc: 'Mailboxes, calendars, contacts', icon: Mail, color: 'blue' },
-  { key: 'onedrive', label: 'OneDrive', desc: 'Files and folders', icon: HardDrive, color: 'purple' },
-  { key: 'sharepoint', label: 'SharePoint', desc: 'Sites, lists, documents', icon: Globe, color: 'green' },
-  { key: 'teams', label: 'Teams', desc: 'Channels, messages, files', icon: MessageSquare, color: 'pink' },
   { key: 'entra_id', label: 'Entra ID', desc: 'Users, groups, policies', icon: KeyRound, color: 'amber' },
+  { key: 'exchange', label: 'Exchange', desc: 'Mailboxes, calendars, contacts', icon: Mail, color: 'blue' },
 ] as const;
 
 const FREQUENCIES = [
@@ -47,7 +44,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [discovering, setDiscovering] = useState(false);
   const [discovery, setDiscovery] = useState<DiscoveryResult | null>(null);
-  const [selectedWorkloads, setSelectedWorkloads] = useState<Set<string>>(new Set(['exchange', 'onedrive', 'sharepoint', 'teams', 'entra_id']));
+  const [selectedWorkloads, setSelectedWorkloads] = useState<Set<string>>(new Set(['entra_id', 'exchange']));
   const [frequency, setFrequency] = useState(24);
   const [retention, setRetention] = useState(30);
   const [autoBackup, setAutoBackup] = useState(true);

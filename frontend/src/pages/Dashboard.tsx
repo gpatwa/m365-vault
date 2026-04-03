@@ -80,11 +80,8 @@ const CHECKLIST_STEPS: {
 ];
 
 const BACKUP_WORKLOADS = [
-  { key: 'exchange', label: 'Exchange', desc: 'Emails, calendar, contacts', icon: '✉️', endpoint: '/exchange/backup-all', fast: true },
-  { key: 'sharepoint', label: 'SharePoint', desc: 'Sites, lists, documents', icon: '🌐', endpoint: '/sharepoint/backup-all', fast: false },
-  { key: 'onedrive', label: 'OneDrive', desc: 'Files and folders', icon: '💾', endpoint: '/onedrive/backup-all', fast: false },
-  { key: 'teams', label: 'Teams', desc: 'Channels, messages, files', icon: '💬', endpoint: '/teams/backup-all', fast: false },
   { key: 'entra_id', label: 'Entra ID', desc: 'Users, groups, policies', icon: '🔑', endpoint: '/entra-id/backup', fast: true },
+  { key: 'exchange', label: 'Exchange', desc: 'Emails, calendar, contacts', icon: '✉️', endpoint: '/exchange/backup-all', fast: true },
 ];
 
 function OnboardingChecklist() {
@@ -179,7 +176,7 @@ function OnboardingChecklist() {
               <div
                 key={step.key}
                 className={`flex items-center gap-3 px-4 py-3 border-b border-border/50 last:border-0 transition-colors ${
-                  isCurrent ? 'bg-blue-500/100/5' : ''
+                  isCurrent ? 'bg-blue-500/5' : ''
                 }`}
               >
                 {/* Status indicator */}
@@ -187,7 +184,7 @@ function OnboardingChecklist() {
                   {done ? (
                     <CheckCircle className="w-5 h-5 text-green-500" />
                   ) : isCurrent ? (
-                    <div className="w-5 h-5 rounded-full border-2 border-blue-500 bg-blue-500/100/10 flex items-center justify-center">
+                    <div className="w-5 h-5 rounded-full border-2 border-blue-500 bg-blue-500/10 flex items-center justify-center">
                       <div className="w-2 h-2 bg-blue-500/100 rounded-full" />
                     </div>
                   ) : (
@@ -218,11 +215,11 @@ function OnboardingChecklist() {
                               disabled={status === 'running' || status === 'done'}
                               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                                 status === 'done'
-                                  ? 'bg-green-500/100/10 text-green-400 border border-green-500/20'
+                                  ? 'bg-green-500/10 text-green-400 border border-green-500/20'
                                   : status === 'running'
-                                  ? 'bg-blue-500/100/10 text-blue-400 border border-blue-500/20 animate-pulse'
+                                  ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20 animate-pulse'
                                   : status === 'error'
-                                  ? 'bg-red-500/100/10 text-red-400 border border-red-500/20 hover:bg-red-500/100/20'
+                                  ? 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20'
                                   : 'bg-muted text-muted-foreground border border-border hover:bg-accent'
                               }`}
                             >
@@ -485,7 +482,7 @@ export default function Dashboard() {
             <button
               onClick={() => handleConnect('microsoft365')}
               disabled={connecting}
-              className="relative p-5 rounded-xl border-2 border-blue-500/30 bg-blue-500/100/5 hover:border-blue-500/50 hover:shadow-md transition-all text-left group"
+              className="relative p-5 rounded-xl border-2 border-blue-500/30 bg-blue-500/5 hover:border-blue-500/50 hover:shadow-md transition-all text-left group"
             >
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-xl bg-card border border-border flex items-center justify-center shadow-sm">
@@ -493,7 +490,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex-1">
                   <h3 className="font-bold text-foreground">Microsoft 365</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">Exchange, OneDrive, SharePoint, Teams, Entra ID</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Entra ID, Exchange + 3 more workloads</p>
                   <div className="mt-2 flex items-center gap-1 text-sm font-medium text-primary">
                     {connecting ? (
                       <><Loader2 className="w-4 h-4 animate-spin" /> Connecting...</>
@@ -562,7 +559,7 @@ export default function Dashboard() {
     <div>
       {/* Action banner for unprotected state */}
       {hasTenantsNoBackups && (
-        <div className="mb-6 bg-amber-500/100/10 border border-amber-500/20 rounded-xl p-4 flex items-center gap-3">
+        <div className="mb-6 bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-center gap-3">
           <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0" />
           <div className="flex-1">
             <p className="font-semibold text-amber-400 text-sm">Your data isn't protected yet</p>
@@ -596,7 +593,7 @@ export default function Dashboard() {
         <PlatformCard
           name={getActivePlatformLabel()}
           icon={
-            <div className="w-10 h-10 bg-blue-500/100/10 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
               <svg className="w-6 h-6" viewBox="0 0 21 21">
                 <path d="M0 0h10v10H0z" fill="#f25022"/>
                 <path d="M11 0h10v10H11z" fill="#7fba00"/>
@@ -623,8 +620,8 @@ export default function Dashboard() {
               <h3 className="text-sm font-semibold text-foreground">License & Usage</h3>
             </div>
             <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
-              licenseData?.tier === 'enterprise' ? 'bg-purple-500/100/10 text-purple-400' :
-              licenseData?.tier === 'professional' ? 'bg-blue-500/100/10 text-blue-400' :
+              licenseData?.tier === 'enterprise' ? 'bg-purple-500/10 text-purple-400' :
+              licenseData?.tier === 'professional' ? 'bg-blue-500/10 text-blue-400' :
               'bg-muted text-muted-foreground'
             }`}>
               {licenseData?.tier_label || 'Community'}

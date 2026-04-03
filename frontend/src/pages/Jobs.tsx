@@ -3,7 +3,7 @@ import { getActivePlatformLabel } from '../config/platforms';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle, Loader2, RotateCcw, Briefcase, CheckCircle2, PlayCircle } from 'lucide-react';
 import { api } from '../api/client';
-import { WORKLOAD_KEYS, WORKLOAD_MAP } from '../config/workloads';
+import { PRIORITY_WORKLOAD_KEYS, WORKLOAD_MAP } from '../config/workloads';
 import WorkloadSwimlane from '../components/jobs/WorkloadSwimlane';
 import type { WorkloadStats } from '../components/jobs/WorkloadSwimlane';
 import type { BackupJob, RestoreJob, PaginatedResponse, FailedJobsSummary } from '../types';
@@ -13,7 +13,7 @@ import Breadcrumb from '../components/design-system/Breadcrumb';
 import HeroSummaryBar, { type HeroStat } from '../components/design-system/HeroSummaryBar';
 
 type Workload = string;
-const WORKLOADS = WORKLOAD_KEYS;
+const WORKLOADS = PRIORITY_WORKLOAD_KEYS;
 
 // ── DataTable column definitions for "All Jobs" view ──
 

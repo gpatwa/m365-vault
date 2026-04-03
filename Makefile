@@ -267,6 +267,18 @@ az-wake: ## Resume all Azure resources (start DB + scale apps back up)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 .PHONY: deploy-dev
+deploy: ## Full health-gated deploy: pre-check → build → push → apply → verify
+	@bash scripts/deploy.sh
+
+.PHONY: deploy-verify
+deploy-verify: ## Run post-deploy health checks only
+	@bash scripts/deploy.sh --verify-only
+
+.PHONY: deploy-skip-build
+deploy-skip-build: ## Deploy without rebuilding images (uses latest in ACR)
+	@bash scripts/deploy.sh --skip-build
+
+.PHONY: deploy-dev
 deploy-dev: ## Trigger dev deployment via GitHub Actions
 	gh workflow run deploy.yml --repo gpatwa/m365-vault -f environment=dev
 	@echo "Triggered dev deployment. Watch: gh run list --repo gpatwa/m365-vault"

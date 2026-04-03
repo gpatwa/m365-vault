@@ -3,6 +3,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Mail, HardDrive, Globe, Shield, ShieldCheck, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search, RotateCcw, BarChart3, Gauge, ChevronDown, Menu, X, Users, Palette, Play, Bot } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useOnboarding } from '../contexts/OnboardingContext';
+import { useFeatureFlags } from '../contexts/FeatureFlagContext';
 import { useBranding } from '../contexts/BrandingContext';
 import CommandPalette from './CommandPalette';
 import ProductTour from './ProductTour';
@@ -21,6 +22,7 @@ interface NavGroup {
   items: NavItem[];
   defaultOpen?: boolean;
   roles?: string[];  // If set, entire group only visible to these roles
+  featureFlag?: string; // If set, group only visible when this feature is enabled
 }
 
 const navGroups: NavGroup[] = [
@@ -42,6 +44,7 @@ const navGroups: NavGroup[] = [
   {
     label: 'More Workloads',
     defaultOpen: false,
+    featureFlag: 'sharepoint',  // Gated — only shows when SharePoint workload is enabled (Professional+)
     items: [
       { path: '/sharepoint', label: 'SharePoint', icon: Globe },
       { path: '/onedrive', label: 'OneDrive', icon: HardDrive },
@@ -117,9 +120,16 @@ export default function Layout() {
   let onboarding: any = null;
   try { onboarding = useOnboarding(); } catch { /* OnboardingProvider not mounted yet */ }
 
+  // Feature flags for workload gating
+  let featureFlags: any = null;
+  try { featureFlags = useFeatureFlags(); } catch { /* FeatureFlagProvider not mounted yet */ }
+  const isFeatureEnabled = (flag: string) => featureFlags?.isEnabled?.(flag) ?? true;
+
   const visibleGroups = navGroups
     // Filter groups by role
     .filter(group => !group.roles || group.roles.includes(userRole))
+    // Filter groups by feature flag
+    .filter(group => !group.featureFlag || isFeatureEnabled(group.featureFlag))
     // Filter items within groups by role
     .map(group => ({
       ...group,

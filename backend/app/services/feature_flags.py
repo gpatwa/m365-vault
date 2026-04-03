@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 TIER_FEATURES = {
     "community": {
-        "workloads": ["exchange", "onedrive", "sharepoint"],
+        "workloads": ["entra_id", "exchange"],
         "intelligence": ["anomaly_detection", "openclaw_attack_demo"],
         "recovery": ["mass_recovery"],
         "compliance": [],
@@ -34,7 +34,7 @@ TIER_FEATURES = {
         "limits": {
             "max_objects": 25,
             "max_tenants": 1,
-            "max_workloads": 3,
+            "max_workloads": 2,
             "retention_days": 30,
         },
     },

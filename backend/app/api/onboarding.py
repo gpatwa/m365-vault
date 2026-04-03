@@ -481,7 +481,7 @@ async def get_onboard_intelligence(
             "email": u.email or "",
             "score": u.criticality_score or 0,
             "tier": tier,
-            "manager": u.manager_display_name or None,
+            "manager": getattr(u, 'manager_display_name', None) or (u.manager_ms_id if hasattr(u, 'manager_ms_id') else None),
             "reports_count": u.direct_reports_count or 0,
         })
 

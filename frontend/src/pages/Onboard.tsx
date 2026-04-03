@@ -610,17 +610,32 @@ function IntelligenceStep({ tenantId, onContinue }: { tenantId?: number; onConti
 
   // Fetch intelligence data
   useEffect(() => {
-    if (!tenantId) return;
-    api.get<any>(`/onboard/intelligence?tenant_id=${tenantId}`)
-      .then(data => {
+    const fetchIntel = async (tid: number) => {
+      try {
+        const data = await api.get<any>(`/onboard/intelligence?tenant_id=${tid}`);
         setIntel(data);
-        // Auto-advance: scanning → graph after 2.5s
         setTimeout(() => setPhase('graph'), 2500);
-      })
-      .catch(() => {
-        // Fallback: skip to continue
+      } catch {
+        setTimeout(() => setPhase('graph'), 1500);
+      }
+    };
+
+    if (tenantId) {
+      fetchIntel(tenantId);
+    } else {
+      // No tenant ID — try to find first active tenant
+      api.get<any>('/tenants/').then((tenants: any) => {
+        const active = (Array.isArray(tenants) ? tenants : tenants?.items || [])
+          .find((t: any) => t.status === 'ACTIVE' || t.status === 'active');
+        if (active?.id) {
+          fetchIntel(active.id);
+        } else {
+          setTimeout(() => setPhase('graph'), 1500);
+        }
+      }).catch(() => {
         setTimeout(() => setPhase('graph'), 1500);
       });
+    }
   }, [tenantId]);
 
   // Animate tier reveals when in graph phase

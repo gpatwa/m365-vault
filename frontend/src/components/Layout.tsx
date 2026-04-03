@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Mail, HardDrive, Globe, Shield, ShieldCheck, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search, RotateCcw, BarChart3, Gauge, ChevronDown, Menu, X, Users, Palette, Play } from 'lucide-react';
+import { LayoutDashboard, Mail, HardDrive, Globe, Shield, ShieldCheck, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search, RotateCcw, BarChart3, Gauge, ChevronDown, Menu, X, Users, Palette, Play, Bot } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useOnboarding } from '../contexts/OnboardingContext';
 import { useBranding } from '../contexts/BrandingContext';
@@ -63,6 +63,7 @@ const navGroups: NavGroup[] = [
     defaultOpen: false,
     items: [
       { path: '/smart-engine', label: 'Smart Engine', icon: Brain },
+      { path: '/agent-shield', label: 'Agent Shield', icon: Bot },
       { path: '/org-context', label: 'Org Context', icon: Shield },
       { path: '/alerts', label: 'Alerts', icon: Bell },
       { path: '/reports', label: 'Reports', icon: BarChart3 },

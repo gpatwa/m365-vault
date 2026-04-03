@@ -32,6 +32,9 @@ import Recovery from './pages/Recovery';
 import Reports from './pages/Reports';
 import Usage from './pages/Usage';
 import Legal from './pages/Legal';
+import Contact from './pages/Contact';
+import About from './pages/About';
+import AgentShield from './pages/AgentShield';
 import ObjectDetail from './pages/ObjectDetail';
 import SecurityPage from './pages/Security';
 import Docs from './pages/Docs';
@@ -112,6 +115,8 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/sso/callback" element={<SSOCallback />} />
       <Route path="/legal" element={<Legal />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/about" element={<About />} />
       <Route path="/docs" element={<Docs />} />
       <Route path="/docs/view/:filename" element={<DocViewer />} />
       <Route path="/onboard" element={<ProtectedRoute><Onboard /></ProtectedRoute>} />
@@ -141,6 +146,7 @@ function AppRoutes() {
         <Route path="alerts" element={<AlertSettings />} />
         <Route path="search" element={<Search />} />
         <Route path="smart-engine" element={<SmartEngine />} />
+        <Route path="agent-shield" element={<AgentShield />} />
         <Route path="restore" element={<SelfRestore />} />
         <Route path="recovery" element={<Recovery />} />
         <Route path="reports" element={<Reports />} />

@@ -149,7 +149,7 @@ function CyberRecoveryStory() {
         <div className={`relative rounded-2xl border overflow-hidden transition-all duration-700 ${current.border} ${current.bg} shadow-2xl ${current.glow}`}>
           {/* Pulsing background glow for DETECT phase */}
           {phase === 3 && (
-            <div className="absolute inset-0 bg-red-500/100/5 animate-pulse" />
+            <div className="absolute inset-0 bg-red-500/5 animate-pulse" />
           )}
 
           <div className="relative p-8">
@@ -219,11 +219,11 @@ function CyberRecoveryStory() {
 
 // ── Workload icons ──
 const WORKLOADS = [
-  { icon: Mail, label: 'Exchange', desc: 'Email, Calendar, Contacts', color: 'text-blue-400 bg-blue-500/100/10 border-blue-500/20' },
-  { icon: HardDrive, label: 'OneDrive', desc: 'Files & Folders', color: 'text-purple-400 bg-purple-500/100/10 border-purple-500/20' },
-  { icon: Globe, label: 'SharePoint', desc: 'Sites, Lists, Documents', color: 'text-green-400 bg-green-500/100/10 border-green-500/20' },
-  { icon: MessageSquare, label: 'Teams', desc: 'Chats, Channels, Files', color: 'text-pink-400 bg-pink-500/100/10 border-pink-500/20' },
-  { icon: KeyRound, label: 'Entra ID', desc: '12 object types, Config drift', color: 'text-amber-400 bg-amber-500/100/10 border-amber-500/20' },
+  { icon: Mail, label: 'Exchange', desc: 'Email, Calendar, Contacts', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
+  { icon: HardDrive, label: 'OneDrive', desc: 'Files & Folders', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
+  { icon: Globe, label: 'SharePoint', desc: 'Sites, Lists, Documents', color: 'text-green-400 bg-green-500/10 border-green-500/20' },
+  { icon: MessageSquare, label: 'Teams', desc: 'Chats, Channels, Files', color: 'text-pink-400 bg-pink-500/10 border-pink-500/20' },
+  { icon: KeyRound, label: 'Entra ID', desc: '12 object types, Config drift', color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
 ];
 
 // ── Competitor comparison (CISO-focused) ──
@@ -265,9 +265,9 @@ export default function Landing() {
           </Link>
           <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
             <a href="#how-it-works" className="hover:text-foreground">How It Works</a>
-            <a href="#workloads" className="hover:text-foreground">Workloads</a>
             <a href="#pricing" className="hover:text-foreground">Pricing</a>
-            <a href="#security" className="hover:text-foreground">Security</a>
+            <Link to="/about" className="hover:text-foreground">About</Link>
+            <Link to="/contact" className="hover:text-foreground">Contact</Link>
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle />
@@ -283,7 +283,7 @@ export default function Landing() {
       <section className="pt-24 pb-16 px-6">
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
-          <div className={`inline-flex items-center gap-2 px-3 py-1 bg-red-500/100/10 text-red-400 rounded-full text-xs font-medium mb-6 transition-all duration-500 ${heroReady ? 'opacity-100' : 'opacity-0'}`}>
+          <div className={`inline-flex items-center gap-2 px-3 py-1 bg-red-500/10 text-red-400 rounded-full text-xs font-medium mb-6 transition-all duration-500 ${heroReady ? 'opacity-100' : 'opacity-0'}`}>
             <AlertTriangle className="w-3.5 h-3.5" />
             Microsoft doesn't back up your M365 data
           </div>
@@ -341,7 +341,7 @@ export default function Landing() {
         <div className="max-w-5xl mx-auto">
           <FadeUp>
             <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-500/100/10 text-red-400 rounded-full text-xs font-medium mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-500/10 text-red-400 rounded-full text-xs font-medium mb-4">
                 <AlertTriangle className="w-3.5 h-3.5" /> Ransomware Scenario
               </div>
               <h2 className="text-3xl font-bold text-foreground">When ransomware hits at 2am, this is your playbook</h2>
@@ -421,7 +421,7 @@ export default function Landing() {
         <div className="max-w-5xl mx-auto">
           <FadeUp>
             <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/100/10 text-amber-400 rounded-full text-xs font-medium mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/10 text-amber-400 rounded-full text-xs font-medium mb-4">
                 <Brain className="w-3.5 h-3.5" /> AI-Powered Intelligence
               </div>
               <h2 className="text-3xl font-bold">Recovery intelligence that no competitor has.</h2>
@@ -662,10 +662,11 @@ export default function Landing() {
               </div>
             </div>
             <div>
-              <div className="text-xs font-semibold text-foreground uppercase tracking-wider mb-3">Resources</div>
+              <div className="text-xs font-semibold text-foreground uppercase tracking-wider mb-3">Company</div>
               <div className="space-y-2 text-sm">
+                <Link to="/about" className="block hover:text-foreground">About</Link>
+                <Link to="/contact" className="block hover:text-foreground">Contact</Link>
                 <a href="https://github.com/gpatwa/m365-vault" className="block hover:text-foreground">GitHub</a>
-                <a href="/docs" className="block hover:text-foreground">Documentation</a>
               </div>
             </div>
             <div>

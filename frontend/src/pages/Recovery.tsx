@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Shield, ShieldAlert, Clock, CheckCircle, XCircle, AlertTriangle, ArrowRight, PlayCircle, Loader2, BookOpen, RotateCcw } from 'lucide-react';
 import { api } from '../api/client';
 import { useTenantId } from '../hooks/useTenant';
+import { PRIORITY_WORKLOAD_KEYS } from '../config/workloads';
 
 interface ConfidenceScore {
   score: number;
@@ -190,7 +191,7 @@ export default function Recovery() {
                   </div>
 
                   <div className="space-y-3">
-                    {rpoRto.workloads.map(wl => (
+                    {rpoRto.workloads.filter(wl => PRIORITY_WORKLOAD_KEYS.includes(wl.workload)).map(wl => (
                       <div key={wl.workload} className="flex items-center gap-3">
                         <span className="w-24 text-sm font-medium capitalize">{wl.workload.replace('_', ' ')}</span>
                         <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">

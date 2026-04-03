@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { api } from '../api/client';
 import DataTable, { type Column, type FilterOption } from '../components/DataTable';
-import { WORKLOAD_MAP } from '../config/workloads';
+import { WORKLOAD_MAP, PRIORITY_WORKLOAD_KEYS } from '../config/workloads';
 import type { FailedItemEntry, FailedItemsSummary, FailedItemCategory } from '../types';
 import Breadcrumb from '../components/design-system/Breadcrumb';
 import HeroSummaryBar, { type HeroStat } from '../components/design-system/HeroSummaryBar';
@@ -96,14 +96,16 @@ export default function FailedItems() {
   // Compute per-workload failure stats from summary
   const workloadStats: WorkloadFailureSummary[] = (() => {
     if (!summary?.by_workload) return [];
-    return Object.entries(summary.by_workload as Record<string, any>).map(([wl, data]: [string, any]) => ({
-      workload: wl,
-      total: data.total || 0,
-      unresolved: data.unresolved || 0,
-      retriable: data.retriable || 0,
-      topCategory: data.top_category || 'unknown',
-      topCategoryCount: data.top_category_count || 0,
-    })).sort((a, b) => b.unresolved - a.unresolved);
+    return Object.entries(summary.by_workload as Record<string, any>)
+      .filter(([wl]) => PRIORITY_WORKLOAD_KEYS.includes(wl))
+      .map(([wl, data]: [string, any]) => ({
+        workload: wl,
+        total: data.total || 0,
+        unresolved: data.unresolved || 0,
+        retriable: data.retriable || 0,
+        topCategory: data.top_category || 'unknown',
+        topCategoryCount: data.top_category_count || 0,
+      })).sort((a, b) => b.unresolved - a.unresolved);
   })();
 
   // Mutations

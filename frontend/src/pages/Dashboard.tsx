@@ -10,7 +10,7 @@ import {
 import { useOnboarding, type OnboardingStep } from '../contexts/OnboardingContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { api } from '../api/client';
-import { WORKLOADS } from '../config/workloads';
+import { PRIORITY_WORKLOADS as WORKLOADS } from '../config/workloads';
 import { getActivePlatformLabel } from '../config/platforms';
 import { useTenantId } from '../hooks/useTenant';
 import { HeroSummaryBar, ActionBanner, PlatformCard } from '../components/design-system';

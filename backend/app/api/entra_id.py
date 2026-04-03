@@ -312,13 +312,17 @@ async def compare_snapshots(
     common = ids_a & ids_b  # In both
 
     # Detect changes by comparing content hash
+    # Business+ gets field-level diffs via snapshot_diff feature
+    from app.services.feature_flags import feature_flags
+    deep_diff_enabled = feature_flags.is_enabled("snapshot_diff")
+
     changed = []
     unchanged = 0
     for item_id in common:
         a = items_a[item_id]
         b = items_b[item_id]
         if a.content_hash != b.content_hash:
-            changed.append({
+            change_entry = {
                 "ms_item_id": item_id,
                 "item_type": b.item_type.value,
                 "name": b.name,
@@ -326,7 +330,29 @@ async def compare_snapshots(
                 "new_size": b.size_bytes,
                 "old_hash": a.content_hash,
                 "new_hash": b.content_hash,
-            })
+            }
+            # Deep diff: compare actual field values (Business+)
+            if deep_diff_enabled and a.metadata_json and b.metadata_json:
+                try:
+                    import json as _json
+                    old_data = _json.loads(a.metadata_json) if isinstance(a.metadata_json, str) else {}
+                    new_data = _json.loads(b.metadata_json) if isinstance(b.metadata_json, str) else {}
+                    field_changes = []
+                    all_keys = set(list(old_data.keys()) + list(new_data.keys()))
+                    for key in sorted(all_keys):
+                        old_val = old_data.get(key)
+                        new_val = new_data.get(key)
+                        if old_val != new_val:
+                            field_changes.append({
+                                "field": key,
+                                "old_value": str(old_val)[:200] if old_val is not None else None,
+                                "new_value": str(new_val)[:200] if new_val is not None else None,
+                            })
+                    if field_changes:
+                        change_entry["field_changes"] = field_changes
+                except Exception:
+                    pass  # Fall back to hash-only diff
+            changed.append(change_entry)
         else:
             unchanged += 1
 

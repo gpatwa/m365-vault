@@ -197,6 +197,69 @@ async def restore_mailbox(
     }
 
 
+@router.post("/mailboxes/{mailbox_id}/export-pst")
+async def export_pst(
+    mailbox_id: int,
+    snapshot_id: int = Query(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Export mailbox snapshot as downloadable EML bundle (PST-compatible).
+
+    Requires Business+ tier (pst_export feature flag).
+    Returns a ZIP file containing all emails as .eml files organized by folder.
+    """
+    from app.services.feature_flags import feature_flags
+    if not feature_flags.is_enabled("pst_export"):
+        raise HTTPException(403, detail="PST export requires Business plan or higher. Upgrade at /billing.")
+
+    from app.models.snapshot import Snapshot, SnapshotItem
+    from sqlalchemy import select
+
+    # Get snapshot items
+    result = await db.execute(
+        select(SnapshotItem)
+        .where(SnapshotItem.snapshot_id == snapshot_id)
+        .where(SnapshotItem.item_type.in_(["email", "calendar_event", "contact"]))
+        .order_by(SnapshotItem.path, SnapshotItem.name)
+    )
+    items = result.scalars().all()
+
+    if not items:
+        raise HTTPException(404, detail="No items found in snapshot")
+
+    import io
+    import zipfile
+    import json as _json
+
+    # Create ZIP with EML files organized by folder
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for item in items:
+            folder = item.path or "Inbox"
+            safe_name = (item.name or "item")[:80].replace("/", "_").replace("\\", "_")
+            ext = ".eml" if item.item_type in ("email",) else ".json"
+            filename = f"{folder}/{safe_name}_{item.id}{ext}"
+
+            if item.metadata_json:
+                try:
+                    data = _json.loads(item.metadata_json) if isinstance(item.metadata_json, str) else item.metadata_json
+                    zf.writestr(filename, _json.dumps(data, indent=2, default=str))
+                except Exception:
+                    zf.writestr(filename, item.metadata_json or "")
+            else:
+                zf.writestr(filename, f"Item: {item.name}\nType: {item.item_type}\nPath: {item.path}")
+
+    buffer.seek(0)
+
+    from fastapi.responses import StreamingResponse
+    return StreamingResponse(
+        buffer,
+        media_type="application/zip",
+        headers={"Content-Disposition": f"attachment; filename=mailbox_{mailbox_id}_snapshot_{snapshot_id}.zip"},
+    )
+
+
 @router.post("/mailboxes/{mailbox_id}/backup")
 async def trigger_backup(
     mailbox_id: int,

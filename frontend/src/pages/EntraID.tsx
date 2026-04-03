@@ -6,6 +6,7 @@ import { WorkloadPageLayout } from '../components/design-system';
 import RestoreDialog from '../components/RestoreDialog';
 import { useTenantId } from '../hooks/useTenant';
 import { formatSize } from '../utils/format';
+import { useFeatureFlags } from '../contexts/FeatureFlagContext';
 import DataTable, { type Column, type FilterOption } from '../components/DataTable';
 
 interface EntraSummary {
@@ -361,6 +362,45 @@ export default function EntraID() {
         onClose={() => setShowRestore(false)}
       />
     )}
+    {/* Feature-gated upgrade prompts */}
+    <EntraFeatureGates />
     </>
+  );
+}
+
+function EntraFeatureGates() {
+  const { isEnabled } = useFeatureFlags();
+  const upgrades = [];
+
+  if (!isEnabled('entra_member_restore')) {
+    upgrades.push({ feature: 'Group Membership Restore', desc: 'Restore groups with all their members re-added automatically', tier: 'Business' });
+  }
+  if (!isEnabled('snapshot_diff')) {
+    upgrades.push({ feature: 'Full Snapshot Diff', desc: 'See field-level changes between snapshots (e.g., CA policy state changes)', tier: 'Business' });
+  }
+  if (!isEnabled('pim_backup')) {
+    upgrades.push({ feature: 'PIM Assignment Backup', desc: 'Back up Privileged Identity Management eligible and active role assignments', tier: 'Enterprise' });
+  }
+
+  if (upgrades.length === 0) return null;
+
+  return (
+    <div className="mt-6 bg-card border border-border rounded-xl p-5">
+      <h3 className="text-sm font-semibold text-foreground mb-3">Available with Upgrade</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {upgrades.map(u => (
+          <div key={u.feature} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg border border-border">
+            <div className="w-8 h-8 bg-teal-500/10 rounded-lg flex items-center justify-center shrink-0">
+              <KeyRound className="w-4 h-4 text-teal-400" />
+            </div>
+            <div>
+              <div className="text-sm font-medium text-foreground">{u.feature}</div>
+              <div className="text-xs text-muted-foreground">{u.desc}</div>
+              <div className="text-[10px] text-teal-400 font-semibold mt-1">{u.tier} plan</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

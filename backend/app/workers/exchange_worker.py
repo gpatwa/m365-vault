@@ -70,7 +70,11 @@ class ExchangeWorker(BaseWorker):
 
         items.extend(att_items)
 
-        # 5. Discover mail rules (Professional+ feature)
+        # 5. Discover archive mailbox emails (Professional+ feature)
+        archive_items = await self._discover_archive(user_id, folder_tokens, new_folder_tokens)
+        items.extend(archive_items)
+
+        # 6. Discover mail rules (Professional+ feature)
         rule_items = await self._discover_mail_rules(user_id)
         items.extend(rule_items)
 
@@ -255,6 +259,85 @@ class ExchangeWorker(BaseWorker):
                     ))
             except Exception as e:
                 logger.error(f"Failed to discover attachments for {msg_id}: {e}")
+
+        return items
+
+    # ── Archive Mailbox Discovery (Professional+) ──
+
+    async def _discover_archive(self, user_id: str, folder_tokens: dict, new_folder_tokens: dict) -> list[BackupItem]:
+        """Discover emails in archive mailbox. Feature-gated to Professional+."""
+        from app.services.feature_flags import feature_flags
+        if not feature_flags.is_enabled("archive_mailbox"):
+            return []
+
+        items = []
+        try:
+            # Check if archive folder exists
+            archive_folders = await self.graph.get_all_pages(
+                f"/users/{user_id}/mailFolders",
+                params={"$select": "id,displayName,totalItemCount", "$top": "50", "includeHiddenFolders": "true"},
+            )
+            archive_folder = next((f for f in archive_folders if f.get("displayName") == "Archive"), None)
+            if not archive_folder:
+                return []
+
+            archive_id = archive_folder["id"]
+            total = archive_folder.get("totalItemCount", 0)
+            if total == 0:
+                return []
+
+            # Delta sync archive folder
+            token_key = f"archive_{archive_id}"
+            existing_token = folder_tokens.get(token_key)
+            delta_path = f"/users/{user_id}/mailFolders/{archive_id}/messages/delta"
+
+            try:
+                if existing_token:
+                    messages, new_delta = await self.graph.get_delta(delta_path, delta_token=existing_token)
+                else:
+                    messages = await self.graph.get_all_pages(
+                        f"/users/{user_id}/mailFolders/{archive_id}/messages",
+                        params={
+                            "$select": "id,subject,sender,from,toRecipients,receivedDateTime,bodyPreview,hasAttachments,importance,isRead",
+                            "$top": "200",
+                        },
+                    )
+                    new_delta = None
+            except Exception:
+                messages = []
+                new_delta = None
+
+            if new_delta:
+                new_folder_tokens[token_key] = new_delta
+
+            for msg in messages:
+                if msg.get("@removed"):
+                    continue
+                items.append(BackupItem(
+                    id=f"archive_{msg['id']}",
+                    item_type="email",
+                    name=msg.get("subject", "(No Subject)"),
+                    path="Archive",
+                    raw_data=msg,
+                    metadata={
+                        "importance": msg.get("importance"),
+                        "isRead": msg.get("isRead"),
+                        "hasAttachments": msg.get("hasAttachments"),
+                        "folderId": archive_id,
+                        "folderName": "Archive",
+                        "isArchive": True,
+                    },
+                    extra_fields={
+                        "subject": msg.get("subject"),
+                        "sender": msg.get("sender", {}).get("emailAddress", {}).get("address"),
+                        "received_at": msg.get("receivedDateTime"),
+                    },
+                ))
+
+            if items:
+                logger.info(f"Discovered {len(items)} archive emails for {user_id}")
+        except Exception as e:
+            logger.warning(f"Archive mailbox discovery failed for {user_id}: {e}")
 
         return items
 

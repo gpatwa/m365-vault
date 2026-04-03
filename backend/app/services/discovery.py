@@ -188,6 +188,46 @@ class DiscoveryService:
             except Exception as e:
                 logger.info(f"Skipping Exchange for {display_name}: {e}")
 
+        # Discover shared mailboxes (Professional+ feature)
+        from app.services.feature_flags import feature_flags
+        if feature_flags.is_enabled("shared_mailbox"):
+            try:
+                # Shared mailboxes are users with recipientType = SharedMailbox
+                # They often don't have licenses but do have mailboxes
+                shared_users = await graph.get_all_pages("/users", params={
+                    "$select": "id,displayName,mail,userPrincipalName,userType",
+                    "$filter": "mail ne null",
+                    "$top": "999",
+                })
+                for su in shared_users:
+                    su_id = su.get("id")
+                    if su_id in discovered_ids.get("exchange", set()):
+                        continue  # Already discovered as regular mailbox
+                    su_name = su.get("displayName", "Unknown")
+                    su_email = su.get("mail")
+                    if not su_email:
+                        continue
+                    # Check if it has a mailbox (shared mailboxes do)
+                    try:
+                        await graph.get(f"/users/{su_id}/mailFolders", params={"$select": "id", "$top": "1"})
+                        await self._upsert_protected_object(
+                            tenant_id=tenant.id,
+                            workload_type=WorkloadType.EXCHANGE,
+                            ms_object_id=su_id,
+                            display_name=f"{su_name} (Shared Mailbox)",
+                            email=su_email,
+                            user_principal_name=su.get("userPrincipalName"),
+                            metadata={"source": "shared_mailbox_discovery", "mailbox_type": "shared"},
+                            object_subtype="shared_mailbox",
+                        )
+                        discovered_ids.setdefault("exchange", set()).add(su_id)
+                        results["mailboxes"] += 1
+                        logger.info(f"Discovered shared mailbox: {su_name}")
+                    except Exception:
+                        pass  # Not a shared mailbox or no access
+            except Exception as e:
+                logger.warning(f"Shared mailbox discovery failed: {e}")
+
             # Validate OneDrive is provisioned (drive/root fails if no mysite)
             try:
                 await graph.get(f"/users/{user_id}/drive/root", params={
@@ -604,6 +644,7 @@ class DiscoveryService:
         user_principal_name: str = None,
         site_url: str = None,
         metadata: dict = None,
+        object_subtype: str = None,
     ):
         """Insert or update a protected object."""
         result = await self.db.execute(
@@ -621,6 +662,8 @@ class DiscoveryService:
             obj.user_principal_name = user_principal_name
             obj.site_url = site_url
             obj.metadata_json = json.dumps(metadata) if metadata else obj.metadata_json
+            if object_subtype:
+                obj.object_subtype = object_subtype
             obj.updated_at = datetime.utcnow()
         else:
             obj = ProtectedObject(
@@ -631,6 +674,7 @@ class DiscoveryService:
                 email=email,
                 user_principal_name=user_principal_name,
                 site_url=site_url,
+                object_subtype=object_subtype,
                 status=ProtectionStatus.UNPROTECTED,
                 metadata_json=json.dumps(metadata) if metadata else None,
             )

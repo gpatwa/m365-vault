@@ -8,6 +8,7 @@ import StatusBadge from '../components/StatusBadge';
 import CriticalityBadge from '../components/CriticalityBadge';
 import { WorkloadPageLayout, Breadcrumb } from '../components/design-system';
 import { useTenantId } from '../hooks/useTenant';
+import { useFeatureFlags } from '../contexts/FeatureFlagContext';
 import { formatSize, timeAgo } from '../utils/format';
 import RestoreDialog from '../components/RestoreDialog';
 import type { ProtectedObject, Snapshot, SnapshotItem } from '../types';
@@ -317,6 +318,49 @@ export default function Exchange() {
         onRowClick={(row) => setSelectedMailbox(row)}
         rowKey="id"
       />
+
+      {/* Feature-gated upgrade prompts */}
+      <FeatureGatedSection />
     </WorkloadPageLayout>
+  );
+}
+
+function FeatureGatedSection() {
+  const { isEnabled } = useFeatureFlags();
+  const upgrades = [];
+
+  if (!isEnabled('shared_mailbox')) {
+    upgrades.push({ feature: 'Shared Mailbox Backup', desc: 'Protect shared mailboxes alongside regular mailboxes', tier: 'Professional' });
+  }
+  if (!isEnabled('archive_mailbox')) {
+    upgrades.push({ feature: 'Archive Mailbox Backup', desc: 'Back up In-Place Archive mailboxes for compliance', tier: 'Professional' });
+  }
+  if (!isEnabled('mail_rules_backup')) {
+    upgrades.push({ feature: 'Mail Rules Backup', desc: 'Protect inbox rules and auto-forwarding configurations', tier: 'Professional' });
+  }
+  if (!isEnabled('pst_export')) {
+    upgrades.push({ feature: 'PST Export', desc: 'Export mailbox snapshots as downloadable PST-compatible archives', tier: 'Business' });
+  }
+
+  if (upgrades.length === 0) return null;
+
+  return (
+    <div className="mt-6 bg-card border border-border rounded-xl p-5">
+      <h3 className="text-sm font-semibold text-foreground mb-3">Available with Upgrade</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {upgrades.map(u => (
+          <div key={u.feature} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg border border-border">
+            <div className="w-8 h-8 bg-teal-500/10 rounded-lg flex items-center justify-center shrink-0">
+              <Download className="w-4 h-4 text-teal-400" />
+            </div>
+            <div>
+              <div className="text-sm font-medium text-foreground">{u.feature}</div>
+              <div className="text-xs text-muted-foreground">{u.desc}</div>
+              <div className="text-[10px] text-teal-400 font-semibold mt-1">{u.tier} plan</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

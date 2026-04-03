@@ -1347,26 +1347,38 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
 
       {/* Attack type selector — show when idle */}
       {attackType === 'none' && scenarioPhase === 'idle' && (
-        <div className={`grid grid-cols-1 ${openclawEnabled ? 'sm:grid-cols-2' : ''} gap-3`}>
-          <button onClick={runCyberScenario}
-            className="text-left p-4 rounded-xl border-2 border-red-500/30 bg-red-500/5 hover:bg-red-500/10 hover:border-red-500/50 transition-all">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xl">🔒</span>
-              <span className="font-semibold text-foreground text-sm">Ransomware Attack</span>
-            </div>
-            <p className="text-[11px] text-muted-foreground">3 mailboxes encrypted, MFA disabled, rogue admin injected</p>
-          </button>
-          {openclawEnabled && (
-            <button onClick={runOpenClawScenario}
-              className="text-left p-4 rounded-xl border-2 border-violet-500/30 bg-violet-500/5 hover:bg-violet-500/10 hover:border-violet-500/50 transition-all">
+        <div className="space-y-3 mt-2">
+          <div className="text-center">
+            <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-1">Choose a scenario to simulate</p>
+            <p className="text-[11px] text-muted-foreground">Click a button below to watch the attack unfold — then see Shieldio recover instantly</p>
+          </div>
+          <div className={`grid grid-cols-1 ${openclawEnabled ? 'sm:grid-cols-2' : ''} gap-3`}>
+            <button onClick={runCyberScenario}
+              className="text-left p-4 rounded-xl border-2 border-red-500/50 bg-gradient-to-br from-red-500/15 to-red-600/5 hover:from-red-500/25 hover:to-red-600/10 hover:border-red-500 transition-all shadow-lg shadow-red-500/10 hover:shadow-red-500/20 group">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-xl">🤖</span>
-                <span className="font-semibold text-foreground text-sm">AI Agent Attack</span>
-                <span className="text-[9px] px-1.5 py-0.5 bg-violet-500/20 text-violet-400 rounded font-bold">NEW</span>
+                <span className="text-2xl">🔒</span>
+                <span className="font-bold text-red-400 text-sm group-hover:text-red-300">Simulate Ransomware Attack</span>
               </div>
-              <p className="text-[11px] text-muted-foreground">OpenClaw agent hijacks M365 via OAuth — emails + identity exfiltrated</p>
+              <p className="text-[11px] text-muted-foreground">3 mailboxes encrypted, MFA disabled, rogue admin injected</p>
+              <div className="mt-3 flex items-center gap-1.5 text-xs font-medium text-red-400 group-hover:text-red-300">
+                <span>Click to start</span> <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              </div>
             </button>
-          )}
+            {openclawEnabled && (
+              <button onClick={runOpenClawScenario}
+                className="text-left p-4 rounded-xl border-2 border-violet-500/50 bg-gradient-to-br from-violet-500/15 to-violet-600/5 hover:from-violet-500/25 hover:to-violet-600/10 hover:border-violet-500 transition-all shadow-lg shadow-violet-500/10 hover:shadow-violet-500/20 group">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl">🤖</span>
+                  <span className="font-bold text-violet-400 text-sm group-hover:text-violet-300">Simulate AI Agent Attack</span>
+                  <span className="text-[9px] px-1.5 py-0.5 bg-violet-500/20 text-violet-400 rounded font-bold">NEW</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground">OpenClaw agent hijacks M365 via OAuth — emails + identity exfiltrated</p>
+                <div className="mt-3 flex items-center gap-1.5 text-xs font-medium text-violet-400 group-hover:text-violet-300">
+                  <span>Click to start</span> <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </button>
+            )}
+          </div>
         </div>
       )}
 

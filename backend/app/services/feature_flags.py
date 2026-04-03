@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 TIER_FEATURES = {
     "community": {
         "workloads": ["exchange", "onedrive", "sharepoint"],
-        "intelligence": ["anomaly_detection"],
+        "intelligence": ["anomaly_detection", "openclaw_attack_demo"],
         "recovery": ["mass_recovery"],
         "compliance": [],
         "operations": [],

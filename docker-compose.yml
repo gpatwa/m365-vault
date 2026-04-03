@@ -81,6 +81,8 @@ services:
       CONNECTOR_APP_ID: ${CONNECTOR_APP_ID:-}
       CONNECTOR_APP_SECRET: ${CONNECTOR_APP_SECRET:-}
       CONNECTOR_REDIRECT_URI: ${CONNECTOR_REDIRECT_URI:-http://localhost:5173/onboard/callback}
+      LICENSE_TIER: enterprise
+      DEMO_MODE: "true"
       DEBUG: "true"
     volumes:
       - ./scripts:/scripts
@@ -109,6 +111,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       DISPATCH_MODE: redis
       WORKER_CONCURRENCY: "3"
+      LICENSE_TIER: enterprise
 
   frontend:
     build: ./frontend

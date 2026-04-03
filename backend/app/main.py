@@ -54,10 +54,23 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application startup and shutdown events."""
-    # Startup
+    # Startup with DB connection retry (handles cold-start of PostgreSQL container)
+    import asyncio as _aio
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
-    await init_db()
-    logger.info("Database initialized")
+    max_retries = 5
+    for attempt in range(1, max_retries + 1):
+        try:
+            await init_db()
+            logger.info("Database initialized")
+            break
+        except Exception as e:
+            if attempt < max_retries:
+                wait = attempt * 5  # 5s, 10s, 15s, 20s, 25s
+                logger.warning(f"DB connection failed (attempt {attempt}/{max_retries}): {e}. Retrying in {wait}s...")
+                await _aio.sleep(wait)
+            else:
+                logger.error(f"DB connection failed after {max_retries} attempts. Exiting.")
+                raise
 
     # Initialize pluggable storage backend
     from app.services.storage_factory import create_storage_backend

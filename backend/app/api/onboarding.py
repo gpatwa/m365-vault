@@ -459,14 +459,32 @@ async def get_onboard_intelligence(
     if tenant.ms_tenant_id and tenant.ms_tenant_id.startswith("demo-"):
         return _generate_demo_intelligence(tenant.name)
 
-    # Real tenants: fetch from org-context service
+    # Real tenants: fetch from org-context service (auto-sync if empty)
     from app.models.org_context import UserContext
     result = await db.execute(
         select(UserContext).where(UserContext.tenant_id == tenant_id).order_by(UserContext.criticality_score.desc())
     )
     users = result.scalars().all()
     if not users:
-        # No org context yet — return demo-like data as placeholder
+        # No org context yet — auto-trigger sync from Graph API
+        try:
+            from app.services.context_collector import ContextCollectorService
+            from app.services.criticality_scorer import CriticalityScorer
+            logger.info(f"Auto-syncing org context for tenant {tenant_id} during onboarding")
+            collector = ContextCollectorService(db)
+            await collector.collect_all(tenant)
+            scorer = CriticalityScorer(db)
+            await scorer.score_all(tenant_id)
+            await db.commit()
+            # Re-fetch after sync
+            result = await db.execute(
+                select(UserContext).where(UserContext.tenant_id == tenant_id).order_by(UserContext.criticality_score.desc())
+            )
+            users = result.scalars().all()
+        except Exception as e:
+            logger.warning(f"Auto-sync failed for tenant {tenant_id}: {e}")
+    if not users:
+        # Still no data — fall back to demo intelligence
         return _generate_demo_intelligence(tenant.name)
 
     user_list = []

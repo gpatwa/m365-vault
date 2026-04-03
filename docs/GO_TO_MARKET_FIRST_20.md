@@ -1,6 +1,61 @@
 # Shieldio — Go-to-Market: First 20 Customers
 
-**Date: 2026-03-30 | Status: GTM Strategy**
+**Date: 2026-03-30 | Updated: 2026-04-03 (v5.0.0) | Status: GTM Strategy**
+
+---
+
+## v5.0.0 Updates (April 2026)
+
+### Brand & Visual Identity
+- **Teal/Cyan brand** (#14b8a6) replaces generic blue — modern, security-focused, distinctive
+- **Geist font** + glassmorphism design inspired by Linear/Vercel/Supabase
+- Landing page fully polished: hero, ransomware scenario animation, pricing, FAQ
+
+### Product Focus: Identity + Email First
+- **Onboarding focuses on Entra ID + Exchange** — the two highest-value workloads
+- SharePoint, OneDrive, Teams available but collapsed under "More Workloads"
+- Recovery playbook: 6-scene interactive demo with real tenant data
+- Cyber attack simulation uses real mailbox names + identity objects
+
+### Demo Experience (Updated Flow)
+1. **Browse Your Tenant** — see real mailboxes and Entra ID directory
+2. **Backup at a Glance** — object counts and snapshot totals
+3. **Browse Your Backup** — drill into email subjects and identity items from snapshots
+4. **Cyber Attack Scenario** — 3 mailboxes encrypted, MFA disabled, rogue admin injected → all recoverable
+5. **Prove You Can Recover** — 100/A confidence score
+6. **One-Click Recovery** — NIST plan generated + Execute button → "7 objects restored"
+
+### Payment Acceptance (Planned)
+- Stripe Billing integration for self-serve subscriptions
+- 14-day free trial for Professional/Business tiers
+- Self-serve upgrade/downgrade via Stripe Customer Portal
+- MSP wholesale metered billing via Stripe
+- See `docs/STRIPE_INTEGRATION_PLAN.md` for details
+
+### Analytics (Planned)
+- PostHog (self-hosted) for product analytics
+- Plausible (self-hosted) for landing page analytics
+- Microsoft Clarity for heatmaps (free)
+- Google Search Console for SEO
+- See `docs/ANALYTICS_ROADMAP.md` for details
+
+### Updated Demo Script
+Replace old 10-minute demo with:
+1. **Landing page** (1 min) — "Your emails. Your files. Your responsibility." + Teal CTAs
+2. **Tenant onboarding** (2 min) — Connect M365, security verification, discover Entra ID + Exchange
+3. **Intelligence** (2 min) — Org map showing CEO → VPs → Directors → Staff priority order
+4. **Recovery playbook** (4 min) — Browse tenant → Browse backup → Cyber attack → Recovery plan → Execute
+5. **Pricing** (1 min) — $1.50/user, free tier available, self-hosted option
+
+### Key Differentiators to Emphasize (Updated)
+| Differentiator | v5 Proof Point |
+|---|---|
+| Identity-first recovery | 6-scene playbook shows Entra ID Phase 1, Exchange Phase 2 |
+| Real data, not mock | Demo uses actual tenant mailboxes and identity objects |
+| NIST SP 800-184 compliance | Recovery plan labeled with NIST reference |
+| One-click recovery | Execute button creates real restore jobs |
+| Privacy-first analytics | Self-hosted PostHog + Plausible (no Google tracking) |
+| Self-serve billing | Stripe Checkout with 14-day trial |
 
 ---
 
@@ -312,16 +367,23 @@ Week 6-8: Full rollout across MSP client base
 
 ---
 
-## 10. Demo Script (10 minutes)
+## 10. Demo Script (10 minutes) — Updated v5
 
 | Minute | Action | What They See |
 |--------|--------|---------------|
-| 0-1 | Login as demo account | Dashboard with real M365 data |
-| 1-2 | Show 5 workloads discovered | Exchange, OneDrive, SharePoint, Teams, Entra ID — auto-discovered |
-| 2-3 | Show criticality scoring | "Your CEO scored 95. Your intern scored 30. We figured this out automatically." |
-| 3-4 | Show MVB recovery plan | "If ransomware hits, identity controls restore first, then your CEO, then everyone else." |
-| 4-5 | Run a backup (1 workload) | Live backup with progress bar |
-| 5-7 | Recovery playbook | 4-scene interactive: detect anomaly → identify blast radius → one-click restore → verify |
-| 7-8 | Show compliance | Audit log, encryption badge, WORM policy, RPO/RTO compliance |
-| 8-9 | Show pricing | "$1.50/user. Intelligence included. No surprise charges." |
-| 9-10 | Close | "Want to connect your tenant? Takes 2 minutes with OAuth." |
+| 0-1 | Show landing page | Teal brand, "Your emails. Your files. Your responsibility." |
+| 1-2 | Login → Onboard with tenant | Connect M365, security verification (OAuth, encryption, per-tenant isolation) |
+| 2-3 | Discovery | Entra ID + Exchange pre-selected (2 priority workloads), 3 more available |
+| 3-4 | Intelligence map | CEO (95) → VPs (82-88) → Directors → Staff — auto-scored from Graph |
+| 4-5 | Recovery playbook: Browse tenant | Real mailboxes with names, Entra ID directory with counts |
+| 5-6 | Recovery playbook: Browse backup | Actual email subjects from snapshots, identity objects backed up |
+| 6-7 | Recovery playbook: Cyber attack | 3 mailboxes "ENCRYPTED", MFA disabled, rogue admin → all "RESTORED" |
+| 7-8 | Recovery playbook: Execute | NIST plan → Phase 1 Identity, Phase 2 Email → "7 objects restored" |
+| 8-9 | Show confidence + pricing | 100/A confidence score. "$1.50/user. Free tier. Self-hosted option." |
+| 9-10 | Close | "Want to connect your tenant? 14-day free trial. Takes 2 minutes." |
+
+**Key phrases for the demo:**
+- "Identity first. If attackers have admin access, restoring data is pointless."
+- "This is your real data — not a simulation. These are your actual mailboxes."
+- "Pre-computed NIST recovery plan. When ransomware hits at 2am, recovery starts instantly."
+- "Self-hosted analytics. We don't even track your product usage on third-party servers."

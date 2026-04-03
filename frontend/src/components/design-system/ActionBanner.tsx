@@ -7,10 +7,10 @@ export interface ActionItem {
 }
 
 const iconMap = {
-  warning: { Icon: AlertTriangle, bg: 'bg-amber-500/10', border: 'border-amber-500/20', text: 'text-amber-400', icon: 'text-amber-400' },
-  error: { Icon: XCircle, bg: 'bg-red-500/10', border: 'border-red-500/20', text: 'text-red-400', icon: 'text-red-400' },
-  info: { Icon: Info, bg: 'bg-blue-500/10', border: 'border-blue-500/20', text: 'text-blue-400', icon: 'text-blue-400' },
-  success: { Icon: CheckCircle, bg: 'bg-green-500/10', border: 'border-green-500/20', text: 'text-green-400', icon: 'text-green-400' },
+  warning: { Icon: AlertTriangle, bg: 'bg-amber-500/100/10', border: 'border-amber-500/20', text: 'text-amber-400', icon: 'text-amber-400' },
+  error: { Icon: XCircle, bg: 'bg-red-500/100/10', border: 'border-red-500/20', text: 'text-red-400', icon: 'text-red-400' },
+  info: { Icon: Info, bg: 'bg-blue-500/100/10', border: 'border-blue-500/20', text: 'text-blue-400', icon: 'text-blue-400' },
+  success: { Icon: CheckCircle, bg: 'bg-green-500/100/10', border: 'border-green-500/20', text: 'text-green-400', icon: 'text-green-400' },
 };
 
 export default function ActionBanner({ items }: { items: ActionItem[] }) {

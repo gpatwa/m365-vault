@@ -118,7 +118,7 @@ export default function Teams() {
           <Users className="w-4 h-4 text-pink-600 flex-shrink-0" />
           <span className="font-medium text-foreground">{row.display_name.replace(' (Team)', '').replace(' (Chats)', '')}</span>
           {row.display_name.includes('(Chats)') && (
-            <span className="px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded text-[10px] font-medium">Chat</span>
+            <span className="px-1.5 py-0.5 bg-purple-500/10 text-purple-600 rounded text-[10px] font-medium">Chat</span>
           )}
         </div>
       ),
@@ -245,7 +245,7 @@ export default function Teams() {
           </div>
         </div>
         {backupMsg && (
-          <div className={`rounded-lg p-3 mb-4 text-sm ${backupMsg.includes('failed') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-green-50 border border-green-200 text-green-700'}`}>
+          <div className={`rounded-lg p-3 mb-4 text-sm ${backupMsg.includes('failed') ? 'bg-red-500/10 border border-red-500/20 text-red-400' : 'bg-green-500/10 border border-green-500/20 text-green-400'}`}>
             {backupMsg}
           </div>
         )}

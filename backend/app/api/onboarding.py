@@ -251,6 +251,7 @@ class CompleteOnboardRequest(BaseModel):
     tenant_id: int
     sla_policy_id: int = None
     protect_all: bool = True
+    workload_types: list[str] = None  # Filter to specific workloads e.g. ['entra_id', 'exchange']
 
 
 @router.post("/complete")
@@ -285,15 +286,17 @@ async def complete_onboarding(
             sla_id = default_sla.id
             logger.info(f"Created default SLA policy {sla_id} for tenant {req.tenant_id}")
 
-    # Assign SLA policy to all unprotected objects
+    # Assign SLA policy to unprotected objects (optionally filtered by workload)
     if req.protect_all and sla_id:
-        from app.models.protected_object import ProtectedObject, ProtectionStatus
-        result = await db.execute(
-            select(ProtectedObject).where(
-                ProtectedObject.tenant_id == req.tenant_id,
-                ProtectedObject.status == ProtectionStatus.UNPROTECTED,
-            )
+        from app.models.protected_object import ProtectedObject, ProtectionStatus, WorkloadType
+        stmt = select(ProtectedObject).where(
+            ProtectedObject.tenant_id == req.tenant_id,
+            ProtectedObject.status == ProtectionStatus.UNPROTECTED,
         )
+        if req.workload_types:
+            wl_enums = [WorkloadType(wt) for wt in req.workload_types]
+            stmt = stmt.where(ProtectedObject.workload_type.in_(wl_enums))
+        result = await db.execute(stmt)
         for obj in result.scalars().all():
             obj.sla_policy_id = sla_id
             obj.status = ProtectionStatus.PROTECTED
@@ -350,19 +353,19 @@ async def list_available_workloads():
     return {
         "workloads": [
             {
-                "key": "exchange",
-                "label": "Exchange",
-                "description": "Emails, calendar events, contacts",
-                "icon": "mail",
+                "key": "entra_id",
+                "label": "Entra ID",
+                "description": "Users, groups, roles, policies, apps",
+                "icon": "key",
                 "speed": "fast",
                 "est_seconds": 2,
                 "recommended": True,
             },
             {
-                "key": "entra_id",
-                "label": "Entra ID",
-                "description": "Users, groups, roles, policies, apps",
-                "icon": "key",
+                "key": "exchange",
+                "label": "Exchange",
+                "description": "Emails, calendar events, contacts",
+                "icon": "mail",
                 "speed": "fast",
                 "est_seconds": 2,
                 "recommended": True,
@@ -374,7 +377,7 @@ async def list_available_workloads():
                 "icon": "globe",
                 "speed": "medium",
                 "est_seconds": 5,
-                "recommended": True,
+                "recommended": False,
             },
             {
                 "key": "onedrive",

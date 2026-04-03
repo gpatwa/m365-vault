@@ -92,8 +92,8 @@ export default function ObjectDetail() {
               <div className="flex items-center gap-3 mt-0.5">
                 {object?.status && (
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    object.status === 'protected' ? 'bg-green-100 text-green-700' :
-                    object.status === 'error' ? 'bg-red-100 text-red-700' :
+                    object.status === 'protected' ? 'bg-green-100 text-green-400' :
+                    object.status === 'error' ? 'bg-red-100 text-red-400' :
                     'bg-muted text-muted-foreground'
                   }`}>
                     {object.status}
@@ -143,7 +143,7 @@ export default function ObjectDetail() {
                   <div
                     key={snap.id}
                     className={`px-4 py-3 hover:bg-muted/50 cursor-pointer transition-colors ${
-                      snap.id === latestSnapshotId ? 'bg-blue-50/50 border-l-2 border-blue-400' : ''
+                      snap.id === latestSnapshotId ? 'bg-blue-500/10/50 border-l-2 border-blue-400' : ''
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -224,7 +224,7 @@ export default function ObjectDetail() {
                         <td className="px-4 py-2.5 text-xs text-muted-foreground truncate max-w-[150px]">{item.path || '-'}</td>
                         <td className="px-4 py-2.5 text-xs text-muted-foreground text-right">{formatSize(item.size_bytes)}</td>
                         <td className="px-4 py-2.5 text-right">
-                          <button className="text-[10px] px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 font-medium transition-colors">
+                          <button className="text-[10px] px-2 py-1 bg-blue-500/10 text-blue-600 rounded hover:bg-blue-100 font-medium transition-colors">
                             Restore
                           </button>
                         </td>

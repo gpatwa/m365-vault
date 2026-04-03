@@ -15,16 +15,16 @@ import Breadcrumb from '../components/design-system/Breadcrumb';
 import HeroSummaryBar, { type HeroStat } from '../components/design-system/HeroSummaryBar';
 
 const CATEGORY_COLORS: Record<string, string> = {
-  permission_denied: 'bg-red-100 text-red-800 border-red-200',
+  permission_denied: 'bg-red-100 text-red-400 border-red-500/20',
   not_found: 'bg-muted text-muted-foreground border-border',
   throttled: 'bg-yellow-100 text-yellow-800 border-yellow-200',
   timeout: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  quota_exceeded: 'bg-orange-100 text-orange-800 border-orange-200',
-  file_too_large: 'bg-purple-100 text-purple-800 border-purple-200',
-  encryption_error: 'bg-red-100 text-red-800 border-red-200',
-  storage_error: 'bg-red-100 text-red-800 border-red-200',
+  quota_exceeded: 'bg-orange-100 text-orange-800 border-orange-500/20',
+  file_too_large: 'bg-purple-100 text-purple-800 border-purple-500/20',
+  encryption_error: 'bg-red-100 text-red-400 border-red-500/20',
+  storage_error: 'bg-red-100 text-red-400 border-red-500/20',
   invalid_data: 'bg-muted text-muted-foreground border-border',
-  auth_expired: 'bg-red-100 text-red-800 border-red-200',
+  auth_expired: 'bg-red-100 text-red-400 border-red-500/20',
   server_error: 'bg-yellow-100 text-yellow-800 border-yellow-200',
   network_error: 'bg-yellow-100 text-yellow-800 border-yellow-200',
   unknown: 'bg-muted text-muted-foreground border-border',
@@ -254,7 +254,7 @@ export default function FailedItems() {
       {/* Page Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-red-50">
+          <div className="p-2.5 rounded-xl bg-red-500/10">
             <ShieldAlert className="w-6 h-6 text-red-600" />
           </div>
           <div>
@@ -265,7 +265,7 @@ export default function FailedItems() {
         <button
           onClick={() => setShowResolved(!showResolved)}
           className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
-            showResolved ? 'bg-muted border-gray-300 text-muted-foreground' : 'bg-card border-border text-muted-foreground hover:bg-muted/50'
+            showResolved ? 'bg-muted border-border text-muted-foreground' : 'bg-card border-border text-muted-foreground hover:bg-muted/50'
           }`}
         >
           {showResolved ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
@@ -274,7 +274,7 @@ export default function FailedItems() {
       </div>
 
       {actionMsg && (
-        <div className={`rounded-lg p-3 mb-4 text-sm ${actionMsg.includes('Error') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-green-50 border border-green-200 text-green-700'}`}>
+        <div className={`rounded-lg p-3 mb-4 text-sm ${actionMsg.includes('Error') ? 'bg-red-500/10 border border-red-500/20 text-red-400' : 'bg-green-500/10 border border-green-500/20 text-green-400'}`}>
           {actionMsg}
         </div>
       )}
@@ -362,17 +362,17 @@ export default function FailedItems() {
                       {CATEGORY_LABELS[cat.category] || cat.category}
                     </span>
                     <span className="text-xs text-muted-foreground font-medium">{cat.count}</span>
-                    {cat.unresolved > 0 && <span className="text-[10px] text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded-full">{cat.unresolved} open</span>}
-                    {cat.retriable > 0 && <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full">{cat.retriable} retriable</span>}
+                    {cat.unresolved > 0 && <span className="text-[10px] text-orange-600 bg-orange-500/10 px-1.5 py-0.5 rounded-full">{cat.unresolved} open</span>}
+                    {cat.retriable > 0 && <span className="text-[10px] text-blue-600 bg-blue-500/10 px-1.5 py-0.5 rounded-full">{cat.retriable} retriable</span>}
                   </div>
                   {isExpanded && (
                     <div className="px-12 pb-3">
-                      <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
+                      <div className="bg-blue-500/10 border border-blue-100 rounded-lg p-3">
                         <div className="flex items-start gap-2">
                           <Info className="w-3.5 h-3.5 text-blue-500 mt-0.5 flex-shrink-0" />
                           <div>
                             <p className="text-xs font-semibold text-blue-900 mb-0.5">Resolution</p>
-                            <p className="text-xs text-blue-800">{cat.resolution_hint}</p>
+                            <p className="text-xs text-blue-400">{cat.resolution_hint}</p>
                           </div>
                         </div>
                       </div>
@@ -422,7 +422,7 @@ export default function FailedItems() {
               <button
                 onClick={() => resolveMutation.mutate([row.id])}
                 disabled={resolveMutation.isPending}
-                className="text-green-600 hover:text-green-800 text-xs font-medium"
+                className="text-green-600 hover:text-green-400 text-xs font-medium"
                 title="Resolve"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />

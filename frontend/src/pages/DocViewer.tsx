@@ -146,12 +146,12 @@ export default function DocViewer() {
       <div className="max-w-4xl mx-auto px-6 pt-20 pb-16">
         {isLoading && (
           <div className="flex items-center justify-center h-64">
-            <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+            <div className="w-8 h-8 border-4 border-blue-500/20 border-t-blue-600 rounded-full animate-spin" />
           </div>
         )}
 
         {error && (
-          <div className="mt-8 bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+          <div className="mt-8 bg-red-500/10 border border-red-500/20 rounded-xl p-6 text-center">
             <p className="text-red-600 font-medium">Document not found</p>
             <Link to="/docs" className="text-sm text-blue-600 hover:underline mt-2 block">Back to documentation</Link>
           </div>

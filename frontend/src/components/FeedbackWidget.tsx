@@ -41,7 +41,7 @@ export default function FeedbackWidget() {
         title="Give feedback"
       >
         <MessageCircle className="w-5 h-5" />
-        <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+        <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500/100 rounded-full animate-pulse" />
       </button>
     );
   }
@@ -74,7 +74,7 @@ export default function FeedbackWidget() {
                       <button
                         key={cat}
                         onClick={() => { setCategory(cat); setStep('details'); }}
-                        className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${category === cat ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-muted/50 border-border text-muted-foreground hover:border-border'}`}
+                        className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${category === cat ? 'bg-blue-500/10 border-blue-300 text-blue-400' : 'bg-muted/50 border-border text-muted-foreground hover:border-border'}`}
                       >
                         {cat}
                       </button>

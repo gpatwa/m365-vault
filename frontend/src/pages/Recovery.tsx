@@ -35,10 +35,10 @@ interface TestResult {
 }
 
 const GRADE_COLORS: Record<string, string> = {
-  A: 'text-green-600 bg-green-50 border-green-200',
-  B: 'text-blue-600 bg-blue-50 border-blue-200',
-  C: 'text-amber-600 bg-amber-50 border-amber-200',
-  D: 'text-red-600 bg-red-50 border-red-200',
+  A: 'text-green-600 bg-green-500/10 border-green-500/20',
+  B: 'text-blue-600 bg-blue-500/10 border-blue-500/20',
+  C: 'text-amber-600 bg-amber-500/10 border-amber-500/20',
+  D: 'text-red-600 bg-red-500/10 border-red-500/20',
 };
 
 const STATUS_ICONS: Record<string, typeof CheckCircle> = {
@@ -48,9 +48,9 @@ const STATUS_ICONS: Record<string, typeof CheckCircle> = {
 };
 
 const SEVERITY_COLORS: Record<string, string> = {
-  critical: 'border-red-200 bg-red-50',
-  high: 'border-amber-200 bg-amber-50',
-  medium: 'border-blue-200 bg-blue-50',
+  critical: 'border-red-500/20 bg-red-500/10',
+  high: 'border-amber-500/20 bg-amber-500/10',
+  medium: 'border-blue-500/20 bg-blue-500/10',
   low: 'border-border bg-muted/50',
 };
 
@@ -123,7 +123,7 @@ export default function Recovery() {
             onClick={() => setActiveTab(tab.key)}
             className={`px-4 py-2.5 text-sm font-medium flex items-center gap-2 border-b-2 transition-all ${
               activeTab === tab.key
-                ? 'border-green-600 text-green-700'
+                ? 'border-green-600 text-green-400'
                 : 'border-transparent text-muted-foreground hover:text-muted-foreground'
             }`}
           >
@@ -163,7 +163,7 @@ export default function Recovery() {
                         </div>
                         <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                           <div
-                            className={`h-full rounded-full ${factor.score >= 80 ? 'bg-green-500' : factor.score >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}
+                            className={`h-full rounded-full ${factor.score >= 80 ? 'bg-green-500/100' : factor.score >= 50 ? 'bg-amber-500/100' : 'bg-red-500/100'}`}
                             style={{ width: `${Math.min(factor.score, 100)}%` }}
                           />
                         </div>
@@ -195,7 +195,7 @@ export default function Recovery() {
                         <span className="w-24 text-sm font-medium capitalize">{wl.workload.replace('_', ' ')}</span>
                         <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                           <div
-                            className={`h-full rounded-full ${wl.status === 'compliant' ? 'bg-green-500' : wl.status === 'at_risk' ? 'bg-amber-500' : 'bg-red-500'}`}
+                            className={`h-full rounded-full ${wl.status === 'compliant' ? 'bg-green-500/100' : wl.status === 'at_risk' ? 'bg-amber-500/100' : 'bg-red-500/100'}`}
                             style={{ width: `${wl.rpo_compliance_pct}%` }}
                           />
                         </div>
@@ -218,8 +218,8 @@ export default function Recovery() {
               <div className="space-y-2">
                 {confidence.recommendations.map((rec, i) => (
                   <div key={i} className={`flex items-start gap-3 p-3 rounded-lg border ${
-                    rec.priority === 'high' ? 'border-red-200 bg-red-50' :
-                    rec.priority === 'medium' ? 'border-amber-200 bg-amber-50' :
+                    rec.priority === 'high' ? 'border-red-500/20 bg-red-500/10' :
+                    rec.priority === 'medium' ? 'border-amber-500/20 bg-amber-500/10' :
                     'border-border bg-muted/50'
                   }`}>
                     <ArrowRight className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
@@ -314,16 +314,16 @@ export default function Recovery() {
                 <div className="space-y-4">
                   {/* Summary */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-                      <p className="text-2xl font-bold text-green-700">{data.passed}</p>
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 text-center">
+                      <p className="text-2xl font-bold text-green-400">{data.passed}</p>
                       <p className="text-xs text-green-600">Passed</p>
                     </div>
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-                      <p className="text-2xl font-bold text-red-700">{data.failed}</p>
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-center">
+                      <p className="text-2xl font-bold text-red-400">{data.failed}</p>
                       <p className="text-xs text-red-600">Failed</p>
                     </div>
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-                      <p className="text-2xl font-bold text-blue-700">{data.pass_rate}%</p>
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 text-center">
+                      <p className="text-2xl font-bold text-blue-400">{data.pass_rate}%</p>
                       <p className="text-xs text-blue-600">Pass Rate</p>
                     </div>
                   </div>
@@ -332,9 +332,9 @@ export default function Recovery() {
                   <div className="space-y-2">
                     {data.results.map((r, i) => (
                       <div key={i} className={`flex items-center justify-between p-3 rounded-lg border ${
-                        r.status === 'passed' ? 'border-green-200 bg-green-50' :
-                        r.status === 'partial' ? 'border-amber-200 bg-amber-50' :
-                        'border-red-200 bg-red-50'
+                        r.status === 'passed' ? 'border-green-500/20 bg-green-500/10' :
+                        r.status === 'partial' ? 'border-amber-500/20 bg-amber-500/10' :
+                        'border-red-500/20 bg-red-500/10'
                       }`}>
                         <div className="flex items-center gap-3">
                           {r.status === 'passed' ? <CheckCircle className="w-4 h-4 text-green-500" /> :

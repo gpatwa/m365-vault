@@ -3,18 +3,18 @@ import { Shield, Lock, Eye, ShieldCheck, CheckCircle2, XCircle, FileText, Server
 import { api } from '../api/client';
 
 const CATEGORY_CONFIG: Record<string, { label: string; icon: typeof Shield; color: string; bg: string }> = {
-  encryption: { label: 'Encryption', icon: Lock, color: 'text-blue-600', bg: 'bg-blue-50' },
-  data_protection: { label: 'Data Protection', icon: ShieldCheck, color: 'text-green-600', bg: 'bg-green-50' },
-  authentication: { label: 'Authentication', icon: Key, color: 'text-purple-600', bg: 'bg-purple-50' },
-  monitoring: { label: 'Monitoring', icon: Eye, color: 'text-amber-600', bg: 'bg-amber-50' },
+  encryption: { label: 'Encryption', icon: Lock, color: 'text-blue-600', bg: 'bg-blue-500/10' },
+  data_protection: { label: 'Data Protection', icon: ShieldCheck, color: 'text-green-600', bg: 'bg-green-500/10' },
+  authentication: { label: 'Authentication', icon: Key, color: 'text-purple-600', bg: 'bg-purple-500/10' },
+  monitoring: { label: 'Monitoring', icon: Eye, color: 'text-amber-600', bg: 'bg-amber-500/10' },
   infrastructure: { label: 'Infrastructure', icon: Server, color: 'text-muted-foreground', bg: 'bg-muted/50' },
 };
 
 const COMPLIANCE_CONFIG: Record<string, { label: string; full: string; color: string }> = {
-  soc2: { label: 'SOC 2', full: 'SOC 2 Trust Services Criteria', color: 'border-blue-200 bg-blue-50 text-blue-800' },
-  gdpr: { label: 'GDPR', full: 'General Data Protection Regulation', color: 'border-green-200 bg-green-50 text-green-800' },
-  hipaa: { label: 'HIPAA', full: 'Health Insurance Portability & Accountability Act', color: 'border-purple-200 bg-purple-50 text-purple-800' },
-  dora: { label: 'DORA', full: 'Digital Operational Resilience Act', color: 'border-amber-200 bg-amber-50 text-amber-800' },
+  soc2: { label: 'SOC 2', full: 'SOC 2 Trust Services Criteria', color: 'border-blue-500/20 bg-blue-500/10 text-blue-400' },
+  gdpr: { label: 'GDPR', full: 'General Data Protection Regulation', color: 'border-green-500/20 bg-green-500/10 text-green-400' },
+  hipaa: { label: 'HIPAA', full: 'Health Insurance Portability & Accountability Act', color: 'border-purple-500/20 bg-purple-500/10 text-purple-800' },
+  dora: { label: 'DORA', full: 'Digital Operational Resilience Act', color: 'border-amber-500/20 bg-amber-500/10 text-amber-400' },
 };
 
 export default function SecurityPage() {
@@ -24,7 +24,7 @@ export default function SecurityPage() {
   });
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-blue-500/20 border-t-blue-600 rounded-full animate-spin" /></div>;
   }
 
   const score = data?.security_score;
@@ -61,7 +61,7 @@ export default function SecurityPage() {
         {/* Encryption */}
         <div className="bg-card rounded-xl border border-border p-5">
           <div className="flex items-center gap-2 mb-3">
-            <div className="p-2 bg-blue-50 rounded-lg"><Lock className="w-4 h-4 text-blue-600" /></div>
+            <div className="p-2 bg-blue-500/10 rounded-lg"><Lock className="w-4 h-4 text-blue-600" /></div>
             <span className="text-sm font-semibold text-foreground">Encryption</span>
           </div>
           <div className="space-y-1.5">
@@ -80,7 +80,7 @@ export default function SecurityPage() {
         {/* Immutability */}
         <div className="bg-card rounded-xl border border-border p-5">
           <div className="flex items-center gap-2 mb-3">
-            <div className="p-2 bg-green-50 rounded-lg"><ShieldCheck className="w-4 h-4 text-green-600" /></div>
+            <div className="p-2 bg-green-500/10 rounded-lg"><ShieldCheck className="w-4 h-4 text-green-600" /></div>
             <span className="text-sm font-semibold text-foreground">Immutability</span>
           </div>
           <div className="space-y-1.5">
@@ -101,14 +101,14 @@ export default function SecurityPage() {
         {/* Coverage */}
         <div className="bg-card rounded-xl border border-border p-5">
           <div className="flex items-center gap-2 mb-3">
-            <div className="p-2 bg-purple-50 rounded-lg"><Users className="w-4 h-4 text-purple-600" /></div>
+            <div className="p-2 bg-purple-500/10 rounded-lg"><Users className="w-4 h-4 text-purple-600" /></div>
             <span className="text-sm font-semibold text-foreground">Coverage</span>
           </div>
           <div className="text-2xl font-bold text-foreground">{data?.coverage?.coverage_percent || 0}%</div>
           <div className="text-xs text-muted-foreground">{data?.coverage?.protected || 0} / {data?.coverage?.total_objects || 0} objects protected</div>
           <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
             <div
-              className="h-full bg-green-500 rounded-full transition-all"
+              className="h-full bg-green-500/100 rounded-full transition-all"
               style={{ width: `${data?.coverage?.coverage_percent || 0}%` }}
             />
           </div>

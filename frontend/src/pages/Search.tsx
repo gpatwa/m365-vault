@@ -79,14 +79,14 @@ export default function Search() {
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Search emails, files, documents, users, policies..."
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-ring focus:border-ring text-sm"
+              className="w-full pl-10 pr-4 py-3 border border-border rounded-xl bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-ring text-sm"
               autoFocus
             />
           </div>
           <select
             value={workloadFilter}
             onChange={e => { setWorkloadFilter(e.target.value); if (searchQuery) setSearchQuery(query); }}
-            className="px-4 py-3 border border-gray-300 rounded-xl text-sm bg-card"
+            className="px-4 py-3 border border-border rounded-xl text-sm bg-card"
           >
             <option value="">All Workloads</option>
             {WORKLOADS.map(w => (

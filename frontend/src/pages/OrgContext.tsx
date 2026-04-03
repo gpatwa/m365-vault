@@ -76,7 +76,7 @@ export default function OrgContext() {
 
       {/* Sync result toast */}
       {syncMutation.isSuccess && (
-        <div className="mb-4 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-sm text-green-800">
+        <div className="mb-4 px-4 py-3 bg-green-500/10 border border-green-500/20 rounded-xl text-sm text-green-400">
           Sync complete: {(syncMutation.data as any)?.users_scored} users and {(syncMutation.data as any)?.sites_scored} sites scored
           {(syncMutation.data as any)?.tiers?.critical > 0 && ` — ${(syncMutation.data as any).tiers.critical} critical users detected`}
         </div>
@@ -84,16 +84,16 @@ export default function OrgContext() {
 
       {/* Hero stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-          <div className="text-2xl font-bold text-red-700">{tiers.critical}</div>
+        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+          <div className="text-2xl font-bold text-red-400">{tiers.critical}</div>
           <div className="text-xs text-red-600 font-medium">Critical</div>
         </div>
-        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+        <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-4">
           <div className="text-2xl font-bold text-orange-700">{tiers.high}</div>
           <div className="text-xs text-orange-600 font-medium">High</div>
         </div>
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-          <div className="text-2xl font-bold text-blue-700">{summary?.total_users || 0}</div>
+        <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+          <div className="text-2xl font-bold text-blue-400">{summary?.total_users || 0}</div>
           <div className="text-xs text-blue-600 font-medium">Total Scored</div>
         </div>
         <div className="bg-muted/50 border border-border rounded-xl p-4">
@@ -111,7 +111,7 @@ export default function OrgContext() {
           <div className="flex flex-wrap gap-3">
             {summary.top_critical_users.map((u: any, i: number) => (
               <div key={i} className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
-                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-700 text-xs font-bold">
+                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-400 text-xs font-bold">
                   {u.criticality_score}
                 </div>
                 <div>
@@ -144,9 +144,9 @@ export default function OrgContext() {
         <div className="flex items-center gap-3 mb-4">
           <input type="text" value={search} onChange={e => { setSearch(e.target.value); setUserPage(1); setSitePage(1); }}
             placeholder={`Search ${tab.toLowerCase()}...`}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm w-64 focus:outline-none focus:ring-2 focus:ring-ring" />
+            className="px-3 py-2 border border-border rounded-lg text-sm w-64 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
           <select value={tierFilter} onChange={e => { setTierFilter(e.target.value); setUserPage(1); setSitePage(1); }}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+            className="px-3 py-2 border border-border rounded-lg text-sm bg-background text-foreground">
             <option value="">All Tiers</option>
             <option value="critical">Critical</option>
             <option value="high">High</option>
@@ -200,9 +200,9 @@ export default function OrgContext() {
                   <td className="px-4 py-3 text-center"><CriticalityBadge tier={u.criticality_tier} /></td>
                   <td className="px-4 py-3 text-center">
                     {u.is_global_admin ? (
-                      <span className="text-[10px] px-1.5 py-0.5 bg-red-100 text-red-700 rounded font-semibold">Global Admin</span>
+                      <span className="text-[10px] px-1.5 py-0.5 bg-red-100 text-red-400 rounded font-semibold">Global Admin</span>
                     ) : u.has_privileged_role ? (
-                      <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-semibold">Privileged</span>
+                      <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-400 rounded font-semibold">Privileged</span>
                     ) : <span className="text-muted-foreground">—</span>}
                   </td>
                   <td className="px-4 py-3 text-center text-sm text-muted-foreground">{u.direct_reports_count || '—'}</td>
@@ -216,9 +216,9 @@ export default function OrgContext() {
               <span className="text-xs text-muted-foreground">{usersData.total} users</span>
               <div className="flex gap-1">
                 <button onClick={() => setUserPage(p => Math.max(1, p - 1))} disabled={userPage === 1}
-                  className="px-3 py-1 text-xs border border-gray-300 rounded disabled:opacity-30">Prev</button>
+                  className="px-3 py-1 text-xs border border-border rounded disabled:opacity-30">Prev</button>
                 <button onClick={() => setUserPage(p => p + 1)} disabled={userPage * 25 >= usersData.total}
-                  className="px-3 py-1 text-xs border border-gray-300 rounded disabled:opacity-30">Next</button>
+                  className="px-3 py-1 text-xs border border-border rounded disabled:opacity-30">Next</button>
               </div>
             </div>
           )}
@@ -256,7 +256,7 @@ export default function OrgContext() {
                   <td className="px-4 py-3 text-center text-sm text-muted-foreground">{s.unique_visitors}</td>
                   <td className="px-4 py-3 text-center">
                     {s.external_sharing_enabled ? (
-                      <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-semibold">External</span>
+                      <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-400 rounded font-semibold">External</span>
                     ) : <span className="text-muted-foreground">—</span>}
                   </td>
                 </tr>
@@ -285,7 +285,7 @@ export default function OrgContext() {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-xs text-muted-foreground">{g.member_count} members</span>
-                  <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded font-medium">+{g.criticality_boost} boost</span>
+                  <span className="text-xs px-2 py-0.5 bg-green-100 text-green-400 rounded font-medium">+{g.criticality_boost} boost</span>
                 </div>
               </div>
             </div>

@@ -285,7 +285,7 @@ export default function DataTable<T extends Record<string, any>>({
                 value={searchInput}
                 onChange={e => setSearchInput(e.target.value)}
                 placeholder={searchPlaceholder}
-                className="w-full pl-9 pr-3 py-2 text-sm border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-ring"
+                className="w-full pl-9 pr-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-ring"
               />
               {searchInput && (
                 <button

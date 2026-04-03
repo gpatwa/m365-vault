@@ -234,9 +234,9 @@ export default function EntraID() {
               onClick={() => setSelectedType(isSelected ? null : type)}
               className={`p-2.5 rounded-lg border text-left transition-all ${
                 isSelected
-                  ? 'border-amber-400 bg-amber-50 ring-2 ring-amber-200'
+                  ? 'border-amber-400 bg-amber-500/10 ring-2 ring-amber-200'
                   : count > 0
-                    ? 'border-border bg-card hover:border-amber-200 hover:bg-amber-50/50'
+                    ? 'border-border bg-card hover:border-amber-500/20 hover:bg-amber-500/10/50'
                     : 'border-border bg-muted/50/50 opacity-60'
               }`}
             >
@@ -253,7 +253,7 @@ export default function EntraID() {
         <button
           onClick={() => setShowDiff(!showDiff)}
           className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-            showDiff ? 'bg-amber-50 border-amber-300 text-amber-700' : 'bg-card border-border text-muted-foreground hover:border-amber-200'
+            showDiff ? 'bg-amber-500/10 border-amber-300 text-amber-400' : 'bg-card border-border text-muted-foreground hover:border-amber-500/20'
           }`}
         >
           {showDiff ? '✕ Close Diff' : '🔍 Compare Snapshots'}
@@ -287,19 +287,19 @@ export default function EntraID() {
 
       {/* Diff Results */}
       {showDiff && diffResult && (
-        <div className="bg-card border border-amber-200 rounded-xl p-4 space-y-3">
-          <h3 className="text-sm font-semibold text-amber-800">Configuration Drift: Snapshot #{diffResult.snapshot_a} → #{diffResult.snapshot_b}</h3>
+        <div className="bg-card border border-amber-500/20 rounded-xl p-4 space-y-3">
+          <h3 className="text-sm font-semibold text-amber-400">Configuration Drift: Snapshot #{diffResult.snapshot_a} → #{diffResult.snapshot_b}</h3>
           <div className="grid grid-cols-4 gap-3">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-              <p className="text-2xl font-bold text-green-700">{diffResult.summary.added}</p>
+            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 text-center">
+              <p className="text-2xl font-bold text-green-400">{diffResult.summary.added}</p>
               <p className="text-[10px] text-green-600 font-medium">Added</p>
             </div>
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
-              <p className="text-2xl font-bold text-red-700">{diffResult.summary.removed}</p>
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-center">
+              <p className="text-2xl font-bold text-red-400">{diffResult.summary.removed}</p>
               <p className="text-[10px] text-red-600 font-medium">Removed</p>
             </div>
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-center">
-              <p className="text-2xl font-bold text-amber-700">{diffResult.summary.changed}</p>
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-center">
+              <p className="text-2xl font-bold text-amber-400">{diffResult.summary.changed}</p>
               <p className="text-[10px] text-amber-600 font-medium">Changed</p>
             </div>
             <div className="bg-muted/50 border border-border rounded-lg p-3 text-center">
@@ -310,21 +310,21 @@ export default function EntraID() {
           {(diffResult.added.length > 0 || diffResult.removed.length > 0 || diffResult.changed.length > 0) && (
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {diffResult.added.map(a => (
-                <div key={a.ms_item_id} className="flex items-center gap-2 text-xs text-green-700 bg-green-50/50 px-2 py-1 rounded">
+                <div key={a.ms_item_id} className="flex items-center gap-2 text-xs text-green-400 bg-green-500/10/50 px-2 py-1 rounded">
                   <span className="font-mono">+</span>
                   <span className="font-medium">{ITEM_TYPE_CONFIG[a.item_type]?.label || a.item_type}:</span>
                   <span>{a.name}</span>
                 </div>
               ))}
               {diffResult.removed.map(r => (
-                <div key={r.ms_item_id} className="flex items-center gap-2 text-xs text-red-700 bg-red-50/50 px-2 py-1 rounded">
+                <div key={r.ms_item_id} className="flex items-center gap-2 text-xs text-red-400 bg-red-500/10/50 px-2 py-1 rounded">
                   <span className="font-mono">-</span>
                   <span className="font-medium">{ITEM_TYPE_CONFIG[r.item_type]?.label || r.item_type}:</span>
                   <span>{r.name}</span>
                 </div>
               ))}
               {diffResult.changed.map(c => (
-                <div key={c.ms_item_id} className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50/50 px-2 py-1 rounded">
+                <div key={c.ms_item_id} className="flex items-center gap-2 text-xs text-amber-400 bg-amber-500/10/50 px-2 py-1 rounded">
                   <span className="font-mono">~</span>
                   <span className="font-medium">{ITEM_TYPE_CONFIG[c.item_type]?.label || c.item_type}:</span>
                   <span>{c.name}</span>

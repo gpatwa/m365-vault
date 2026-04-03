@@ -123,7 +123,7 @@ export default function JobTable({
                       <div className="flex items-center gap-2">
                         <div className="flex-1 max-w-[120px] bg-gray-200 rounded-full h-2">
                           <div
-                            className={`h-2 rounded-full transition-all ${j.objects_failed > 0 ? 'bg-orange-500' : 'bg-green-500'}`}
+                            className={`h-2 rounded-full transition-all ${j.objects_failed > 0 ? 'bg-orange-500/100' : 'bg-green-500/100'}`}
                             style={{ width: `${Math.round(((j.objects_processed + j.objects_failed) / j.objects_total) * 100)}%` }}
                           />
                         </div>
@@ -177,25 +177,25 @@ export default function JobTable({
                               <div className="flex items-center gap-4 text-xs text-muted-foreground">
                                 {obj.detail && <span className="italic">{obj.detail}</span>}
                                 {obj.item_count !== undefined && (
-                                  <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                                  <span className="bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full font-medium">
                                     {obj.item_count} items
                                   </span>
                                 )}
                                 {obj.size_bytes !== undefined && (
-                                  <span className="bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full font-medium">
+                                  <span className="bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded-full font-medium">
                                     {formatSize(obj.size_bytes)}
                                   </span>
                                 )}
                                 {obj.error && (
-                                  <span className="bg-red-50 text-red-700 px-2 py-0.5 rounded-full font-medium max-w-[300px] truncate" title={obj.error}>
+                                  <span className="bg-red-500/10 text-red-400 px-2 py-0.5 rounded-full font-medium max-w-[300px] truncate" title={obj.error}>
                                     {obj.error}
                                   </span>
                                 )}
                               </div>
                               <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                                obj.status === 'completed' ? 'bg-green-100 text-green-700' :
-                                obj.status === 'failed' ? 'bg-red-100 text-red-700' :
-                                obj.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
+                                obj.status === 'completed' ? 'bg-green-100 text-green-400' :
+                                obj.status === 'failed' ? 'bg-red-100 text-red-400' :
+                                obj.status === 'in_progress' ? 'bg-blue-100 text-blue-400' :
                                 'bg-muted text-muted-foreground'
                               }`}>
                                 {obj.status.replace('_', ' ')}
@@ -204,7 +204,7 @@ export default function JobTable({
                           ))}
                         </div>
                         {j.error_message && (
-                          <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+                          <div className="mt-2 p-2 bg-red-500/10 border border-red-500/20 rounded-lg text-xs text-red-400">
                             {j.error_message}
                           </div>
                         )}

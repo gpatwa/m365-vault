@@ -18,20 +18,20 @@
   --muted-foreground: #737373;
   --border: #e5e5e5;
   --input: #e5e5e5;
-  --primary: #3b82f6;
+  --primary: #14b8a6;
   --primary-foreground: #ffffff;
   --secondary: #f5f5f5;
   --secondary-foreground: #171717;
   --accent: #f5f5f5;
   --accent-foreground: #171717;
   --destructive: #ef4444;
-  --ring: #3b82f6;
+  --ring: #14b8a6;
 
   /* Semantic */
   --success: #22c55e;
   --warning: #f59e0b;
   --danger: #ef4444;
-  --info: #3b82f6;
+  --info: #14b8a6;
 
   /* Typography */
   --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -48,20 +48,20 @@
   --muted-foreground: #b5b5b5;
   --border: rgba(255, 255, 255, 0.1);
   --input: rgba(255, 255, 255, 0.15);
-  --primary: #3b82f6;
+  --primary: #14b8a6;
   --primary-foreground: #ffffff;
   --secondary: #262626;
   --secondary-foreground: #fafafa;
   --accent: #262626;
   --accent-foreground: #fafafa;
   --destructive: #dc2626;
-  --ring: #3b82f6;
+  --ring: #14b8a6;
 
   /* Semantic (muted for dark) */
   --success: #4ade80;
   --warning: #fbbf24;
   --danger: #f87171;
-  --info: #60a5fa;
+  --info: #2dd4bf;
 
   /* Sidebar */
   --sidebar: #171717;

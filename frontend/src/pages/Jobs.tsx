@@ -19,9 +19,9 @@ const WORKLOADS = WORKLOAD_KEYS;
 
 const statusBadge = (status: string) => {
   const colors: Record<string, string> = {
-    completed: 'bg-green-100 text-green-700',
-    failed: 'bg-red-100 text-red-700',
-    in_progress: 'bg-blue-100 text-blue-700',
+    completed: 'bg-green-100 text-green-400',
+    failed: 'bg-red-100 text-red-400',
+    in_progress: 'bg-blue-100 text-blue-400',
     queued: 'bg-yellow-100 text-yellow-700',
     partial: 'bg-orange-100 text-orange-700',
     cancelled: 'bg-muted text-muted-foreground',
@@ -276,7 +276,7 @@ export default function Jobs() {
       {/* Page Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-indigo-50">
+          <div className="p-2.5 rounded-xl bg-indigo-500/10">
             <Briefcase className="w-6 h-6 text-indigo-600" />
           </div>
           <div>
@@ -290,9 +290,9 @@ export default function Jobs() {
         </div>
         {failedSummary && failedSummary.total_failed > 0 && (
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm">
+            <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 text-sm">
               <AlertTriangle className="w-4 h-4 text-red-500" />
-              <span className="text-red-700 font-medium">{failedSummary.total_failed} failed</span>
+              <span className="text-red-400 font-medium">{failedSummary.total_failed} failed</span>
               <span className="text-red-500">({failedSummary.ready_now} ready to retry)</span>
             </div>
             <button
@@ -309,7 +309,7 @@ export default function Jobs() {
 
       {/* Retry message */}
       {retryMsg && (
-        <div className={`rounded-lg p-3 mb-4 text-sm ${retryMsg.includes('failed') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-green-50 border border-green-200 text-green-700'}`}>
+        <div className={`rounded-lg p-3 mb-4 text-sm ${retryMsg.includes('failed') ? 'bg-red-500/10 border border-red-500/20 text-red-400' : 'bg-green-500/10 border border-green-500/20 text-green-400'}`}>
           {retryMsg}
         </div>
       )}
@@ -385,7 +385,7 @@ export default function Jobs() {
               <button
                 onClick={() => retryJobMutation.mutate(row.id)}
                 disabled={retryJobMutation.isPending}
-                className="px-2.5 py-1 border border-orange-200 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-50 flex items-center gap-1"
+                className="px-2.5 py-1 border border-orange-500/20 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-500/10 flex items-center gap-1"
               >
                 <RotateCcw className="w-3 h-3" /> Retry
               </button>

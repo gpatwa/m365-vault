@@ -228,11 +228,11 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
             placeholder={workloadFilter
               ? `Search ${workloadFilter.replace('_', ' ')} backups...`
               : 'Search backups, check status, investigate issues...'}
-            className="flex-1 px-3 py-4 text-sm outline-none border-none"
+            className="flex-1 px-3 py-4 text-sm outline-none border-none bg-transparent text-foreground"
           />
           {loading && <Loader2 className="w-4 h-4 text-blue-500 animate-spin mr-2" />}
           {workloadFilter && (
-            <button onClick={() => setWorkloadFilter(null)} className="mr-2 px-2 py-0.5 text-[10px] bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200">
+            <button onClick={() => setWorkloadFilter(null)} className="mr-2 px-2 py-0.5 text-[10px] bg-teal-500/15 text-teal-400 rounded-full hover:bg-teal-500/25">
               {workloadFilter.replace('_', ' ')} ×
             </button>
           )}
@@ -302,7 +302,7 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
                           <button
                             key={action}
                             onClick={() => handleAction(item, action)}
-                            className="px-2 py-1 text-[10px] font-medium text-blue-600 bg-blue-50 rounded hover:bg-blue-100 flex items-center gap-1 capitalize"
+                            className="px-2 py-1 text-[10px] font-medium text-blue-600 bg-blue-500/10 rounded hover:bg-blue-100 flex items-center gap-1 capitalize"
                             title={action}
                           >
                             <ActionIcon className="w-3 h-3" />
@@ -349,7 +349,7 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
                   data-idx={i}
                   onClick={() => goToLink(link.path)}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                    selectedIdx === i ? 'bg-blue-50 text-blue-900' : 'hover:bg-muted/50 text-muted-foreground'
+                    selectedIdx === i ? 'bg-blue-500/10 text-blue-900' : 'hover:bg-muted/50 text-muted-foreground'
                   }`}
                 >
                   <ArrowRight className="w-4 h-4 text-muted-foreground" />

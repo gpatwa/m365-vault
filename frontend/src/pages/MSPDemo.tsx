@@ -132,9 +132,9 @@ export default function MSPDemo() {
             {tenants.slice(0, 5).map((t: any) => (
               <div key={t.id} className="flex items-center gap-4 bg-card rounded-xl p-3 border border-border">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2 ${
-                  t.health_score >= 90 ? 'text-green-400 border-green-500/30 bg-green-500/10' :
-                  t.health_score >= 70 ? 'text-amber-400 border-amber-500/30 bg-amber-500/10' :
-                  'text-red-400 border-red-500/30 bg-red-500/10'
+                  t.health_score >= 90 ? 'text-green-400 border-green-500/30 bg-green-500/100/10' :
+                  t.health_score >= 70 ? 'text-amber-400 border-amber-500/30 bg-amber-500/100/10' :
+                  'text-red-400 border-red-500/30 bg-red-500/100/10'
                 }`}>{t.health_score}</div>
                 <div className="flex-1">
                   <div className="text-sm font-medium text-foreground">{t.name}</div>
@@ -172,7 +172,7 @@ export default function MSPDemo() {
       </div>
       {!onboardMutation.isSuccess ? (
         <button onClick={() => onboardMutation.mutate()} disabled={onboardMutation.isPending}
-          className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-500 disabled:opacity-50 flex items-center justify-center gap-2">
+          className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-500/100 disabled:opacity-50 flex items-center justify-center gap-2">
           {onboardMutation.isPending ? <><Loader2 className="w-4 h-4 animate-spin" /> Onboarding...</> : <><Play className="w-4 h-4" /> Onboard 2 Clients Now</>}
         </button>
       ) : (
@@ -192,7 +192,7 @@ export default function MSPDemo() {
           <div className="text-sm font-medium text-muted-foreground">Preview: Your Sidebar</div>
           <div className="bg-slate-900 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-7 h-7 rounded bg-blue-500 flex items-center justify-center"><Shield className="w-4 h-4 text-foreground" /></div>
+              <div className="w-7 h-7 rounded bg-blue-500/100 flex items-center justify-center"><Shield className="w-4 h-4 text-foreground" /></div>
               <div><div className="text-sm font-bold text-foreground">Acme Cyber Solutions</div><div className="text-[9px] text-muted-foreground">Managed Security</div></div>
             </div>
             {['Dashboard', 'Exchange', 'OneDrive', 'Recovery'].map(item => (
@@ -213,7 +213,7 @@ export default function MSPDemo() {
               <span className="text-muted-foreground font-mono text-[10px]">{item.example}</span>
             </div>
           ))}
-          <button onClick={() => markEngaged(2)} className="w-full py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-500">
+          <button onClick={() => markEngaged(2)} className="w-full py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-500/100">
             {engaged[2] ? 'Branding Applied' : 'Apply Demo Branding'}
           </button>
         </div>
@@ -234,7 +234,7 @@ export default function MSPDemo() {
               selectedTenant?.id === t.id ? 'border-blue-500 ring-1 ring-blue-500/30' : 'border-border hover:border-border'
             }`}>
             <div className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold border-2 ${
-              t.health_score >= 90 ? 'text-green-400 border-green-500/30 bg-green-500/10' : 'text-amber-400 border-amber-500/30 bg-amber-500/10'
+              t.health_score >= 90 ? 'text-green-400 border-green-500/30 bg-green-500/100/10' : 'text-amber-400 border-amber-500/30 bg-amber-500/100/10'
             }`}>{t.health_score}</div>
             <div className="flex-1">
               <div className="font-medium text-foreground">{t.name}</div>
@@ -248,7 +248,7 @@ export default function MSPDemo() {
         ))}
       </div>
       {selectedTenant && (
-        <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 text-center text-sm text-blue-300">
+        <div className="bg-blue-500/100/10 border border-blue-500/30 rounded-xl p-4 text-center text-sm text-blue-300">
           Selected: <strong>{selectedTenant.name}</strong> — {selectedTenant.protected_objects} objects across {selectedTenant.workload_count} workloads including Entra ID
         </div>
       )}
@@ -263,10 +263,10 @@ export default function MSPDemo() {
       </div>
       <div className="space-y-3">
         {[
-          { phase: 1, title: 'Detect', desc: 'AI anomaly detection flags 1,847 files renamed to .encrypted', color: 'border-red-500/40 bg-red-500/5', icon: '🚨' },
-          { phase: 2, title: 'Isolate', desc: 'Circuit breaker pauses backups. Clean restore point identified (2h ago)', color: 'border-amber-500/40 bg-amber-500/5', icon: '🔒' },
-          { phase: 3, title: 'Plan', desc: 'MVB recovery plan: Identity first → CEO/CFO → Critical staff → Everyone', color: 'border-blue-500/40 bg-blue-500/5', icon: '📋' },
-          { phase: 4, title: 'Recover', desc: 'One-click mass recovery. 125 users restored in priority order. Zero data loss.', color: 'border-green-500/40 bg-green-500/5', icon: '✅' },
+          { phase: 1, title: 'Detect', desc: 'AI anomaly detection flags 1,847 files renamed to .encrypted', color: 'border-red-500/40 bg-red-500/100/5', icon: '🚨' },
+          { phase: 2, title: 'Isolate', desc: 'Circuit breaker pauses backups. Clean restore point identified (2h ago)', color: 'border-amber-500/40 bg-amber-500/100/5', icon: '🔒' },
+          { phase: 3, title: 'Plan', desc: 'MVB recovery plan: Identity first → CEO/CFO → Critical staff → Everyone', color: 'border-blue-500/40 bg-blue-500/100/5', icon: '📋' },
+          { phase: 4, title: 'Recover', desc: 'One-click mass recovery. 125 users restored in priority order. Zero data loss.', color: 'border-green-500/40 bg-green-500/100/5', icon: '✅' },
         ].map((p, i) => (
           <div key={p.phase} className={`border rounded-xl p-4 ${p.color} transition-all duration-500`}
             style={{ opacity: 1, transitionDelay: `${i * 200}ms` }}>
@@ -280,7 +280,7 @@ export default function MSPDemo() {
           </div>
         ))}
       </div>
-      <button onClick={() => markEngaged(4)} className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-500 flex items-center justify-center gap-2">
+      <button onClick={() => markEngaged(4)} className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-500/100 flex items-center justify-center gap-2">
         {engaged[4] ? <><CheckCircle className="w-4 h-4" /> Recovery Complete</> : <><Play className="w-4 h-4" /> Simulate Recovery</>}
       </button>
       {engaged[4] && <div className="text-center text-green-400 text-sm font-medium">All 125 users restored. Identity controls verified. Client back online.</div>}
@@ -343,7 +343,7 @@ export default function MSPDemo() {
             <div className="text-3xl font-bold text-blue-400 mt-1">${sellAt.toFixed(2)}</div>
             <div className="text-xs text-muted-foreground">per user/mo</div>
           </div>
-          <div className="bg-green-500/10 rounded-xl p-4 border border-green-500/30 text-center">
+          <div className="bg-green-500/100/10 rounded-xl p-4 border border-green-500/30 text-center">
             <div className="text-sm text-green-300">Your Margin</div>
             <div className="text-3xl font-bold text-green-400 mt-1">{marginPct}%</div>
             <div className="text-xs text-green-300">${margin.toFixed(0)}/mo profit</div>
@@ -373,7 +373,7 @@ export default function MSPDemo() {
               <div className="text-xs text-muted-foreground mt-1">Review data inventory, retention timeline, and confirm deactivation.</div>
             </div>
             <button onClick={() => setShowOffboardModal(true)}
-              className="px-6 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-500">
+              className="px-6 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-500/100">
               Start Offboard Workflow
             </button>
             {showOffboardModal && (
@@ -386,7 +386,7 @@ export default function MSPDemo() {
             )}
           </div>
         ) : (
-          <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-center text-green-300 text-sm">
+          <div className="bg-green-500/100/10 border border-green-500/30 rounded-xl p-4 text-center text-green-300 text-sm">
             Client offboarded. Backups retained per SLA policy. Data is safe.
           </div>
         )}
@@ -407,7 +407,7 @@ export default function MSPDemo() {
             ))}
           </div>
           <button onClick={() => navigate('/login')}
-            className="px-8 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-500 text-lg inline-flex items-center gap-2">
+            className="px-8 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-500/100 text-lg inline-flex items-center gap-2">
             Start Your MSP Pilot — 3 Months Free <ArrowRight className="w-5 h-5" />
           </button>
         </div>
@@ -425,13 +425,13 @@ export default function MSPDemo() {
           {SCENES.map((s, i) => (
             <div key={s.key} className="flex items-center gap-1">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                i < scene ? 'bg-green-500 text-foreground' :
+                i < scene ? 'bg-green-500/100 text-foreground' :
                 i === scene ? `bg-gradient-to-br ${s.color} text-white ring-2 ring-offset-2 ring-offset-gray-900 ring-blue-500/50` :
                 'bg-card text-muted-foreground border border-border'
               }`}>
                 {i < scene ? <CheckCircle className="w-4 h-4" /> : <s.icon className="w-3.5 h-3.5" />}
               </div>
-              {i < SCENES.length - 1 && <div className={`w-4 sm:w-8 h-0.5 ${i < scene ? 'bg-green-500' : 'bg-secondary'}`} />}
+              {i < SCENES.length - 1 && <div className={`w-4 sm:w-8 h-0.5 ${i < scene ? 'bg-green-500/100' : 'bg-secondary'}`} />}
             </div>
           ))}
         </div>
@@ -455,7 +455,7 @@ export default function MSPDemo() {
         <div className="text-xs text-muted-foreground">{scene + 1} / {SCENES.length}</div>
         {scene < SCENES.length - 1 ? (
           <button onClick={() => setScene(scene + 1)} disabled={!canAdvance}
-            className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-500 disabled:opacity-30 transition-all">
+            className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-500/100 disabled:opacity-30 transition-all">
             Next <ArrowRight className="w-4 h-4" />
           </button>
         ) : (

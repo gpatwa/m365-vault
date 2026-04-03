@@ -47,7 +47,7 @@ export default function SmartEngine() {
   const scoreColor = (score: number) =>
     score >= 80 ? 'text-green-600' : score >= 50 ? 'text-yellow-600' : 'text-red-600';
   const scoreBg = (score: number) =>
-    score >= 80 ? 'bg-green-50 border-green-200' : score >= 50 ? 'bg-yellow-50 border-yellow-200' : 'bg-red-50 border-red-200';
+    score >= 80 ? 'bg-green-500/10 border-green-500/20' : score >= 50 ? 'bg-yellow-500/10 border-yellow-200' : 'bg-red-500/10 border-red-500/20';
 
   const formatMetric = (metric: string, value: number) => {
     if (metric === 'size_bytes') return `${(value / 1024).toFixed(1)} KB`;
@@ -129,7 +129,7 @@ export default function SmartEngine() {
               <div key={a.id} className={`p-3 ${a.resolved ? 'opacity-50' : ''}`}>
                 <div className="flex items-center gap-2 mb-1">
                   <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${
-                    a.severity === 'critical' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                    a.severity === 'critical' ? 'bg-red-100 text-red-400' : 'bg-yellow-100 text-yellow-700'
                   }`}>{a.severity}</span>
                   <span className="text-xs font-medium text-muted-foreground capitalize">{a.workload}</span>
                   <span className="text-xs text-muted-foreground">{a.metric}</span>
@@ -187,7 +187,7 @@ export default function SmartEngine() {
       </div>
 
       {/* How it works */}
-      <div className="mt-6 bg-purple-50 border border-purple-200 rounded-xl p-5">
+      <div className="mt-6 bg-purple-500/10 border border-purple-500/20 rounded-xl p-5">
         <h3 className="font-semibold text-purple-900 mb-2 flex items-center gap-2">
           <Brain className="w-4 h-4" /> How Smart Engine Works
         </h3>

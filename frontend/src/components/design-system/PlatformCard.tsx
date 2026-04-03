@@ -26,9 +26,9 @@ interface PlatformCardProps {
 
 function getStatusColor(protected_: number, total: number) {
   if (total === 0) return { bg: 'bg-muted', text: 'text-muted-foreground', label: '—' };
-  if (protected_ === total) return { bg: 'bg-green-500/10', text: 'text-green-400', label: '✅' };
-  if (protected_ === 0) return { bg: 'bg-red-500/10', text: 'text-red-400', label: '❌' };
-  return { bg: 'bg-amber-500/10', text: 'text-amber-400', label: '⚠' };
+  if (protected_ === total) return { bg: 'bg-green-500/100/10', text: 'text-green-400', label: '✅' };
+  if (protected_ === 0) return { bg: 'bg-red-500/100/10', text: 'text-red-400', label: '❌' };
+  return { bg: 'bg-amber-500/100/10', text: 'text-amber-400', label: '⚠' };
 }
 
 function timeAgo(dateStr: string | null): string {
@@ -70,9 +70,9 @@ export default function PlatformCard({
 
         {/* Health score pill */}
         <div className={`px-3 py-1.5 rounded-lg text-sm font-bold ${
-          healthScore >= 80 ? 'bg-green-500/10 text-green-400' :
-          healthScore >= 50 ? 'bg-amber-500/10 text-amber-400' :
-          'bg-red-500/10 text-red-400'
+          healthScore >= 80 ? 'bg-green-500/100/10 text-green-400' :
+          healthScore >= 50 ? 'bg-amber-500/100/10 text-amber-400' :
+          'bg-red-500/100/10 text-red-400'
         }`}>
           {healthScore}
         </div>
@@ -81,7 +81,7 @@ export default function PlatformCard({
         <div className="w-24 h-2 bg-muted rounded-full overflow-hidden hidden sm:block">
           <div
             className={`h-full rounded-full transition-all ${
-              pct === 100 ? 'bg-green-500' : pct > 0 ? 'bg-amber-500' : 'bg-red-400'
+              pct === 100 ? 'bg-green-500/100' : pct > 0 ? 'bg-amber-500/100' : 'bg-red-400'
             }`}
             style={{ width: `${pct}%` }}
           />

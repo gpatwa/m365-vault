@@ -111,27 +111,27 @@ export default function SLAPolicies() {
             <div>
               <label className="block text-sm font-medium text-muted-foreground mb-1">Name</label>
               <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring" />
+                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-ring" />
             </div>
             <div>
               <label className="block text-sm font-medium text-muted-foreground mb-1">Priority (1=highest)</label>
               <input type="number" value={form.priority} onChange={e => setForm({ ...form, priority: +e.target.value })} min={1} max={10}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring" />
+                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-ring" />
             </div>
             <div>
               <label className="block text-sm font-medium text-muted-foreground mb-1">Backup Frequency (hours)</label>
               <input type="number" value={form.backup_frequency_hours} onChange={e => setForm({ ...form, backup_frequency_hours: +e.target.value })} min={1}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring" />
+                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-ring" />
             </div>
             <div>
               <label className="block text-sm font-medium text-muted-foreground mb-1">Retention (days)</label>
               <input type="number" value={form.retention_days} onChange={e => setForm({ ...form, retention_days: +e.target.value })} min={1}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring" />
+                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-ring" />
             </div>
             <div className="col-span-2">
               <label className="block text-sm font-medium text-muted-foreground mb-1">Description</label>
               <input type="text" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring" />
+                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-ring" />
             </div>
             <div className="col-span-2 flex items-center gap-6">
               <label className="flex items-center gap-2 text-sm">
@@ -165,7 +165,7 @@ export default function SLAPolicies() {
           <h3 className="text-lg font-semibold mb-2">Assign "{showAssign.name}" to Workloads</h3>
           <p className="text-muted-foreground text-sm mb-4">Choose which workloads to protect with this SLA policy</p>
           {assignMsg && (
-            <div className="bg-green-50 border border-green-200 text-green-700 rounded-lg p-3 mb-4 text-sm">{assignMsg}</div>
+            <div className="bg-green-500/10 border border-green-500/20 text-green-400 rounded-lg p-3 mb-4 text-sm">{assignMsg}</div>
           )}
           <div className={`grid grid-cols-2 md:grid-cols-${WORKLOADS.length + 1} gap-3`}>
             {WORKLOADS.map(w => {
@@ -178,7 +178,7 @@ export default function SLAPolicies() {
               );
             })}
             <button onClick={handleAssignAll}
-              className="flex items-center gap-2 px-4 py-3 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-lg text-sm font-medium text-orange-700">
+              className="flex items-center gap-2 px-4 py-3 bg-orange-500/10 hover:bg-orange-100 border border-orange-500/20 rounded-lg text-sm font-medium text-orange-700">
               <Shield className="w-5 h-5" /> All Workloads
             </button>
           </div>
@@ -195,7 +195,7 @@ export default function SLAPolicies() {
                 <h3 className="font-semibold">{p.name}</h3>
                 {p.is_locked ? <Lock className="w-4 h-4 text-orange-500" /> : null}
                 {(p as any).worm_enabled ? <span className="px-1.5 py-0.5 bg-orange-100 text-orange-700 text-[10px] font-bold rounded" title="WORM: Write-Once Read-Many">WORM</span> : null}
-                {(p as any).legal_hold ? <span className="px-1.5 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded" title="Legal Hold: Cannot delete">HOLD</span> : null}
+                {(p as any).legal_hold ? <span className="px-1.5 py-0.5 bg-red-100 text-red-400 text-[10px] font-bold rounded" title="Legal Hold: Cannot delete">HOLD</span> : null}
               </div>
               <div className="flex gap-1">
                 <button onClick={() => setShowAssign(p)} title="Assign to workloads" className="p-1.5 text-muted-foreground hover:text-green-600 rounded"><Link className="w-4 h-4" /></button>

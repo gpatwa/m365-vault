@@ -114,7 +114,7 @@ export default function Settings() {
 
       {/* Demo onboarding: tenant just connected banner */}
       {connectedTenantId && (
-        <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mb-6">
+        <div className="bg-green-500/100/10 border border-green-500/30 rounded-xl p-4 mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <CheckCircle className="w-6 h-6 text-green-400" />
@@ -129,7 +129,7 @@ export default function Settings() {
             </div>
             <button
               onClick={() => navigate(`/onboard/callback?demo=true&db_tenant_id=${connectedTenantId}&tenant_name=${encodeURIComponent(connectedTenantName || '')}&step=1`)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-500 flex items-center gap-2"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-500/100 flex items-center gap-2"
             >
               Continue Setup <ArrowRight className="w-4 h-4" />
             </button>
@@ -152,8 +152,8 @@ export default function Settings() {
       {/* Action messages */}
       {(testResult || actionMsg) && (
         <div className={`rounded-lg p-4 mb-4 flex items-center gap-3 ${
-          testResult ? (testResult.success ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20')
-            : 'bg-blue-500/10 border border-blue-500/20'
+          testResult ? (testResult.success ? 'bg-green-500/100/10 border border-green-500/20' : 'bg-red-500/100/10 border border-red-500/20')
+            : 'bg-blue-500/100/10 border border-blue-500/20'
         }`}>
           {testResult ? (
             <>
@@ -163,7 +163,7 @@ export default function Settings() {
           ) : (
             <>
               <CheckCircle className="w-5 h-5 text-blue-600" />
-              <span className="text-blue-800">{actionMsg}</span>
+              <span className="text-blue-400">{actionMsg}</span>
             </>
           )}
           <button onClick={() => { setTestResult(null); setActionMsg(''); }} className="ml-auto text-muted-foreground hover:text-muted-foreground">&times;</button>
@@ -193,7 +193,7 @@ export default function Settings() {
               type="text" value={purgeInput}
               onChange={e => setPurgeInput(e.target.value)}
               placeholder="Type tenant name to confirm"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-red-500 focus:border-red-500 font-mono text-sm"
+              className="w-full px-3 py-2 border border-border rounded-lg mb-4 bg-background text-foreground focus:ring-2 focus:ring-red-500 focus:border-red-500 font-mono text-sm"
               autoFocus
             />
             <div className="flex gap-3 justify-end">
@@ -225,7 +225,7 @@ export default function Settings() {
                   type="text" value={credForm.client_id}
                   onChange={e => setCredForm({ ...credForm, client_id: e.target.value })}
                   placeholder="Leave blank to keep current"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring font-mono text-sm"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-ring font-mono text-sm"
                 />
               </div>
               <div>
@@ -234,7 +234,7 @@ export default function Settings() {
                   type="password" value={credForm.client_secret}
                   onChange={e => setCredForm({ ...credForm, client_secret: e.target.value })}
                   placeholder="Leave blank to keep current"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-ring"
                 />
               </div>
             </div>
@@ -269,7 +269,7 @@ export default function Settings() {
             <div key={t.id} className={`bg-card rounded-xl border shadow-sm p-5 ${isInactive ? 'opacity-75' : ''}`}>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${isInactive ? 'bg-muted' : 'bg-blue-50'}`}>
+                  <div className={`p-2 rounded-lg ${isInactive ? 'bg-muted' : 'bg-blue-500/10'}`}>
                     <Building2 className={`w-6 h-6 ${isInactive ? 'text-muted-foreground' : 'text-blue-600'}`} />
                   </div>
                   <div className="min-w-0">
@@ -290,7 +290,7 @@ export default function Settings() {
                   {/* Active tenant actions */}
                   {isActive && (
                     <>
-                      <button onClick={() => discoverMutation.mutate(t.id)} className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-sm hover:bg-blue-200 flex items-center gap-1">
+                      <button onClick={() => discoverMutation.mutate(t.id)} className="px-3 py-1.5 bg-blue-100 text-blue-400 rounded-lg text-sm hover:bg-blue-200 flex items-center gap-1">
                         <RefreshCw className="w-4 h-4" /> Discover
                       </button>
                       <button onClick={() => deactivateMutation.mutate(t.id)} className="px-3 py-1.5 bg-yellow-100 text-yellow-700 rounded-lg text-sm hover:bg-yellow-200 flex items-center gap-1">
@@ -302,10 +302,10 @@ export default function Settings() {
                   {/* Inactive tenant actions */}
                   {isInactive && (
                     <>
-                      <button onClick={() => reactivateMutation.mutate(t.id)} className="px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-sm hover:bg-green-200 flex items-center gap-1">
+                      <button onClick={() => reactivateMutation.mutate(t.id)} className="px-3 py-1.5 bg-green-100 text-green-400 rounded-lg text-sm hover:bg-green-200 flex items-center gap-1">
                         <Play className="w-4 h-4" /> Reactivate
                       </button>
-                      <button onClick={() => setPurgeConfirm({ id: t.id, name: t.name })} className="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg text-sm hover:bg-red-200 flex items-center gap-1">
+                      <button onClick={() => setPurgeConfirm({ id: t.id, name: t.name })} className="px-3 py-1.5 bg-red-100 text-red-400 rounded-lg text-sm hover:bg-red-200 flex items-center gap-1">
                         <Trash2 className="w-4 h-4" /> Purge
                       </button>
                     </>
@@ -354,7 +354,7 @@ export default function Settings() {
                 {permsTenant === t.id && permsData && !permsData.error && (
                   <div className="mt-3 border rounded-lg overflow-hidden">
                     <div className={`px-4 py-2 text-sm font-medium flex items-center justify-between ${
-                      permsData.all_backup_ready ? 'bg-green-50 text-green-700' : 'bg-orange-50 text-orange-700'
+                      permsData.all_backup_ready ? 'bg-green-500/10 text-green-400' : 'bg-orange-500/10 text-orange-700'
                     }`}>
                       <span className="flex items-center gap-1.5">
                         {permsData.all_backup_ready ? <CheckCircle className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
@@ -402,7 +402,7 @@ export default function Settings() {
                                 {allMissing.length > 0 ? (
                                   <div className="space-y-1">
                                     {allMissing.map((perm: string) => (
-                                      <code key={perm} className="inline-block bg-red-50 text-red-700 px-1.5 py-0.5 rounded text-[10px] font-mono mr-1">{perm}</code>
+                                      <code key={perm} className="inline-block bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded text-[10px] font-mono mr-1">{perm}</code>
                                     ))}
                                   </div>
                                 ) : <span className="text-green-600 text-xs font-medium">All granted</span>}
@@ -433,9 +433,9 @@ export default function Settings() {
 
                     {/* Instructions for fixing permissions */}
                     {!permsData.all_backup_ready && (
-                      <div className="bg-blue-50 border-t border-blue-100 px-4 py-3">
-                        <p className="text-xs font-semibold text-blue-800 mb-2">How to grant missing permissions:</p>
-                        <ol className="text-xs text-blue-700 space-y-1.5 list-decimal list-inside">
+                      <div className="bg-blue-500/10 border-t border-blue-100 px-4 py-3">
+                        <p className="text-xs font-semibold text-blue-400 mb-2">How to grant missing permissions:</p>
+                        <ol className="text-xs text-blue-400 space-y-1.5 list-decimal list-inside">
                           <li>
                             <strong>One-time setup:</strong> Add redirect URI to your app registration in{' '}
                             <a href={`https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Authentication/appId/${t.client_id}`}
@@ -469,7 +469,7 @@ export default function Settings() {
                 )}
 
                 {permsTenant === t.id && permsData?.error && (
-                  <div className="mt-3 bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+                  <div className="mt-3 bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-sm text-red-400">
                     {permsData.error}
                   </div>
                 )}

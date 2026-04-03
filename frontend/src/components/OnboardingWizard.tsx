@@ -173,11 +173,11 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
     .reduce((sum, w) => sum + getWorkloadCount(w.key), 0);
 
   const colorMap: Record<string, { bg: string; border: string; text: string; ring: string }> = {
-    blue: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', ring: 'ring-blue-400' },
-    purple: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', ring: 'ring-purple-400' },
-    green: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700', ring: 'ring-green-400' },
-    pink: { bg: 'bg-pink-50', border: 'border-pink-200', text: 'text-pink-700', ring: 'ring-pink-400' },
-    amber: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', ring: 'ring-amber-400' },
+    blue: { bg: 'bg-blue-500/10', border: 'border-blue-500/20', text: 'text-blue-400', ring: 'ring-blue-400' },
+    purple: { bg: 'bg-purple-500/10', border: 'border-purple-500/20', text: 'text-purple-400', ring: 'ring-purple-400' },
+    green: { bg: 'bg-green-500/10', border: 'border-green-500/20', text: 'text-green-400', ring: 'ring-green-400' },
+    pink: { bg: 'bg-pink-500/10', border: 'border-pink-500/20', text: 'text-pink-400', ring: 'ring-pink-400' },
+    amber: { bg: 'bg-amber-500/10', border: 'border-amber-500/20', text: 'text-amber-400', ring: 'ring-amber-400' },
   };
 
   return (
@@ -204,7 +204,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
 
       <div className="p-6">
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 mb-4 text-sm flex items-center gap-2">
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg p-3 mb-4 text-sm flex items-center gap-2">
             <XCircle className="w-4 h-4 flex-shrink-0" />
             {error}
           </div>
@@ -220,16 +220,16 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
             {/* Setup Guide */}
             <button
               onClick={() => setShowGuide(!showGuide)}
-              className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 mb-4"
+              className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-400 mb-4"
             >
               {showGuide ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
               How to create an Azure AD App Registration
             </button>
 
             {showGuide && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 text-sm text-blue-800 space-y-2">
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mb-4 text-sm text-blue-400 space-y-2">
                 <p className="font-medium">Quick Setup Guide:</p>
-                <ol className="list-decimal list-inside space-y-1.5 text-blue-700">
+                <ol className="list-decimal list-inside space-y-1.5 text-blue-400">
                   <li>Go to <a href="https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade" target="_blank" rel="noopener noreferrer" className="underline inline-flex items-center gap-1">Azure Portal &gt; App Registrations <ExternalLink className="w-3 h-3" /></a></li>
                   <li>Click "New registration" &gt; Name it "Shieldio Backup" &gt; Register</li>
                   <li>Go to "API permissions" &gt; Add: <code className="bg-blue-100 px-1 rounded">Mail.Read</code>, <code className="bg-blue-100 px-1 rounded">Files.Read.All</code>, <code className="bg-blue-100 px-1 rounded">Sites.Read.All</code>, <code className="bg-blue-100 px-1 rounded">User.Read.All</code>, <code className="bg-blue-100 px-1 rounded">Directory.Read.All</code></li>
@@ -248,7 +248,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                     type="text" required value={form.name}
                     onChange={e => setForm({ ...form, name: e.target.value })}
                     placeholder="Contoso Inc."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring focus:border-ring"
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-ring"
                   />
                 </div>
                 <div>
@@ -257,7 +257,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                     type="text" required value={form.ms_tenant_id}
                     onChange={e => setForm({ ...form, ms_tenant_id: e.target.value })}
                     placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring focus:border-ring font-mono text-sm"
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-ring font-mono text-sm"
                   />
                 </div>
                 <div>
@@ -266,7 +266,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                     type="text" required value={form.client_id}
                     onChange={e => setForm({ ...form, client_id: e.target.value })}
                     placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring focus:border-ring font-mono text-sm"
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-ring font-mono text-sm"
                   />
                 </div>
                 <div>
@@ -275,7 +275,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                     type="password" required value={form.client_secret}
                     onChange={e => setForm({ ...form, client_secret: e.target.value })}
                     placeholder="Client secret value"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring focus:border-ring"
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-ring"
                   />
                 </div>
               </div>
@@ -283,8 +283,8 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
               {testResult && (
                 <div className={`flex items-center gap-2 text-sm p-3 rounded-lg ${
                   testResult.success
-                    ? 'bg-green-50 border border-green-200 text-green-700'
-                    : 'bg-red-50 border border-red-200 text-red-700'
+                    ? 'bg-green-500/10 border border-green-500/20 text-green-400'
+                    : 'bg-red-500/10 border border-red-500/20 text-red-400'
                 }`}>
                   {testResult.success ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
                   {testResult.message}
@@ -342,7 +342,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                       >
                         {count > 0 && (
                           <div className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center ${
-                            selected ? 'bg-green-500' : 'bg-gray-200'
+                            selected ? 'bg-green-500/100' : 'bg-gray-200'
                           }`}>
                             {selected && <CheckCircle className="w-4 h-4 text-foreground" />}
                           </div>
@@ -357,7 +357,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                 </div>
 
                 {discovery.errors?.length > 0 && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 text-sm text-yellow-800">
+                  <div className="bg-yellow-500/10 border border-yellow-200 rounded-lg p-3 mb-4 text-sm text-yellow-800">
                     <p className="font-medium mb-1">Warnings:</p>
                     {discovery.errors.map((err, i) => <p key={i}>{err}</p>)}
                   </div>
@@ -365,7 +365,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
 
                 {/* Permission Status */}
                 {permissions && !permissions.all_backup_ready && (
-                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+                  <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-4 mb-4">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <ShieldCheck className="w-5 h-5 text-orange-600" />
@@ -403,9 +403,9 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                 )}
 
                 {permissions && permissions.all_backup_ready && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4 flex items-center gap-2">
+                  <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 mb-4 flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-green-600" />
-                    <p className="text-sm text-green-700 font-medium">All backup permissions granted</p>
+                    <p className="text-sm text-green-400 font-medium">All backup permissions granted</p>
                   </div>
                 )}
 
@@ -453,7 +453,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                       onClick={() => setFrequency(f.hours)}
                       className={`p-3 rounded-lg border-2 text-left transition-all ${
                         frequency === f.hours
-                          ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
+                          ? 'border-blue-500 bg-blue-500/10 ring-2 ring-blue-200'
                           : 'border-border hover:border-border'
                       }`}
                     >
@@ -493,7 +493,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
               <input
                 type="checkbox" checked={autoBackup}
                 onChange={e => setAutoBackup(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-ring"
+                className="w-4 h-4 rounded border-border text-blue-600 focus:ring-ring"
               />
               <span className="text-sm text-muted-foreground">Start first backup immediately after setup</span>
             </label>

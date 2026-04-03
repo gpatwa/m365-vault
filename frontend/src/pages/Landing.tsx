@@ -8,13 +8,19 @@ import {
 import ThemeToggle from '../components/ThemeToggle';
 
 // ── Scroll animation hook ──
-function useInView(threshold = 0.15) {
+function useInView(threshold = 0.05) {
   const ref = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setInView(true); }, { threshold });
+    // Check if already in viewport (e.g. anchor navigation)
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight + 100 && rect.bottom > -100) {
+      setInView(true);
+      return;
+    }
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setInView(true); }, { threshold, rootMargin: '100px 0px' });
     obs.observe(el);
     return () => obs.disconnect();
   }, [threshold]);
@@ -24,7 +30,7 @@ function useInView(threshold = 0.15) {
 function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   const { ref, inView } = useInView();
   return (
-    <div ref={ref} className={`transition-all duration-700 ${inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: `${delay}ms` }}>
+    <div ref={ref} className={`transition-all duration-700 ${inView ? 'opacity-100 translate-y-0' : 'opacity-90 translate-y-2'}`} style={{ transitionDelay: `${delay}ms` }}>
       {children}
     </div>
   );
@@ -34,7 +40,7 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 
 // ── Cyber Recovery Story — Cinematic 6-Phase Animation ──
 function CyberRecoveryStory() {
-  const { ref, inView } = useInView(0.2);
+  const { ref, inView } = useInView(0.05);
   const [phase, setPhase] = useState(0);
   const [autoPlay, setAutoPlay] = useState(true);
 
@@ -143,7 +149,7 @@ function CyberRecoveryStory() {
         <div className={`relative rounded-2xl border overflow-hidden transition-all duration-700 ${current.border} ${current.bg} shadow-2xl ${current.glow}`}>
           {/* Pulsing background glow for DETECT phase */}
           {phase === 3 && (
-            <div className="absolute inset-0 bg-red-500/5 animate-pulse" />
+            <div className="absolute inset-0 bg-red-500/100/5 animate-pulse" />
           )}
 
           <div className="relative p-8">
@@ -213,11 +219,11 @@ function CyberRecoveryStory() {
 
 // ── Workload icons ──
 const WORKLOADS = [
-  { icon: Mail, label: 'Exchange', desc: 'Email, Calendar, Contacts', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
-  { icon: HardDrive, label: 'OneDrive', desc: 'Files & Folders', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
-  { icon: Globe, label: 'SharePoint', desc: 'Sites, Lists, Documents', color: 'text-green-400 bg-green-500/10 border-green-500/20' },
-  { icon: MessageSquare, label: 'Teams', desc: 'Chats, Channels, Files', color: 'text-pink-400 bg-pink-500/10 border-pink-500/20' },
-  { icon: KeyRound, label: 'Entra ID', desc: '12 object types, Config drift', color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
+  { icon: Mail, label: 'Exchange', desc: 'Email, Calendar, Contacts', color: 'text-blue-400 bg-blue-500/100/10 border-blue-500/20' },
+  { icon: HardDrive, label: 'OneDrive', desc: 'Files & Folders', color: 'text-purple-400 bg-purple-500/100/10 border-purple-500/20' },
+  { icon: Globe, label: 'SharePoint', desc: 'Sites, Lists, Documents', color: 'text-green-400 bg-green-500/100/10 border-green-500/20' },
+  { icon: MessageSquare, label: 'Teams', desc: 'Chats, Channels, Files', color: 'text-pink-400 bg-pink-500/100/10 border-pink-500/20' },
+  { icon: KeyRound, label: 'Entra ID', desc: '12 object types, Config drift', color: 'text-amber-400 bg-amber-500/100/10 border-amber-500/20' },
 ];
 
 // ── Competitor comparison (CISO-focused) ──
@@ -254,7 +260,7 @@ export default function Landing() {
       <nav className="fixed top-0 w-full z-50 bg-card/80 backdrop-blur-sm border-b border-border">
         <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
           <Link to="/welcome" className="flex items-center gap-2">
-            <Shield className="w-6 h-6 text-blue-600" />
+            <Shield className="w-6 h-6 text-teal-500" />
             <span className="font-bold text-foreground">Shieldio</span>
           </Link>
           <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
@@ -266,7 +272,7 @@ export default function Landing() {
           <div className="flex items-center gap-3">
             <ThemeToggle />
             <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">Sign In</Link>
-            <Link to="/login?register=true" className="px-4 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium rounded-lg hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg shadow-blue-500/20">
+            <Link to="/login?register=true" className="px-4 py-1.5 bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-sm font-medium rounded-lg hover:from-teal-400 hover:to-cyan-400 transition-all shadow-lg shadow-teal-500/20">
               Start Free
             </Link>
           </div>
@@ -277,7 +283,7 @@ export default function Landing() {
       <section className="pt-24 pb-16 px-6">
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
-          <div className={`inline-flex items-center gap-2 px-3 py-1 bg-red-500/10 text-red-400 rounded-full text-xs font-medium mb-6 transition-all duration-500 ${heroReady ? 'opacity-100' : 'opacity-0'}`}>
+          <div className={`inline-flex items-center gap-2 px-3 py-1 bg-red-500/100/10 text-red-400 rounded-full text-xs font-medium mb-6 transition-all duration-500 ${heroReady ? 'opacity-100' : 'opacity-0'}`}>
             <AlertTriangle className="w-3.5 h-3.5" />
             Microsoft doesn't back up your M365 data
           </div>
@@ -286,7 +292,7 @@ export default function Landing() {
           <h1 className={`text-3xl md:text-5xl font-extrabold text-foreground leading-[1.1] tracking-tight transition-all duration-700 delay-200 ${heroReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
             Your emails. Your files.{' '}
             <br className="hidden md:block" />
-            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-teal-500 to-cyan-500 bg-clip-text text-transparent">
               Your responsibility.
             </span>
           </h1>
@@ -299,7 +305,7 @@ export default function Landing() {
 
           {/* CTAs */}
           <div className={`mt-8 flex items-center justify-center gap-4 transition-all duration-700 delay-700 ${heroReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            <Link to="/login?register=true" className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all hover:shadow-lg hover:shadow-blue-200 flex items-center gap-2">
+            <Link to="/login?register=true" className="px-6 py-3 bg-teal-600 text-white font-semibold rounded-xl hover:bg-teal-700 transition-all hover:shadow-lg hover:shadow-teal-200/20 flex items-center gap-2">
               Start Free <ArrowRight className="w-4 h-4" />
             </Link>
             <a href="https://github.com/gpatwa/m365-vault" target="_blank" rel="noopener noreferrer"
@@ -311,11 +317,11 @@ export default function Landing() {
           {/* Stats — CISO-focused value props */}
           <div className={`mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto transition-all duration-700 delay-900 ${heroReady ? 'opacity-100' : 'opacity-0'}`}>
             <div className="text-center">
-              <div className="text-xl font-bold text-blue-600">Context-Aware</div>
+              <div className="text-xl font-bold text-teal-500">Context-Aware</div>
               <div className="text-xs text-muted-foreground mt-1">Recovery Plans</div>
             </div>
             <div className="text-center">
-              <div className="text-xl font-bold text-indigo-600">Pre-Computed</div>
+              <div className="text-xl font-bold text-cyan-500">Pre-Computed</div>
               <div className="text-xs text-muted-foreground mt-1">Org Intelligence</div>
             </div>
             <div className="text-center">
@@ -335,7 +341,7 @@ export default function Landing() {
         <div className="max-w-5xl mx-auto">
           <FadeUp>
             <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-500/10 text-red-400 rounded-full text-xs font-medium mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-500/100/10 text-red-400 rounded-full text-xs font-medium mb-4">
                 <AlertTriangle className="w-3.5 h-3.5" /> Ransomware Scenario
               </div>
               <h2 className="text-3xl font-bold text-foreground">When ransomware hits at 2am, this is your playbook</h2>
@@ -362,7 +368,7 @@ export default function Landing() {
                   <tr className="border-b bg-muted/50">
                     <th className="text-left px-5 py-3 font-medium text-foreground">Capability</th>
                     <th className="text-center px-5 py-3 font-medium text-foreground">Microsoft 365</th>
-                    <th className="text-center px-5 py-3 font-semibold text-blue-600">Shieldio</th>
+                    <th className="text-center px-5 py-3 font-semibold text-teal-500">Shieldio</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -415,7 +421,7 @@ export default function Landing() {
         <div className="max-w-5xl mx-auto">
           <FadeUp>
             <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/10 text-amber-400 rounded-full text-xs font-medium mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/100/10 text-amber-400 rounded-full text-xs font-medium mb-4">
                 <Brain className="w-3.5 h-3.5" /> AI-Powered Intelligence
               </div>
               <h2 className="text-3xl font-bold">Recovery intelligence that no competitor has.</h2>
@@ -426,13 +432,13 @@ export default function Landing() {
           </FadeUp>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
-              { icon: Eye, title: 'Org Context', desc: 'Auto-discovers your reporting hierarchy, VIP groups, and privileged roles from Microsoft Graph. No manual user mapping. No professional services.', color: 'from-blue-500 to-indigo-500' },
+              { icon: Eye, title: 'Org Context', desc: 'Auto-discovers your reporting hierarchy, VIP groups, and privileged roles from Microsoft Graph. No manual user mapping. No professional services.', color: 'from-teal-500 to-cyan-500' },
               { icon: Brain, title: 'Criticality Scoring', desc: '4-factor scoring: role weight, data sensitivity, activity level, business dependency. Your CEO scores 95. The summer intern scores 30. Automatically.', color: 'from-amber-500 to-orange-500' },
               { icon: ShieldCheck, title: 'Recovery Plans', desc: 'Pre-computed 4-phase NIST-ordered plans: identity controls first, then critical users, then high priority, then full recovery. Refreshed every 6 hours.', color: 'from-green-500 to-emerald-500' },
               { icon: AlertTriangle, title: 'Anomaly Detection', desc: 'Z-score baselines detect mass encryption, data exfiltration, and unusual deletions while backups are running. Not after the incident.', color: 'from-rose-500 to-red-500' },
             ].map((f, i) => (
               <FadeUp key={f.title} delay={i * 150}>
-                <div className="bg-card rounded-xl p-6 border border-border hover:border-blue-500/30 transition-all hover:shadow-lg hover:shadow-blue-500/5">
+                <div className="bg-card rounded-xl p-6 border border-border hover:border-teal-500/30 transition-all hover:shadow-lg hover:shadow-teal-500/5">
                   <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${f.color} flex items-center justify-center mb-4`}>
                     <f.icon className="w-5 h-5 text-white" />
                   </div>
@@ -477,7 +483,7 @@ export default function Landing() {
             ))}
           </div>
           <div className="text-center">
-            <Link to="/security" className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+            <Link to="/security" className="text-sm text-teal-500 hover:text-teal-400 font-medium">
               View full security posture <ChevronRight className="w-3.5 h-3.5 inline" />
             </Link>
           </div>
@@ -499,7 +505,7 @@ export default function Landing() {
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="text-left px-5 py-3 font-medium text-foreground">Feature</th>
-                    <th className="text-center px-5 py-3 font-semibold text-blue-400">Shieldio</th>
+                    <th className="text-center px-5 py-3 font-semibold text-teal-400">Shieldio</th>
                     <th className="text-center px-5 py-3 font-medium text-foreground">Others</th>
                   </tr>
                 </thead>
@@ -536,28 +542,28 @@ export default function Landing() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
             {PRICING.map((tier, i) => (
               <FadeUp key={tier.name} delay={i * 100}>
-                <div className={`relative rounded-xl p-6 ${tier.primary ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white ring-2 ring-blue-500/50 ring-offset-2 ring-offset-background shadow-xl shadow-blue-500/20' : 'bg-card border border-border text-foreground hover:border-blue-500/20 hover:shadow-lg hover:shadow-blue-500/5 transition-all'}`}>
+                <div className={`relative rounded-xl p-6 ${tier.primary ? 'bg-gradient-to-br from-teal-600 to-cyan-600 text-white ring-2 ring-teal-500/50 ring-offset-2 ring-offset-background shadow-xl shadow-teal-500/20' : 'bg-card border border-border text-foreground hover:border-teal-500/20 hover:shadow-lg hover:shadow-teal-500/5 transition-all'}`}>
                   {tier.primary && (
                     <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-gradient-to-r from-amber-400 to-orange-400 text-black text-[10px] font-bold rounded-full shadow-md">
                       Recommended
                     </span>
                   )}
-                  <div className={`text-sm font-semibold ${tier.primary ? 'text-blue-200' : 'text-muted-foreground'}`}>{tier.name}</div>
+                  <div className={`text-sm font-semibold ${tier.primary ? 'text-teal-200' : 'text-muted-foreground'}`}>{tier.name}</div>
                   <div className="flex items-baseline gap-1 mt-2">
                     <span className="text-3xl font-extrabold">{tier.price}</span>
-                    <span className={`text-sm ${tier.primary ? 'text-blue-200' : 'text-muted-foreground'}`}>{tier.period}</span>
+                    <span className={`text-sm ${tier.primary ? 'text-teal-200' : 'text-muted-foreground'}`}>{tier.period}</span>
                   </div>
-                  <p className={`text-sm mt-1 ${tier.primary ? 'text-blue-200' : 'text-muted-foreground'}`}>{tier.desc}</p>
+                  <p className={`text-sm mt-1 ${tier.primary ? 'text-teal-200' : 'text-muted-foreground'}`}>{tier.desc}</p>
                   <ul className="mt-5 space-y-2">
                     {tier.features.map(f => (
                       <li key={f} className="flex items-center gap-2 text-sm">
-                        <Check className={`w-4 h-4 ${tier.primary ? 'text-blue-200' : 'text-green-500'}`} />
+                        <Check className={`w-4 h-4 ${tier.primary ? 'text-teal-200' : 'text-green-500'}`} />
                         {f}
                       </li>
                     ))}
                   </ul>
                   <Link to="/login" className={`block mt-6 text-center py-2.5 rounded-lg font-medium text-sm transition-colors ${
-                    tier.primary ? 'bg-white text-blue-600 hover:bg-blue-50' : 'bg-muted text-muted-foreground hover:bg-accent'
+                    tier.primary ? 'bg-white text-teal-600 hover:bg-teal-500/10' : 'bg-muted text-muted-foreground hover:bg-accent'
                   }`}>
                     {tier.cta}
                   </Link>
@@ -575,7 +581,7 @@ export default function Landing() {
             <h2 className="text-2xl font-bold mb-3">See it live with your data in 10 minutes</h2>
             <p className="text-muted-foreground text-sm mb-6">Connect your M365 tenant. Watch Shieldio discover your org, score criticality, and build a recovery plan — in real time.</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link to="/login" className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 flex items-center gap-2">
+              <Link to="/login" className="px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-semibold rounded-xl hover:from-teal-400 hover:to-cyan-400 transition-all shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40 flex items-center gap-2">
                 Start Free <ArrowRight className="w-4 h-4" />
               </Link>
               <Link to="/login" className="px-6 py-3 bg-card text-foreground font-medium rounded-xl hover:bg-secondary transition-colors border border-border">
@@ -605,7 +611,7 @@ export default function Landing() {
               { q: 'What\'s included in the free tier?', a: 'Up to 25 objects across Exchange, OneDrive, and SharePoint. Basic Smart Engine, 30-day retention, and community support. No credit card required.' },
             ].map((faq, i) => (
               <FadeUp key={i} delay={i * 50}>
-                <details className="group bg-card border border-border rounded-xl overflow-hidden hover:border-blue-500/20 transition-all">
+                <details className="group bg-card border border-border rounded-xl overflow-hidden hover:border-teal-500/20 transition-all">
                   <summary className="flex items-center justify-between px-5 py-4 cursor-pointer text-foreground font-medium text-sm">
                     {faq.q}
                     <ChevronRight className="w-4 h-4 text-muted-foreground transition-transform group-open:rotate-90" />
@@ -621,12 +627,12 @@ export default function Landing() {
       </section>
 
       {/* ═══ SECTION 10: FINAL CTA ═══ */}
-      <section className="py-20 px-6 bg-gradient-to-br from-blue-600 to-indigo-700">
+      <section className="py-20 px-6 bg-gradient-to-br from-teal-600 to-cyan-700">
         <div className="max-w-3xl mx-auto text-center text-white">
           <FadeUp>
             <h2 className="text-3xl font-bold mb-4">Ready to prove you can recover?</h2>
-            <p className="text-blue-100 mb-8">Most backup vendors prove you can back up. Shieldio proves you can recover.</p>
-            <Link to="/login" className="inline-flex items-center gap-2 px-8 py-3.5 bg-white text-blue-700 font-semibold rounded-xl hover:bg-blue-50 transition-colors text-lg">
+            <p className="text-teal-100 mb-8">Most backup vendors prove you can back up. Shieldio proves you can recover.</p>
+            <Link to="/login" className="inline-flex items-center gap-2 px-8 py-3.5 bg-white text-teal-700 font-semibold rounded-xl hover:bg-teal-500/10 transition-colors text-lg">
               Get Started Free <ArrowRight className="w-5 h-5" />
             </Link>
           </FadeUp>
@@ -639,7 +645,7 @@ export default function Landing() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <Shield className="w-5 h-5 text-blue-400" />
+                <Shield className="w-5 h-5 text-teal-400" />
                 <span className="font-semibold text-foreground">Shieldio</span>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">

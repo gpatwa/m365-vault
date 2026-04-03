@@ -40,7 +40,7 @@ export default function Performance() {
   });
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-blue-500/20 border-t-blue-600 rounded-full animate-spin" /></div>;
   }
 
   const noResults = !data?.benchmarks;
@@ -89,10 +89,10 @@ export default function Performance() {
         <>
           {/* Hero Metrics */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <MetricCard icon={Zap} label="Health Check" value={b.health_check?.latency_ms || '—'} unit="ms" color="bg-green-500" />
-            <MetricCard icon={Activity} label="API Avg Latency" value={avgLatency} unit="ms" color="bg-blue-500" />
-            <MetricCard icon={Database} label="Compression" value={b.storage?.compression_ratio || '—'} unit="x" color="bg-purple-500" />
-            <MetricCard icon={Shield} label="Total Storage" value={b.storage?.total_size_bytes ? `${(b.storage.total_size_bytes / 1024 / 1024).toFixed(1)}` : '—'} unit="MB" color="bg-amber-500" />
+            <MetricCard icon={Zap} label="Health Check" value={b.health_check?.latency_ms || '—'} unit="ms" color="bg-green-500/100" />
+            <MetricCard icon={Activity} label="API Avg Latency" value={avgLatency} unit="ms" color="bg-blue-500/100" />
+            <MetricCard icon={Database} label="Compression" value={b.storage?.compression_ratio || '—'} unit="x" color="bg-purple-500/100" />
+            <MetricCard icon={Shield} label="Total Storage" value={b.storage?.total_size_bytes ? `${(b.storage.total_size_bytes / 1024 / 1024).toFixed(1)}` : '—'} unit="MB" color="bg-amber-500/100" />
           </div>
 
           {/* API Latency Chart */}
@@ -117,9 +117,9 @@ export default function Performance() {
                 </ResponsiveContainer>
               </div>
               <div className="flex items-center justify-center gap-6 mt-2 text-xs">
-                <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-blue-500 rounded" /> p50 (median)</div>
-                <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-amber-500 rounded" /> p95</div>
-                <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-red-500 rounded" /> p99</div>
+                <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-blue-500/100 rounded" /> p50 (median)</div>
+                <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-amber-500/100 rounded" /> p95</div>
+                <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-red-500/100 rounded" /> p99</div>
               </div>
             </div>
           )}

@@ -35,11 +35,17 @@ const navGroups: NavGroup[] = [
     label: 'Workloads',
     defaultOpen: true,
     items: [
-      { path: '/exchange', label: 'Exchange', icon: Mail },
-      { path: '/onedrive', label: 'OneDrive', icon: HardDrive },
-      { path: '/sharepoint', label: 'SharePoint', icon: Globe },
-      { path: '/teams', label: 'Teams', icon: MessageSquare },
       { path: '/entra-id', label: 'Entra ID', icon: KeyRound },
+      { path: '/exchange', label: 'Exchange', icon: Mail },
+    ],
+  },
+  {
+    label: 'More Workloads',
+    defaultOpen: false,
+    items: [
+      { path: '/sharepoint', label: 'SharePoint', icon: Globe },
+      { path: '/onedrive', label: 'OneDrive', icon: HardDrive },
+      { path: '/teams', label: 'Teams', icon: MessageSquare },
     ],
   },
   {

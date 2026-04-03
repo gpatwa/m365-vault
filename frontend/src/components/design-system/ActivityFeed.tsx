@@ -10,10 +10,10 @@ export interface ActivityItem {
 }
 
 const typeConfig = {
-  success: { Icon: CheckCircle, color: 'text-green-500', bg: 'bg-green-50' },
-  failure: { Icon: XCircle, color: 'text-red-500', bg: 'bg-red-50' },
-  warning: { Icon: AlertTriangle, color: 'text-amber-500', bg: 'bg-amber-50' },
-  running: { Icon: Loader2, color: 'text-blue-500', bg: 'bg-blue-50', animate: true },
+  success: { Icon: CheckCircle, color: 'text-green-500', bg: 'bg-green-500/10' },
+  failure: { Icon: XCircle, color: 'text-red-500', bg: 'bg-red-500/10' },
+  warning: { Icon: AlertTriangle, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+  running: { Icon: Loader2, color: 'text-blue-500', bg: 'bg-blue-500/10', animate: true },
   queued: { Icon: Clock, color: 'text-muted-foreground', bg: 'bg-muted/50' },
 };
 
@@ -49,7 +49,7 @@ export default function ActivityFeed({ items, maxItems = 8 }: { items: ActivityI
               {item.action && (
                 <button
                   onClick={item.action.onClick}
-                  className="text-[10px] font-semibold text-blue-600 hover:text-blue-800 whitespace-nowrap"
+                  className="text-[10px] font-semibold text-blue-600 hover:text-blue-400 whitespace-nowrap"
                 >
                   {item.action.label}
                 </button>

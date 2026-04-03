@@ -22,7 +22,7 @@ const TOUR_STEPS = [
     title: 'Step 2: Configure SLA Policies',
     description: 'Define backup frequency (hourly to daily), retention period (30-365 days), WORM immutability, and legal hold. Assign policies to workloads.',
     icon: Shield,
-    color: 'bg-indigo-500',
+    color: 'bg-indigo-500/100',
     route: '/sla-policies',
   },
   // ── Daily Operations ──

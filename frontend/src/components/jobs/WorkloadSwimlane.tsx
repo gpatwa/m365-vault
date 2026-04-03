@@ -124,19 +124,19 @@ export default function WorkloadSwimlane({
             {stats.completed > 0 && (
               <div className="flex items-center gap-1 text-xs">
                 <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-                <span className="font-medium text-green-700">{stats.completed}</span>
+                <span className="font-medium text-green-400">{stats.completed}</span>
               </div>
             )}
             {stats.failed > 0 && (
               <div className="flex items-center gap-1 text-xs">
                 <XCircle className="w-3.5 h-3.5 text-red-500" />
-                <span className="font-medium text-red-700">{stats.failed}</span>
+                <span className="font-medium text-red-400">{stats.failed}</span>
               </div>
             )}
             {stats.in_progress > 0 && (
               <div className="flex items-center gap-1 text-xs">
                 <Loader2 className="w-3.5 h-3.5 text-blue-500 animate-spin" />
-                <span className="font-medium text-blue-700">{stats.in_progress}</span>
+                <span className="font-medium text-blue-400">{stats.in_progress}</span>
               </div>
             )}
             {stats.queued > 0 && (
@@ -166,13 +166,13 @@ export default function WorkloadSwimlane({
         <div className="mt-3 w-full bg-gray-200 rounded-full h-2 overflow-hidden">
           <div className="h-full flex">
             {progressPercent > 0 && (
-              <div className="bg-green-500 h-full transition-all" style={{ width: `${progressPercent}%` }} />
+              <div className="bg-green-500/100 h-full transition-all" style={{ width: `${progressPercent}%` }} />
             )}
             {activePercent > 0 && (
-              <div className="bg-blue-500 h-full transition-all" style={{ width: `${activePercent}%` }} />
+              <div className="bg-blue-500/100 h-full transition-all" style={{ width: `${activePercent}%` }} />
             )}
             {failedPercent > 0 && (
-              <div className="bg-red-500 h-full transition-all" style={{ width: `${failedPercent}%` }} />
+              <div className="bg-red-500/100 h-full transition-all" style={{ width: `${failedPercent}%` }} />
             )}
           </div>
         </div>
@@ -187,7 +187,7 @@ export default function WorkloadSwimlane({
           {stats.total > 0 && (
             <>
               <span className="text-muted-foreground">|</span>
-              <span>Success: <strong className={progressPercent >= 90 ? 'text-green-700' : progressPercent >= 70 ? 'text-yellow-700' : 'text-red-700'}>{progressPercent}%</strong></span>
+              <span>Success: <strong className={progressPercent >= 90 ? 'text-green-400' : progressPercent >= 70 ? 'text-yellow-700' : 'text-red-400'}>{progressPercent}%</strong></span>
             </>
           )}
         </div>

@@ -77,8 +77,8 @@ export default function Login() {
       <div className="hidden lg:flex flex-col flex-1 bg-gradient-to-br from-background via-background to-blue-900 relative overflow-hidden">
         {/* Background pattern */}
         <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-20 left-20 w-64 h-64 bg-blue-500 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-indigo-500 rounded-full blur-3xl" />
+          <div className="absolute top-20 left-20 w-64 h-64 bg-blue-500/100 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 right-20 w-96 h-96 bg-indigo-500/100 rounded-full blur-3xl" />
         </div>
 
         <div className="relative flex flex-col justify-between flex-1 p-12">
@@ -190,8 +190,8 @@ export default function Login() {
 
           {/* Error */}
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl p-3 mb-4 text-sm flex items-start gap-2">
-              <div className="w-4 h-4 bg-red-500/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+            <div className="bg-red-500/100/10 border border-red-500/20 text-red-400 rounded-xl p-3 mb-4 text-sm flex items-start gap-2">
+              <div className="w-4 h-4 bg-red-500/100/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                 <span className="text-[10px] font-bold">!</span>
               </div>
               {error}

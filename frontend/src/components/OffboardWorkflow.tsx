@@ -40,7 +40,7 @@ export default function OffboardWorkflow({ tenantId, tenantName, onClose, onComp
         {/* Header */}
         <div className="sticky top-0 bg-muted border-b border-border px-6 py-4 flex items-center justify-between z-10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-amber-500/100/10 flex items-center justify-center">
               <AlertTriangle className="w-5 h-5 text-amber-400" />
             </div>
             <div>
@@ -57,11 +57,11 @@ export default function OffboardWorkflow({ tenantId, tenantName, onClose, onComp
             <div key={s} className="flex items-center gap-2">
               <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
                 step === s ? 'bg-blue-600 text-white' :
-                (['review', 'retention', 'confirm', 'done'].indexOf(step) > i) ? 'bg-green-500 text-foreground' :
+                (['review', 'retention', 'confirm', 'done'].indexOf(step) > i) ? 'bg-green-500/100 text-foreground' :
                 'bg-card text-muted-foreground'
               }`}>{(['review', 'retention', 'confirm', 'done'].indexOf(step) > i) ? <CheckCircle className="w-4 h-4" /> : i + 1}</div>
               <span className={`text-[10px] ${step === s ? 'text-foreground' : 'text-muted-foreground'}`}>{s === 'review' ? 'Review' : s === 'retention' ? 'Retention' : s === 'confirm' ? 'Confirm' : 'Done'}</span>
-              {i < 3 && <div className={`w-8 h-0.5 ${(['review', 'retention', 'confirm', 'done'].indexOf(step) > i) ? 'bg-green-500' : 'bg-secondary'}`} />}
+              {i < 3 && <div className={`w-8 h-0.5 ${(['review', 'retention', 'confirm', 'done'].indexOf(step) > i) ? 'bg-green-500/100' : 'bg-secondary'}`} />}
             </div>
           ))}
         </div>
@@ -99,7 +99,7 @@ export default function OffboardWorkflow({ tenantId, tenantName, onClose, onComp
                   </div>
 
                   {preCheck?.active_jobs > 0 && (
-                    <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 flex items-start gap-2">
+                    <div className="bg-red-500/100/10 border border-red-500/30 rounded-lg p-3 flex items-start gap-2">
                       <XCircle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
                       <div className="text-xs text-red-300">
                         <strong>{preCheck.active_jobs} active backup job(s)</strong> — wait for completion before offboarding.
@@ -108,14 +108,14 @@ export default function OffboardWorkflow({ tenantId, tenantName, onClose, onComp
                   )}
 
                   {blockers.filter((b: any) => b.type === 'worm_lock').map((b: any, i: number) => (
-                    <div key={i} className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 flex items-start gap-2">
+                    <div key={i} className="bg-amber-500/100/10 border border-amber-500/30 rounded-lg p-3 flex items-start gap-2">
                       <Lock className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
                       <div className="text-xs text-amber-300">{b.message} — {b.action}</div>
                     </div>
                   ))}
 
                   <button onClick={() => setStep('retention')} disabled={!canOffboard}
-                    className="w-full py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-500 disabled:opacity-40 flex items-center justify-center gap-2">
+                    className="w-full py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-500/100 disabled:opacity-40 flex items-center justify-center gap-2">
                     Review Retention Timeline <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -134,7 +134,7 @@ export default function OffboardWorkflow({ tenantId, tenantName, onClose, onComp
                           <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4 text-blue-400" />
                             <span className="text-sm font-medium text-foreground">{rt.policy_name}</span>
-                            {rt.worm_enabled && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300">WORM</span>}
+                            {rt.worm_enabled && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/100/20 text-amber-300">WORM</span>}
                           </div>
                           <span className="text-xs text-muted-foreground">{rt.objects_covered} objects</span>
                         </div>
@@ -143,7 +143,7 @@ export default function OffboardWorkflow({ tenantId, tenantName, onClose, onComp
                           <span className="text-muted-foreground font-medium">Data purge: {rt.data_purge_date}</span>
                         </div>
                         <div className="mt-2 w-full bg-secondary rounded-full h-1.5">
-                          <div className="bg-blue-500 rounded-full h-1.5" style={{ width: '100%' }} />
+                          <div className="bg-blue-500/100 rounded-full h-1.5" style={{ width: '100%' }} />
                         </div>
                         <div className="flex justify-between text-[9px] text-muted-foreground mt-1">
                           <span>Today (offboard)</span>
@@ -176,7 +176,7 @@ export default function OffboardWorkflow({ tenantId, tenantName, onClose, onComp
                   <div className="flex items-center gap-3">
                     <button onClick={() => setStep('review')} className="px-4 py-2 text-muted-foreground text-sm hover:text-foreground">Back</button>
                     <button onClick={() => setStep('confirm')}
-                      className="flex-1 py-2.5 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-500 flex items-center justify-center gap-2">
+                      className="flex-1 py-2.5 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-500/100 flex items-center justify-center gap-2">
                       Proceed to Confirmation <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
@@ -186,7 +186,7 @@ export default function OffboardWorkflow({ tenantId, tenantName, onClose, onComp
               {/* Step 3: Final confirmation */}
               {step === 'confirm' && (
                 <div className="space-y-5">
-                  <div className="bg-red-500/5 border border-red-500/30 rounded-xl p-6 text-center">
+                  <div className="bg-red-500/100/5 border border-red-500/30 rounded-xl p-6 text-center">
                     <AlertTriangle className="w-12 h-12 text-amber-400 mx-auto mb-3" />
                     <h3 className="text-lg font-bold text-foreground mb-2">Confirm Offboard</h3>
                     <p className="text-sm text-muted-foreground">
@@ -211,7 +211,7 @@ export default function OffboardWorkflow({ tenantId, tenantName, onClose, onComp
                   <div className="flex items-center gap-3">
                     <button onClick={() => setStep('retention')} className="px-4 py-2 text-muted-foreground text-sm hover:text-foreground">Back</button>
                     <button onClick={() => offboardMutation.mutate()} disabled={offboardMutation.isPending}
-                      className="flex-1 py-3 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-500 disabled:opacity-50 flex items-center justify-center gap-2">
+                      className="flex-1 py-3 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-500/100 disabled:opacity-50 flex items-center justify-center gap-2">
                       {offboardMutation.isPending ? <><Loader2 className="w-4 h-4 animate-spin" /> Offboarding...</> : <><AlertTriangle className="w-4 h-4" /> Offboard {tenantName}</>}
                     </button>
                   </div>
@@ -221,7 +221,7 @@ export default function OffboardWorkflow({ tenantId, tenantName, onClose, onComp
               {/* Step 4: Done */}
               {step === 'done' && (
                 <div className="space-y-5 text-center">
-                  <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto">
+                  <div className="w-16 h-16 rounded-full bg-green-500/100/10 flex items-center justify-center mx-auto">
                     <CheckCircle className="w-8 h-8 text-green-400" />
                   </div>
                   <div>
@@ -245,13 +245,13 @@ export default function OffboardWorkflow({ tenantId, tenantName, onClose, onComp
                   </div>
 
                   {offboardMutation.data?.retention && (
-                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-xs text-blue-300">
+                    <div className="bg-blue-500/100/10 border border-blue-500/30 rounded-lg p-3 text-xs text-blue-300">
                       Data accessible until <strong>{offboardMutation.data.retention.data_purge_date}</strong> ({offboardMutation.data.retention.max_retention_days} days)
                     </div>
                   )}
 
                   <button onClick={() => { onComplete(); onClose(); }}
-                    className="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-500">
+                    className="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-500/100">
                     Return to MSP Dashboard
                   </button>
                 </div>

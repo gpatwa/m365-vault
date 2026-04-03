@@ -63,6 +63,11 @@ class ItemType(str, enum.Enum):
     OAUTH_PERMISSION_GRANT = "oauth_permission_grant"
     DEVICE = "device"
     DOMAIN = "domain"
+    # Phase 2/3: New object types
+    MAIL_RULE = "mail_rule"                        # Exchange inbox rules
+    PIM_ELIGIBILITY = "pim_eligibility"            # PIM eligible role assignments
+    PIM_ASSIGNMENT = "pim_assignment"              # PIM active role assignments
+    CONFIG = "config"                              # Generic configuration items
     # Teams object types
     CHAT_MESSAGE = "chat_message"
     CHANNEL_MESSAGE = "channel_message"

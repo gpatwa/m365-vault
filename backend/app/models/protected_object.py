@@ -39,6 +39,7 @@ class ProtectedObject(Base):
     last_backup_status = Column(String(50), nullable=True)
     total_items_backed_up = Column(Integer, default=0)
     total_size_bytes = Column(Integer, default=0)
+    object_subtype = Column(String(50), nullable=True)  # mailbox, shared_mailbox, archive_mailbox
     metadata_json = Column(Text, nullable=True)  # Extra metadata as JSON
     criticality_score = Column(Integer, default=50)  # 0-100, from Org Context Layer
     criticality_tier = Column(String(20), default="medium")  # critical/high/medium/low

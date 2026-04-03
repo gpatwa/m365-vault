@@ -95,6 +95,10 @@ class EntraIDWorker(BaseWorker):
         await self._backup_devices(protected_object, snapshot, wrapped_dek)
         await self._backup_domains(protected_object, snapshot, wrapped_dek)
 
+        # Phase 3: PIM backup (Enterprise feature)
+        await self._backup_pim_eligibility(protected_object, snapshot, wrapped_dek)
+        await self._backup_pim_assignments(protected_object, snapshot, wrapped_dek)
+
         # Count totals
         result = await self.db.execute(
             select(func.count(SnapshotItem.id), func.sum(SnapshotItem.size_bytes))
@@ -767,6 +771,93 @@ class EntraIDWorker(BaseWorker):
         except Exception as e:
             logger.error(f"Failed to backup domains: {e}")
 
+    # ── PIM Assignment Backup (Enterprise) ──
+
+    async def _backup_pim_eligibility(
+        self, protected_object: ProtectedObject,
+        snapshot: Snapshot, wrapped_dek: str
+    ):
+        """Backup PIM eligible role assignments. Enterprise-only feature."""
+        from app.services.feature_flags import feature_flags
+        if not feature_flags.is_enabled("pim_backup"):
+            return
+
+        try:
+            eligibilities = await self.graph.get_all_pages(
+                "/roleManagement/directory/roleEligibilityScheduleInstances",
+            )
+            count = 0
+            for elig in eligibilities:
+                try:
+                    await self._store_item(
+                        obj=elig,
+                        item_type=ItemType.PIM_ELIGIBILITY,
+                        ms_item_id=elig.get("id", f"pim_elig_{count}"),
+                        name=f"PIM Eligibility: {elig.get('principalId', 'unknown')} → {elig.get('roleDefinitionId', 'unknown')}",
+                        path="PIM/Eligibility",
+                        protected_object=protected_object,
+                        snapshot=snapshot,
+                        wrapped_dek=wrapped_dek,
+                        metadata={
+                            "principalId": elig.get("principalId"),
+                            "roleDefinitionId": elig.get("roleDefinitionId"),
+                            "directoryScopeId": elig.get("directoryScopeId"),
+                            "startDateTime": elig.get("startDateTime"),
+                            "endDateTime": elig.get("endDateTime"),
+                        },
+                    )
+                    count += 1
+                except Exception as e:
+                    logger.error(f"Failed to backup PIM eligibility: {e}")
+            if count:
+                await self.db.flush()
+                logger.info(f"Backed up {count} PIM eligibility assignments")
+        except Exception as e:
+            logger.warning(f"PIM eligibility backup failed (may need RoleEligibilitySchedule.Read.Directory scope): {e}")
+
+    async def _backup_pim_assignments(
+        self, protected_object: ProtectedObject,
+        snapshot: Snapshot, wrapped_dek: str
+    ):
+        """Backup PIM active role assignments. Enterprise-only feature."""
+        from app.services.feature_flags import feature_flags
+        if not feature_flags.is_enabled("pim_backup"):
+            return
+
+        try:
+            assignments = await self.graph.get_all_pages(
+                "/roleManagement/directory/roleAssignmentScheduleInstances",
+            )
+            count = 0
+            for assgn in assignments:
+                try:
+                    await self._store_item(
+                        obj=assgn,
+                        item_type=ItemType.PIM_ASSIGNMENT,
+                        ms_item_id=assgn.get("id", f"pim_assgn_{count}"),
+                        name=f"PIM Assignment: {assgn.get('principalId', 'unknown')} → {assgn.get('roleDefinitionId', 'unknown')}",
+                        path="PIM/Assignments",
+                        protected_object=protected_object,
+                        snapshot=snapshot,
+                        wrapped_dek=wrapped_dek,
+                        metadata={
+                            "principalId": assgn.get("principalId"),
+                            "roleDefinitionId": assgn.get("roleDefinitionId"),
+                            "directoryScopeId": assgn.get("directoryScopeId"),
+                            "assignmentType": assgn.get("assignmentType"),
+                            "startDateTime": assgn.get("startDateTime"),
+                            "endDateTime": assgn.get("endDateTime"),
+                        },
+                    )
+                    count += 1
+                except Exception as e:
+                    logger.error(f"Failed to backup PIM assignment: {e}")
+            if count:
+                await self.db.flush()
+                logger.info(f"Backed up {count} PIM active assignments")
+        except Exception as e:
+            logger.warning(f"PIM assignment backup failed: {e}")
+
     # ── Restore Operations ──
 
     async def restore_items(
@@ -826,7 +917,7 @@ class EntraIDWorker(BaseWorker):
         await self.graph.post("/identity/conditionalAccess/policies", json_data=restore_body)
 
     async def _restore_group(self, obj_data: dict):
-        """Recreate a group with its members."""
+        """Recreate a group with its members. Member restore gated to Business+."""
         restore_body = {
             "displayName": f"[Restored] {obj_data.get('displayName', 'Unknown')}",
             "description": obj_data.get("description"),
@@ -835,7 +926,31 @@ class EntraIDWorker(BaseWorker):
             "securityEnabled": obj_data.get("securityEnabled", True),
             "groupTypes": obj_data.get("groupTypes", []),
         }
-        await self.graph.post("/groups", json_data=restore_body)
+        result = await self.graph.post("/groups", json_data=restore_body)
+        new_group_id = result.get("id") if isinstance(result, dict) else None
+
+        # Restore group members (Business+ feature)
+        if new_group_id:
+            from app.services.feature_flags import feature_flags
+            members = obj_data.get("_members", [])
+            if members and feature_flags.is_enabled("entra_member_restore"):
+                restored_members = 0
+                for member in members:
+                    member_id = member.get("id")
+                    if not member_id:
+                        continue
+                    try:
+                        await self.graph.post(
+                            f"/groups/{new_group_id}/members/$ref",
+                            json_data={
+                                "@odata.id": f"https://graph.microsoft.com/v1.0/directoryObjects/{member_id}"
+                            },
+                        )
+                        restored_members += 1
+                    except Exception as e:
+                        logger.warning(f"Failed to add member {member_id} to group {new_group_id}: {e}")
+                if restored_members:
+                    logger.info(f"Restored {restored_members}/{len(members)} members to group {new_group_id}")
 
     async def _restore_app(self, obj_data: dict):
         """Recreate an app registration."""

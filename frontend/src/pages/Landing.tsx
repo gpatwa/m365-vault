@@ -240,10 +240,10 @@ const COMPARE_FEATURES = [
 
 // ── Pricing tiers ──
 const PRICING = [
-  { name: 'Community', price: 'Free', period: 'forever', desc: 'Up to 25 objects', features: ['Exchange + OneDrive + SharePoint', 'Basic Smart Engine', '30-day retention', 'Community support'], cta: 'Start Free', primary: false },
-  { name: 'Professional', price: '$1.50', period: '/user/mo', desc: 'Unlimited users', features: ['All 5 workloads + Teams', 'Full Smart Engine', '90-day retention', 'SSO + email support'], cta: 'Start Trial', primary: true },
-  { name: 'Business', price: '$3.00', period: '/user/mo', desc: 'Unlimited tenants', features: ['Org Context + MVB Plans', 'Criticality scoring', '1-year retention', 'Priority support'], cta: 'Start Trial', primary: false },
-  { name: 'Enterprise', price: '$5.00', period: '/user/mo', desc: 'Unlimited everything', features: ['Agentic Recovery', 'WORM + eDiscovery', 'Cleanroom Recovery', 'Dedicated support'], cta: 'Contact Sales', primary: false },
+  { name: 'Community', price: 'Free', period: 'forever', desc: 'Up to 25 objects', features: ['Entra ID + Exchange backup', 'Basic anomaly detection', '30-day retention', 'Community support'], cta: 'Start Free', primary: false },
+  { name: 'Professional', price: '$1.50', period: '/user/mo', desc: 'Unlimited users', features: ['All 5 workloads + shared mailbox', 'Archive mailbox + mail rules', '90-day retention + SSO', 'Agent Shield + full Smart Engine'], cta: 'Start Trial', primary: true },
+  { name: 'Business', price: '$3.00', period: '/user/mo', desc: 'Unlimited tenants', features: ['PST export + snapshot diff', 'Group membership restore', 'Org Context + MVB Plans', '1-year retention + priority support'], cta: 'Start Trial', primary: false },
+  { name: 'Enterprise', price: '$5.00', period: '/user/mo', desc: 'Unlimited everything', features: ['PIM assignment backup', 'Agent Governance + WORM', 'Cleanroom + eDiscovery', 'Dedicated support'], cta: 'Contact Sales', primary: false },
 ];
 
 // ═══════════════════════════════════════════════════════

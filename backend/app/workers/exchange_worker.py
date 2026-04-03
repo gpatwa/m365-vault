@@ -67,11 +67,16 @@ class ExchangeWorker(BaseWorker):
 
         # 4. Discover attachments for emails that have them
         att_items = await self._discover_attachments(user_id, email_items)
+
         items.extend(att_items)
+
+        # 5. Discover mail rules (Professional+ feature)
+        rule_items = await self._discover_mail_rules(user_id)
+        items.extend(rule_items)
 
         logger.info(
             f"Exchange discovery: {len(email_items)} emails, {len(cal_items)} events, "
-            f"{len(contact_items)} contacts, {len(att_items)} attachments"
+            f"{len(contact_items)} contacts, {len(att_items)} attachments, {len(rule_items)} rules"
         )
 
         return items, self.serialize_delta_tokens(new_folder_tokens)
@@ -252,6 +257,62 @@ class ExchangeWorker(BaseWorker):
                 logger.error(f"Failed to discover attachments for {msg_id}: {e}")
 
         return items
+
+    # ── Mail Rules Discovery (Professional+) ──
+
+    async def _discover_mail_rules(self, user_id: str) -> list[BackupItem]:
+        """Discover inbox mail rules for a user. Feature-gated to Professional+."""
+        from app.services.feature_flags import feature_flags
+        if not feature_flags.is_enabled("mail_rules_backup"):
+            return []
+
+        items = []
+        try:
+            rules = await self.graph.get_all_pages(
+                f"/users/{user_id}/mailFolders/inbox/messageRules",
+                params={"$top": "100"},
+            )
+            for rule in rules:
+                rule_name = rule.get("displayName", f"Rule {rule.get('id', 'unknown')}")
+                items.append(BackupItem(
+                    id=f"rule_{rule['id']}",
+                    item_type="mail_rule",
+                    name=rule_name,
+                    path="MailRules",
+                    raw_data=rule,
+                    metadata={
+                        "isEnabled": rule.get("isEnabled", False),
+                        "sequence": rule.get("sequence"),
+                        "hasActions": bool(rule.get("actions")),
+                        "hasConditions": bool(rule.get("conditions")),
+                    },
+                ))
+            if rules:
+                logger.info(f"Discovered {len(rules)} mail rules for {user_id}")
+        except Exception as e:
+            logger.warning(f"Mail rules discovery failed for {user_id}: {e}")
+
+        return items
+
+    # ── Mail Rules Restore ──
+
+    async def restore_mail_rules(self, user_id: str, rules: list[dict]) -> int:
+        """Restore inbox mail rules for a user."""
+        restored = 0
+        for rule_data in rules:
+            try:
+                # Strip read-only fields
+                payload = {k: v for k, v in rule_data.items()
+                          if k not in ("id", "@odata.type", "@odata.context")}
+                payload["displayName"] = f"[Restored] {payload.get('displayName', 'Rule')}"
+                await self.graph.post(
+                    f"/users/{user_id}/mailFolders/inbox/messageRules",
+                    json=payload,
+                )
+                restored += 1
+            except Exception as e:
+                logger.error(f"Failed to restore mail rule: {e}")
+        return restored
 
     # ═══════════════════════════════════════════════════════
     # Restore Operations (not using BaseWorker framework)

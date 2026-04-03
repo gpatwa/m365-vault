@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Shield, Globe, MessageSquare, CheckCircle, XCircle, Loader2, ArrowRight, LogOut, Lock, Shrink, Hash, Star, Brain, ChevronRight } from 'lucide-react';
 import { api } from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
+import { useFeatureFlags } from '../contexts/FeatureFlagContext';
 
 const PLATFORM_ICONS: Record<string, any> = {
   microsoft365: Shield,
@@ -12,10 +13,10 @@ const PLATFORM_ICONS: Record<string, any> = {
 };
 
 const PLATFORM_COLORS: Record<string, string> = {
-  microsoft365: 'border-blue-500/30 bg-blue-500/100/10 hover:border-blue-400',
-  google: 'border-green-500/30 bg-green-500/100/10 hover:border-green-400',
+  microsoft365: 'border-blue-500/30 bg-blue-500/10 hover:border-blue-400',
+  google: 'border-green-500/30 bg-green-500/10 hover:border-green-400',
   salesforce: 'border-sky-500/30 bg-sky-500/10 hover:border-sky-400',
-  slack: 'border-purple-500/30 bg-purple-500/100/10 hover:border-purple-400',
+  slack: 'border-purple-500/30 bg-purple-500/10 hover:border-purple-400',
 };
 
 interface Platform {
@@ -120,7 +121,7 @@ export default function Onboard() {
           <div className="flex items-stretch w-full mb-3">
             {/* Node 1: M365 Tenant */}
             <div className={`w-[22%] p-3.5 rounded-xl border backdrop-blur-sm transition-all duration-1000 ease-out ${
-              preflightStep >= 1 ? 'opacity-100 scale-100 border-blue-500/40 bg-blue-500/100/10 shadow-lg shadow-blue-500/5' : 'opacity-0 scale-90 border-transparent'}`}>
+              preflightStep >= 1 ? 'opacity-100 scale-100 border-blue-500/40 bg-blue-500/10 shadow-lg shadow-blue-500/5' : 'opacity-0 scale-90 border-transparent'}`}>
               <div className="flex items-center gap-2 mb-2.5">
                 <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 21 21"><path d="M0 0h10v10H0z" fill="#f25022"/><path d="M11 0h10v10H11z" fill="#7fba00"/><path d="M0 11h10v10H0z" fill="#00a4ef"/><path d="M11 11h10v10H11z" fill="#ffb900"/></svg>
                 <span className="font-bold text-foreground text-xs">Your M365 Tenant</span>
@@ -141,7 +142,7 @@ export default function Onboard() {
 
             {/* Node 2: Admin Consent */}
             <div className={`w-[22%] p-3.5 rounded-xl border backdrop-blur-sm transition-all duration-1000 ease-out ${
-              preflightStep >= 4 ? 'opacity-100 scale-100 border-purple-500/40 bg-purple-500/100/10 shadow-lg shadow-purple-500/5' : 'opacity-0 scale-90 border-transparent'}`}>
+              preflightStep >= 4 ? 'opacity-100 scale-100 border-purple-500/40 bg-purple-500/10 shadow-lg shadow-purple-500/5' : 'opacity-0 scale-90 border-transparent'}`}>
               <div className="flex items-center gap-2 mb-2.5">
                 <span className="text-base">🔐</span>
                 <span className="font-bold text-foreground text-xs">Admin Consent</span>
@@ -162,7 +163,7 @@ export default function Onboard() {
 
             {/* Node 3: Read-Only Token */}
             <div className={`w-[22%] p-3.5 rounded-xl border backdrop-blur-sm transition-all duration-1000 ease-out ${
-              preflightStep >= 7 ? 'opacity-100 scale-100 border-green-500/40 bg-green-500/100/10 shadow-lg shadow-green-500/5' : 'opacity-0 scale-90 border-transparent'}`}>
+              preflightStep >= 7 ? 'opacity-100 scale-100 border-green-500/40 bg-green-500/10 shadow-lg shadow-green-500/5' : 'opacity-0 scale-90 border-transparent'}`}>
               <div className="flex items-center gap-2 mb-2.5">
                 <span className="text-base">📋</span>
                 <span className="font-bold text-foreground text-xs">Read-Only Token</span>
@@ -189,7 +190,7 @@ export default function Onboard() {
           <div className="flex items-stretch w-full mt-1">
             {/* Node 4: Security Layer */}
             <div className={`w-[22%] p-3.5 rounded-xl border backdrop-blur-sm transition-all duration-1000 ease-out ${
-              preflightStep >= 10 ? 'opacity-100 scale-100 border-amber-500/40 bg-amber-500/100/10 shadow-lg shadow-amber-500/5' : 'opacity-0 scale-90 border-transparent'}`}>
+              preflightStep >= 10 ? 'opacity-100 scale-100 border-amber-500/40 bg-amber-500/10 shadow-lg shadow-amber-500/5' : 'opacity-0 scale-90 border-transparent'}`}>
               <div className="flex items-center gap-2 mb-2.5">
                 <Shield className="w-4 h-4 text-amber-400" />
                 <span className="font-bold text-foreground text-xs">Security Layer</span>
@@ -210,7 +211,7 @@ export default function Onboard() {
 
             {/* Node 5: Smart Engine */}
             <div className={`w-[22%] p-3.5 rounded-xl border backdrop-blur-sm transition-all duration-1000 ease-out ${
-              preflightStep >= 13 ? 'opacity-100 scale-100 border-cyan-500/40 bg-cyan-500/100/10 shadow-lg shadow-cyan-500/5' : 'opacity-0 scale-90 border-transparent'}`}>
+              preflightStep >= 13 ? 'opacity-100 scale-100 border-cyan-500/40 bg-cyan-500/10 shadow-lg shadow-cyan-500/5' : 'opacity-0 scale-90 border-transparent'}`}>
               <div className="flex items-center gap-2 mb-2.5">
                 <Brain className="w-4 h-4 text-cyan-400" />
                 <span className="font-bold text-foreground text-xs">Smart Engine</span>
@@ -384,9 +385,9 @@ const Shimmer = () => (
 // ── Intelligence Step: Animated Org Graph + Criticality Priority ──
 
 const TIER_CONFIG: Record<string, { color: string; border: string; bg: string; icon: string; label: string }> = {
-  critical: { color: 'text-red-400', border: 'border-red-500/40', bg: 'bg-red-500/100/10', icon: '👑', label: 'Critical' },
-  high: { color: 'text-orange-400', border: 'border-orange-500/40', bg: 'bg-orange-500/100/10', icon: '⭐', label: 'High' },
-  medium: { color: 'text-blue-400', border: 'border-blue-500/30', bg: 'bg-blue-500/100/10', icon: '●', label: 'Medium' },
+  critical: { color: 'text-red-400', border: 'border-red-500/40', bg: 'bg-red-500/10', icon: '👑', label: 'Critical' },
+  high: { color: 'text-orange-400', border: 'border-orange-500/40', bg: 'bg-orange-500/10', icon: '⭐', label: 'High' },
+  medium: { color: 'text-blue-400', border: 'border-blue-500/30', bg: 'bg-blue-500/10', icon: '●', label: 'Medium' },
   low: { color: 'text-muted-foreground', border: 'border-border', bg: 'bg-muted', icon: '○', label: 'Standard' },
 };
 
@@ -421,12 +422,12 @@ function TenantConnectedStep({ tenantName, tenantId, onContinue }: { tenantName:
   }, [stage]);
 
   const securityChecks = [
-    { icon: '🔐', label: 'OAuth 2.0 Admin Consent', detail: 'Delegated via Microsoft identity platform — no passwords stored', color: 'border-blue-500/30 bg-blue-500/100/10' },
-    { icon: '📡', label: 'Microsoft Graph API Access', detail: 'Secure HTTPS connection to graph.microsoft.com established', color: 'border-purple-500/30 bg-purple-500/100/10' },
-    { icon: '👁️', label: 'Read-Only Permissions', detail: 'Only Mail.Read, Files.Read, Sites.Read, User.Read.All — no write access', color: 'border-green-500/30 bg-green-500/100/10' },
-    { icon: '🛡️', label: 'Per-Tenant Isolation', detail: 'Unique encryption key (DEK) generated for this tenant — zero cross-tenant access', color: 'border-amber-500/30 bg-amber-500/100/10' },
-    { icon: '✅', label: 'Tenant ID Validated', detail: `Tenant ${tenantId || '...'} confirmed in Microsoft Entra directory`, color: 'border-cyan-500/30 bg-cyan-500/100/10' },
-    { icon: '🔒', label: 'Encryption Key Provisioned', detail: 'AES-256-GCM data encryption key wrapped by master KEK — ready for backup', color: 'border-red-500/30 bg-red-500/100/10' },
+    { icon: '🔐', label: 'OAuth 2.0 Admin Consent', detail: 'Delegated via Microsoft identity platform — no passwords stored', color: 'border-blue-500/30 bg-blue-500/10' },
+    { icon: '📡', label: 'Microsoft Graph API Access', detail: 'Secure HTTPS connection to graph.microsoft.com established', color: 'border-purple-500/30 bg-purple-500/10' },
+    { icon: '👁️', label: 'Read-Only Permissions', detail: 'Only Mail.Read, Files.Read, Sites.Read, User.Read.All — no write access', color: 'border-green-500/30 bg-green-500/10' },
+    { icon: '🛡️', label: 'Per-Tenant Isolation', detail: 'Unique encryption key (DEK) generated for this tenant — zero cross-tenant access', color: 'border-amber-500/30 bg-amber-500/10' },
+    { icon: '✅', label: 'Tenant ID Validated', detail: `Tenant ${tenantId || '...'} confirmed in Microsoft Entra directory`, color: 'border-cyan-500/30 bg-cyan-500/10' },
+    { icon: '🔒', label: 'Encryption Key Provisioned', detail: 'AES-256-GCM data encryption key wrapped by master KEK — ready for backup', color: 'border-red-500/30 bg-red-500/10' },
   ];
 
   const allDone = stage === 'done';
@@ -442,7 +443,7 @@ function TenantConnectedStep({ tenantName, tenantId, onContinue }: { tenantName:
     return (
       <div>
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-500/100/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
           </div>
           <h2 className="text-2xl font-bold text-foreground">Connecting to Microsoft 365</h2>
@@ -453,7 +454,7 @@ function TenantConnectedStep({ tenantName, tenantId, onContinue }: { tenantName:
         <div className="bg-card border border-border rounded-xl p-5 mb-4">
           <div className="flex items-center justify-between mb-5">
             <div className="flex flex-col items-center gap-1">
-              <div className="w-10 h-10 rounded-lg bg-blue-500/100/10 border border-blue-500/20 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
                 <svg className="w-5 h-5" viewBox="0 0 21 21"><path d="M0 0h10v10H0z" fill="#f25022"/><path d="M11 0h10v10H11z" fill="#7fba00"/><path d="M0 11h10v10H0z" fill="#00a4ef"/><path d="M11 11h10v10H11z" fill="#ffb900"/></svg>
               </div>
               <span className="text-[10px] text-muted-foreground">Microsoft</span>
@@ -467,7 +468,7 @@ function TenantConnectedStep({ tenantName, tenantId, onContinue }: { tenantName:
               </div>
             </div>
             <div className="flex flex-col items-center gap-1">
-              <div className="w-10 h-10 rounded-lg bg-green-500/100/10 border border-green-500/20 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center justify-center">
                 <Shield className="w-5 h-5 text-green-400" />
               </div>
               <span className="text-[10px] text-muted-foreground">Shieldio</span>
@@ -477,8 +478,8 @@ function TenantConnectedStep({ tenantName, tenantId, onContinue }: { tenantName:
           <div className="space-y-2.5">
             {discoverySteps.map((s, i) => (
               <div key={i} className={`flex items-start gap-3 p-2.5 rounded-lg transition-all duration-500 ${
-                discoveryStep > i ? 'bg-green-500/100/5 border border-green-500/20' :
-                discoveryStep === i ? 'bg-blue-500/100/5 border border-blue-500/20' :
+                discoveryStep > i ? 'bg-green-500/5 border border-green-500/20' :
+                discoveryStep === i ? 'bg-blue-500/5 border border-blue-500/20' :
                 'opacity-30'
               }`}>
                 {discoveryStep > i ? (
@@ -506,11 +507,11 @@ function TenantConnectedStep({ tenantName, tenantId, onContinue }: { tenantName:
       {/* Header */}
       <div className="text-center mb-6">
         <div className="flex items-center justify-center gap-3 mb-4">
-          <div className="w-12 h-12 rounded-xl bg-blue-500/100/10 border border-blue-500/20 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
             <svg className="w-6 h-6" viewBox="0 0 21 21"><path d="M0 0h10v10H0z" fill="#f25022"/><path d="M11 0h10v10H11z" fill="#7fba00"/><path d="M0 11h10v10H0z" fill="#00a4ef"/><path d="M11 11h10v10H11z" fill="#ffb900"/></svg>
           </div>
           <ArrowRight className="w-5 h-5 text-muted-foreground" />
-          <div className="w-12 h-12 rounded-xl bg-green-500/100/10 border border-green-500/20 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center">
             <Shield className="w-6 h-6 text-green-400" />
           </div>
         </div>
@@ -534,7 +535,7 @@ function TenantConnectedStep({ tenantName, tenantId, onContinue }: { tenantName:
           <div className="text-xs text-muted-foreground">Microsoft 365 Business • Tenant {tenantId}</div>
         </div>
         <span className={`text-xs font-semibold px-2.5 py-1 rounded-full transition-all duration-500 ${
-          allDone ? 'bg-green-500/100/10 text-green-400 border border-green-500/20' : 'bg-blue-500/100/10 text-blue-400 border border-blue-500/20 animate-pulse'
+          allDone ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20 animate-pulse'
         }`}>
           {allDone ? '✓ Secured' : '⏳ Verifying...'}
         </span>
@@ -547,7 +548,7 @@ function TenantConnectedStep({ tenantName, tenantId, onContinue }: { tenantName:
           const active = revealed === i;
           return (
             <div key={i} className={`flex items-start gap-3 p-3 rounded-xl border transition-all duration-700 ${
-              done ? check.color : active ? 'border-blue-500/30 bg-blue-500/100/5' : 'border-border bg-card/50 opacity-40'
+              done ? check.color : active ? 'border-blue-500/30 bg-blue-500/5' : 'border-border bg-card/50 opacity-40'
             }`} style={{ transitionDelay: `${i * 100}ms` }}>
               <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
                 {done ? (
@@ -644,7 +645,7 @@ function IntelligenceStep({ tenantId, onContinue }: { tenantId?: number; onConti
     ];
     return (
       <div className="text-center py-8">
-        <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-blue-500/100/10 flex items-center justify-center">
+        <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-blue-500/10 flex items-center justify-center">
           <Brain className="w-8 h-8 text-blue-400 animate-pulse" />
         </div>
         <h2 className="text-2xl font-bold text-foreground mb-2">Analyzing Your Organization</h2>
@@ -851,7 +852,7 @@ function ProtectedVisual({ tenantName, onDashboard, onRecovery }: { tenantName: 
       {/* Animated shield with glow */}
       <div className={`relative mx-auto mb-6 transition-all duration-1000 ${phase >= 1 ? 'scale-100 opacity-100' : 'scale-50 opacity-0'}`}>
         <div className={`w-24 h-24 mx-auto rounded-full flex items-center justify-center transition-all duration-1000 ${
-          phase >= 2 ? 'bg-teal-500/100/20 shadow-[0_0_40px_rgba(20,184,166,0.3)]' : 'bg-muted'
+          phase >= 2 ? 'bg-teal-500/20 shadow-[0_0_40px_rgba(20,184,166,0.3)]' : 'bg-muted'
         }`}>
           <Shield className={`w-12 h-12 transition-all duration-700 ${phase >= 2 ? 'text-teal-400' : 'text-muted-foreground'}`} />
         </div>
@@ -862,7 +863,7 @@ function ProtectedVisual({ tenantName, onDashboard, onRecovery }: { tenantName: 
 
       {/* Tenant name badge */}
       <div className={`transition-all duration-700 ${phase >= 3 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-teal-500/100/10 border border-teal-500/30 rounded-full mb-4">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-teal-500/10 border border-teal-500/30 rounded-full mb-4">
           <div className="w-2 h-2 rounded-full bg-teal-500/100 animate-pulse" />
           <span className="text-sm font-medium text-teal-400">{tenantName}</span>
           <CheckCircle className="w-4 h-4 text-teal-500" />
@@ -915,6 +916,8 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
   activeWorkloads?: Set<string>;
 }) {
   const navigate = useNavigate();
+  const { isEnabled } = useFeatureFlags();
+  const openclawEnabled = isEnabled('openclaw_attack_demo');
   const [loading, setLoading] = useState(true);
   const [sceneLoading, setSceneLoading] = useState(false);
 
@@ -931,7 +934,8 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
 
   // Interactive state per scene
   const [engaged, setEngaged] = useState<Record<number, boolean>>({});
-  const [scenarioPhase, setScenarioPhase] = useState<'idle' | 'encrypting' | 'mfa_disabled' | 'rogue_admin' | 'detected' | 'recoverable'>('idle');
+  const [attackType, setAttackType] = useState<'none' | 'ransomware' | 'openclaw'>('none');
+  const [scenarioPhase, setScenarioPhase] = useState<'idle' | 'encrypting' | 'mfa_disabled' | 'rogue_admin' | 'detected' | 'recoverable' | 'agent_connected' | 'oauth_hijack' | 'data_exfil' | 'agent_detected' | 'agent_recovered'>('idle');
   const [scoreRevealed, setScoreRevealed] = useState(false);
   const [recoveryPlan, setRecoveryPlan] = useState<any>(null);
   const [planVisible, setPlanVisible] = useState(0);
@@ -1032,11 +1036,22 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
 
   // Scene 3: enhanced cyber attack scenario
   const runCyberScenario = () => {
+    setAttackType('ransomware');
     setScenarioPhase('encrypting');
     setTimeout(() => setScenarioPhase('mfa_disabled'), 1500);
     setTimeout(() => setScenarioPhase('rogue_admin'), 2500);
     setTimeout(() => setScenarioPhase('detected'), 4000);
     setTimeout(() => { setScenarioPhase('recoverable'); markEngaged(3); }, 5500);
+  };
+
+  // Scene 3: OpenClaw AI agent attack scenario
+  const runOpenClawScenario = () => {
+    setAttackType('openclaw');
+    setScenarioPhase('agent_connected');
+    setTimeout(() => setScenarioPhase('oauth_hijack'), 1500);
+    setTimeout(() => setScenarioPhase('data_exfil'), 3000);
+    setTimeout(() => setScenarioPhase('agent_detected'), 4500);
+    setTimeout(() => { setScenarioPhase('agent_recovered'); markEngaged(3); }, 6000);
   };
 
   // Scene 5: execute recovery (non-dry-run)
@@ -1094,7 +1109,7 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
             {mailboxes.map((mb: any) => (
               <div key={mb.id} className="flex items-center justify-between px-2 py-1.5 rounded-lg bg-muted/50 text-sm">
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="w-7 h-7 rounded-full bg-teal-500/100/20 text-teal-400 flex items-center justify-center text-xs font-bold shrink-0">
+                  <span className="w-7 h-7 rounded-full bg-teal-500/20 text-teal-400 flex items-center justify-center text-xs font-bold shrink-0">
                     {(mb.display_name || mb.email || '?')[0].toUpperCase()}
                   </span>
                   <div className="min-w-0">
@@ -1133,7 +1148,7 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
   // Scene 1: Backup at a Glance (was Scene 0)
   const renderScene0 = () => loading ? <Shimmer /> : (
     <div className="space-y-3">
-      <div className="bg-green-500/100/10 border border-green-500/30 rounded-xl p-4">
+      <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {Object.entries(workloads).map(([k, v]: [string, any], i) => (
             <div key={k} className="text-center transition-all duration-700" style={{ opacity: countUpActive ? 1 : 0, transitionDelay: `${i * 150}ms` }}>
@@ -1220,8 +1235,11 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
     ? entra.counts
     : { users: 15, groups: 8, roles: 3, conditional_access_policies: 5, oauth_grants: 12 };
 
-  // Scene 3: Enhanced Cyber Attack Scenario
+  // Scene 3: Enhanced Cyber Attack Scenario — dual selector
   const affectedMailboxes = mailboxes.slice(0, 3);
+  const isRansomwarePhase = ['encrypting', 'mfa_disabled', 'rogue_admin', 'detected', 'recoverable'].includes(scenarioPhase);
+  const isOpenClawPhase = ['agent_connected', 'oauth_hijack', 'data_exfil', 'agent_detected', 'agent_recovered'].includes(scenarioPhase);
+
   const renderAttackScene = () => loading ? <Shimmer /> : (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
@@ -1231,16 +1249,27 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
           <div className="space-y-1">
             {mailboxes.slice(0, 5).map((mb: any, i: number) => {
               const isAffected = i < 3;
-              const encrypted = isAffected && ['encrypting', 'mfa_disabled', 'rogue_admin', 'detected', 'recoverable'].includes(scenarioPhase);
-              const recovered = isAffected && scenarioPhase === 'recoverable';
+              // Ransomware badges
+              const encrypted = isAffected && isRansomwarePhase;
+              const ransomRecovered = isAffected && scenarioPhase === 'recoverable';
+              // OpenClaw badges
+              const accessed = isAffected && ['oauth_hijack'].includes(scenarioPhase);
+              const exfiltrated = isAffected && ['data_exfil', 'agent_detected'].includes(scenarioPhase);
+              const agentRecovered = isAffected && scenarioPhase === 'agent_recovered';
+              const anyRecovered = ransomRecovered || agentRecovered;
+              const anyDanger = (encrypted && !ransomRecovered) || exfiltrated;
+              const anyWarning = accessed && !exfiltrated && !agentRecovered;
               return (
                 <div key={mb.id} className={`flex items-center gap-2 px-2 py-1.5 rounded text-xs transition-all duration-500 ${
-                  recovered ? 'bg-green-500/100/15 ring-1 ring-green-500/40' :
-                  encrypted ? 'bg-red-500/100/15 ring-1 ring-red-500/40' : 'bg-muted/50'
+                  anyRecovered ? 'bg-green-500/15 ring-1 ring-green-500/40' :
+                  anyDanger ? 'bg-red-500/15 ring-1 ring-red-500/40' :
+                  anyWarning ? 'bg-amber-500/15 ring-1 ring-amber-500/40' : 'bg-muted/50'
                 }`}>
                   <span className="truncate flex-1 text-foreground">{mb.display_name || mb.email}</span>
-                  {encrypted && !recovered && <span className="text-[9px] px-1 py-0.5 bg-red-500/100/30 text-red-400 rounded font-bold shrink-0">ENCRYPTED</span>}
-                  {recovered && <span className="text-[9px] px-1 py-0.5 bg-green-500/100/30 text-green-400 rounded font-bold shrink-0">RESTORED</span>}
+                  {encrypted && !ransomRecovered && <span className="text-[9px] px-1 py-0.5 bg-red-500/30 text-red-400 rounded font-bold shrink-0">ENCRYPTED</span>}
+                  {anyRecovered && <span className="text-[9px] px-1 py-0.5 bg-green-500/30 text-green-400 rounded font-bold shrink-0">RESTORED</span>}
+                  {exfiltrated && <span className="text-[9px] px-1 py-0.5 bg-red-500/30 text-red-400 rounded font-bold shrink-0">EXFILTRATED</span>}
+                  {anyWarning && <span className="text-[9px] px-1 py-0.5 bg-amber-500/30 text-amber-400 rounded font-bold shrink-0">ACCESSED</span>}
                 </div>
               );
             })}
@@ -1257,21 +1286,41 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
               const recovered = isMFA && scenarioPhase === 'recoverable';
               return (
                 <div key={type} className={`flex items-center justify-between px-2 py-1 rounded text-xs transition-all duration-500 ${
-                  recovered ? 'bg-green-500/100/15 ring-1 ring-green-500/40' :
-                  mfaDisabled ? 'bg-red-500/100/15 ring-1 ring-red-500/40' : 'bg-muted/50'
+                  recovered ? 'bg-green-500/15 ring-1 ring-green-500/40' :
+                  mfaDisabled ? 'bg-red-500/15 ring-1 ring-red-500/40' : 'bg-muted/50'
                 }`}>
                   <span className={`text-foreground ${mfaDisabled && !recovered ? 'line-through text-red-400' : ''}`}>{meta.label || type}</span>
                   <span className="font-semibold text-foreground">{count}</span>
                 </div>
               );
             })}
+            {/* Ransomware: Rogue Global Admin */}
             {['rogue_admin', 'detected', 'recoverable'].includes(scenarioPhase) && (
               <div className={`flex items-center justify-between px-2 py-1 rounded text-xs transition-all duration-300 ${
-                scenarioPhase === 'recoverable' ? 'bg-green-500/100/15 ring-1 ring-green-500/40' : 'bg-red-500/100/20 ring-1 ring-red-500/50'
+                scenarioPhase === 'recoverable' ? 'bg-green-500/15 ring-1 ring-green-500/40' : 'bg-red-500/20 ring-1 ring-red-500/50'
               }`}>
                 <span className="text-red-400 font-medium">Rogue Global Admin</span>
-                <span className={`text-[9px] px-1 py-0.5 rounded font-bold ${scenarioPhase === 'recoverable' ? 'bg-green-500/100/30 text-green-400' : 'bg-red-500/100/30 text-red-400'}`}>
+                <span className={`text-[9px] px-1 py-0.5 rounded font-bold ${scenarioPhase === 'recoverable' ? 'bg-green-500/30 text-green-400' : 'bg-red-500/30 text-red-400'}`}>
                   {scenarioPhase === 'recoverable' ? 'REVERTED' : 'INJECTED'}
+                </span>
+              </div>
+            )}
+            {/* OpenClaw: Agent ServicePrincipal */}
+            {isOpenClawPhase && (
+              <div className={`flex items-center justify-between px-2 py-1 rounded text-xs transition-all duration-300 ${
+                scenarioPhase === 'agent_recovered' ? 'bg-green-500/15 ring-1 ring-green-500/40' :
+                ['data_exfil', 'agent_detected'].includes(scenarioPhase) ? 'bg-red-500/20 ring-1 ring-red-500/50' :
+                'bg-violet-500/15 ring-1 ring-violet-500/40'
+              }`}>
+                <span className="text-violet-400 font-medium flex items-center gap-1">🤖 OpenClaw Agent</span>
+                <span className={`text-[9px] px-1 py-0.5 rounded font-bold ${
+                  scenarioPhase === 'agent_recovered' ? 'bg-green-500/30 text-green-400' :
+                  ['data_exfil', 'agent_detected'].includes(scenarioPhase) ? 'bg-red-500/30 text-red-400' :
+                  'bg-violet-500/30 text-violet-400'
+                }`}>
+                  {scenarioPhase === 'agent_recovered' ? 'REVOKED' :
+                   ['data_exfil', 'agent_detected'].includes(scenarioPhase) ? 'EXFILTRATING' :
+                   scenarioPhase === 'oauth_hijack' ? 'ACCESSING' : 'CONNECTED'}
                 </span>
               </div>
             )}
@@ -1279,36 +1328,81 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
         </div>
       </div>
 
-      {/* Alert banner */}
-      {['detected', 'recoverable'].includes(scenarioPhase) && (
-        <div className={`rounded-xl p-3 border transition-all duration-500 ${
-          scenarioPhase === 'recoverable' ? 'bg-green-500/100/10 border-green-500/30' : 'bg-amber-500/100/10 border-amber-500/30 animate-pulse'
-        }`}>
-          <p className={`text-sm font-medium ${scenarioPhase === 'recoverable' ? 'text-green-400' : 'text-amber-400'}`}>
-            {scenarioPhase === 'recoverable'
-              ? `✓ All ${affectedMailboxes.length} mailboxes + identity controls recoverable from latest snapshot`
-              : `⚠ Shieldio Alert: ${affectedMailboxes.length} mailboxes encrypted, MFA policy disabled, rogue admin detected`}
-          </p>
+      {/* Alert banners are now per-phase below the visualization */}
+
+      {/* Attack type selector — show when idle */}
+      {attackType === 'none' && scenarioPhase === 'idle' && (
+        <div className={`grid grid-cols-1 ${openclawEnabled ? 'sm:grid-cols-2' : ''} gap-3`}>
+          <button onClick={runCyberScenario}
+            className="text-left p-4 rounded-xl border-2 border-red-500/30 bg-red-500/5 hover:bg-red-500/10 hover:border-red-500/50 transition-all">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xl">🔒</span>
+              <span className="font-semibold text-foreground text-sm">Ransomware Attack</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground">3 mailboxes encrypted, MFA disabled, rogue admin injected</p>
+          </button>
+          {openclawEnabled && (
+            <button onClick={runOpenClawScenario}
+              className="text-left p-4 rounded-xl border-2 border-violet-500/30 bg-violet-500/5 hover:bg-violet-500/10 hover:border-violet-500/50 transition-all">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xl">🤖</span>
+                <span className="font-semibold text-foreground text-sm">AI Agent Attack</span>
+                <span className="text-[9px] px-1.5 py-0.5 bg-violet-500/20 text-violet-400 rounded font-bold">NEW</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground">OpenClaw agent hijacks M365 via OAuth — emails + identity exfiltrated</p>
+            </button>
+          )}
         </div>
       )}
 
-      {/* Action button */}
-      {scenarioPhase === 'idle' && (
-        <button onClick={runCyberScenario}
-          className="w-full py-2.5 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors flex items-center justify-center gap-2 text-sm">
-          Simulate Ransomware Attack
-        </button>
-      )}
-      {['encrypting', 'mfa_disabled', 'rogue_admin'].includes(scenarioPhase) && (
-        <div className="bg-red-500/100/10 border border-red-500/30 rounded-xl p-3 animate-pulse">
+      {/* Ransomware progress banners */}
+      {isRansomwarePhase && ['encrypting', 'mfa_disabled', 'rogue_admin'].includes(scenarioPhase) && (
+        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 animate-pulse">
           <p className="text-sm text-red-400 font-medium">
             {scenarioPhase === 'encrypting' ? `Encrypting ${affectedMailboxes.map(m => m.display_name).join(', ')}...` :
-             scenarioPhase === 'mfa_disabled' ? 'Disabling MFA policies...' :
-             'Injecting rogue Global Admin...'}
+             scenarioPhase === 'mfa_disabled' ? 'Disabling MFA policies...' : 'Injecting rogue Global Admin...'}
           </p>
         </div>
       )}
-      <GapRow m365="No Entra ID backup. No undo for disabled MFA or rogue admin grants."
+      {scenarioPhase === 'detected' && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 animate-pulse">
+          <p className="text-sm text-amber-400 font-medium">⚠ Shieldio Alert: {affectedMailboxes.length} mailboxes encrypted, MFA disabled, rogue admin detected</p>
+        </div>
+      )}
+      {scenarioPhase === 'recoverable' && (
+        <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-3">
+          <p className="text-sm text-green-400 font-medium">✓ All {affectedMailboxes.length} mailboxes + identity controls recoverable from latest snapshot</p>
+        </div>
+      )}
+
+      {/* OpenClaw progress banners */}
+      {scenarioPhase === 'agent_connected' && (
+        <div className="bg-violet-500/10 border border-violet-500/30 rounded-xl p-3 animate-pulse">
+          <p className="text-sm text-violet-400 font-medium">🤖 OpenClaw agent connected to M365 via OAuth token...</p>
+        </div>
+      )}
+      {scenarioPhase === 'oauth_hijack' && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 animate-pulse">
+          <p className="text-sm text-amber-400 font-medium">Agent accessing Exchange mailboxes via Graph API...</p>
+        </div>
+      )}
+      {scenarioPhase === 'data_exfil' && (
+        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 animate-pulse">
+          <p className="text-sm text-red-400 font-medium">Agent exfiltrating emails + capturing OAuth tokens...</p>
+        </div>
+      )}
+      {scenarioPhase === 'agent_detected' && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 animate-pulse">
+          <p className="text-sm text-amber-400 font-medium">⚠ Shieldio Smart Engine: Anomalous Graph API access from unmanaged AI agent</p>
+        </div>
+      )}
+      {scenarioPhase === 'agent_recovered' && (
+        <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-3">
+          <p className="text-sm text-green-400 font-medium">✓ Agent revoked, OAuth tokens rotated, {affectedMailboxes.length} mailboxes restored from immutable snapshots</p>
+        </div>
+      )}
+
+      <GapRow m365="No Entra ID backup. No undo for rogue agents, disabled MFA, or stolen OAuth tokens."
         shieldio="Full identity + email backup with instant revert from immutable snapshots" />
     </div>
   );
@@ -1359,7 +1453,7 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
           </div>
         </div>
         {conf.recommendations?.length > 0 && scoreRevealed && (
-          <div className="mt-3 px-3 py-2 bg-amber-500/100/10 border border-amber-500/30 rounded-lg animate-pulse">
+          <div className="mt-3 px-3 py-2 bg-amber-500/10 border border-amber-500/30 rounded-lg animate-pulse">
             <p className="text-xs text-amber-400"><span className="font-semibold">Recommendation:</span> {conf.recommendations[0].action}</p>
           </div>
         )}
@@ -1420,7 +1514,7 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
                       <span className="text-muted-foreground ml-auto shrink-0">
                         {item.item_count} items{item.size_bytes ? ` · ${fmtBytes(item.size_bytes)}` : ''}
                       </span>
-                      {item.criticality_tier === 'critical' && <span className="text-[9px] px-1 py-0.5 bg-red-500/100/20 text-red-400 rounded font-bold">VIP</span>}
+                      {item.criticality_tier === 'critical' && <span className="text-[9px] px-1 py-0.5 bg-red-500/20 text-red-400 rounded font-bold">VIP</span>}
                     </div>
                   ))}
                 </div>
@@ -1440,13 +1534,13 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
                   </button>
                 )}
                 {executionStatus === 'executing' && (
-                  <div className="bg-teal-500/100/10 border border-teal-500/30 rounded-xl p-3 flex items-center gap-2">
+                  <div className="bg-teal-500/10 border border-teal-500/30 rounded-xl p-3 flex items-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin text-teal-500" />
                     <p className="text-sm text-teal-400 font-medium">Restoring from latest snapshots...</p>
                   </div>
                 )}
                 {executionStatus === 'complete' && (
-                  <div className="bg-green-500/100/10 border border-green-500/30 rounded-xl p-3">
+                  <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-3">
                     <p className="text-sm text-green-400 font-semibold">
                       ✓ Recovery Complete — {executionResult?.jobs_created || executionResult?.objects_restored || recoveryPlan.plan.length} objects restored
                     </p>
@@ -1454,7 +1548,7 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
                   </div>
                 )}
                 {executionStatus === 'error' && (
-                  <div className="bg-red-500/100/10 border border-red-500/30 rounded-xl p-3">
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3">
                     <p className="text-sm text-red-400">Recovery failed. Try from the Recovery Dashboard.</p>
                   </div>
                 )}
@@ -1462,7 +1556,7 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
             )}
           </div>
         ) : (
-          <div className="bg-teal-500/100/10 border border-teal-500/30 rounded-xl p-4 text-center">
+          <div className="bg-teal-500/10 border border-teal-500/30 rounded-xl p-4 text-center">
             <p className="text-sm text-teal-400 font-medium">Analyzing backup data...</p>
           </div>
         )}
@@ -1476,7 +1570,7 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
     { key: 'browse_tenant', title: 'Browse Your Tenant', subtitle: `${tenantName} — your Exchange mailboxes and Entra ID directory.`, problem: null as string | null, explore: { label: 'Open Exchange', route: '/exchange' }, render: renderBrowseTenant },
     { key: 'overview', title: 'Your Backup at a Glance', subtitle: `${tenantName} — here's what Shieldio captured.`, problem: null as string | null, explore: { label: 'Explore backups', route: '/exchange' }, render: renderScene0 },
     { key: 'browse_backup', title: 'Browse Your Backup', subtitle: 'See what Shieldio captured — emails, identity objects, configs.', problem: null as string | null, explore: { label: 'Open Entra ID', route: '/entra-id' }, render: renderBrowseBackup },
-    { key: 'attack', title: 'Cyber Attack Scenario', subtitle: 'Watch a ransomware attack hit your real data — then recover instantly.', problem: 'If attackers encrypt your email and disable MFA, can you recover?', explore: { label: 'Open Entra ID', route: '/entra-id' }, render: renderAttackScene },
+    { key: 'attack', title: 'Cyber Attack Scenario', subtitle: 'Watch a real attack hit your data — then recover instantly.', problem: 'If attackers or rogue AI agents compromise your email and identity, can you recover?', explore: { label: 'Open Entra ID', route: '/entra-id' }, render: renderAttackScene },
     { key: 'confidence', title: 'Prove You Can Recover', subtitle: 'Know if you can actually recover — before you need to.', problem: null as string | null, explore: { label: 'Open Recovery Dashboard', route: '/recovery' }, render: renderScene2 },
     { key: 'mass_recovery', title: 'One-Click Recovery', subtitle: 'NIST-ordered recovery — identity first, then communications.', problem: 'Without Shieldio, recovery means restoring each identity config and mailbox one by one. Days to weeks.', explore: { label: 'Open Recovery Dashboard', route: '/recovery' }, render: renderScene3 },
   ];
@@ -1512,7 +1606,7 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
         </div>
 
         {scene.problem && (
-          <div className="px-5 py-3 bg-red-500/100/10 border-b border-red-100">
+          <div className="px-5 py-3 bg-red-500/10 border-b border-red-100">
             <p className="text-sm text-red-400">{scene.problem}</p>
           </div>
         )}
@@ -1542,7 +1636,7 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
               {scene.explore.label} →
             </button>
           </div>
-          {!canAdvance && simScene === 3 && <p className="text-xs text-red-400 mt-2 animate-pulse font-medium">👆 Click "Simulate Ransomware Attack" above to continue</p>}
+          {!canAdvance && simScene === 3 && <p className="text-xs text-red-400 mt-2 animate-pulse font-medium">👆 Choose an attack scenario above to continue</p>}
           {!canAdvance && simScene === 5 && <p className="text-xs text-teal-400 mt-2 animate-pulse font-medium">👆 Click "Generate Recovery Plan" above to continue</p>}
         </div>
       </div>
@@ -1865,14 +1959,14 @@ export function OnboardCallback() {
           {WIZARD_STEPS.map((s, i) => (
             <div key={s.key} className="flex items-center gap-1.5">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                i < step ? 'bg-green-500/100/100 text-foreground' :
+                i < step ? 'bg-green-500/100 text-foreground' :
                 i === step ? 'bg-blue-600 text-white ring-4 ring-blue-100' :
                 'bg-muted text-muted-foreground'
               }`}>
                 {i < step ? <CheckCircle className="w-4 h-4" /> : i + 1}
               </div>
               <span className={`text-xs font-medium hidden sm:block ${i <= step ? 'text-foreground' : 'text-muted-foreground'}`}>{s.label}</span>
-              {i < WIZARD_STEPS.length - 1 && <div className={`w-8 sm:w-16 h-0.5 mx-1 ${i < step ? 'bg-green-500/100/100' : 'bg-muted'}`} />}
+              {i < WIZARD_STEPS.length - 1 && <div className={`w-8 sm:w-16 h-0.5 mx-1 ${i < step ? 'bg-green-500/100' : 'bg-muted'}`} />}
             </div>
           ))}
         </div>
@@ -1924,7 +2018,7 @@ export function OnboardCallback() {
                     disabled={discovering}
                     className={`w-full p-3 rounded-xl border-2 text-left transition-all flex items-center gap-3 ${
                       isSelected
-                        ? 'border-teal-400 bg-teal-500/100/10'
+                        ? 'border-teal-400 bg-teal-500/10'
                         : 'border-border hover:border-border'
                     }`}
                   >
@@ -2030,7 +2124,7 @@ export function OnboardCallback() {
                 onClick={() => setSelectedSla(sla.id)}
                 className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
                   selectedSla === sla.id
-                    ? 'border-blue-500 bg-blue-500/100/10 ring-2 ring-blue-200'
+                    ? 'border-blue-500 bg-blue-500/10 ring-2 ring-blue-200'
                     : 'border-border hover:border-border'
                 }`}
               >
@@ -2043,7 +2137,7 @@ export function OnboardCallback() {
                     </div>
                   </div>
                   <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                    selectedSla === sla.id ? 'border-blue-500 bg-blue-500/100/100' : 'border-border'
+                    selectedSla === sla.id ? 'border-blue-500 bg-blue-500/100' : 'border-border'
                   }`}>
                     {selectedSla === sla.id && <CheckCircle className="w-4 h-4 text-foreground" />}
                   </div>
@@ -2090,15 +2184,15 @@ export function OnboardCallback() {
           <div className="bg-card border border-border rounded-xl p-3 mb-4">
             <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Backup Priority Order</div>
             <div className="flex items-center gap-2 text-xs">
-              <span className="flex items-center gap-1 px-2 py-1 bg-red-500/100/10 border border-red-500/20 rounded-lg text-red-400 font-medium">
+              <span className="flex items-center gap-1 px-2 py-1 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 font-medium">
                 {backupStatus === 'running' ? '🔄' : backupStatus === 'complete' ? '✅' : '1️⃣'} Identity + CEO
               </span>
               <ArrowRight className="w-3 h-3 text-muted-foreground" />
-              <span className="flex items-center gap-1 px-2 py-1 bg-orange-500/100/10 border border-orange-500/20 rounded-lg text-orange-400 font-medium">
+              <span className="flex items-center gap-1 px-2 py-1 bg-orange-500/10 border border-orange-500/20 rounded-lg text-orange-400 font-medium">
                 {backupStatus === 'complete' ? '✅' : '2️⃣'} VPs
               </span>
               <ArrowRight className="w-3 h-3 text-muted-foreground" />
-              <span className="flex items-center gap-1 px-2 py-1 bg-blue-500/100/10 border border-blue-500/20 rounded-lg text-blue-400 font-medium">
+              <span className="flex items-center gap-1 px-2 py-1 bg-blue-500/10 border border-blue-500/20 rounded-lg text-blue-400 font-medium">
                 {backupStatus === 'complete' ? '✅' : '3️⃣'} Directors
               </span>
               <ArrowRight className="w-3 h-3 text-muted-foreground" />
@@ -2147,11 +2241,11 @@ export function OnboardCallback() {
                 <div className="text-xs font-medium text-muted-foreground mb-3">Backup Pipeline — what happens to each object:</div>
                 <div className="flex items-center justify-between gap-1">
                   {[
-                    { icon: <Globe className="w-4 h-4" />, label: 'Read', color: 'bg-blue-500/100/20 text-blue-400', desc: 'Graph API' },
-                    { icon: <Shrink className="w-4 h-4" />, label: 'Compress', color: 'bg-purple-500/100/20 text-purple-400', desc: '-60% size' },
-                    { icon: <Hash className="w-4 h-4" />, label: 'Hash', color: 'bg-cyan-500/100/20 text-cyan-400', desc: 'SHA-256' },
-                    { icon: <Lock className="w-4 h-4" />, label: 'Encrypt', color: 'bg-green-500/100/20 text-green-400', desc: 'AES-256' },
-                    { icon: <Shield className="w-4 h-4" />, label: 'Store', color: 'bg-amber-500/100/20 text-amber-400', desc: 'Immutable' },
+                    { icon: <Globe className="w-4 h-4" />, label: 'Read', color: 'bg-blue-500/20 text-blue-400', desc: 'Graph API' },
+                    { icon: <Shrink className="w-4 h-4" />, label: 'Compress', color: 'bg-purple-500/20 text-purple-400', desc: '-60% size' },
+                    { icon: <Hash className="w-4 h-4" />, label: 'Hash', color: 'bg-cyan-500/20 text-cyan-400', desc: 'SHA-256' },
+                    { icon: <Lock className="w-4 h-4" />, label: 'Encrypt', color: 'bg-green-500/20 text-green-400', desc: 'AES-256' },
+                    { icon: <Shield className="w-4 h-4" />, label: 'Store', color: 'bg-amber-500/20 text-amber-400', desc: 'Immutable' },
                   ].map((stage, i) => (
                     <div key={stage.label} className="flex items-center gap-1">
                       <div className={`flex flex-col items-center gap-1 ${stage.color} rounded-lg p-2 min-w-[52px]`}>
@@ -2180,7 +2274,7 @@ export function OnboardCallback() {
           {backupStatus === 'running' && (
             <div className="space-y-3">
               {/* Overall progress */}
-              <div className="bg-blue-500/100/10 border border-blue-500/30 rounded-xl p-3">
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
                   <span className="text-sm font-medium text-blue-300">Protecting {totalObjects} objects...</span>
@@ -2197,9 +2291,9 @@ export function OnboardCallback() {
                 const pipelineStage = status === 'running' ? ['Reading', 'Compressing', 'Hashing', 'Encrypting', 'Storing'][Math.floor(Math.random() * 3)] : '';
                 return (
                   <div key={wl} className={`rounded-xl border transition-all overflow-hidden ${
-                    status === 'running' ? 'border-blue-500/50 bg-blue-500/100/5' :
-                    status === 'done' ? 'border-green-500/30 bg-green-500/100/5' :
-                    status === 'failed' ? 'border-red-500/30 bg-red-500/100/5' : 'border-border bg-card/30'
+                    status === 'running' ? 'border-blue-500/50 bg-blue-500/5' :
+                    status === 'done' ? 'border-green-500/30 bg-green-500/5' :
+                    status === 'failed' ? 'border-red-500/30 bg-red-500/5' : 'border-border bg-card/30'
                   }`}>
                     <div className="flex items-center gap-3 p-3">
                       {status === 'pending' && <div className="w-6 h-6 rounded-full border-2 border-border flex items-center justify-center text-[9px] text-muted-foreground">—</div>}
@@ -2226,10 +2320,10 @@ export function OnboardCallback() {
                     {status === 'running' && (
                       <div className="flex h-1">
                         <div className="flex-1 bg-blue-500/100 animate-pulse" />
-                        <div className="flex-1 bg-purple-500/100/50" />
-                        <div className="flex-1 bg-cyan-500/100/30" />
-                        <div className="flex-1 bg-green-500/100/20" />
-                        <div className="flex-1 bg-amber-500/100/10" />
+                        <div className="flex-1 bg-purple-500/50" />
+                        <div className="flex-1 bg-cyan-500/30" />
+                        <div className="flex-1 bg-green-500/20" />
+                        <div className="flex-1 bg-amber-500/10" />
                       </div>
                     )}
                     {status === 'done' && <div className="h-1 bg-green-500/100" />}
@@ -2243,8 +2337,8 @@ export function OnboardCallback() {
           {backupStatus === 'complete' && (
             <div className="space-y-4">
               {/* Success header */}
-              <div className="bg-green-500/100/10 border border-green-500/30 rounded-xl p-5 text-center">
-                <div className="w-14 h-14 rounded-full bg-green-500/100/20 flex items-center justify-center mx-auto mb-3">
+              <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-5 text-center">
+                <div className="w-14 h-14 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-3">
                   <Shield className="w-7 h-7 text-green-400" />
                 </div>
                 <div className="text-xl font-bold text-foreground">{totalObjects} Objects Protected</div>
@@ -2267,7 +2361,7 @@ export function OnboardCallback() {
                   {Object.entries(backupProgress).filter(([, s]) => s === 'done').map(([wl]) => {
                     const count = wl === 'exchange' ? disc?.mailboxes : wl === 'onedrive' ? disc?.onedrives : wl === 'sharepoint' ? disc?.sites : wl === 'teams' ? disc?.teams : 1;
                     return (
-                      <div key={wl} className="flex items-center gap-3 p-2 rounded-lg bg-green-500/100/5 border border-green-500/20">
+                      <div key={wl} className="flex items-center gap-3 p-2 rounded-lg bg-green-500/5 border border-green-500/20">
                         <Shield className="w-4 h-4 text-green-400 shrink-0" />
                         <div className="flex-1">
                           <span className="text-sm font-medium text-foreground capitalize">{wl.replace('_', ' ')}</span>
@@ -2281,7 +2375,7 @@ export function OnboardCallback() {
               </div>
 
               {/* What comes next — intelligence preview */}
-              <div className="bg-blue-500/100/5 border border-blue-500/20 rounded-xl p-4">
+              <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Star className="w-4 h-4 text-blue-400" />
                   <span className="text-sm font-semibold text-foreground">What happens next</span>

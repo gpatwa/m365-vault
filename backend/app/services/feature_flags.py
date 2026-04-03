@@ -40,7 +40,7 @@ TIER_FEATURES = {
     },
     "professional": {
         "workloads": ["exchange", "onedrive", "sharepoint", "teams", "entra_id"],
-        "intelligence": ["anomaly_detection", "health_scoring", "sensitive_data_scanner"],
+        "intelligence": ["anomaly_detection", "health_scoring", "sensitive_data_scanner", "openclaw_attack_demo"],
         "recovery": ["mass_recovery", "test_restore"],
         "compliance": [],
         "operations": [],
@@ -55,7 +55,7 @@ TIER_FEATURES = {
     "business": {
         "workloads": ["exchange", "onedrive", "sharepoint", "teams", "entra_id"],
         "intelligence": ["anomaly_detection", "health_scoring", "sensitive_data_scanner",
-                         "org_context", "mvb_plans", "criticality_scoring"],
+                         "org_context", "mvb_plans", "criticality_scoring", "openclaw_attack_demo"],
         "recovery": ["mass_recovery", "test_restore"],
         "compliance": ["worm", "legal_hold"],
         "operations": ["msp_dashboard", "msp_billing"],
@@ -70,7 +70,7 @@ TIER_FEATURES = {
     "enterprise": {
         "workloads": ["exchange", "onedrive", "sharepoint", "teams", "entra_id", "power_platform"],
         "intelligence": ["anomaly_detection", "health_scoring", "sensitive_data_scanner",
-                         "org_context", "mvb_plans", "criticality_scoring"],
+                         "org_context", "mvb_plans", "criticality_scoring", "openclaw_attack_demo"],
         "recovery": ["mass_recovery", "test_restore", "agentic_recovery", "cleanroom"],
         "compliance": ["worm", "legal_hold", "ediscovery"],
         "operations": ["msp_dashboard", "msp_billing", "msp_branding", "msp_bulk_onboard", "msp_demo"],

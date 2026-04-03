@@ -132,9 +132,9 @@ export default function MSPDemo() {
             {tenants.slice(0, 5).map((t: any) => (
               <div key={t.id} className="flex items-center gap-4 bg-card rounded-xl p-3 border border-border">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2 ${
-                  t.health_score >= 90 ? 'text-green-400 border-green-500/30 bg-green-500/100/10' :
-                  t.health_score >= 70 ? 'text-amber-400 border-amber-500/30 bg-amber-500/100/10' :
-                  'text-red-400 border-red-500/30 bg-red-500/100/10'
+                  t.health_score >= 90 ? 'text-green-400 border-green-500/30 bg-green-500/10' :
+                  t.health_score >= 70 ? 'text-amber-400 border-amber-500/30 bg-amber-500/10' :
+                  'text-red-400 border-red-500/30 bg-red-500/10'
                 }`}>{t.health_score}</div>
                 <div className="flex-1">
                   <div className="text-sm font-medium text-foreground">{t.name}</div>
@@ -234,7 +234,7 @@ export default function MSPDemo() {
               selectedTenant?.id === t.id ? 'border-blue-500 ring-1 ring-blue-500/30' : 'border-border hover:border-border'
             }`}>
             <div className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold border-2 ${
-              t.health_score >= 90 ? 'text-green-400 border-green-500/30 bg-green-500/100/10' : 'text-amber-400 border-amber-500/30 bg-amber-500/100/10'
+              t.health_score >= 90 ? 'text-green-400 border-green-500/30 bg-green-500/10' : 'text-amber-400 border-amber-500/30 bg-amber-500/10'
             }`}>{t.health_score}</div>
             <div className="flex-1">
               <div className="font-medium text-foreground">{t.name}</div>
@@ -248,7 +248,7 @@ export default function MSPDemo() {
         ))}
       </div>
       {selectedTenant && (
-        <div className="bg-blue-500/100/10 border border-blue-500/30 rounded-xl p-4 text-center text-sm text-blue-300">
+        <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 text-center text-sm text-blue-300">
           Selected: <strong>{selectedTenant.name}</strong> — {selectedTenant.protected_objects} objects across {selectedTenant.workload_count} workloads including Entra ID
         </div>
       )}
@@ -263,10 +263,10 @@ export default function MSPDemo() {
       </div>
       <div className="space-y-3">
         {[
-          { phase: 1, title: 'Detect', desc: 'AI anomaly detection flags 1,847 files renamed to .encrypted', color: 'border-red-500/40 bg-red-500/100/5', icon: '🚨' },
-          { phase: 2, title: 'Isolate', desc: 'Circuit breaker pauses backups. Clean restore point identified (2h ago)', color: 'border-amber-500/40 bg-amber-500/100/5', icon: '🔒' },
-          { phase: 3, title: 'Plan', desc: 'MVB recovery plan: Identity first → CEO/CFO → Critical staff → Everyone', color: 'border-blue-500/40 bg-blue-500/100/5', icon: '📋' },
-          { phase: 4, title: 'Recover', desc: 'One-click mass recovery. 125 users restored in priority order. Zero data loss.', color: 'border-green-500/40 bg-green-500/100/5', icon: '✅' },
+          { phase: 1, title: 'Detect', desc: 'AI anomaly detection flags 1,847 files renamed to .encrypted', color: 'border-red-500/40 bg-red-500/5', icon: '🚨' },
+          { phase: 2, title: 'Isolate', desc: 'Circuit breaker pauses backups. Clean restore point identified (2h ago)', color: 'border-amber-500/40 bg-amber-500/5', icon: '🔒' },
+          { phase: 3, title: 'Plan', desc: 'MVB recovery plan: Identity first → CEO/CFO → Critical staff → Everyone', color: 'border-blue-500/40 bg-blue-500/5', icon: '📋' },
+          { phase: 4, title: 'Recover', desc: 'One-click mass recovery. 125 users restored in priority order. Zero data loss.', color: 'border-green-500/40 bg-green-500/5', icon: '✅' },
         ].map((p, i) => (
           <div key={p.phase} className={`border rounded-xl p-4 ${p.color} transition-all duration-500`}
             style={{ opacity: 1, transitionDelay: `${i * 200}ms` }}>
@@ -343,7 +343,7 @@ export default function MSPDemo() {
             <div className="text-3xl font-bold text-blue-400 mt-1">${sellAt.toFixed(2)}</div>
             <div className="text-xs text-muted-foreground">per user/mo</div>
           </div>
-          <div className="bg-green-500/100/10 rounded-xl p-4 border border-green-500/30 text-center">
+          <div className="bg-green-500/10 rounded-xl p-4 border border-green-500/30 text-center">
             <div className="text-sm text-green-300">Your Margin</div>
             <div className="text-3xl font-bold text-green-400 mt-1">{marginPct}%</div>
             <div className="text-xs text-green-300">${margin.toFixed(0)}/mo profit</div>
@@ -386,7 +386,7 @@ export default function MSPDemo() {
             )}
           </div>
         ) : (
-          <div className="bg-green-500/100/10 border border-green-500/30 rounded-xl p-4 text-center text-green-300 text-sm">
+          <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-center text-green-300 text-sm">
             Client offboarded. Backups retained per SLA policy. Data is safe.
           </div>
         )}

@@ -26,8 +26,8 @@ interface BillingData {
 
 const STATUS_COLORS: Record<string, string> = {
   draft: 'bg-muted/500/10 text-muted-foreground',
-  invoiced: 'bg-blue-500/100/10 text-blue-400',
-  paid: 'bg-green-500/100/10 text-green-400',
+  invoiced: 'bg-blue-500/10 text-blue-400',
+  paid: 'bg-green-500/10 text-green-400',
 };
 
 export default function BillingPortal() {
@@ -89,7 +89,7 @@ export default function BillingPortal() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-card rounded-xl p-4 border border-border">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-green-500/100/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
                 <DollarSign className="w-5 h-5 text-green-400" />
               </div>
               <div>
@@ -100,7 +100,7 @@ export default function BillingPortal() {
           </div>
           <div className="bg-card rounded-xl p-4 border border-border">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-500/100/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
                 <Users className="w-5 h-5 text-blue-400" />
               </div>
               <div>
@@ -111,7 +111,7 @@ export default function BillingPortal() {
           </div>
           <div className="bg-card rounded-xl p-4 border border-border">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-purple-500/100/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
                 <TrendingUp className="w-5 h-5 text-purple-400" />
               </div>
               <div>
@@ -122,7 +122,7 @@ export default function BillingPortal() {
           </div>
           <div className="bg-card rounded-xl p-4 border border-border">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-amber-500/100/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
                 <Calendar className="w-5 h-5 text-amber-400" />
               </div>
               <div>
@@ -144,7 +144,7 @@ export default function BillingPortal() {
                 key={i}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
                   data.unit_price === tier.price
-                    ? 'bg-blue-500/100/20 text-blue-300 ring-1 ring-blue-500/50'
+                    ? 'bg-blue-500/20 text-blue-300 ring-1 ring-blue-500/50'
                     : 'bg-secondary/50 text-muted-foreground'
                 }`}
               >

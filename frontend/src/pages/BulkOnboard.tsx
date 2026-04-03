@@ -151,7 +151,7 @@ export default function BulkOnboard() {
       {step === 'preview' && (
         <div>
           {parseErrors.length > 0 && (
-            <div className="bg-red-500/100/10 border border-red-500/30 rounded-xl p-4 mb-4">
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-4">
               <p className="text-red-400 text-sm font-medium mb-1">{parseErrors.length} row(s) with errors:</p>
               {parseErrors.map((err, i) => (
                 <p key={i} className="text-xs text-red-300">Row {err.row}: {err.error}</p>
@@ -235,15 +235,15 @@ export default function BulkOnboard() {
       {step === 'done' && (
         <div>
           <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="bg-green-500/100/10 border border-green-500/30 rounded-xl p-4 text-center">
+            <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-center">
               <div className="text-2xl font-bold text-green-400">{results.filter(r => r.status === 'created').length}</div>
               <div className="text-xs text-green-300">Created</div>
             </div>
-            <div className="bg-amber-500/100/10 border border-amber-500/30 rounded-xl p-4 text-center">
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 text-center">
               <div className="text-2xl font-bold text-amber-400">{results.filter(r => r.status === 'skipped').length}</div>
               <div className="text-xs text-amber-300">Skipped (duplicate)</div>
             </div>
-            <div className="bg-red-500/100/10 border border-red-500/30 rounded-xl p-4 text-center">
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-center">
               <div className="text-2xl font-bold text-red-400">{results.filter(r => r.status === 'failed').length}</div>
               <div className="text-xs text-red-300">Failed</div>
             </div>
@@ -268,9 +268,9 @@ export default function BulkOnboard() {
                     <td className="px-3 py-2 text-muted-foreground font-mono text-xs">{r.ms_tenant_id}</td>
                     <td className="px-3 py-2">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-medium uppercase ${
-                        r.status === 'created' ? 'bg-green-500/100/10 text-green-400' :
-                        r.status === 'skipped' ? 'bg-amber-500/100/10 text-amber-400' :
-                        'bg-red-500/100/10 text-red-400'
+                        r.status === 'created' ? 'bg-green-500/10 text-green-400' :
+                        r.status === 'skipped' ? 'bg-amber-500/10 text-amber-400' :
+                        'bg-red-500/10 text-red-400'
                       }`}>{r.status}</span>
                     </td>
                     <td className="px-3 py-2 text-xs text-muted-foreground">{r.reason || (r.tenant_id ? `ID: ${r.tenant_id}` : '')}</td>

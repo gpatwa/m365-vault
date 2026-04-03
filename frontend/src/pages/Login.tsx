@@ -190,8 +190,8 @@ export default function Login() {
 
           {/* Error */}
           {error && (
-            <div className="bg-red-500/100/10 border border-red-500/20 text-red-400 rounded-xl p-3 mb-4 text-sm flex items-start gap-2">
-              <div className="w-4 h-4 bg-red-500/100/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+            <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl p-3 mb-4 text-sm flex items-start gap-2">
+              <div className="w-4 h-4 bg-red-500/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                 <span className="text-[10px] font-bold">!</span>
               </div>
               {error}

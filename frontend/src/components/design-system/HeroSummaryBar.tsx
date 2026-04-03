@@ -11,12 +11,12 @@ export interface HeroStat {
 }
 
 const colorMap = {
-  green: { bg: 'bg-green-500/100/10', text: 'text-green-400', border: 'border-green-500/20', icon: 'text-green-400' },
-  blue: { bg: 'bg-blue-500/100/10', text: 'text-blue-400', border: 'border-blue-500/20', icon: 'text-blue-400' },
-  amber: { bg: 'bg-amber-500/100/10', text: 'text-amber-400', border: 'border-amber-500/20', icon: 'text-amber-400' },
-  red: { bg: 'bg-red-500/100/10', text: 'text-red-400', border: 'border-red-500/20', icon: 'text-red-400' },
+  green: { bg: 'bg-green-500/10', text: 'text-green-400', border: 'border-green-500/20', icon: 'text-green-400' },
+  blue: { bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/20', icon: 'text-blue-400' },
+  amber: { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20', icon: 'text-amber-400' },
+  red: { bg: 'bg-red-500/10', text: 'text-red-400', border: 'border-red-500/20', icon: 'text-red-400' },
   gray: { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border', icon: 'text-muted-foreground' },
-  purple: { bg: 'bg-purple-500/100/10', text: 'text-purple-400', border: 'border-purple-500/20', icon: 'text-purple-400' },
+  purple: { bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-500/20', icon: 'text-purple-400' },
 };
 
 const trendIcons = { up: '↑', down: '↓', flat: '→' };

@@ -15,11 +15,11 @@ interface TierComparison {
 }
 
 const CATEGORY_LABELS: Record<string, { label: string; icon: string; color: string }> = {
-  workloads: { label: 'Workloads', icon: '📦', color: 'border-blue-500/30 bg-blue-500/100/5' },
-  intelligence: { label: 'Intelligence', icon: '🧠', color: 'border-purple-500/30 bg-purple-500/100/5' },
-  recovery: { label: 'Recovery', icon: '🔄', color: 'border-green-500/30 bg-green-500/100/5' },
-  compliance: { label: 'Compliance', icon: '📋', color: 'border-amber-500/30 bg-amber-500/100/5' },
-  operations: { label: 'Operations (MSP)', icon: '🏢', color: 'border-cyan-500/30 bg-cyan-500/100/5' },
+  workloads: { label: 'Workloads', icon: '📦', color: 'border-blue-500/30 bg-blue-500/5' },
+  intelligence: { label: 'Intelligence', icon: '🧠', color: 'border-purple-500/30 bg-purple-500/5' },
+  recovery: { label: 'Recovery', icon: '🔄', color: 'border-green-500/30 bg-green-500/5' },
+  compliance: { label: 'Compliance', icon: '📋', color: 'border-amber-500/30 bg-amber-500/5' },
+  operations: { label: 'Operations (MSP)', icon: '🏢', color: 'border-cyan-500/30 bg-cyan-500/5' },
   platform: { label: 'Platform', icon: '⚙️', color: 'border-gray-500/30 bg-muted/500/5' },
 };
 
@@ -98,7 +98,7 @@ export default function FeatureFlags() {
                   {Object.entries(featureMap).map(([feature, enabled]) => (
                     <div key={feature}
                       className={`flex items-center justify-between px-3 py-2 rounded-lg border text-xs ${
-                        enabled ? 'border-green-500/20 bg-green-500/100/5' : 'border-border bg-card/50'
+                        enabled ? 'border-green-500/20 bg-green-500/5' : 'border-border bg-card/50'
                       }`}>
                       <div className="flex items-center gap-2">
                         {enabled ?

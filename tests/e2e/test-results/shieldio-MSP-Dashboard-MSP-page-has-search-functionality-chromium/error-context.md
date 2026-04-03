@@ -1,0 +1,414 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - generic [ref=e5]:
+      - link "Shieldio" [ref=e6] [cursor=pointer]:
+        - /url: /welcome
+        - img [ref=e7]
+        - generic [ref=e9]: Shieldio
+      - generic [ref=e10]:
+        - link "How It Works" [ref=e11] [cursor=pointer]:
+          - /url: "#how-it-works"
+        - link "Workloads" [ref=e12] [cursor=pointer]:
+          - /url: "#workloads"
+        - link "Pricing" [ref=e13] [cursor=pointer]:
+          - /url: "#pricing"
+        - link "Security" [ref=e14] [cursor=pointer]:
+          - /url: "#security"
+      - generic [ref=e15]:
+        - link "Sign In" [ref=e16] [cursor=pointer]:
+          - /url: /login
+        - link "Start Free" [ref=e17] [cursor=pointer]:
+          - /url: /login?register=true
+  - generic [ref=e19]:
+    - generic [ref=e20]:
+      - img [ref=e21]
+      - text: Microsoft doesn't back up your M365 data
+    - heading "Your emails. Your files. Your responsibility." [level=1] [ref=e23]:
+      - text: Your emails. Your files.
+      - text: Your responsibility.
+    - paragraph [ref=e24]: Microsoft's 93-day recycle bin is not a recovery plan. When ransomware hits, Shieldio already has a context-aware recovery plan — identity first, critical users next, then everyone else.
+    - generic [ref=e25]:
+      - link "Start Free" [ref=e26] [cursor=pointer]:
+        - /url: /login?register=true
+        - text: Start Free
+        - img [ref=e27]
+      - link "View Source" [ref=e29] [cursor=pointer]:
+        - /url: https://github.com/gpatwa/m365-vault
+        - img [ref=e30]
+        - text: View Source
+    - generic [ref=e33]:
+      - generic [ref=e34]:
+        - generic [ref=e35]: Context-Aware
+        - generic [ref=e36]: Recovery Plans
+      - generic [ref=e37]:
+        - generic [ref=e38]: Pre-Computed
+        - generic [ref=e39]: Org Intelligence
+      - generic [ref=e40]:
+        - generic [ref=e41]: $1.50/user
+        - generic [ref=e42]: All Included
+      - generic [ref=e43]:
+        - generic [ref=e44]: SOC 2 + HIPAA
+        - generic [ref=e45]: + GDPR + DORA
+  - generic [ref=e47]:
+    - generic [ref=e49]:
+      - generic [ref=e50]:
+        - img [ref=e51]
+        - text: Ransomware Scenario
+      - heading "When ransomware hits at 2am, this is your playbook" [level=2] [ref=e53]
+      - paragraph [ref=e54]: Watch how Shieldio detects an attack, identifies the blast radius, and recovers your critical users first — automatically
+    - generic [ref=e55]:
+      - generic [ref=e56]:
+        - button "1 PROTECT" [ref=e58] [cursor=pointer]:
+          - generic [ref=e60]: "1"
+          - generic [ref=e61]: PROTECT
+        - button "2 MONITOR" [ref=e62] [cursor=pointer]:
+          - generic [ref=e64]: "2"
+          - generic [ref=e65]: MONITOR
+        - button "3 DETECT" [ref=e66] [cursor=pointer]:
+          - generic [ref=e68]: "3"
+          - generic [ref=e69]: DETECT
+        - button "4 RESPOND" [ref=e70] [cursor=pointer]:
+          - generic [ref=e72]: "4"
+          - generic [ref=e73]: RESPOND
+        - button "5 RECOVER" [ref=e74] [cursor=pointer]:
+          - generic [ref=e76]: "5"
+          - generic [ref=e77]: RECOVER
+        - button "6 VERIFY" [ref=e78] [cursor=pointer]:
+          - generic [ref=e80]: "6"
+          - generic [ref=e81]: VERIFY
+      - generic [ref=e82]:
+        - generic [ref=e83]: 🎬
+        - paragraph [ref=e84]: Scroll down to watch the story unfold...
+  - generic [ref=e86]:
+    - generic [ref=e88]:
+      - heading "Why not just use Microsoft?" [level=2] [ref=e89]
+      - paragraph [ref=e90]: Microsoft 365 has built-in retention. Here's why it's not enough.
+    - table [ref=e93]:
+      - rowgroup [ref=e94]:
+        - row "Capability Microsoft 365 Shieldio" [ref=e95]:
+          - columnheader "Capability" [ref=e96]
+          - columnheader "Microsoft 365" [ref=e97]
+          - columnheader "Shieldio" [ref=e98]
+      - rowgroup [ref=e99]:
+        - row "Recovery model 93-day recycle bin Unlimited point-in-time restore" [ref=e100]:
+          - cell "Recovery model" [ref=e101]
+          - cell "93-day recycle bin" [ref=e102]
+          - cell "Unlimited point-in-time restore" [ref=e103]
+        - row "Ransomware detection None AI anomaly detection (Z-score baselines)" [ref=e104]:
+          - cell "Ransomware detection" [ref=e105]
+          - cell "None" [ref=e106]
+          - cell "AI anomaly detection (Z-score baselines)" [ref=e107]
+        - row "Recovery plan None — restore manually Pre-computed 4-phase MVB plans" [ref=e108]:
+          - cell "Recovery plan" [ref=e109]
+          - cell "None — restore manually" [ref=e110]
+          - cell "Pre-computed 4-phase MVB plans" [ref=e111]
+        - row "Entra ID rollback No undo for CA policies or roles Full config snapshot + diff comparison" [ref=e112]:
+          - cell "Entra ID rollback" [ref=e113]
+          - cell "No undo for CA policies or roles" [ref=e114]
+          - cell "Full config snapshot + diff comparison" [ref=e115]
+        - row "Recovery order Manual, one mailbox at a time Criticality-ordered — CEO restored first" [ref=e116]:
+          - cell "Recovery order" [ref=e117]
+          - cell "Manual, one mailbox at a time" [ref=e118]
+          - cell "Criticality-ordered — CEO restored first" [ref=e119]
+        - row "Recovery confidence Unknown until you try Scored 0-100 with evidence" [ref=e120]:
+          - cell "Recovery confidence" [ref=e121]
+          - cell "Unknown until you try" [ref=e122]
+          - cell "Scored 0-100 with evidence" [ref=e123]
+  - generic [ref=e125]:
+    - generic [ref=e127]:
+      - heading "Every workload. One platform." [level=2] [ref=e128]
+      - paragraph [ref=e129]: Five M365 workloads protected with unified backup, restore, and monitoring
+    - generic [ref=e130]:
+      - generic [ref=e132]:
+        - img [ref=e133]
+        - generic [ref=e136]: Exchange
+        - generic [ref=e137]: Email, Calendar, Contacts
+      - generic [ref=e139]:
+        - img [ref=e140]
+        - generic [ref=e142]: OneDrive
+        - generic [ref=e143]: Files & Folders
+      - generic [ref=e145]:
+        - img [ref=e146]
+        - generic [ref=e149]: SharePoint
+        - generic [ref=e150]: Sites, Lists, Documents
+      - generic [ref=e152]:
+        - img [ref=e153]
+        - generic [ref=e155]: Teams
+        - generic [ref=e156]: Chats, Channels, Files
+      - generic [ref=e158]:
+        - img [ref=e159]
+        - generic [ref=e162]: Entra ID
+        - generic [ref=e163]: 12 object types, Config drift
+  - generic [ref=e165]:
+    - generic [ref=e167]:
+      - generic [ref=e168]:
+        - img [ref=e169]
+        - text: AI-Powered Intelligence
+      - heading "Recovery intelligence that no competitor has." [level=2] [ref=e177]
+      - paragraph [ref=e178]: Other vendors back up your data. Shieldio understands your organization and builds recovery plans automatically.
+    - generic [ref=e179]:
+      - generic [ref=e181]:
+        - img [ref=e183]
+        - heading "Org Context" [level=3] [ref=e186]
+        - paragraph [ref=e187]: Auto-discovers your reporting hierarchy, VIP groups, and privileged roles from Microsoft Graph. No manual user mapping. No professional services.
+      - generic [ref=e189]:
+        - img [ref=e191]
+        - heading "Criticality Scoring" [level=3] [ref=e199]
+        - paragraph [ref=e200]: "4-factor scoring: role weight, data sensitivity, activity level, business dependency. Your CEO scores 95. The summer intern scores 30. Automatically."
+      - generic [ref=e202]:
+        - img [ref=e204]
+        - heading "Recovery Plans" [level=3] [ref=e207]
+        - paragraph [ref=e208]: "Pre-computed 4-phase NIST-ordered plans: identity controls first, then critical users, then high priority, then full recovery. Refreshed every 6 hours."
+      - generic [ref=e210]:
+        - img [ref=e212]
+        - heading "Anomaly Detection" [level=3] [ref=e214]
+        - paragraph [ref=e215]: Z-score baselines detect mass encryption, data exfiltration, and unusual deletions while backups are running. Not after the incident.
+  - generic [ref=e217]:
+    - generic [ref=e219]:
+      - heading "Enterprise-grade security" [level=2] [ref=e220]
+      - paragraph [ref=e221]: Your data is encrypted, immutable, and compliance-ready from day one
+    - generic [ref=e222]:
+      - generic [ref=e224]:
+        - generic [ref=e225]: 🔒
+        - generic [ref=e226]:
+          - generic [ref=e227]: AES-256-GCM
+          - generic [ref=e228]: Encryption at Rest
+      - generic [ref=e230]:
+        - generic [ref=e231]: 🔑
+        - generic [ref=e232]:
+          - generic [ref=e233]: Per-Tenant Keys
+          - generic [ref=e234]: Key Isolation
+      - generic [ref=e236]:
+        - generic [ref=e237]: 🛡️
+        - generic [ref=e238]:
+          - generic [ref=e239]: WORM Storage
+          - generic [ref=e240]: Immutable Backups
+      - generic [ref=e242]:
+        - generic [ref=e243]: ✅
+        - generic [ref=e244]:
+          - generic [ref=e245]: SOC 2 Ready
+          - generic [ref=e246]: 16 Controls
+      - generic [ref=e248]:
+        - generic [ref=e249]: 🇪🇺
+        - generic [ref=e250]:
+          - generic [ref=e251]: GDPR Ready
+          - generic [ref=e252]: 8 Articles
+      - generic [ref=e254]:
+        - generic [ref=e255]: 🏥
+        - generic [ref=e256]:
+          - generic [ref=e257]: HIPAA Ready
+          - generic [ref=e258]: 14 Safeguards
+      - generic [ref=e260]:
+        - generic [ref=e261]: 🔐
+        - generic [ref=e262]:
+          - generic [ref=e263]: SSO + MFA
+          - generic [ref=e264]: Entra ID OIDC
+      - generic [ref=e266]:
+        - generic [ref=e267]: 📋
+        - generic [ref=e268]:
+          - generic [ref=e269]: Audit Trail
+          - generic [ref=e270]: Full Logging
+    - link "View full security posture" [ref=e272] [cursor=pointer]:
+      - /url: /security
+      - text: View full security posture
+      - img [ref=e273]
+  - generic [ref=e276]:
+    - generic [ref=e278]:
+      - heading "Shieldio vs. Veeam, Rubrik, Druva" [level=2] [ref=e279]
+      - paragraph [ref=e280]: Recovery intelligence that competitors charge extra for — or don't offer at all
+    - table [ref=e283]:
+      - rowgroup [ref=e284]:
+        - row "Feature Shieldio Others" [ref=e285]:
+          - columnheader "Feature" [ref=e286]
+          - columnheader "Shieldio" [ref=e287]
+          - columnheader "Others" [ref=e288]
+      - rowgroup [ref=e289]:
+        - row "Context-aware recovery plans" [ref=e290]:
+          - cell "Context-aware recovery plans" [ref=e291]
+          - cell [ref=e292]:
+            - img [ref=e293]
+          - cell [ref=e295]:
+            - img [ref=e296]
+        - row "Entra ID config backup + rollback" [ref=e299]:
+          - cell "Entra ID config backup + rollback" [ref=e300]
+          - cell [ref=e301]:
+            - img [ref=e302]
+          - cell [ref=e304]:
+            - img [ref=e305]
+        - row "Criticality-based restore order" [ref=e308]:
+          - cell "Criticality-based restore order" [ref=e309]
+          - cell [ref=e310]:
+            - img [ref=e311]
+          - cell [ref=e313]:
+            - img [ref=e314]
+        - row "Recovery confidence score" [ref=e317]:
+          - cell "Recovery confidence score" [ref=e318]
+          - cell [ref=e319]:
+            - img [ref=e320]
+          - cell [ref=e322]:
+            - img [ref=e323]
+        - row "Anomaly detection (built-in)" [ref=e326]:
+          - cell "Anomaly detection (built-in)" [ref=e327]
+          - cell [ref=e328]:
+            - img [ref=e329]
+          - cell [ref=e331]:
+            - img [ref=e332]
+        - row "WORM immutable storage" [ref=e335]:
+          - cell "WORM immutable storage" [ref=e336]
+          - cell [ref=e337]:
+            - img [ref=e338]
+          - cell [ref=e340]:
+            - img [ref=e341]
+        - row "Intelligence surcharge $0 $$$" [ref=e343]:
+          - cell "Intelligence surcharge" [ref=e344]
+          - cell "$0" [ref=e345]
+          - cell "$$$" [ref=e346]
+        - row "Starting price $1.50/user $2-10/user" [ref=e347]:
+          - cell "Starting price" [ref=e348]
+          - cell "$1.50/user" [ref=e349]
+          - cell "$2-10/user" [ref=e350]
+  - generic [ref=e352]:
+    - generic [ref=e354]:
+      - heading "Simple, transparent pricing" [level=2] [ref=e355]
+      - paragraph [ref=e356]: No per-GB charges. No surprise overages. Intelligence included free.
+    - generic [ref=e357]:
+      - generic [ref=e359]:
+        - generic [ref=e360]: Community
+        - generic [ref=e361]:
+          - generic [ref=e362]: Free
+          - generic [ref=e363]: forever
+        - paragraph [ref=e364]: Up to 25 objects
+        - list [ref=e365]:
+          - listitem [ref=e366]:
+            - img [ref=e367]
+            - text: Exchange + OneDrive + SharePoint
+          - listitem [ref=e369]:
+            - img [ref=e370]
+            - text: Basic Smart Engine
+          - listitem [ref=e372]:
+            - img [ref=e373]
+            - text: 30-day retention
+          - listitem [ref=e375]:
+            - img [ref=e376]
+            - text: Community support
+        - link "Start Free" [ref=e378] [cursor=pointer]:
+          - /url: /login
+      - generic [ref=e380]:
+        - generic [ref=e381]: Professional
+        - generic [ref=e382]:
+          - generic [ref=e383]: $1.50
+          - generic [ref=e384]: /user/mo
+        - paragraph [ref=e385]: Unlimited users
+        - list [ref=e386]:
+          - listitem [ref=e387]:
+            - img [ref=e388]
+            - text: All 5 workloads + Teams
+          - listitem [ref=e390]:
+            - img [ref=e391]
+            - text: Full Smart Engine
+          - listitem [ref=e393]:
+            - img [ref=e394]
+            - text: 90-day retention
+          - listitem [ref=e396]:
+            - img [ref=e397]
+            - text: SSO + email support
+        - link "Start Trial" [ref=e399] [cursor=pointer]:
+          - /url: /login
+      - generic [ref=e401]:
+        - generic [ref=e402]: Business
+        - generic [ref=e403]:
+          - generic [ref=e404]: $3.00
+          - generic [ref=e405]: /user/mo
+        - paragraph [ref=e406]: Unlimited tenants
+        - list [ref=e407]:
+          - listitem [ref=e408]:
+            - img [ref=e409]
+            - text: Org Context + MVB Plans
+          - listitem [ref=e411]:
+            - img [ref=e412]
+            - text: Criticality scoring
+          - listitem [ref=e414]:
+            - img [ref=e415]
+            - text: 1-year retention
+          - listitem [ref=e417]:
+            - img [ref=e418]
+            - text: Priority support
+        - link "Start Trial" [ref=e420] [cursor=pointer]:
+          - /url: /login
+      - generic [ref=e422]:
+        - generic [ref=e423]: Enterprise
+        - generic [ref=e424]:
+          - generic [ref=e425]: $5.00
+          - generic [ref=e426]: /user/mo
+        - paragraph [ref=e427]: Unlimited everything
+        - list [ref=e428]:
+          - listitem [ref=e429]:
+            - img [ref=e430]
+            - text: Agentic Recovery
+          - listitem [ref=e432]:
+            - img [ref=e433]
+            - text: WORM + eDiscovery
+          - listitem [ref=e435]:
+            - img [ref=e436]
+            - text: Cleanroom Recovery
+          - listitem [ref=e438]:
+            - img [ref=e439]
+            - text: Dedicated support
+        - link "Contact Sales" [ref=e441] [cursor=pointer]:
+          - /url: /login
+  - generic [ref=e444]:
+    - heading "See it live with your data in 10 minutes" [level=2] [ref=e445]
+    - paragraph [ref=e446]: Connect your M365 tenant. Watch Shieldio discover your org, score criticality, and build a recovery plan — in real time.
+    - generic [ref=e447]:
+      - link "Start Free" [ref=e448] [cursor=pointer]:
+        - /url: /login
+        - text: Start Free
+        - img [ref=e449]
+      - link "Book a Demo" [ref=e451] [cursor=pointer]:
+        - /url: /login
+    - paragraph [ref=e452]: Free for up to 25 users. No credit card. SOC 2 + GDPR + HIPAA + DORA ready.
+  - generic [ref=e455]:
+    - heading "Ready to prove you can recover?" [level=2] [ref=e456]
+    - paragraph [ref=e457]: Most backup vendors prove you can back up. Shieldio proves you can recover.
+    - link "Get Started Free" [ref=e458] [cursor=pointer]:
+      - /url: /login
+      - text: Get Started Free
+      - img [ref=e459]
+  - contentinfo [ref=e461]:
+    - generic [ref=e462]:
+      - generic [ref=e463]:
+        - generic [ref=e464]:
+          - generic [ref=e465]:
+            - img [ref=e466]
+            - generic [ref=e468]: Shieldio
+          - paragraph [ref=e469]:
+            - text: SaaS Data Protection Platform.
+            - text: Open source. Self-hosted. Secure.
+        - generic [ref=e470]:
+          - generic [ref=e471]: Product
+          - generic [ref=e472]:
+            - link "Workloads" [ref=e473] [cursor=pointer]:
+              - /url: "#workloads"
+            - link "Pricing" [ref=e474] [cursor=pointer]:
+              - /url: "#pricing"
+            - link "Security" [ref=e475] [cursor=pointer]:
+              - /url: "#security"
+        - generic [ref=e476]:
+          - generic [ref=e477]: Resources
+          - generic [ref=e478]:
+            - link "GitHub" [ref=e479] [cursor=pointer]:
+              - /url: https://github.com/gpatwa/m365-vault
+            - link "Documentation" [ref=e480] [cursor=pointer]:
+              - /url: /docs
+        - generic [ref=e481]:
+          - generic [ref=e482]: Legal
+          - generic [ref=e483]:
+            - link "Terms of Service" [ref=e484] [cursor=pointer]:
+              - /url: /legal?tab=tos
+            - link "Privacy Policy" [ref=e485] [cursor=pointer]:
+              - /url: /legal?tab=privacy
+      - generic [ref=e486]: © 2026 Shieldio. Open source under Apache 2.0 License.
+```

@@ -1,8 +1,8 @@
 /** Criticality tier badge — shows business importance level */
 const TIER_STYLES: Record<string, string> = {
-  critical: 'bg-red-500/100/10 text-red-400 border-red-500/20',
-  high: 'bg-orange-500/100/10 text-orange-400 border-orange-500/20',
-  medium: 'bg-blue-500/100/10 text-blue-400 border-blue-500/20',
+  critical: 'bg-red-500/10 text-red-400 border-red-500/20',
+  high: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+  medium: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
   low: 'bg-muted text-muted-foreground border-border',
 };
 

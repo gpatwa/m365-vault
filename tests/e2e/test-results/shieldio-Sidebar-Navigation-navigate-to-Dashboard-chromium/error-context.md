@@ -1,0 +1,330 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - generic [ref=e7]:
+            - img [ref=e8]
+            - generic [ref=e10]:
+              - heading "Shieldio" [level=1] [ref=e11]
+              - paragraph [ref=e12]: SaaS Data Protection
+          - button "Search (⌘K)" [ref=e13] [cursor=pointer]:
+            - img [ref=e14]
+        - button "Search... ⌘K" [ref=e17] [cursor=pointer]:
+          - img [ref=e18]
+          - generic [ref=e21]: Search...
+          - generic [ref=e22]: ⌘K
+      - navigation [ref=e23]:
+        - link "Dashboard" [ref=e26] [cursor=pointer]:
+          - /url: /
+          - img [ref=e27]
+          - text: Dashboard
+        - generic [ref=e32]:
+          - button "Workloads" [ref=e33] [cursor=pointer]:
+            - text: Workloads
+            - img [ref=e34]
+          - generic [ref=e36]:
+            - link "Exchange" [ref=e37] [cursor=pointer]:
+              - /url: /exchange
+              - img [ref=e38]
+              - text: Exchange
+            - link "OneDrive" [ref=e41] [cursor=pointer]:
+              - /url: /onedrive
+              - img [ref=e42]
+              - text: OneDrive
+            - link "SharePoint" [ref=e44] [cursor=pointer]:
+              - /url: /sharepoint
+              - img [ref=e45]
+              - text: SharePoint
+            - link "Teams" [ref=e48] [cursor=pointer]:
+              - /url: /teams
+              - img [ref=e49]
+              - text: Teams
+            - link "Entra ID" [ref=e51] [cursor=pointer]:
+              - /url: /entra-id
+              - img [ref=e52]
+              - text: Entra ID
+        - generic [ref=e55]:
+          - button "Operations" [ref=e56] [cursor=pointer]:
+            - text: Operations
+            - img [ref=e57]
+          - generic [ref=e59]:
+            - link "Jobs" [ref=e60] [cursor=pointer]:
+              - /url: /jobs
+              - img [ref=e61]
+              - text: Jobs
+            - link "Failed Items" [ref=e63] [cursor=pointer]:
+              - /url: /failed-items
+              - img [ref=e64]
+              - text: Failed Items
+            - link "Self Restore" [ref=e66] [cursor=pointer]:
+              - /url: /restore
+              - img [ref=e67]
+              - text: Self Restore
+            - link "Recovery" [ref=e70] [cursor=pointer]:
+              - /url: /recovery
+              - img [ref=e71]
+              - text: Recovery
+        - button "Intelligence" [ref=e75] [cursor=pointer]:
+          - text: Intelligence
+          - img [ref=e76]
+        - button "MSP" [ref=e79] [cursor=pointer]:
+          - text: MSP
+          - img [ref=e80]
+        - button "Administration" [ref=e83] [cursor=pointer]:
+          - text: Administration
+          - img [ref=e84]
+      - generic [ref=e86]:
+        - button "Switch to light mode" [ref=e88] [cursor=pointer]:
+          - img [ref=e89]
+        - button "Sign Out" [ref=e95] [cursor=pointer]:
+          - img [ref=e96]
+          - text: Sign Out
+    - main [ref=e99]:
+      - generic [ref=e101]:
+        - generic [ref=e102]:
+          - button "5/6 Getting started with Shieldio 5 of 6 steps complete" [ref=e103] [cursor=pointer]:
+            - generic [ref=e104]:
+              - generic [ref=e105]:
+                - img [ref=e106]
+                - generic [ref=e109]: 5/6
+              - generic [ref=e110]:
+                - heading "Getting started with Shieldio" [level=3] [ref=e111]
+                - paragraph [ref=e112]: 5 of 6 steps complete
+            - img [ref=e114]
+          - generic [ref=e116]:
+            - generic [ref=e117]:
+              - img [ref=e119]
+              - generic [ref=e123]: Create your account
+              - generic [ref=e124]: Done
+            - generic [ref=e125]:
+              - img [ref=e127]
+              - generic [ref=e131]: Connect your SaaS platform
+              - generic [ref=e132]: Done
+            - generic [ref=e133]:
+              - img [ref=e135]
+              - generic [ref=e139]: Discover your workloads
+              - generic [ref=e140]: Done
+            - generic [ref=e141]:
+              - img [ref=e143]
+              - generic [ref=e147]: Assign backup protection
+              - generic [ref=e148]: Done
+            - generic [ref=e149]:
+              - img [ref=e151]
+              - generic [ref=e155]: Run your first backup
+              - generic [ref=e156]: Done
+            - generic [ref=e157]:
+              - generic [ref=e161]:
+                - generic [ref=e162]: Explore recovery capabilities
+                - paragraph [ref=e163]: See your recovery readiness score and simulate a restore.
+              - button "Explore" [ref=e164] [cursor=pointer]:
+                - text: Explore
+                - img [ref=e165]
+        - generic [ref=e167]:
+          - heading "Dashboard" [level=1] [ref=e168]
+          - paragraph [ref=e169]: SaaS Data Protection Overview
+        - generic [ref=e170]:
+          - generic [ref=e172] [cursor=pointer]:
+            - generic [ref=e173]:
+              - paragraph [ref=e174]: Protection
+              - paragraph [ref=e175]: 100%
+              - paragraph [ref=e176]: 142/142 objects
+            - img [ref=e178]
+          - generic [ref=e181] [cursor=pointer]:
+            - generic [ref=e182]:
+              - paragraph [ref=e183]: Health Score
+              - paragraph [ref=e184]: "80"
+              - paragraph [ref=e185]: "Success: 50%"
+              - paragraph [ref=e186]: ↑ Healthy
+            - img [ref=e188]
+          - generic [ref=e191] [cursor=pointer]:
+            - generic [ref=e192]:
+              - paragraph [ref=e193]: Backups (24h)
+              - paragraph [ref=e194]: "6"
+              - paragraph [ref=e195]: 3 successful, 3 failed
+            - img [ref=e197]
+          - generic [ref=e202] [cursor=pointer]:
+            - generic [ref=e203]:
+              - paragraph [ref=e204]: Action Items
+              - paragraph [ref=e205]: "145"
+              - paragraph [ref=e206]: 142 unprotected
+            - img [ref=e208]
+        - generic [ref=e210]:
+          - generic [ref=e211]:
+            - img [ref=e212]
+            - generic [ref=e214]: 142 objects are not protected by any SLA policy
+            - button "Assign SLA" [ref=e215] [cursor=pointer]:
+              - text: Assign SLA
+              - img [ref=e216]
+          - generic [ref=e218]:
+            - img [ref=e219]
+            - generic [ref=e223]: 3 backup jobs failed in the last 24 hours
+            - button "View Failed" [ref=e224] [cursor=pointer]:
+              - text: View Failed
+              - img [ref=e225]
+        - generic [ref=e228]:
+          - button "Microsoft 365 142/142 5 workloads • 100% protected 80" [ref=e229] [cursor=pointer]:
+            - img [ref=e232]
+            - generic [ref=e237]:
+              - generic [ref=e238]:
+                - heading "Microsoft 365" [level=3] [ref=e239]
+                - generic [ref=e240]: 142/142
+              - paragraph [ref=e241]: 5 workloads • 100% protected
+            - generic [ref=e242]: "80"
+            - img [ref=e245]
+          - generic [ref=e248]:
+            - button "Exchange 45/45 never 0 items" [ref=e249] [cursor=pointer]:
+              - generic [ref=e250]:
+                - img [ref=e251]
+                - generic [ref=e254]: Exchange
+                - generic [ref=e255]: 45/45
+              - generic [ref=e256]:
+                - generic [ref=e257]: never
+                - generic [ref=e258]: 0 items
+            - button "OneDrive 45/45 never 0 items" [ref=e261] [cursor=pointer]:
+              - generic [ref=e262]:
+                - img [ref=e263]
+                - generic [ref=e265]: OneDrive
+                - generic [ref=e266]: 45/45
+              - generic [ref=e267]:
+                - generic [ref=e268]: never
+                - generic [ref=e269]: 0 items
+            - button "SharePoint 24/24 never 0 items" [ref=e272] [cursor=pointer]:
+              - generic [ref=e273]:
+                - img [ref=e274]
+                - generic [ref=e277]: SharePoint
+                - generic [ref=e278]: 24/24
+              - generic [ref=e279]:
+                - generic [ref=e280]: never
+                - generic [ref=e281]: 0 items
+            - button "Teams 25/25 never 0 items" [ref=e284] [cursor=pointer]:
+              - generic [ref=e285]:
+                - img [ref=e286]
+                - generic [ref=e288]: Teams
+                - generic [ref=e289]: 25/25
+              - generic [ref=e290]:
+                - generic [ref=e291]: never
+                - generic [ref=e292]: 0 items
+            - button "Entra ID 3/3 never 0 items" [ref=e295] [cursor=pointer]:
+              - generic [ref=e296]:
+                - img [ref=e297]
+                - generic [ref=e300]: Entra ID
+                - generic [ref=e301]: 3/3
+              - generic [ref=e302]:
+                - generic [ref=e303]: never
+                - generic [ref=e304]: 0 items
+        - generic [ref=e307]:
+          - generic [ref=e308]:
+            - generic [ref=e309]:
+              - generic [ref=e310]:
+                - img [ref=e311]
+                - heading "License & Usage" [level=3] [ref=e313]
+              - generic [ref=e314]: Community (Free)
+            - generic [ref=e315]:
+              - generic [ref=e317]:
+                - generic [ref=e318]: Protected Objects
+                - generic [ref=e319]: 142 / 25
+              - generic [ref=e323]:
+                - generic [ref=e324]: Tenants
+                - generic [ref=e325]: 3 / 1
+              - generic [ref=e329]:
+                - generic [ref=e330]: Workloads
+                - generic [ref=e331]: 5 / 3
+              - generic [ref=e334]:
+                - paragraph [ref=e335]: Included Workloads
+                - generic [ref=e336]:
+                  - generic [ref=e337]: exchange
+                  - generic [ref=e338]: onedrive
+                  - generic [ref=e339]: sharepoint
+              - button "View full usage details →" [ref=e340] [cursor=pointer]
+          - generic [ref=e341]:
+            - generic [ref=e342]:
+              - heading "7-Day Backup Trend" [level=3] [ref=e343]
+              - img [ref=e344]
+            - application [ref=e350]:
+              - generic [ref=e354]:
+                - generic [ref=e355]:
+                  - generic [ref=e357]: Thu
+                  - generic [ref=e359]: Fri
+                  - generic [ref=e361]: Sat
+                  - generic [ref=e363]: Sun
+                  - generic [ref=e365]: Mon
+                  - generic [ref=e367]: Tue
+                  - generic [ref=e369]: Wed
+                - generic [ref=e370]:
+                  - generic [ref=e372]: "0"
+                  - generic [ref=e374]: "1"
+                  - generic [ref=e376]: "2"
+                  - generic [ref=e378]: "3"
+                  - generic [ref=e380]: "4"
+        - generic [ref=e381]:
+          - generic [ref=e382]:
+            - generic [ref=e383]:
+              - img [ref=e384]
+              - heading "Storage" [level=3] [ref=e388]
+            - generic [ref=e389]:
+              - generic [ref=e390]:
+                - paragraph [ref=e391]: Total Size
+                - paragraph [ref=e392]: 0 GB
+              - generic [ref=e393]:
+                - paragraph [ref=e394]: Snapshots
+                - paragraph [ref=e395]: "0"
+              - generic [ref=e396]:
+                - paragraph [ref=e397]: Dedup Savings
+                - paragraph [ref=e398]: 42%
+              - generic [ref=e399]:
+                - paragraph [ref=e400]: Compression
+                - paragraph [ref=e401]: 2.9x
+          - generic [ref=e402]:
+            - generic [ref=e403]:
+              - img [ref=e404]
+              - heading "Compliance" [level=3] [ref=e408]
+            - generic [ref=e409]:
+              - generic [ref=e410]:
+                - paragraph [ref=e411]: SLA Adherence
+                - paragraph [ref=e412]: 100%
+              - generic [ref=e413]:
+                - paragraph [ref=e414]: Violations
+                - paragraph [ref=e415]: "0"
+              - generic [ref=e416]:
+                - img [ref=e417]
+                - generic [ref=e420]:
+                  - paragraph [ref=e421]: WORM Locked
+                  - paragraph [ref=e422]: Active
+              - generic [ref=e423]:
+                - img [ref=e424]
+                - generic [ref=e427]:
+                  - paragraph [ref=e428]: Sensitive Data
+                  - paragraph [ref=e429]: Monitored
+    - generic [ref=e435]:
+      - button [ref=e436] [cursor=pointer]:
+        - img [ref=e437]
+      - generic [ref=e440]:
+        - img [ref=e442]
+        - generic [ref=e445]: Step 1 of 11
+      - heading "Welcome to Shieldio" [level=3] [ref=e446]
+      - paragraph [ref=e447]: Your SaaS data protection platform. This tour walks you through setup, operations, and advanced features — it only takes 90 seconds.
+      - generic [ref=e448]:
+        - generic [ref=e449]:
+          - button [ref=e450] [cursor=pointer]
+          - button [ref=e451] [cursor=pointer]
+          - button [ref=e452] [cursor=pointer]
+          - button [ref=e453] [cursor=pointer]
+          - button [ref=e454] [cursor=pointer]
+          - button [ref=e455] [cursor=pointer]
+          - button [ref=e456] [cursor=pointer]
+          - button [ref=e457] [cursor=pointer]
+          - button [ref=e458] [cursor=pointer]
+          - button [ref=e459] [cursor=pointer]
+          - button [ref=e460] [cursor=pointer]
+        - button "Next" [ref=e462] [cursor=pointer]:
+          - text: Next
+          - img [ref=e463]
+      - button "Skip tour" [ref=e465] [cursor=pointer]
+    - button "Give feedback" [ref=e466] [cursor=pointer]:
+      - img [ref=e467]
+  - generic [ref=e470]: "0"
+```

@@ -44,9 +44,9 @@ interface MSPOverview {
 }
 
 const HEALTH_COLORS: Record<string, string> = {
-  healthy: 'text-green-400 bg-green-500/100/10 border-green-500/30',
-  at_risk: 'text-amber-400 bg-amber-500/100/10 border-amber-500/30',
-  critical: 'text-red-400 bg-red-500/100/10 border-red-500/30',
+  healthy: 'text-green-400 bg-green-500/10 border-green-500/30',
+  at_risk: 'text-amber-400 bg-amber-500/10 border-amber-500/30',
+  critical: 'text-red-400 bg-red-500/10 border-red-500/30',
 };
 
 const HEALTH_RING: Record<string, string> = {
@@ -67,7 +67,7 @@ function StatCard({ icon: Icon, label, value, sub }: { icon: typeof Shield; labe
   return (
     <div className="bg-card rounded-xl p-4 border border-border">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg bg-blue-500/100/10 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
           <Icon className="w-5 h-5 text-blue-400" />
         </div>
         <div>
@@ -155,7 +155,7 @@ export default function MSPDashboard() {
               <div className="flex items-center gap-2">
                 <span className="font-semibold text-foreground text-sm">{tenant.name}</span>
                 <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                  tenant.status === 'active' ? 'bg-green-500/100/10 text-green-400' : 'bg-gray-600 text-muted-foreground'
+                  tenant.status === 'active' ? 'bg-green-500/10 text-green-400' : 'bg-gray-600 text-muted-foreground'
                 }`}>
                   {tenant.status}
                 </span>
@@ -198,12 +198,12 @@ export default function MSPDashboard() {
             {/* Alerts */}
             <div className="flex items-center gap-2">
               {tenant.alert_count > 0 ? (
-                <div className="flex items-center gap-1 px-2 py-1 bg-red-500/100/10 rounded-lg">
+                <div className="flex items-center gap-1 px-2 py-1 bg-red-500/10 rounded-lg">
                   <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
                   <span className="text-xs text-red-400 font-medium">{tenant.alert_count}</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-1 px-2 py-1 bg-green-500/100/10 rounded-lg">
+                <div className="flex items-center gap-1 px-2 py-1 bg-green-500/10 rounded-lg">
                   <CheckCircle className="w-3.5 h-3.5 text-green-400" />
                   <span className="text-xs text-green-400 font-medium">OK</span>
                 </div>

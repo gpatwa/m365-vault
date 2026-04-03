@@ -62,13 +62,13 @@
       - text: Failed to fetch
     - generic [ref=e85]:
       - generic [ref=e86]:
-        - generic [ref=e87]: Username
-        - textbox "Enter your username" [ref=e88]: admin
+        - generic [ref=e87]: Email or Username
+        - textbox "Email or username" [ref=e88]: admin
       - generic [ref=e89]:
         - generic [ref=e90]:
           - generic [ref=e91]: Password
           - button "Forgot password?" [ref=e92] [cursor=pointer]
-        - textbox "Enter your password" [ref=e93]: admin123
+        - textbox "Enter your password" [ref=e93]: Admin123
       - button "Sign In" [ref=e94] [cursor=pointer]:
         - text: Sign In
         - img [ref=e95]

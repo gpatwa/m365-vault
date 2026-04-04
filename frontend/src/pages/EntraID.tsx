@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Shield, Users, KeyRound, ShieldCheck, AppWindow, MapPin, UserCog, Server, Building2, Lock, Laptop, Globe, Download } from 'lucide-react';
+import { Shield, Users, KeyRound, ShieldCheck, AppWindow, MapPin, UserCog, Server, Building2, Lock, Laptop, Globe, Download, X } from 'lucide-react';
 import { api } from '../api/client';
 import { WorkloadPageLayout } from '../components/design-system';
 import RestoreDialog from '../components/RestoreDialog';
@@ -256,49 +256,22 @@ export default function EntraID() {
         ) : null;
       })()}
 
-      {/* Toolbar — Restore + Compare aligned in one row */}
-      <div className="flex items-center justify-between gap-3">
-        <button
-          onClick={() => setShowDiff(!showDiff)}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-            showDiff ? 'bg-amber-500/10 border-amber-300 text-amber-400' : 'bg-card border-border text-muted-foreground hover:border-amber-500/20'
-          }`}
-        >
-          {showDiff ? '✕ Close Diff' : '🔍 Compare Snapshots'}
-        </button>
-        {showDiff && snapshots?.items && snapshots.items.length >= 2 && (
-          <div className="flex items-center gap-2 text-xs">
-            <select
-              className="border border-border rounded-lg px-2 py-1 text-xs"
-              value={diffSnapA || ''}
-              onChange={e => setDiffSnapA(Number(e.target.value) || null)}
-            >
-              <option value="">Older snapshot...</option>
-              {snapshots.items.map(s => (
-                <option key={s.id} value={s.id}>#{s.id} ({s.item_count} items, {s.started_at?.slice(0, 10)})</option>
-              ))}
-            </select>
-            <span className="text-muted-foreground">→</span>
-            <select
-              className="border border-border rounded-lg px-2 py-1 text-xs"
-              value={diffSnapB || ''}
-              onChange={e => setDiffSnapB(Number(e.target.value) || null)}
-            >
-              <option value="">Newer snapshot...</option>
-              {snapshots.items.map(s => (
-                <option key={s.id} value={s.id}>#{s.id} ({s.item_count} items, {s.started_at?.slice(0, 10)})</option>
-              ))}
-            </select>
-          </div>
-        )}
-        <button
-          onClick={() => setShowRestore(true)}
-          disabled={!summary.snapshot_id}
-          className="ml-auto px-4 py-1.5 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 flex items-center gap-2 disabled:opacity-50"
-        >
-          <Download className="w-4 h-4" /> Restore
-        </button>
-      </div>
+      {/* Diff toggle (collapsible, shown only when clicked) */}
+      {showDiff && snapshots?.items && snapshots.items.length >= 2 && (
+        <div className="flex items-center gap-2 text-xs bg-card border border-border rounded-lg p-3">
+          <span className="text-muted-foreground font-medium">Compare:</span>
+          <select className="border border-border rounded-lg px-2 py-1 text-xs bg-background text-foreground" value={diffSnapA || ''} onChange={e => setDiffSnapA(Number(e.target.value) || null)}>
+            <option value="">Older snapshot...</option>
+            {snapshots.items.map(s => (<option key={s.id} value={s.id}>#{s.id} ({s.item_count} items, {s.started_at?.slice(0, 10)})</option>))}
+          </select>
+          <span className="text-muted-foreground">→</span>
+          <select className="border border-border rounded-lg px-2 py-1 text-xs bg-background text-foreground" value={diffSnapB || ''} onChange={e => setDiffSnapB(Number(e.target.value) || null)}>
+            <option value="">Newer snapshot...</option>
+            {snapshots.items.map(s => (<option key={s.id} value={s.id}>#{s.id} ({s.item_count} items, {s.started_at?.slice(0, 10)})</option>))}
+          </select>
+          <button onClick={() => setShowDiff(false)} className="ml-auto text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
+        </div>
+      )}
 
       {/* Diff Results */}
       {showDiff && diffResult && (
@@ -348,6 +321,26 @@ export default function EntraID() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Action toolbar — matches Exchange page pattern */}
+      {summary.snapshot_id && !showDiff && (
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            onClick={() => setShowDiff(!showDiff)}
+            className="px-3 py-2 text-sm border border-border rounded-lg bg-card text-muted-foreground hover:border-amber-500/20 hover:text-foreground transition-colors"
+          >
+            Compare Snapshots
+          </button>
+          <button
+            onClick={() => setShowRestore(true)}
+            disabled={!summary.snapshot_id}
+            className="px-3 py-2 text-sm bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 flex items-center gap-1.5 disabled:opacity-50"
+          >
+            <Download className="w-3.5 h-3.5" /> Restore
+          </button>
+          <span className="ml-auto text-xs text-muted-foreground">{summary.item_count} items backed up</span>
         </div>
       )}
 

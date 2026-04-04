@@ -23,6 +23,10 @@ class User(Base):
     full_name = Column(String(255), nullable=True)
     role = Column(Enum(UserRole), default=UserRole.VIEWER, nullable=False)
     is_active = Column(Integer, default=1)
+    email_verified = Column(Integer, default=0)  # 0=unverified, 1=verified
+    email_verification_token = Column(String(255), nullable=True)
+    password_reset_token = Column(String(255), nullable=True)
+    password_reset_expires = Column(DateTime, nullable=True)
     sso_provider = Column(String(50), nullable=True)   # "entra_id", "google", etc.
     sso_subject_id = Column(String(255), nullable=True, index=True)  # IdP unique ID
     created_at = Column(DateTime, default=datetime.utcnow)

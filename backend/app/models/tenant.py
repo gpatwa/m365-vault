@@ -28,5 +28,12 @@ class Tenant(Base):
     total_sites = Column(Integer, default=0)
     total_entra_objects = Column(Integer, default=0)
     total_teams = Column(Integer, default=0)
+    # Stripe Billing
+    stripe_customer_id = Column(String(255), nullable=True)
+    subscription_id = Column(String(255), nullable=True)
+    subscription_status = Column(String(50), default="free")  # free, trialing, active, past_due, canceled
+    subscription_tier = Column(String(50), default="community")
+    trial_ends_at = Column(DateTime, nullable=True)
+    current_period_end = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

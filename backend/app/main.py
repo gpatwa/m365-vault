@@ -362,9 +362,11 @@ app.include_router(diagnostics_router)
 from app.api.msp import router as msp_router
 from app.api.feature_flags import router as feature_flags_router
 from app.api.agents import router as agents_router
+from app.api.billing import router as billing_router
 app.include_router(msp_router)
 app.include_router(feature_flags_router)
 app.include_router(agents_router)
+app.include_router(billing_router)
 
 
 @app.get("/")

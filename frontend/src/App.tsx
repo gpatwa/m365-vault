@@ -35,6 +35,9 @@ import Legal from './pages/Legal';
 import Contact from './pages/Contact';
 import About from './pages/About';
 import AgentShield from './pages/AgentShield';
+import ResetPassword from './pages/ResetPassword';
+import VerifyEmail from './pages/VerifyEmail';
+import Billing from './pages/Billing';
 import ObjectDetail from './pages/ObjectDetail';
 import SecurityPage from './pages/Security';
 import Docs from './pages/Docs';
@@ -117,6 +120,8 @@ function AppRoutes() {
       <Route path="/legal" element={<Legal />} />
       <Route path="/contact" element={<Contact />} />
       <Route path="/about" element={<About />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/docs" element={<Docs />} />
       <Route path="/docs/view/:filename" element={<DocViewer />} />
       <Route path="/onboard" element={<ProtectedRoute><Onboard /></ProtectedRoute>} />
@@ -151,6 +156,7 @@ function AppRoutes() {
         <Route path="recovery" element={<Recovery />} />
         <Route path="reports" element={<Reports />} />
         <Route path="usage" element={<Usage />} />
+        <Route path="billing" element={<Billing />} />
         <Route path="security" element={<SecurityPage />} />
         <Route path="performance" element={<Performance />} />
         <Route path="org-context" element={<OrgContext />} />

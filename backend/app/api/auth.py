@@ -1,5 +1,6 @@
 """Authentication API routes."""
-from datetime import timedelta
+import logging
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -13,6 +14,8 @@ from app.services.auth import (
     hash_password, verify_password, create_access_token, create_refresh_token,
     verify_refresh_token, validate_password, get_current_user
 )
+
+logger = logging.getLogger(__name__)
 from app.config import settings
 from app.errors import (
     ShieldioError, AUTH_INVALID_CREDENTIALS, AUTH_ACCOUNT_DISABLED,
@@ -152,6 +155,80 @@ async def refresh_token(req: RefreshRequest, db: AsyncSession = Depends(get_db))
 async def get_me(current_user: User = Depends(get_current_user)):
     """Get current authenticated user info."""
     return current_user
+
+
+# ── Password Reset + Email Verification ──
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+
+class VerifyEmailRequest(BaseModel):
+    token: str
+
+
+@router.post("/forgot-password")
+async def forgot_password(req: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)):
+    """Send password reset email. Always returns 200 (don't reveal if email exists)."""
+    import secrets
+    from datetime import timedelta
+    result = await db.execute(select(User).where(User.email == req.email))
+    user = result.scalar_one_or_none()
+    if user:
+        token = secrets.token_urlsafe(32)
+        user.password_reset_token = token
+        user.password_reset_expires = datetime.utcnow() + timedelta(hours=1)
+        await db.commit()
+        # Send email
+        try:
+            from app.services.email_service import email_service
+            await email_service.send_password_reset(user.email, token)
+        except Exception as e:
+            logger.warning(f"Failed to send reset email: {e}")
+    return {"message": "If that email exists, a reset link has been sent."}
+
+
+@router.post("/reset-password")
+async def reset_password(req: ResetPasswordRequest, db: AsyncSession = Depends(get_db)):
+    """Reset password using token from email."""
+    result = await db.execute(
+        select(User).where(User.password_reset_token == req.token)
+    )
+    user = result.scalar_one_or_none()
+    if not user or not user.password_reset_expires or user.password_reset_expires < datetime.utcnow():
+        raise HTTPException(400, detail="Invalid or expired reset token")
+
+    is_valid, error = validate_password(req.new_password)
+    if not is_valid:
+        raise HTTPException(400, detail=error)
+
+    user.password_hash = hash_password(req.new_password)
+    user.password_reset_token = None
+    user.password_reset_expires = None
+    await db.commit()
+    return {"message": "Password reset successfully. You can now log in."}
+
+
+@router.post("/verify-email")
+async def verify_email(req: VerifyEmailRequest, db: AsyncSession = Depends(get_db)):
+    """Verify email address using token from email."""
+    result = await db.execute(
+        select(User).where(User.email_verification_token == req.token)
+    )
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(400, detail="Invalid verification token")
+
+    user.email_verified = 1
+    user.email_verification_token = None
+    await db.commit()
+    return {"message": "Email verified successfully."}
 
 
 # ── SSO / OIDC Endpoints ──

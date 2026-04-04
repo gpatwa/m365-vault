@@ -143,6 +143,21 @@ class Settings(BaseSettings):
     ALERT_EMAIL_RECIPIENTS: str = ""  # Comma-separated
     ALERT_WEBHOOK_URL: str = ""       # Slack, Teams, or custom webhook
 
+    # Email (transactional)
+    EMAIL_PROVIDER: str = "console"  # console, resend, smtp
+    RESEND_API_KEY: str = ""
+    EMAIL_FROM: str = "Shieldio <noreply@shieldio.io>"
+    FRONTEND_URL: str = "http://localhost:5173"
+
+    # Stripe Billing
+    STRIPE_SECRET_KEY: str = ""
+    STRIPE_PUBLISHABLE_KEY: str = ""
+    STRIPE_WEBHOOK_SECRET: str = ""
+    STRIPE_PRICE_PROFESSIONAL: str = ""
+    STRIPE_PRICE_BUSINESS: str = ""
+    STRIPE_PRICE_ENTERPRISE: str = ""
+    TRIAL_PERIOD_DAYS: int = 14
+
     # Smart Engine
     ANOMALY_Z_SCORE_THRESHOLD: float = 2.0   # Standard deviations to flag as anomaly
     HEALTH_CHECK_INTERVAL_MINUTES: int = 5

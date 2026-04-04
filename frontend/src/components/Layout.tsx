@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Mail, HardDrive, Globe, Shield, ShieldCheck, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search, RotateCcw, BarChart3, Gauge, ChevronDown, Menu, X, Users, Palette, Play, Bot } from 'lucide-react';
+import { LayoutDashboard, Mail, HardDrive, Globe, Shield, ShieldCheck, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search, RotateCcw, BarChart3, Gauge, ChevronDown, Menu, X, Users, Palette, Play, Bot, CreditCard } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useOnboarding } from '../contexts/OnboardingContext';
 import { useFeatureFlags } from '../contexts/FeatureFlagContext';
@@ -91,6 +91,7 @@ const navGroups: NavGroup[] = [
       { path: '/tenants', label: 'Tenants', icon: Building2 },
       { path: '/sla-policies', label: 'SLA Policies', icon: Shield },
       { path: '/usage', label: 'Usage & License', icon: Gauge },
+      { path: '/billing', label: 'Billing', icon: CreditCard },
       { path: '/audit', label: 'Audit Log', icon: FileText },
       { path: '/security', label: 'Security', icon: ShieldAlert },
       { path: '/performance', label: 'Performance', icon: Activity },

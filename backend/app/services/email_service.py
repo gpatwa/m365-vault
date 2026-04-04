@@ -20,7 +20,7 @@ def _base_template(title: str, content: str) -> str:
 <table width="560" cellpadding="0" cellspacing="0" style="background:#171717;border-radius:12px;border:1px solid rgba(255,255,255,0.1);">
   <!-- Header -->
   <tr><td style="padding:24px 32px 16px;border-bottom:1px solid rgba(255,255,255,0.1);">
-    <span style="color:#14b8a6;font-size:20px;font-weight:700;">&#9737; Shieldio</span>
+    <span style="color:#14b8a6;font-size:20px;font-weight:700;">&#9737; KavachIQ</span>
   </td></tr>
   <!-- Title -->
   <tr><td style="padding:24px 32px 8px;">
@@ -32,7 +32,7 @@ def _base_template(title: str, content: str) -> str:
   </td></tr>
   <!-- Footer -->
   <tr><td style="padding:16px 32px;border-top:1px solid rgba(255,255,255,0.1);color:#737373;font-size:11px;">
-    Shieldio — SaaS Data Protection | <a href="https://shieldio.io" style="color:#14b8a6;text-decoration:none;">shieldio.io</a>
+    KavachIQ — Intelligent Cyber Recovery | <a href="https://kavachiq.com" style="color:#14b8a6;text-decoration:none;">kavachiq.com</a>
   </td></tr>
 </table>
 </td></tr></table>
@@ -55,7 +55,7 @@ class EmailService:
         name = full_name or email.split("@")[0]
         content = f"""
         <p>Hi {name},</p>
-        <p>Welcome to Shieldio! Your account is ready.</p>
+        <p>Welcome to KavachIQ! Your account is ready.</p>
         <p>Here's what you can do next:</p>
         <ul style="color:#b5b5b5;">
           <li>Connect your Microsoft 365 tenant</li>
@@ -65,7 +65,7 @@ class EmailService:
         {_button("Go to Dashboard", _frontend_url("/"))}
         <p style="color:#737373;font-size:12px;margin-top:16px;">Free for up to 25 objects. No credit card required.</p>
         """
-        await self.provider.send(to=email, subject="Welcome to Shieldio", html=_base_template("Welcome to Shieldio", content))
+        await self.provider.send(to=email, subject="Welcome to KavachIQ", html=_base_template("Welcome to KavachIQ", content))
 
     async def send_email_verification(self, email: str, token: str):
         """Email verification link."""
@@ -73,9 +73,9 @@ class EmailService:
         content = f"""
         <p>Please verify your email address to complete your registration.</p>
         {_button("Verify Email", url)}
-        <p style="color:#737373;font-size:12px;">If you didn't create a Shieldio account, you can ignore this email.</p>
+        <p style="color:#737373;font-size:12px;">If you didn't create a KavachIQ account, you can ignore this email.</p>
         """
-        await self.provider.send(to=email, subject="Verify your email — Shieldio", html=_base_template("Verify Your Email", content))
+        await self.provider.send(to=email, subject="Verify your email — KavachIQ", html=_base_template("Verify Your Email", content))
 
     async def send_password_reset(self, email: str, token: str):
         """Password reset link (expires in 1 hour)."""
@@ -85,14 +85,14 @@ class EmailService:
         {_button("Reset Password", url)}
         <p style="color:#737373;font-size:12px;">This link expires in 1 hour. If you didn't request a reset, ignore this email.</p>
         """
-        await self.provider.send(to=email, subject="Reset your password — Shieldio", html=_base_template("Reset Your Password", content))
+        await self.provider.send(to=email, subject="Reset your password — KavachIQ", html=_base_template("Reset Your Password", content))
 
     async def send_trial_reminder(self, email: str, full_name: str, days_remaining: int):
         """Trial ending reminder."""
         name = full_name or "there"
         content = f"""
         <p>Hi {name},</p>
-        <p>Your Shieldio trial ends in <strong>{days_remaining} day{'s' if days_remaining != 1 else ''}</strong>.</p>
+        <p>Your KavachIQ trial ends in <strong>{days_remaining} day{'s' if days_remaining != 1 else ''}</strong>.</p>
         <p>To keep protecting your M365 data, upgrade to a paid plan:</p>
         <ul style="color:#b5b5b5;">
           <li><strong>Professional</strong> — $1.50/user/month (unlimited objects)</li>
@@ -102,18 +102,18 @@ class EmailService:
         {_button("Upgrade Now", _frontend_url("/billing"))}
         <p style="color:#737373;font-size:12px;">If you don't upgrade, your account will revert to the free Community plan (25 objects).</p>
         """
-        await self.provider.send(to=email, subject=f"Your Shieldio trial ends in {days_remaining} days", html=_base_template("Trial Ending Soon", content))
+        await self.provider.send(to=email, subject=f"Your KavachIQ trial ends in {days_remaining} days", html=_base_template("Trial Ending Soon", content))
 
     async def send_payment_failed(self, email: str, full_name: str):
         """Payment declined notification."""
         name = full_name or "there"
         content = f"""
         <p>Hi {name},</p>
-        <p>We couldn't process your payment for Shieldio. Please update your payment method to continue protecting your data.</p>
+        <p>We couldn't process your payment for KavachIQ. Please update your payment method to continue protecting your data.</p>
         {_button("Update Payment Method", _frontend_url("/billing"))}
         <p style="color:#737373;font-size:12px;">If your payment isn't updated within 7 days, your account will revert to the free Community plan.</p>
         """
-        await self.provider.send(to=email, subject="Payment failed — Shieldio", html=_base_template("Payment Failed", content))
+        await self.provider.send(to=email, subject="Payment failed — KavachIQ", html=_base_template("Payment Failed", content))
 
     async def send_backup_failure(self, email: str, tenant_name: str, workload: str, error: str):
         """Backup failure alert."""

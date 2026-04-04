@@ -146,7 +146,7 @@ class Settings(BaseSettings):
     # Email (transactional)
     EMAIL_PROVIDER: str = "console"  # console, resend, smtp
     RESEND_API_KEY: str = ""
-    EMAIL_FROM: str = "Shieldio <noreply@shieldio.io>"
+    EMAIL_FROM: str = "KavachIQ <noreply@kavachiq.com>"
     FRONTEND_URL: str = "http://localhost:5173"
 
     # Stripe Billing

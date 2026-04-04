@@ -379,11 +379,13 @@ from app.api.feature_flags import router as feature_flags_router
 from app.api.agents import router as agents_router
 from app.api.billing import router as billing_router
 from app.api.security_posture import router as security_posture_router
+from app.api.restore_approval import router as restore_approval_router
 app.include_router(msp_router)
 app.include_router(feature_flags_router)
 app.include_router(agents_router)
 app.include_router(billing_router)
 app.include_router(security_posture_router)
+app.include_router(restore_approval_router)
 
 
 @app.get("/")

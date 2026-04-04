@@ -101,8 +101,8 @@ def require_role(*roles: UserRole):
 # Backup operations: read-only access — ADMIN and OPERATOR can trigger
 require_backup_permission = require_role(UserRole.ADMIN, UserRole.OPERATOR)
 
-# Restore/recovery operations: write access — ADMIN only (high-risk)
-require_restore_permission = require_role(UserRole.ADMIN)
+# Restore/recovery operations: write access — ADMIN and RESTORE_OPERATOR
+require_restore_permission = require_role(UserRole.ADMIN, UserRole.RESTORE_OPERATOR)
 
 # MSP operations: dashboard, billing, branding — ADMIN and MSP_ADMIN
 require_msp_permission = require_role(UserRole.ADMIN, UserRole.MSP_ADMIN)

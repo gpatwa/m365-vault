@@ -183,9 +183,19 @@ async def restore_mailbox(
         target_object_id=req.target_object_id,
         item_ids_json=json.dumps(req.item_ids) if req.item_ids else None,
         status=RestoreStatus.QUEUED,
+        initiated_by_user_id=current_user.id,
     )
     db.add(restore_job)
     await db.flush()
+
+    # Audit log
+    from app.services.audit import audit_log
+    await audit_log(
+        db, action="restore.exchange", resource_type="protected_object",
+        resource_id=mailbox_id, user_id=current_user.id,
+        details=f"Exchange restore: {req.restore_type} on mailbox {obj.display_name}",
+        severity="warning",
+    )
 
     result = await get_dispatcher().dispatch_restore(
         RestoreJobMessage(restore_job_id=restore_job.id), db=db
@@ -208,8 +218,13 @@ async def export_pst(
     """Export mailbox snapshot as downloadable EML bundle (PST-compatible).
 
     Requires Business+ tier (pst_export feature flag).
+    Requires ADMIN or RESTORE_OPERATOR role (data exfiltration prevention).
     Returns a ZIP file containing all emails as .eml files organized by folder.
     """
+    from app.models.user import UserRole
+    if current_user.role not in (UserRole.ADMIN, UserRole.RESTORE_OPERATOR):
+        raise HTTPException(403, detail="PST export requires Restore Operator or Admin role")
+
     from app.services.feature_flags import feature_flags
     if not feature_flags.is_enabled("pst_export"):
         raise HTTPException(403, detail="PST export requires Business plan or higher. Upgrade at /billing.")

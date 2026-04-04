@@ -9,6 +9,7 @@ from app.database import Base
 class UserRole(str, enum.Enum):
     ADMIN = "admin"
     MSP_ADMIN = "msp_admin"
+    RESTORE_OPERATOR = "restore_operator"  # Can trigger restores but not admin settings
     OPERATOR = "operator"
     VIEWER = "viewer"
 

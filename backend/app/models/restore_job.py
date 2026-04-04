@@ -2,7 +2,7 @@
 import enum
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Enum, Integer, String, Text, ForeignKey
+from sqlalchemy import Column, DateTime, Enum, Integer, String, Text, ForeignKey, Index
 from app.database import Base
 
 
@@ -48,4 +48,8 @@ class RestoreJob(Base):
     item_ids_json = Column(Text, nullable=True)  # JSON array of specific item IDs for item-level
     retry_count = Column(Integer, default=0)     # Number of times this job has been retried
     max_retries = Column(Integer, default=3)     # Maximum auto-retries before dead-lettering
+    # Audit + approval
+    initiated_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    approval_required = Column(Integer, default=0)    # 0=no, 1=yes
+    approval_status = Column(String(20), nullable=True)  # pending, approved, rejected
     created_at = Column(DateTime, default=datetime.utcnow)

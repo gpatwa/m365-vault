@@ -421,9 +421,19 @@ async def restore_entra_id(
         restore_type=RestoreType(req.restore_type),
         item_ids_json=json.dumps(req.item_ids) if req.item_ids else None,
         status=RestoreStatus.QUEUED,
+        initiated_by_user_id=current_user.id,
     )
     db.add(restore_job)
     await db.flush()
+
+    # Audit log
+    from app.services.audit import audit_log
+    await audit_log(
+        db, action="restore.entra_id", resource_type="protected_object",
+        resource_id=obj.id, user_id=current_user.id,
+        details=f"Entra ID restore: {req.restore_type} from snapshot {req.snapshot_id}",
+        severity="warning",
+    )
 
     disp_result = await get_dispatcher().dispatch_restore(
         RestoreJobMessage(restore_job_id=restore_job.id), db=db

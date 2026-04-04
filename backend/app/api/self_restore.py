@@ -109,24 +109,33 @@ async def restore_my_item(
     if not obj:
         raise HTTPException(status_code=404, detail="Protected object not found")
 
-    # Non-admin: verify items belong to user
-    if current_user.role.value != "admin":
+    # Non-admin/non-restore_operator: verify items belong to user + in-place only
+    from app.models.user import UserRole
+    if current_user.role not in (UserRole.ADMIN, UserRole.RESTORE_OPERATOR):
         if obj.email != current_user.email:
             raise HTTPException(status_code=403, detail="You can only restore your own items")
 
     # Create restore job
     restore_job = RestoreJob(
         tenant_id=obj.tenant_id,
-        workload_type=obj.workload_type.value,
         restore_type=RestoreType.ITEM_LEVEL,
         status=RestoreStatus.QUEUED,
         source_snapshot_id=snapshot.id,
         source_object_id=obj.id,
-        items_requested=len(ids),
-        created_by=current_user.username,
+        item_ids_json=json.dumps(ids),
+        initiated_by_user_id=current_user.id,
     )
     db.add(restore_job)
     await db.flush()
+
+    # Audit log
+    from app.services.audit import audit_log
+    await audit_log(
+        db, action="restore.self_service", resource_type="protected_object",
+        resource_id=obj.id, user_id=current_user.id,
+        details=f"Self-restore: {len(ids)} items from {obj.display_name} by {current_user.email}",
+        severity="info",
+    )
 
     # Execute restore
     from app.services.restore_engine import RestoreEngine

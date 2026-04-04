@@ -483,6 +483,15 @@ async def mass_restore(
             "plan": restore_plan,
         }
 
+    # Audit log
+    from app.services.audit import audit_log
+    await audit_log(
+        db, action="restore.mass_recovery", resource_type="tenant",
+        resource_id=req.tenant_id, user_id=current_user.id,
+        details=f"Mass restore: {len(restore_plan)} objects to {restore_point.isoformat()}",
+        severity="warning",
+    )
+
     # Execute restore jobs
     jobs_created = 0
     for plan_item in restore_plan:
@@ -492,6 +501,7 @@ async def mass_restore(
             source_object_id=plan_item["object_id"],
             restore_type=RestoreType.FULL_INPLACE,
             status=RestoreStatus.QUEUED,
+            initiated_by_user_id=current_user.id,
         )
         db.add(restore_job)
         await db.flush()
@@ -604,6 +614,15 @@ async def test_restore(
             "items_verified": verified,
             "errors": errors,
         })
+
+    # Audit log
+    from app.services.audit import audit_log
+    await audit_log(
+        db, action="restore.test", resource_type="tenant",
+        resource_id=tenant_id, user_id=current_user.id,
+        details=f"Test restore: {len(test_results)} objects tested",
+        severity="info",
+    )
 
     await db.commit()
 

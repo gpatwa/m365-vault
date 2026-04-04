@@ -317,7 +317,9 @@ See full design: `docs/CONFIG_DRIFT_DESIGN.md`
 | 4 | 9-10 | **DONE** | Polish: Health gate, re-auth, analytics, alerting |
 | 5 | 11 | **DONE** | GDPR: Data export, account deletion |
 | 6 | 12-15 | **PLANNED** | Configuration Drift Detection (THE MOAT) |
-| 7 | 16+ | Backlog | Hybrid Backup (Microsoft Backup Storage API) |
+| 7 | 15 | **DONE** | Restore Permission Model: audit, roles, approval workflow |
+| 8 | 16+ | Backlog | Per-Workload App Separation (Sites.Selected, RBAC for Apps) |
+| 9 | 17+ | Backlog | Hybrid Backup (Microsoft Backup Storage API) |
 
 ---
 

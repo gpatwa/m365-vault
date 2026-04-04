@@ -38,7 +38,7 @@ export default function SecurityPosture() {
 
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ['security-posture'],
-    queryFn: () => api.get<PostureData>('/security/posture'),
+    queryFn: () => api.get<PostureData>('/security-posture/posture'),
   });
 
   const d = data;

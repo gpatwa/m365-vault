@@ -214,30 +214,30 @@ export default function FailedItems() {
 
   const heroStats: HeroStat[] = [
     {
-      label: 'Total Failed',
-      value: summary?.total_failed ?? 0,
-      subtitle: 'Across all workloads',
-      icon: XCircle,
-      color: (summary?.total_failed ?? 0) > 0 ? 'red' : 'gray',
-    },
-    {
-      label: 'Unresolved',
+      label: 'Protection Gaps',
       value: summary?.total_unresolved ?? 0,
-      subtitle: 'Needs attention',
+      subtitle: 'Items at risk',
       icon: ShieldAlert,
       color: (summary?.total_unresolved ?? 0) > 0 ? 'red' : 'green',
     },
     {
-      label: 'Retriable',
+      label: 'At Risk',
+      value: (summary?.total_unresolved ?? 0) - (summary?.categories?.reduce((sum: number, c: FailedItemCategory) => sum + (c.retriable || 0), 0) ?? 0),
+      subtitle: 'Needs manual action',
+      icon: XCircle,
+      color: (summary?.total_unresolved ?? 0) > 0 ? 'red' : 'gray',
+    },
+    {
+      label: 'Auto-Fixable',
       value: summary?.categories?.reduce((sum: number, c: FailedItemCategory) => sum + (c.retriable || 0), 0) ?? 0,
       subtitle: 'Ready to retry',
       icon: RotateCcw,
       color: 'amber',
     },
     {
-      label: 'Error Types',
+      label: 'Root Causes',
       value: summary?.categories?.length ?? 0,
-      subtitle: 'Distinct categories',
+      subtitle: 'Distinct error types',
       icon: Info,
       color: 'blue',
     },
@@ -249,7 +249,7 @@ export default function FailedItems() {
       <Breadcrumb
         items={[
           { label: getActivePlatformLabel(), path: '/' },
-          { label: 'Failed Items' },
+          { label: 'Protection Gaps' },
         ]}
       />
 
@@ -260,8 +260,8 @@ export default function FailedItems() {
             <ShieldAlert className="w-6 h-6 text-red-600" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-foreground">Failed Items</h1>
-            <p className="text-xs text-muted-foreground">Review failures by workload, understand root causes, take action</p>
+            <h1 className="text-xl font-bold text-foreground">Protection Gaps</h1>
+            <p className="text-xs text-muted-foreground">Items not fully protected — close these gaps to ensure complete recovery</p>
           </div>
         </div>
         <button
@@ -396,7 +396,7 @@ export default function FailedItems() {
           ...(showResolved ? {} : { is_resolved: 'false' }),
           ...(selectedWorkload ? { workload_type: selectedWorkload } : {}),
         }}
-        title={selectedWorkload ? `${WORKLOAD_MAP[selectedWorkload]?.label || selectedWorkload} Failures` : 'All Failed Items'}
+        title={selectedWorkload ? `${WORKLOAD_MAP[selectedWorkload]?.label || selectedWorkload} Gaps` : 'All Protection Gaps'}
         searchable
         searchPlaceholder="Search by item name or error..."
         filters={filters}

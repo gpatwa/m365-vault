@@ -374,8 +374,8 @@ export default function Dashboard() {
     if (failed > 0) {
       items.push({
         icon: 'error',
-        message: `${failed} backup job${failed > 1 ? 's' : ''} failed in the last 24 hours`,
-        action: { label: 'View Failed', onClick: () => navigate('/failed-items') },
+        message: `${failed} protection gap${failed > 1 ? 's' : ''} detected in the last 24 hours`,
+        action: { label: 'View Gaps', onClick: () => navigate('/failed-items') },
       });
     }
     if (anomalies > 0) {

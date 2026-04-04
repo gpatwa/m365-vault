@@ -56,7 +56,7 @@ const navGroups: NavGroup[] = [
     defaultOpen: true,
     items: [
       { path: '/jobs', label: 'Jobs', icon: Activity },
-      { path: '/failed-items', label: 'Failed Items', icon: ShieldAlert },
+      { path: '/failed-items', label: 'Protection Gaps', icon: ShieldAlert },
       { path: '/restore', label: 'Self Restore', icon: RotateCcw },
       { path: '/recovery', label: 'Recovery', icon: ShieldCheck },
     ],

@@ -100,6 +100,9 @@ export default function Exchange() {
         <span className="font-medium flex items-center gap-2">
           <Mail className="w-4 h-4 text-blue-500" />
           {row.display_name}
+          {(row as any).object_subtype === 'shared_mailbox' && (
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">Shared</span>
+          )}
         </span>
       ),
     },

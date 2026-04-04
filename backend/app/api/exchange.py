@@ -74,6 +74,7 @@ async def list_mailboxes(
                 "total_size_bytes": m.total_size_bytes,
                 "criticality_score": m.criticality_score,
                 "criticality_tier": m.criticality_tier,
+                "object_subtype": m.object_subtype,
             }
             for m in mailboxes
         ],

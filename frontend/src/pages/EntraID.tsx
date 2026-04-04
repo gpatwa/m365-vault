@@ -81,15 +81,27 @@ const itemColumns: Column<SnapshotItem>[] = [
   {
     key: 'metadata',
     label: 'Details',
-    render: (row) => (
-      <span className="text-muted-foreground text-xs">
-        {row.metadata && Object.entries(row.metadata)
-          .filter(([, v]) => v !== null && v !== undefined && v !== '')
-          .slice(0, 3)
-          .map(([k, v]) => `${k}: ${v}`)
-          .join(' \u2022 ')}
-      </span>
-    ),
+    render: (row) => {
+      if (!row.metadata) return null;
+      const m = row.metadata;
+      // Show clean, human-readable details per object type
+      const parts: string[] = [];
+      if (m.mail || m.email) parts.push(m.mail || m.email);
+      else if (m.userPrincipalName) parts.push(m.userPrincipalName);
+      if (m.displayName && !parts[0]?.includes(m.displayName)) parts.push(m.displayName);
+      if (m.accountEnabled !== undefined) parts.push(m.accountEnabled ? 'Active' : 'Disabled');
+      if (m.securityEnabled !== undefined) parts.push(m.securityEnabled ? 'Security' : 'Distribution');
+      if (m.state) parts.push(m.state);
+      if (m.memberCount !== undefined) parts.push(`${m.memberCount} members`);
+      if (m.signInAudience) parts.push(m.signInAudience);
+      if (m.servicePrincipalType) parts.push(m.servicePrincipalType);
+      if (parts.length === 0) {
+        // Fallback: show first 2 non-null values
+        Object.entries(m).filter(([, v]) => v !== null && v !== undefined && v !== '').slice(0, 2)
+          .forEach(([, v]) => parts.push(String(v).slice(0, 40)));
+      }
+      return <span className="text-muted-foreground text-xs">{parts.slice(0, 3).join(' · ')}</span>;
+    },
   },
   {
     key: 'size_bytes',
@@ -223,9 +235,11 @@ export default function EntraID() {
         </button>
       </div>
 
-      {/* Object Type Cards — 12 types in responsive grid */}
+      {/* Object Type Cards — show non-zero types, collapse empty ones */}
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-2.5">
-        {Object.entries(ITEM_TYPE_CONFIG).map(([type, config]) => {
+        {Object.entries(ITEM_TYPE_CONFIG)
+          .filter(([type]) => (summary.counts?.[type] || 0) > 0)
+          .map(([type, config]) => {
           const count = summary.counts?.[type] || 0;
           const Icon = config.icon;
           const isSelected = selectedType === type;
@@ -236,9 +250,7 @@ export default function EntraID() {
               className={`p-2.5 rounded-lg border text-left transition-all ${
                 isSelected
                   ? 'border-amber-400 bg-amber-500/10 ring-2 ring-amber-200'
-                  : count > 0
-                    ? 'border-border bg-card hover:border-amber-500/20 hover:bg-amber-500/10/50'
-                    : 'border-border bg-muted/50/50 opacity-60'
+                  : 'border-border bg-card hover:border-amber-500/20 hover:bg-amber-500/10/50'
               }`}
             >
               <Icon className={`w-4 h-4 mb-0.5 ${config.color}`} />
@@ -248,6 +260,12 @@ export default function EntraID() {
           );
         })}
       </div>
+      {(() => {
+        const zeroCount = Object.entries(ITEM_TYPE_CONFIG).filter(([type]) => !(summary.counts?.[type])).length;
+        return zeroCount > 0 ? (
+          <p className="text-xs text-muted-foreground mt-1">{zeroCount} more object types available (no data yet)</p>
+        ) : null;
+      })()}
 
       {/* Snapshot Diff Toggle */}
       <div className="flex items-center gap-3">

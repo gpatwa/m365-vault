@@ -215,8 +215,8 @@ export default function EntraID() {
       statusMessage={backupMutation.isSuccess ? `Backup completed — ${(backupMutation.data as any)?.item_count || 0} objects backed up` : undefined}
     >
 
-      {/* Object Type Cards — show non-zero types, collapse empty ones */}
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-2.5">
+      {/* Object type chips — compact, clickable filters */}
+      <div className="flex items-center gap-2 flex-wrap">
         {Object.entries(ITEM_TYPE_CONFIG)
           .filter(([type]) => (summary.counts?.[type] || 0) > 0)
           .map(([type, config]) => {
@@ -227,15 +227,15 @@ export default function EntraID() {
             <button
               key={type}
               onClick={() => setSelectedType(isSelected ? null : type)}
-              className={`p-2.5 rounded-lg border text-left transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 isSelected
-                  ? 'border-amber-400 bg-amber-500/10 ring-2 ring-amber-200'
-                  : 'border-border bg-card hover:border-amber-500/20 hover:bg-amber-500/10/50'
+                  ? 'bg-teal-500/15 text-teal-400 ring-1 ring-teal-500/30'
+                  : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-teal-500/20'
               }`}
             >
-              <Icon className={`w-4 h-4 mb-0.5 ${config.color}`} />
-              <p className="text-base font-bold">{count}</p>
-              <p className="text-[10px] text-muted-foreground truncate">{config.label}</p>
+              <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-teal-400' : config.color}`} />
+              <span>{config.label}</span>
+              <span className={`font-bold ${isSelected ? 'text-teal-300' : 'text-foreground'}`}>{count}</span>
             </button>
           );
         })}
@@ -308,27 +308,31 @@ export default function EntraID() {
         </div>
       )}
 
-      {/* Action bar + filter chip */}
-      {summary.snapshot_id && !showDiff && (
-        <div className="flex items-center gap-2">
-          {selectedType && (
+      {/* Action bar — fixed height container */}
+      {summary.snapshot_id && (
+        <div className="flex items-center gap-2 h-9">
+          {selectedType && !showDiff && (
             <button onClick={() => setSelectedType(null)}
               className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-teal-500/15 text-teal-400 ring-1 ring-teal-500/30 hover:bg-teal-500/25 transition-colors">
-              {ITEM_TYPE_CONFIG[selectedType]?.label || selectedType}
+              Showing: {ITEM_TYPE_CONFIG[selectedType]?.label || selectedType}
               <X className="w-3 h-3" />
             </button>
           )}
           <div className="ml-auto flex items-center gap-2">
-            <button
-              onClick={() => setShowDiff(true)}
-              className="px-3 py-1.5 text-xs border border-border rounded-lg bg-card text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Compare
-            </button>
-            <button
-              onClick={() => setShowRestore(true)}
-              className="px-3 py-1.5 text-xs bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 flex items-center gap-1.5"
-            >
+            {!showDiff && (
+              <button onClick={() => setShowDiff(true)}
+                className="px-3 py-1.5 text-xs border border-border rounded-lg bg-card text-muted-foreground hover:text-foreground transition-colors">
+                Compare
+              </button>
+            )}
+            {showDiff && (
+              <button onClick={() => setShowDiff(false)}
+                className="px-3 py-1.5 text-xs border border-amber-500/30 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors">
+                Close Compare
+              </button>
+            )}
+            <button onClick={() => setShowRestore(true)}
+              className="px-3 py-1.5 text-xs bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 flex items-center gap-1.5">
               <Download className="w-3 h-3" /> Restore
             </button>
           </div>

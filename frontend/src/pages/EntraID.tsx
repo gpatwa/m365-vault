@@ -224,17 +224,6 @@ export default function EntraID() {
       statusMessage={backupMutation.isSuccess ? `Backup completed — ${(backupMutation.data as any)?.item_count || 0} objects backed up` : undefined}
     >
 
-      {/* Restore Button */}
-      <div className="flex justify-end">
-        <button
-          onClick={() => setShowRestore(true)}
-          disabled={!summary.snapshot_id}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 flex items-center gap-2 disabled:opacity-50"
-        >
-          <Download className="w-4 h-4" /> Restore Entra ID Objects
-        </button>
-      </div>
-
       {/* Object Type Cards — show non-zero types, collapse empty ones */}
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-2.5">
         {Object.entries(ITEM_TYPE_CONFIG)
@@ -263,12 +252,12 @@ export default function EntraID() {
       {(() => {
         const zeroCount = Object.entries(ITEM_TYPE_CONFIG).filter(([type]) => !(summary.counts?.[type])).length;
         return zeroCount > 0 ? (
-          <p className="text-xs text-muted-foreground mt-1">{zeroCount} more object types available (no data yet)</p>
+          <p className="text-[10px] text-muted-foreground">{zeroCount} more object types with no data yet</p>
         ) : null;
       })()}
 
-      {/* Snapshot Diff Toggle */}
-      <div className="flex items-center gap-3">
+      {/* Toolbar — Restore + Compare aligned in one row */}
+      <div className="flex items-center justify-between gap-3">
         <button
           onClick={() => setShowDiff(!showDiff)}
           className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
@@ -302,6 +291,13 @@ export default function EntraID() {
             </select>
           </div>
         )}
+        <button
+          onClick={() => setShowRestore(true)}
+          disabled={!summary.snapshot_id}
+          className="ml-auto px-4 py-1.5 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 flex items-center gap-2 disabled:opacity-50"
+        >
+          <Download className="w-4 h-4" /> Restore
+        </button>
       </div>
 
       {/* Diff Results */}
@@ -363,7 +359,7 @@ export default function EntraID() {
           columns={itemColumns}
           extraParams={extraParams}
           filters={[itemTypeFilterOptions]}
-          defaultPageSize={50}
+          defaultPageSize={25}
           emptyMessage={selectedType ? 'No items of this type' : 'No backed-up objects yet'}
         />
       )}

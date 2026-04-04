@@ -270,6 +270,57 @@ Soft delete: 7-day recovery window before permanent purge
 
 ---
 
+## Phase 6: Configuration Drift Detection (Weeks 12-15) — THE MOAT
+
+**Goal:** Turn backup data into security monitoring. Detect unauthorized config changes, enable one-click revert.
+
+**Why:** Microsoft Secure Score shows current state. KavachIQ shows what CHANGED and lets you UNDO it. No competitor offers this.
+
+See full design: `docs/CONFIG_DRIFT_DESIGN.md`
+
+### Phase 6A: Core Drift Detection (Week 12-13, 30 hrs)
+- `config_drift_events` table + severity classification
+- `DriftDetectionService` — auto-compare consecutive snapshots
+- API: timeline, summary, acknowledge, revert, manual scan
+- Frontend `/config-drift` page with unified timeline
+- Feature flag: `config_drift` (Professional+)
+
+### Phase 6B: Exchange Mail Rule Drift (Week 14, 12 hrs)
+- Compare mail rules between snapshots
+- Detect: new forward to external, delegate changes, rule modifications
+- One-click revert for mail rules
+
+### Phase 6C: Agent Integration + Auto-Revert (Week 15, 16 hrs)
+- Correlate drift with Agent Shield activity
+- Auto-revert policies (Enterprise)
+- Email/webhook notifications
+
+### Competitive Advantage
+
+| Feature | Microsoft | Veeam | Rubrik | KavachIQ |
+|---|---|---|---|---|
+| Config change detection | Audit logs (raw) | No | No | **Analyzed + classified** |
+| Before/after comparison | No | No | No | **Snapshot diff** |
+| One-click config revert | No | No | No | **Revert from snapshot** |
+| Agent change tracking | Partial | No | No | **Agent Shield + Drift** |
+| Cross-workload timeline | No | No | No | **Unified timeline** |
+
+---
+
+## Updated Timeline Summary
+
+| Phase | Weeks | Status | What |
+|---|---|---|---|
+| 1 | 1-3 | **DONE** | Revenue: Resend + Password Reset + Stripe |
+| 2 | 4-6 | **DONE** | Exchange: Shared/archive mailbox, mail rules, PST |
+| 3 | 7-8 | **DONE** | Entra ID: Group restore, PIM, snapshot diff |
+| 4 | 9-10 | **DONE** | Polish: Health gate, re-auth, analytics, alerting |
+| 5 | 11 | **DONE** | GDPR: Data export, account deletion |
+| 6 | 12-15 | **PLANNED** | Configuration Drift Detection (THE MOAT) |
+| 7 | 16+ | Backlog | Hybrid Backup (Microsoft Backup Storage API) |
+
+---
+
 ## Sources
 
 - [Veeam M365 + Entra ID Backup](https://www.veeam.com/products/saas/microsoft-office-365-entra-id-backup-service.html)

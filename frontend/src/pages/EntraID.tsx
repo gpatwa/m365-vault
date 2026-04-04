@@ -249,14 +249,7 @@ export default function EntraID() {
           );
         })}
       </div>
-      {(() => {
-        const zeroCount = Object.entries(ITEM_TYPE_CONFIG).filter(([type]) => !(summary.counts?.[type])).length;
-        return zeroCount > 0 ? (
-          <p className="text-[10px] text-muted-foreground">{zeroCount} more object types with no data yet</p>
-        ) : null;
-      })()}
-
-      {/* Diff toggle (collapsible, shown only when clicked) */}
+      {/* Diff panel (collapsible) */}
       {showDiff && snapshots?.items && snapshots.items.length >= 2 && (
         <div className="flex items-center gap-2 text-xs bg-card border border-border rounded-lg p-3">
           <span className="text-muted-foreground font-medium">Compare:</span>
@@ -324,23 +317,21 @@ export default function EntraID() {
         </div>
       )}
 
-      {/* Action toolbar — matches Exchange page pattern */}
+      {/* Action bar — same position as Exchange's refresh/export row */}
       {summary.snapshot_id && !showDiff && (
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center justify-end gap-2">
           <button
-            onClick={() => setShowDiff(!showDiff)}
-            className="px-3 py-2 text-sm border border-border rounded-lg bg-card text-muted-foreground hover:border-amber-500/20 hover:text-foreground transition-colors"
+            onClick={() => setShowDiff(true)}
+            className="px-3 py-1.5 text-xs border border-border rounded-lg bg-card text-muted-foreground hover:text-foreground transition-colors"
           >
-            Compare Snapshots
+            Compare
           </button>
           <button
             onClick={() => setShowRestore(true)}
-            disabled={!summary.snapshot_id}
-            className="px-3 py-2 text-sm bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 flex items-center gap-1.5 disabled:opacity-50"
+            className="px-3 py-1.5 text-xs bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 flex items-center gap-1.5"
           >
-            <Download className="w-3.5 h-3.5" /> Restore
+            <Download className="w-3 h-3" /> Restore
           </button>
-          <span className="ml-auto text-xs text-muted-foreground">{summary.item_count} items backed up</span>
         </div>
       )}
 

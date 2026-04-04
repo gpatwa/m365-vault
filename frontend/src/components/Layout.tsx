@@ -92,6 +92,7 @@ const navGroups: NavGroup[] = [
       { path: '/sla-policies', label: 'SLA Policies', icon: Shield },
       { path: '/usage', label: 'Usage & License', icon: Gauge },
       { path: '/billing', label: 'Billing', icon: CreditCard },
+      { path: '/security-posture', label: 'Security Posture', icon: Shield },
       { path: '/audit', label: 'Audit Log', icon: FileText },
       { path: '/security', label: 'Security', icon: ShieldAlert },
       { path: '/performance', label: 'Performance', icon: Activity },

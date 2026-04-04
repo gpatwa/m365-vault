@@ -128,9 +128,24 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Correlation-ID", "X-Request-ID"],
 )
+
+
+# ── Security Headers Middleware ──
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    if settings.FORCE_HTTPS:
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+    return response
+
 
 # ── HTTPS Redirect (production only) ──
 if settings.FORCE_HTTPS:
@@ -363,10 +378,12 @@ from app.api.msp import router as msp_router
 from app.api.feature_flags import router as feature_flags_router
 from app.api.agents import router as agents_router
 from app.api.billing import router as billing_router
+from app.api.security_posture import router as security_posture_router
 app.include_router(msp_router)
 app.include_router(feature_flags_router)
 app.include_router(agents_router)
 app.include_router(billing_router)
+app.include_router(security_posture_router)
 
 
 @app.get("/")

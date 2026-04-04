@@ -10,7 +10,8 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     SECRET_KEY: str = "change-me-in-production-use-openssl-rand-hex-32"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours for development
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60  # 1 hour (production-safe default)
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # Database
     DATABASE_URL: str = "sqlite+aiosqlite:///./m365_protection.db"
@@ -195,3 +196,26 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# Startup security validation — reject insecure defaults in production
+INSECURE_DEFAULTS = ["change-me", "docker-dev-secret", "docker-dev-32"]
+
+def validate_production_config():
+    """Warn or block if insecure defaults are used in production (DEBUG=False)."""
+    import logging
+    _log = logging.getLogger("config")
+    issues = []
+    if any(d in settings.SECRET_KEY for d in INSECURE_DEFAULTS):
+        issues.append("SECRET_KEY is using an insecure default — generate with: openssl rand -hex 32")
+    if any(d in settings.ENCRYPTION_MASTER_KEY for d in INSECURE_DEFAULTS):
+        issues.append("ENCRYPTION_MASTER_KEY is using an insecure default — generate with: openssl rand -hex 32")
+    if issues:
+        if not settings.DEBUG:
+            for issue in issues:
+                _log.critical(f"SECURITY: {issue}")
+            raise RuntimeError("Production deployment with insecure defaults. Set SECRET_KEY and ENCRYPTION_MASTER_KEY.")
+        else:
+            for issue in issues:
+                _log.warning(f"DEV MODE: {issue}")
+
+validate_production_config()

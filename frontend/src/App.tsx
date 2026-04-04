@@ -38,6 +38,7 @@ import AgentShield from './pages/AgentShield';
 import ResetPassword from './pages/ResetPassword';
 import VerifyEmail from './pages/VerifyEmail';
 import Billing from './pages/Billing';
+import SecurityPosture from './pages/SecurityPosture';
 import ObjectDetail from './pages/ObjectDetail';
 import SecurityPage from './pages/Security';
 import Docs from './pages/Docs';
@@ -157,6 +158,7 @@ function AppRoutes() {
         <Route path="reports" element={<Reports />} />
         <Route path="usage" element={<Usage />} />
         <Route path="billing" element={<Billing />} />
+        <Route path="security-posture" element={<SecurityPosture />} />
         <Route path="security" element={<SecurityPage />} />
         <Route path="performance" element={<Performance />} />
         <Route path="org-context" element={<OrgContext />} />

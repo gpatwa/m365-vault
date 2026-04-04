@@ -189,7 +189,8 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
-        case_sensitive = True
+        env_file_encoding = "utf-8"
+        case_sensitive = False  # Allow both STRIPE_SECRET_KEY and stripe_secret_key
         extra = "ignore"  # Allow extra env vars (M365 credentials in .env)
 
 

@@ -340,6 +340,11 @@ export default function Settings() {
               </div>
               {/* Permission Status */}
               <div className="mt-3">
+                {t.ms_tenant_id?.startsWith('demo-') ? (
+                  <span className="px-3 py-1.5 rounded-lg text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20 inline-flex items-center gap-1">
+                    Demo Tenant — permissions check requires real M365 connection
+                  </span>
+                ) : (
                 <button
                   onClick={() => checkPerms(t.id)}
                   disabled={permsLoading && permsTenant === t.id}
@@ -350,6 +355,7 @@ export default function Settings() {
                     : <><ShieldCheck className="w-3 h-3" /> {permsTenant === t.id && permsData ? 'Hide' : 'Check'} Permissions</>
                   }
                 </button>
+                )}
 
                 {permsTenant === t.id && permsData && !permsData.error && (
                   <div className="mt-3 border rounded-lg overflow-hidden">

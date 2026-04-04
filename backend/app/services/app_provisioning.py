@@ -322,13 +322,11 @@ class AppProvisioningService:
             if perm_name:
                 granted_permissions.add(perm_name)
 
-        # Build per-workload status
+        # Build per-workload status — only active workloads (Entra ID + Exchange)
+        # SharePoint, OneDrive, Teams are behind feature flags and not yet active
         workload_perms = {
-            "exchange": {"backup": ["Mail.Read", "Calendars.Read", "Contacts.Read"], "restore": ["Mail.ReadWrite", "Calendars.ReadWrite", "Contacts.ReadWrite"]},
-            "onedrive": {"backup": ["Files.Read.All"], "restore": ["Files.ReadWrite.All"]},
-            "sharepoint": {"backup": ["Sites.Read.All"], "restore": ["Sites.ReadWrite.All"]},
-            "teams": {"backup": ["Chat.Read.All", "ChannelMessage.Read.All", "Team.ReadBasic.All"], "restore": []},
             "entra_id": {"backup": ["Directory.Read.All", "User.Read.All", "Group.Read.All"], "restore": ["User.ReadWrite.All", "Group.ReadWrite.All", "Application.ReadWrite.All"]},
+            "exchange": {"backup": ["Mail.Read", "Calendars.Read", "Contacts.Read"], "restore": ["Mail.ReadWrite", "Calendars.ReadWrite", "Contacts.ReadWrite"]},
         }
 
         result = {}

@@ -390,7 +390,9 @@ export default function Settings() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
-                        {Object.entries(permsData.workloads).map(([wl, status]: [string, any]) => {
+                        {Object.entries(permsData.workloads)
+                          .filter(([wl]) => ['entra_id', 'exchange'].includes(wl))
+                          .map(([wl, status]: [string, any]) => {
                           const allMissing = [...(status.missing_backup || []), ...(status.missing_restore || [])];
                           return (
                             <tr key={wl}>

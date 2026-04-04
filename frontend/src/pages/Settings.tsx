@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Building2, Plus, CheckCircle, XCircle, RefreshCw, Trash2, Wifi, Pause, Play, KeyRound, AlertTriangle, ExternalLink, ShieldCheck, Loader2, ArrowRight } from 'lucide-react';
+import { Building2, Plus, CheckCircle, XCircle, RefreshCw, Trash2, Wifi, Pause, Play, KeyRound, AlertTriangle, ExternalLink, ShieldCheck, Loader2, ArrowRight, ChevronDown } from 'lucide-react';
 import { api } from '../api/client';
 import StatusBadge from '../components/StatusBadge';
 import OnboardingWizard from '../components/OnboardingWizard';
@@ -21,6 +21,7 @@ export default function Settings() {
   const [actionMsg, setActionMsg] = useState('');
   const [permsTenant, setPermsTenant] = useState<number | null>(null);
   const [permsData, setPermsData] = useState<any>(null);
+  const [showDemoTenants, setShowDemoTenants] = useState(false);
   const [permsLoading, setPermsLoading] = useState(false);
   const qc = useQueryClient();
 
@@ -259,9 +260,10 @@ export default function Settings() {
         </div>
       )}
 
-      {/* Tenant List */}
+      {/* Tenant List — Real tenants first, demo tenants collapsed */}
       <div className="space-y-4">
-        {tenants?.map(t => {
+        {/* Real M365 Tenants */}
+        {tenants?.filter(t => !t.ms_tenant_id?.startsWith('demo-')).map(t => {
           const isActive = t.status === 'active';
           const isInactive = t.status === 'inactive';
 
@@ -483,6 +485,43 @@ export default function Settings() {
             </div>
           );
         })}
+
+        {/* Demo Tenants — collapsible */}
+        {tenants && tenants.filter(t => t.ms_tenant_id?.startsWith('demo-')).length > 0 && (
+          <div className="border border-border rounded-xl overflow-hidden">
+            <button onClick={() => setShowDemoTenants(!showDemoTenants)}
+              className="w-full flex items-center justify-between px-5 py-3 bg-muted/50 text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <span className="flex items-center gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wider">Demo Tenants</span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                  {tenants.filter(t => t.ms_tenant_id?.startsWith('demo-')).length}
+                </span>
+              </span>
+              <ChevronDown className={`w-4 h-4 transition-transform ${showDemoTenants ? 'rotate-180' : ''}`} />
+            </button>
+            {showDemoTenants && (
+              <div className="space-y-4 p-4">
+                {tenants.filter(t => t.ms_tenant_id?.startsWith('demo-')).map(t => (
+                    <div key={t.id} className="bg-card rounded-xl border shadow-sm p-5 opacity-75">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Building2 className="w-5 h-5 text-muted-foreground" />
+                          <div>
+                            <h3 className="font-semibold text-foreground">{t.name}</h3>
+                            <p className="text-xs text-muted-foreground">Demo • Tenant {t.id}</p>
+                          </div>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                          Demo
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {isLoading && <p className="text-muted-foreground text-center py-8">Loading...</p>}
         {!isLoading && !tenants?.length && (
           <div className="text-center py-12 text-muted-foreground">

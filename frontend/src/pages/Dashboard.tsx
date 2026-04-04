@@ -582,6 +582,7 @@ export default function Dashboard() {
         <p className="text-sm text-muted-foreground">SaaS Data Protection Overview</p>
       </div>
 
+
       {/* Row 1: Hero Stats */}
       <HeroSummaryBar stats={heroStats} />
 

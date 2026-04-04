@@ -67,15 +67,29 @@ async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
     if result.scalar_one_or_none():
         raise ShieldioError(VALIDATION_DUPLICATE, detail="Username or email already exists")
 
+    import secrets
+    verification_token = secrets.token_urlsafe(32)
+
     user = User(
         username=req.username,
         email=req.email,
         password_hash=hash_password(req.password),
         full_name=req.full_name,
         role=req.role,
+        email_verified=0,
+        email_verification_token=verification_token,
     )
     db.add(user)
     await db.flush()
+
+    # Send welcome + verification email (non-blocking, don't fail registration)
+    try:
+        from app.services.email_service import email_service
+        await email_service.send_welcome(user.email, user.full_name or user.username)
+        await email_service.send_email_verification(user.email, verification_token)
+    except Exception as e:
+        logger.warning(f"Failed to send registration emails to {user.email}: {e}")
+
     return user
 
 

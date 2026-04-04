@@ -18,6 +18,7 @@ export default function Exchange() {
   const [selectedSnapshot, setSelectedSnapshot] = useState<Snapshot | null>(null);
   const [showRestore, setShowRestore] = useState(false);
   const [backupMsg, setBackupMsg] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
   const tenantId = useTenantId();
   const qc = useQueryClient();
 
@@ -295,24 +296,31 @@ export default function Exchange() {
       isBackingUp={backupAllMutation.isPending}
       statusMessage={backupMsg}
     >
+      {/* Status filter pills */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {[
+          { key: '', label: 'All' },
+          { key: 'protected', label: 'Protected' },
+          { key: 'unprotected', label: 'Unprotected' },
+          { key: 'error', label: 'Error' },
+        ].map(s => (
+          <button key={s.key} onClick={() => setStatusFilter(s.key)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              statusFilter === s.key
+                ? 'bg-teal-500/15 text-teal-400 ring-1 ring-teal-500/30'
+                : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-teal-500/20'
+            }`}>
+            {s.label}
+          </button>
+        ))}
+      </div>
+
       <DataTable<ProtectedObject>
-        queryKey="exchange-mailboxes"
+        queryKey={`exchange-mailboxes-${statusFilter}`}
         endpoint="/exchange/mailboxes"
         columns={columns}
-        extraParams={{ tenant_id: tenantId ?? '' }}
+        extraParams={{ tenant_id: tenantId ?? '', ...(statusFilter ? { status: statusFilter } : {}) }}
         enabled={!!tenantId}
-        filters={[
-          {
-            key: 'status',
-            label: 'All Statuses',
-            options: [
-              { value: 'protected', label: 'Protected' },
-              { value: 'unprotected', label: 'Unprotected' },
-              { value: 'error', label: 'Error' },
-              { value: 'pending', label: 'Pending' },
-            ],
-          },
-        ]}
         exportable
         exportEndpoint="/export/csv?source=exchange_mailboxes"
         defaultSortBy="display_name"

@@ -7,7 +7,7 @@ import RestoreDialog from '../components/RestoreDialog';
 import { useTenantId } from '../hooks/useTenant';
 import { formatSize } from '../utils/format';
 import { useFeatureFlags } from '../contexts/FeatureFlagContext';
-import DataTable, { type Column, type FilterOption } from '../components/DataTable';
+import DataTable, { type Column } from '../components/DataTable';
 
 interface EntraSummary {
   protected: boolean;
@@ -44,15 +44,6 @@ const ITEM_TYPE_CONFIG: Record<string, { label: string; icon: typeof Users; colo
   oauth_permission_grant: { label: 'OAuth Grants', icon: Lock, color: 'text-pink-600' },
   device: { label: 'Devices', icon: Laptop, color: 'text-muted-foreground' },
   domain: { label: 'Domains', icon: Globe, color: 'text-emerald-600' },
-};
-
-const itemTypeFilterOptions: FilterOption = {
-  key: 'item_type',
-  label: 'All Types',
-  options: Object.entries(ITEM_TYPE_CONFIG).map(([value, cfg]) => ({
-    value,
-    label: cfg.label,
-  })),
 };
 
 const itemColumns: Column<SnapshotItem>[] = [
@@ -317,21 +308,30 @@ export default function EntraID() {
         </div>
       )}
 
-      {/* Action bar — same position as Exchange's refresh/export row */}
+      {/* Action bar + filter chip */}
       {summary.snapshot_id && !showDiff && (
-        <div className="flex items-center justify-end gap-2">
-          <button
-            onClick={() => setShowDiff(true)}
-            className="px-3 py-1.5 text-xs border border-border rounded-lg bg-card text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Compare
-          </button>
-          <button
-            onClick={() => setShowRestore(true)}
-            className="px-3 py-1.5 text-xs bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 flex items-center gap-1.5"
-          >
-            <Download className="w-3 h-3" /> Restore
-          </button>
+        <div className="flex items-center gap-2">
+          {selectedType && (
+            <button onClick={() => setSelectedType(null)}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-teal-500/15 text-teal-400 ring-1 ring-teal-500/30 hover:bg-teal-500/25 transition-colors">
+              {ITEM_TYPE_CONFIG[selectedType]?.label || selectedType}
+              <X className="w-3 h-3" />
+            </button>
+          )}
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={() => setShowDiff(true)}
+              className="px-3 py-1.5 text-xs border border-border rounded-lg bg-card text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Compare
+            </button>
+            <button
+              onClick={() => setShowRestore(true)}
+              className="px-3 py-1.5 text-xs bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 flex items-center gap-1.5"
+            >
+              <Download className="w-3 h-3" /> Restore
+            </button>
+          </div>
         </div>
       )}
 
@@ -342,7 +342,6 @@ export default function EntraID() {
           endpoint={`/entra-id/snapshot/${summary.snapshot_id}/items`}
           columns={itemColumns}
           extraParams={extraParams}
-          filters={[itemTypeFilterOptions]}
           defaultPageSize={25}
           emptyMessage={selectedType ? 'No items of this type' : 'No backed-up objects yet'}
         />

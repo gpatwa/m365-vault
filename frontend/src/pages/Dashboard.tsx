@@ -408,8 +408,8 @@ export default function Dashboard() {
         iconColor: wl.iconColor || 'text-muted-foreground',
         protected: data.protected || 0,
         total: data.total || 0,
-        lastBackup: null,
-        itemCount: 0,
+        lastBackup: (data as any).last_backup || null,
+        itemCount: (data as any).item_count || 0,
         path: `/${wl.key.replace('_', '-')}`,
       };
     });
@@ -422,22 +422,17 @@ export default function Dashboard() {
 
   const trendData = useMemo(() => {
     if (!activityData?.activity) return [];
-    const days: Record<string, { day: string; success: number; failed: number }> = {};
     const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const key = d.toISOString().split('T')[0];
-      days[key] = { day: dayLabels[d.getDay()], success: 0, failed: 0 };
-    }
-    activityData.activity.forEach((a: any) => {
-      const key = (a.timestamp || a.completed_at || '').split('T')[0];
-      if (days[key]) {
-        if (a.status === 'completed') days[key].success++;
-        else if (a.status === 'failed') days[key].failed++;
-      }
+    return activityData.activity.map((a: any) => {
+      const d = new Date(a.date);
+      const success = a.backups_successful || 0;
+      const failed = (a.backups || 0) - success;
+      return {
+        day: dayLabels[d.getDay()],
+        success,
+        failed: Math.max(failed, 0),
+      };
     });
-    return Object.values(days);
   }, [activityData]);
 
   // Render

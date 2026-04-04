@@ -44,11 +44,29 @@ async def get_summary(
             )
         )).scalar()
 
+        # Get last backup and total items for this workload
+        last_backup_result = await db.execute(
+            select(func.max(ProtectedObject.last_backup_at)).where(
+                stmt.whereclause if hasattr(stmt, 'whereclause') else True,
+                ProtectedObject.workload_type == wt,
+            )
+        )
+        last_backup = last_backup_result.scalar()
+
+        total_items_result = await db.execute(
+            select(func.sum(ProtectedObject.total_items_backed_up)).where(
+                ProtectedObject.workload_type == wt,
+            )
+        )
+        total_items = total_items_result.scalar() or 0
+
         workload_stats[wt.value] = {
             "total": total,
             "protected": protected,
             "unprotected": total - protected,
             "protection_rate": round(protected / total * 100, 1) if total > 0 else 0,
+            "last_backup": last_backup.isoformat() if last_backup else None,
+            "item_count": total_items,
         }
 
     # Total protected objects

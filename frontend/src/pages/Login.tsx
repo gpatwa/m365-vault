@@ -25,6 +25,9 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isRegister, setIsRegister] = useState(searchParams.get('register') === 'true');
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotSent, setForgotSent] = useState(false);
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -199,7 +202,40 @@ export default function Login() {
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+          {/* Forgot Password Mode */}
+          {forgotMode && !forgotSent && (
+            <div className="space-y-4 mb-6">
+              <p className="text-sm text-muted-foreground">Enter your email and we'll send you a reset link.</p>
+              <input type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)}
+                placeholder="Enter your email"
+                className="w-full px-3.5 py-2.5 border border-input bg-transparent rounded-xl text-sm text-foreground focus:ring-2 focus:ring-ring" />
+              {error && <p className="text-xs text-red-400">{error}</p>}
+              <button onClick={async () => {
+                try {
+                  await api.post('/auth/forgot-password', { email: forgotEmail });
+                  setForgotSent(true);
+                } catch (e: any) { setError(e.message || 'Failed to send'); }
+              }} className="w-full py-2.5 bg-primary text-primary-foreground rounded-xl font-semibold">
+                Send Reset Link
+              </button>
+              <button onClick={() => { setForgotMode(false); setError(''); }} className="w-full text-sm text-muted-foreground hover:text-foreground">
+                Back to Sign In
+              </button>
+            </div>
+          )}
+          {forgotMode && forgotSent && (
+            <div className="text-center py-6">
+              <div className="w-12 h-12 bg-teal-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Mail className="w-6 h-6 text-teal-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-1">Check Your Email</h3>
+              <p className="text-sm text-muted-foreground mb-4">If that email exists, a reset link has been sent.</p>
+              <button onClick={() => { setForgotMode(false); setForgotSent(false); setError(''); }}
+                className="text-sm text-primary hover:text-primary/80 font-medium">Back to Sign In</button>
+            </div>
+          )}
+
+          {!forgotMode && <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
             <div>
               <label className="block text-sm font-medium text-muted-foreground mb-1.5">
                 {isRegister ? 'Work Email' : 'Email or Username'}
@@ -241,7 +277,7 @@ export default function Login() {
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-sm font-medium text-muted-foreground">Password</label>
                 {!isRegister && (
-                  <button type="button" className="text-xs text-primary hover:text-primary/80 font-medium">
+                  <button type="button" onClick={() => { setForgotMode(true); setError(''); }} className="text-xs text-primary hover:text-primary/80 font-medium">
                     Forgot password?
                   </button>
                 )}
@@ -272,7 +308,7 @@ export default function Login() {
                 </>
               )}
             </button>
-          </form>
+          </form>}
 
           {/* Toggle register/login */}
           <p className="text-center text-sm text-muted-foreground mt-6">

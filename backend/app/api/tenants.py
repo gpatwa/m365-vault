@@ -580,3 +580,51 @@ async def configure_permissions(
     except Exception as e:
         logger.error(f"Auto-configure failed for tenant {tenant_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Graph API Re-authentication ──
+
+@router.post("/{tenant_id}/reauth")
+async def reauth_tenant(
+    tenant_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("ADMIN")),
+):
+    """Regenerate OAuth consent URL for a tenant whose Graph API token expired.
+
+    When a tenant's token expires, backups fail with 401 errors.
+    This endpoint returns a new OAuth consent URL so the admin can re-authorize.
+    """
+    from app.config import settings
+
+    tenant = await db.get(Tenant, tenant_id)
+    if not tenant:
+        raise HTTPException(404, detail="Tenant not found")
+
+    # Build OAuth consent URL
+    redirect_uri = settings.CONNECTOR_REDIRECT_URI
+    client_id = settings.CONNECTOR_APP_ID or tenant.client_id
+
+    if not client_id:
+        raise HTTPException(400, detail="No connector app configured. Set CONNECTOR_APP_ID.")
+
+    auth_url = (
+        f"https://login.microsoftonline.com/{tenant.ms_tenant_id}/adminconsent"
+        f"?client_id={client_id}"
+        f"&redirect_uri={redirect_uri}"
+        f"&state=reauth-{tenant_id}"
+    )
+
+    # Mark tenant as needing re-auth
+    tenant.status = TenantStatus.ERROR
+    tenant.updated_at = datetime.utcnow()
+    await db.commit()
+
+    logger.info(f"Re-auth URL generated for tenant {tenant_id}: {tenant.name}")
+
+    return {
+        "tenant_id": tenant_id,
+        "tenant_name": tenant.name,
+        "auth_url": auth_url,
+        "message": "Redirect the admin to this URL to re-authorize Graph API access.",
+    }

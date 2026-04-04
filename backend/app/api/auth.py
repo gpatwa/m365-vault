@@ -304,3 +304,66 @@ async def sso_callback(
             is_active=user.is_active,
         ),
     )
+
+
+# ── GDPR: Data Export + Account Deletion ──
+
+
+@router.post("/export-my-data")
+async def export_my_data(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Export all user data as JSON (GDPR Article 20 — right to data portability)."""
+    from app.models.tenant import Tenant
+
+    profile = {
+        "id": current_user.id,
+        "username": current_user.username,
+        "email": current_user.email,
+        "full_name": current_user.full_name,
+        "role": current_user.role.value,
+        "email_verified": bool(getattr(current_user, 'email_verified', 0)),
+        "created_at": current_user.created_at.isoformat() if current_user.created_at else None,
+    }
+
+    tenants_result = await db.execute(select(Tenant))
+    tenants = [{"id": t.id, "name": t.name, "status": t.status.value} for t in tenants_result.scalars().all()]
+
+    return {
+        "export_date": datetime.utcnow().isoformat(),
+        "user": profile,
+        "tenants": tenants,
+        "note": "For full backup data, use the Exchange/Entra ID browse and export APIs.",
+    }
+
+
+class DeleteAccountRequest(BaseModel):
+    confirm_username: str
+
+
+@router.delete("/account")
+async def delete_account(
+    req: DeleteAccountRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Delete user account (GDPR Article 17). Soft-deletes immediately, purge after 7 days."""
+    if req.confirm_username != current_user.username:
+        raise HTTPException(400, detail="Username confirmation doesn't match.")
+
+    current_user.is_active = 0
+    current_user.updated_at = datetime.utcnow()
+    await db.commit()
+
+    try:
+        from app.services.email_service import email_service
+        await email_service.provider.send(
+            to=current_user.email,
+            subject="Account Deleted — Shieldio",
+            html=f"<p>Your Shieldio account ({current_user.username}) has been deactivated. Data purge in 7 days.</p>",
+        )
+    except Exception:
+        pass
+
+    return {"message": "Account deactivated. Data purge in 7 days.", "grace_period_days": 7}

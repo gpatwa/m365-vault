@@ -61,6 +61,20 @@ class BackupEngine:
                 job.error_message = str(e)
                 job.completed_at = datetime.utcnow()
                 await self.db.commit()
+                # Send failure alert email
+                try:
+                    from app.services.email_service import email_service
+                    from app.config import settings
+                    if settings.ALERT_EMAIL_RECIPIENTS:
+                        for recipient in settings.ALERT_EMAIL_RECIPIENTS.split(","):
+                            await email_service.send_backup_failure(
+                                email=recipient.strip(),
+                                tenant_name=f"Tenant {job.tenant_id}",
+                                workload=job.workload_type or "unknown",
+                                error=str(e)[:200],
+                            )
+                except Exception as alert_err:
+                    logger.warning(f"Failed to send backup failure alert: {alert_err}")
 
     async def run_backup_for_object(
         self,

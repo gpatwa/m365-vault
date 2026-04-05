@@ -149,24 +149,24 @@ resource "azurerm_container_app" "backend" {
     value = var.redis_url
   }
 
-  secret {
-    name  = "stripe-secret-key"
-    value = var.stripe_secret_key != "" ? var.stripe_secret_key : "not-configured"
+  # ── App secrets from Key Vault (pushed via make secrets-push) ────
+  # These use Key Vault references — secret values never in Terraform state.
+  # If Key Vault URI not set (first deploy), fall back to placeholder.
+  dynamic "secret" {
+    for_each = var.keyvault_uri != "" ? ["stripe-secret-key", "stripe-webhook-secret", "resend-api-key", "connector-app-secret"] : []
+    content {
+      name                = secret.value
+      key_vault_secret_id = "${trimsuffix(var.keyvault_uri, "/")}secrets/${secret.value}"
+      identity            = "System"
+    }
   }
-
-  secret {
-    name  = "stripe-webhook-secret"
-    value = var.stripe_webhook_secret != "" ? var.stripe_webhook_secret : "not-configured"
-  }
-
-  secret {
-    name  = "resend-api-key"
-    value = var.resend_api_key != "" ? var.resend_api_key : "not-configured"
-  }
-
-  secret {
-    name  = "connector-app-secret"
-    value = var.connector_app_secret != "" ? var.connector_app_secret : "not-configured"
+  # Fallback for first deploy (before Key Vault exists)
+  dynamic "secret" {
+    for_each = var.keyvault_uri == "" ? ["stripe-secret-key", "stripe-webhook-secret", "resend-api-key", "connector-app-secret"] : []
+    content {
+      name  = secret.value
+      value = "not-configured"
+    }
   }
 
   template {
@@ -382,6 +382,10 @@ resource "azurerm_container_app" "worker" {
   resource_group_name          = var.resource_group_name
   revision_mode                = "Single"
 
+  identity {
+    type = "SystemAssigned"
+  }
+
   registry {
     server               = var.acr_login_server
     username             = var.acr_admin_username
@@ -474,10 +478,17 @@ resource "azurerm_container_app" "worker" {
   tags = var.tags
 }
 
-# Grant backend managed identity access to Key Vault secrets
+# Grant backend + worker managed identity access to Key Vault secrets
 resource "azurerm_role_assignment" "backend_keyvault" {
   count                = var.enable_keyvault ? 1 : 0
   scope                = var.keyvault_id
   role_definition_name = "Key Vault Secrets User"
   principal_id         = azurerm_container_app.backend.identity[0].principal_id
+}
+
+resource "azurerm_role_assignment" "worker_keyvault" {
+  count                = var.enable_keyvault ? 1 : 0
+  scope                = var.keyvault_id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = azurerm_container_app.worker.identity[0].principal_id
 }

@@ -91,10 +91,15 @@ jobs:
             -backend-config="container_name=tfstate" \
             -backend-config="key=m365vault.terraform.tfstate" \
             -backend-config="use_oidc=true"
+          # Sensitive secrets (Stripe, Resend, Connector) are in Key Vault,
+          # referenced by Container Apps via managed identity.
+          # Only non-sensitive config is passed here.
           terraform apply \
             -var-file=environments/dev.tfvars \
             -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
             -var="image_tag=${{ needs.build.outputs.image_tag }}" \
+            -var="connector_app_id=${{ vars.CONNECTOR_APP_ID }}" \
+            -var="posthog_api_key=${{ vars.POSTHOG_API_KEY }}" \
             -auto-approve
 
       - name: Smoke Test
@@ -141,6 +146,8 @@ jobs:
             -var-file=environments/prod.tfvars \
             -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
             -var="image_tag=${{ needs.build.outputs.image_tag }}" \
+            -var="connector_app_id=${{ vars.CONNECTOR_APP_ID }}" \
+            -var="posthog_api_key=${{ vars.POSTHOG_API_KEY }}" \
             -auto-approve
 
       - name: Smoke Test

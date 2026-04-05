@@ -147,19 +147,14 @@ variable "tags" {
   default = {}
 }
 
-# ── Stripe Billing ──────────────────────────────────────────────────
-variable "stripe_secret_key" {
-  type      = string
-  sensitive = true
-  default   = ""
+# ── Key Vault URI (for secret references) ───────────────────────────
+variable "keyvault_uri" {
+  description = "Key Vault base URI (e.g. https://kv-m365vault-dev.vault.azure.net/)"
+  type        = string
+  default     = ""
 }
 
-variable "stripe_webhook_secret" {
-  type      = string
-  sensitive = true
-  default   = ""
-}
-
+# ── Non-sensitive config (safe in Terraform state) ──────────────────
 variable "stripe_publishable_key" {
   type    = string
   default = ""
@@ -180,13 +175,6 @@ variable "stripe_price_enterprise" {
   default = ""
 }
 
-# ── Email (Resend) ──────────────────────────────────────────────────
-variable "resend_api_key" {
-  type      = string
-  sensitive = true
-  default   = ""
-}
-
 variable "email_provider" {
   type    = string
   default = "resend"
@@ -197,16 +185,9 @@ variable "frontend_url" {
   default = "https://app.kavachiq.com"
 }
 
-# ── Microsoft 365 Connector ─────────────────────────────────────────
 variable "connector_app_id" {
   type    = string
   default = ""
-}
-
-variable "connector_app_secret" {
-  type      = string
-  sensitive = true
-  default   = ""
 }
 
 variable "connector_redirect_uri" {
@@ -214,7 +195,6 @@ variable "connector_redirect_uri" {
   default = "https://app.kavachiq.com/onboard/callback"
 }
 
-# ── PostHog Analytics ───────────────────────────────────────────────
 variable "posthog_api_key" {
   type    = string
   default = ""

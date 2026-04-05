@@ -22,6 +22,7 @@ frontend/dist/
 
 # Environment & secrets
 .env
+.env.secrets
 *.local
 
 # Backup data (contains encrypted user data)

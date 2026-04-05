@@ -270,6 +270,42 @@ az-wake: ## Resume all Azure resources (start DB + scale apps back up)
 deploy: ## Full health-gated deploy: pre-check → build → push → apply → verify
 	@bash scripts/deploy.sh
 
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Secrets Management (Azure Key Vault)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+.PHONY: secrets-push
+secrets-push: ## Push .env.secrets → Azure Key Vault (ENV=dev|prod)
+	@./scripts/manage-secrets.sh push --env $(ENV)
+
+.PHONY: secrets-pull
+secrets-pull: ## Pull Azure Key Vault → .env.secrets (ENV=dev|prod)
+	@./scripts/manage-secrets.sh pull --env $(ENV)
+
+.PHONY: secrets-list
+secrets-list: ## List all secrets in Key Vault (ENV=dev|prod)
+	@./scripts/manage-secrets.sh list --env $(ENV)
+
+.PHONY: secrets-verify
+secrets-verify: ## Verify all required secrets exist in Key Vault (ENV=dev|prod)
+	@./scripts/manage-secrets.sh verify --env $(ENV)
+
+.PHONY: db-migrate
+db-migrate: ## Run DB migration on Azure (ENV=dev|prod)
+	@./scripts/manage-secrets.sh db-migrate --env $(ENV)
+
+.PHONY: full-deploy
+full-deploy: acr-push secrets-push tf-apply db-migrate ## Full deploy: build + secrets + infra + migrate (ENV=dev|prod)
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "  Deploy complete ($(ENV))"
+	@echo "  Run 'make secrets-verify ENV=$(ENV)' to confirm"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# GitHub Actions Deployment
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 .PHONY: deploy-verify
 deploy-verify: ## Run post-deploy health checks only
 	@bash scripts/deploy.sh --verify-only

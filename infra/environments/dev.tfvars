@@ -27,3 +27,14 @@ worker_max_replicas   = 2
 redis_sku             = "Basic"
 redis_capacity        = 0
 redis_family          = "C"
+
+# ── Stripe, Resend, M365 Connector ──────────────────────────────────
+# Sensitive values passed via TF_VAR_* environment variables or -var flags:
+#   TF_VAR_stripe_secret_key, TF_VAR_stripe_webhook_secret,
+#   TF_VAR_resend_api_key, TF_VAR_connector_app_id,
+#   TF_VAR_connector_app_secret
+#
+# Non-sensitive values:
+email_provider            = "resend"
+frontend_url              = "https://app.kavachiq.com"
+connector_redirect_uri    = "https://app.kavachiq.com/onboard/callback"

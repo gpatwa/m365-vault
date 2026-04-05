@@ -120,3 +120,76 @@ variable "redis_sku" {
   default     = "Basic"
   description = "Redis SKU: Basic (dev), Standard (prod)"
 }
+
+# ── Stripe Billing ──────────────────────────────────────────────────
+variable "stripe_secret_key" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+variable "stripe_webhook_secret" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+variable "stripe_publishable_key" {
+  type    = string
+  default = ""
+}
+
+variable "stripe_price_professional" {
+  type    = string
+  default = ""
+}
+
+variable "stripe_price_business" {
+  type    = string
+  default = ""
+}
+
+variable "stripe_price_enterprise" {
+  type    = string
+  default = ""
+}
+
+# ── Email (Resend) ──────────────────────────────────────────────────
+variable "resend_api_key" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+variable "email_provider" {
+  type    = string
+  default = "resend"
+}
+
+variable "frontend_url" {
+  type    = string
+  default = "https://app.kavachiq.com"
+}
+
+# ── Microsoft 365 Connector ─────────────────────────────────────────
+variable "connector_app_id" {
+  type    = string
+  default = ""
+}
+
+variable "connector_app_secret" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+variable "connector_redirect_uri" {
+  type    = string
+  default = "https://app.kavachiq.com/onboard/callback"
+}
+
+# ── PostHog Analytics ───────────────────────────────────────────────
+variable "posthog_api_key" {
+  type    = string
+  default = ""
+}

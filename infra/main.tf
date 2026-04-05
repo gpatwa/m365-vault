@@ -136,5 +136,22 @@ module "container_apps" {
   worker_memory             = var.worker_memory
   worker_min_replicas       = var.worker_min_replicas
   worker_max_replicas       = var.worker_max_replicas
+  # Stripe Billing
+  stripe_secret_key         = var.stripe_secret_key
+  stripe_webhook_secret     = var.stripe_webhook_secret
+  stripe_publishable_key    = var.stripe_publishable_key
+  stripe_price_professional = var.stripe_price_professional
+  stripe_price_business     = var.stripe_price_business
+  stripe_price_enterprise   = var.stripe_price_enterprise
+  # Email (Resend)
+  resend_api_key            = var.resend_api_key
+  email_provider            = var.email_provider
+  frontend_url              = var.frontend_url
+  # Microsoft 365 Connector
+  connector_app_id          = var.connector_app_id
+  connector_app_secret      = var.connector_app_secret
+  connector_redirect_uri    = var.connector_redirect_uri
+  # Analytics
+  posthog_api_key           = var.posthog_api_key
   tags                      = local.tags
 }

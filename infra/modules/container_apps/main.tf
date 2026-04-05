@@ -149,6 +149,26 @@ resource "azurerm_container_app" "backend" {
     value = var.redis_url
   }
 
+  secret {
+    name  = "stripe-secret-key"
+    value = var.stripe_secret_key != "" ? var.stripe_secret_key : "not-configured"
+  }
+
+  secret {
+    name  = "stripe-webhook-secret"
+    value = var.stripe_webhook_secret != "" ? var.stripe_webhook_secret : "not-configured"
+  }
+
+  secret {
+    name  = "resend-api-key"
+    value = var.resend_api_key != "" ? var.resend_api_key : "not-configured"
+  }
+
+  secret {
+    name  = "connector-app-secret"
+    value = var.connector_app_secret != "" ? var.connector_app_secret : "not-configured"
+  }
+
   template {
     min_replicas = var.backend_min_replicas
     max_replicas = var.backend_max_replicas
@@ -204,6 +224,66 @@ resource "azurerm_container_app" "backend" {
       env {
         name        = "REDIS_URL"
         secret_name = "redis-url"
+      }
+
+      # ── Stripe Billing ──
+      env {
+        name        = "STRIPE_SECRET_KEY"
+        secret_name = "stripe-secret-key"
+      }
+      env {
+        name        = "STRIPE_WEBHOOK_SECRET"
+        secret_name = "stripe-webhook-secret"
+      }
+      env {
+        name  = "STRIPE_PUBLISHABLE_KEY"
+        value = var.stripe_publishable_key
+      }
+      env {
+        name  = "STRIPE_PRICE_PROFESSIONAL"
+        value = var.stripe_price_professional
+      }
+      env {
+        name  = "STRIPE_PRICE_BUSINESS"
+        value = var.stripe_price_business
+      }
+      env {
+        name  = "STRIPE_PRICE_ENTERPRISE"
+        value = var.stripe_price_enterprise
+      }
+
+      # ── Email (Resend) ──
+      env {
+        name        = "RESEND_API_KEY"
+        secret_name = "resend-api-key"
+      }
+      env {
+        name  = "EMAIL_PROVIDER"
+        value = var.email_provider
+      }
+      env {
+        name  = "FRONTEND_URL"
+        value = var.frontend_url
+      }
+
+      # ── Microsoft 365 Connector ──
+      env {
+        name  = "CONNECTOR_APP_ID"
+        value = var.connector_app_id
+      }
+      env {
+        name        = "CONNECTOR_APP_SECRET"
+        secret_name = "connector-app-secret"
+      }
+      env {
+        name  = "CONNECTOR_REDIRECT_URI"
+        value = var.connector_redirect_uri
+      }
+
+      # ── Analytics ──
+      env {
+        name  = "POSTHOG_API_KEY"
+        value = var.posthog_api_key
       }
 
       liveness_probe {

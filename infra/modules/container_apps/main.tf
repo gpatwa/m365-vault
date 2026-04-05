@@ -156,7 +156,7 @@ resource "azurerm_container_app" "backend" {
     for_each = var.keyvault_uri != "" ? ["stripe-secret-key", "stripe-webhook-secret", "resend-api-key", "connector-app-secret"] : []
     content {
       name                = secret.value
-      key_vault_secret_id = "${trimsuffix(var.keyvault_uri, "/")}secrets/${secret.value}"
+      key_vault_secret_id = "${trimsuffix(var.keyvault_uri, "/")}/secrets/${secret.value}"
       identity            = "System"
     }
   }

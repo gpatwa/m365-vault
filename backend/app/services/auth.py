@@ -2,7 +2,8 @@
 from datetime import datetime, timedelta
 from typing import Optional
 
-import bcrypt
+import hashlib
+import os
 from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -28,11 +29,33 @@ def validate_password(password: str) -> tuple[bool, str]:
 
 
 def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    """Hash password using PBKDF2-SHA256 (no native dependency, works everywhere)."""
+    salt = os.urandom(16)
+    key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 260000)
+    return f"pbkdf2:sha256:260000${salt.hex()}${key.hex()}"
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+    """Verify password against PBKDF2-SHA256 or legacy bcrypt hash."""
+    if hashed_password.startswith("pbkdf2:"):
+        # New PBKDF2 format: pbkdf2:sha256:iterations$salt_hex$key_hex
+        parts = hashed_password.split("$")
+        if len(parts) != 3:
+            return False
+        header = parts[0]  # pbkdf2:sha256:260000
+        salt = bytes.fromhex(parts[1])
+        stored_key = parts[2]
+        iterations = int(header.split(":")[-1])
+        key = hashlib.pbkdf2_hmac("sha256", plain_password.encode("utf-8"), salt, iterations)
+        return key.hex() == stored_key
+    elif hashed_password.startswith("$2b$") or hashed_password.startswith("$2a$"):
+        # Legacy bcrypt hash — use bcrypt library
+        try:
+            import bcrypt
+            return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+        except Exception:
+            return False
+    return False
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:

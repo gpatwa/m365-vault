@@ -17,11 +17,11 @@ const TenantContext = createContext<TenantState>({
 export function TenantProvider({ children }: { children: ReactNode }) {
   const [tenantId, setTenantId] = useState<number | null>(() => {
     // Restore from sessionStorage on mount
-    const stored = sessionStorage.getItem('shieldio_tenant_id');
+    const stored = sessionStorage.getItem('kavachiq_tenant_id');
     return stored ? parseInt(stored, 10) : null;
   });
   const [tenantName, setTenantName] = useState<string | null>(() => {
-    return sessionStorage.getItem('shieldio_tenant_name');
+    return sessionStorage.getItem('kavachiq_tenant_name');
   });
 
   // Read from URL query param on initial load
@@ -32,7 +32,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       const id = parseInt(urlTenantId, 10);
       if (!isNaN(id)) {
         setTenantId(id);
-        sessionStorage.setItem('shieldio_tenant_id', String(id));
+        sessionStorage.setItem('kavachiq_tenant_id', String(id));
       }
     }
   }, []);
@@ -40,15 +40,15 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const setTenant = useCallback((id: number, name: string) => {
     setTenantId(id);
     setTenantName(name);
-    sessionStorage.setItem('shieldio_tenant_id', String(id));
-    sessionStorage.setItem('shieldio_tenant_name', name);
+    sessionStorage.setItem('kavachiq_tenant_id', String(id));
+    sessionStorage.setItem('kavachiq_tenant_name', name);
   }, []);
 
   const clearTenant = useCallback(() => {
     setTenantId(null);
     setTenantName(null);
-    sessionStorage.removeItem('shieldio_tenant_id');
-    sessionStorage.removeItem('shieldio_tenant_name');
+    sessionStorage.removeItem('kavachiq_tenant_id');
+    sessionStorage.removeItem('kavachiq_tenant_name');
   }, []);
 
   return (

@@ -74,18 +74,18 @@ function SmartHome() {
   const [redirect, setRedirect] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log('[Shieldio:SmartHome] mounted, token:', !!api.getToken());
+    console.log('[KavachIQ:SmartHome] mounted, token:', !!api.getToken());
 
     // Route users based on their role and purpose
     api.get<any>('/auth/me')
       .then(user => {
         if ((user?.username === 'demo' || user?.username === 'prospect') && !sessionStorage.getItem('demo_onboard_complete')) {
-          console.log('[Shieldio:SmartHome] → demo/prospect user, redirect /onboard/demo');
+          console.log('[KavachIQ:SmartHome] → demo/prospect user, redirect /onboard/demo');
           setRedirect('/onboard/demo');
           return;
         }
         if (user?.username === 'msp' || user?.role === 'msp_admin') {
-          console.log('[Shieldio:SmartHome] → MSP user, redirect /msp');
+          console.log('[KavachIQ:SmartHome] → MSP user, redirect /msp');
           setRedirect('/msp');
           return;
         }
@@ -94,7 +94,7 @@ function SmartHome() {
       })
       .then(tenants => {
         if (!tenants) return; // demo user already redirected
-        console.log('[Shieldio:SmartHome] tenants:', tenants?.length);
+        console.log('[KavachIQ:SmartHome] tenants:', tenants?.length);
         if (!tenants || tenants.length === 0) {
           setRedirect('/onboard');
         } else {
@@ -102,7 +102,7 @@ function SmartHome() {
         }
       })
       .catch((err) => {
-        console.error('[Shieldio:SmartHome] catch:', err?.message);
+        console.error('[KavachIQ:SmartHome] catch:', err?.message);
         setRedirect('/onboard');
       });
   }, []);

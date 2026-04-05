@@ -1,4 +1,4 @@
-"""Shieldio — SaaS Data Protection — FastAPI Application Entry Point."""
+"""KavachIQ — SaaS Data Protection — FastAPI Application Entry Point."""
 import json
 import logging
 import time
@@ -12,7 +12,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.database import init_db
-from app.errors import ShieldioError, RATE_LIMIT_EXCEEDED
+from app.errors import KavachIQError, RATE_LIMIT_EXCEEDED
 from app.services.scheduler import start_scheduler, stop_scheduler
 from app.models.dedup import DedupEntry          # noqa: F401 — ensure table is created
 from app.models.worker_queue import WorkerQueueEntry  # noqa: F401 — ensure table is created
@@ -119,7 +119,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
-    description="Shieldio — SaaS Data Protection for Exchange, OneDrive, SharePoint, Teams, and Entra ID",
+    description="KavachIQ — SaaS Data Protection for Exchange, OneDrive, SharePoint, Teams, and Entra ID",
     lifespan=lifespan,
 )
 
@@ -267,9 +267,9 @@ async def correlation_id_middleware(request: Request, call_next):
 
 # ── Global Error Handlers ──
 
-@app.exception_handler(ShieldioError)
-async def shieldio_error_handler(request: Request, exc: ShieldioError):
-    """Handle structured Shieldio errors — returns standardized error JSON."""
+@app.exception_handler(KavachIQError)
+async def kavachiq_error_handler(request: Request, exc: KavachIQError):
+    """Handle structured KavachIQ errors — returns standardized error JSON."""
     return exc.error_def.response(request=request, detail=exc.detail, extra=exc.extra)
 
 

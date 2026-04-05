@@ -1,4 +1,4 @@
-"""Shieldio Data Plane Worker — standalone process for backup/restore execution.
+"""KavachIQ Data Plane Worker — standalone process for backup/restore execution.
 
 This is the worker process that runs separately from the API server.
 It polls Redis queues for jobs and executes them using BackupEngine/RestoreEngine.
@@ -41,7 +41,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
-logger = logging.getLogger("shieldio.worker")
+logger = logging.getLogger("kavachiq.worker")
 
 shutdown_event = asyncio.Event()
 
@@ -287,7 +287,7 @@ async def worker_loop(worker_id: int):
 
 async def main():
     """Initialize and run worker processes."""
-    logger.info("Shieldio Data Plane Worker starting…")
+    logger.info("KavachIQ Data Plane Worker starting…")
     logger.info(f"Redis: {settings.REDIS_URL}")
     logger.info(f"Concurrency: {settings.WORKER_CONCURRENCY}")
 

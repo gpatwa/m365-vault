@@ -14,7 +14,7 @@ const API_BASE =
 
 /**
  * Structured API error with error code, message, fix suggestion, and correlation ID.
- * Matches the backend Shieldio error response format.
+ * Matches the backend KavachIQ error response format.
  */
 export class ApiError extends Error {
   code: string;

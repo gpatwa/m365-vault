@@ -48,7 +48,7 @@ export default function MSPBranding() {
 
   const handleReset = () => {
     setForm({
-      company_name: 'Shieldio',
+      company_name: 'KavachIQ',
       tagline: 'SaaS Data Protection',
       logo_url: '',
       primary_color: '#3b82f6',
@@ -156,7 +156,7 @@ export default function MSPBranding() {
                   <Shield className="w-7 h-7" style={{ color: form.primary_color }} />
                 )}
                 <div>
-                  <h2 className="text-sm font-bold text-foreground leading-tight">{form.company_name || 'Shieldio'}</h2>
+                  <h2 className="text-sm font-bold text-foreground leading-tight">{form.company_name || 'KavachIQ'}</h2>
                   <p className="text-[10px] text-muted-foreground">{form.tagline || 'SaaS Data Protection'}</p>
                 </div>
               </div>

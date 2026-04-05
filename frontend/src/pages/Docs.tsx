@@ -6,7 +6,7 @@ const DOCS = [
     category: 'Security & Compliance',
     items: [
       { title: 'Security Architecture', desc: 'Encryption, authentication, RBAC, WORM, infrastructure security — 10 sections covering all controls.', file: 'SECURITY.md', icon: Lock, color: 'text-blue-600 bg-blue-500/10' },
-      { title: 'Compliance Mapping', desc: 'SOC 2 (16 controls), GDPR (8 articles), HIPAA (14 safeguards), DORA (6 articles) mapped to Shieldio features.', file: 'COMPLIANCE_MAPPING.md', icon: ShieldCheck, color: 'text-green-600 bg-green-500/10' },
+      { title: 'Compliance Mapping', desc: 'SOC 2 (16 controls), GDPR (8 articles), HIPAA (14 safeguards), DORA (6 articles) mapped to KavachIQ features.', file: 'COMPLIANCE_MAPPING.md', icon: ShieldCheck, color: 'text-green-600 bg-green-500/10' },
       { title: 'Tenant Security', desc: 'Per-tenant encryption, key isolation, data sovereignty, and access control architecture.', file: 'TENANT_SECURITY.md', icon: Shield, color: 'text-purple-600 bg-purple-500/10' },
     ],
   },
@@ -34,7 +34,7 @@ export default function Docs() {
         <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between">
           <Link to="/welcome" className="flex items-center gap-2">
             <Shield className="w-6 h-6 text-blue-600" />
-            <span className="font-bold text-foreground">Shieldio</span>
+            <span className="font-bold text-foreground">KavachIQ</span>
           </Link>
           <div className="flex items-center gap-3">
             <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">Sign In</Link>

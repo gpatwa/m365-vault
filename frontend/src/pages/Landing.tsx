@@ -172,7 +172,7 @@ function CyberRecoveryStory() {
 
             {/* Progress visualization */}
             <div className="bg-black/30 rounded-xl p-4 mb-6 font-mono text-sm">
-              <div className="text-muted-foreground mb-1">$ shieldio status</div>
+              <div className="text-muted-foreground mb-1">$ kavachiq status</div>
               <div className={`transition-all duration-500 ${phase === 3 ? 'text-red-400' : phase >= 5 ? 'text-green-400' : 'text-blue-400'}`}>
                 {current.visual}
               </div>
@@ -261,7 +261,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
           <Link to="/welcome" className="flex items-center gap-2">
             <Shield className="w-6 h-6 text-teal-500" />
-            <span className="font-bold text-foreground">Shieldio</span>
+            <span className="font-bold text-foreground">KavachIQ</span>
           </Link>
           <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
             <a href="#how-it-works" className="hover:text-foreground">How It Works</a>
@@ -301,7 +301,7 @@ export default function Landing() {
           {/* Sub */}
           <p className={`mt-6 text-lg text-muted-foreground max-w-2xl mx-auto transition-all duration-700 delay-500 ${heroReady ? 'opacity-100' : 'opacity-0'}`}>
             Microsoft's 93-day recycle bin is not a recovery plan. When ransomware hits,
-            Shieldio already has a context-aware recovery plan — identity first, critical users next, then everyone else.
+            KavachIQ already has a context-aware recovery plan — identity first, critical users next, then everyone else.
           </p>
 
           {/* CTAs */}
@@ -345,7 +345,7 @@ export default function Landing() {
                 <AlertTriangle className="w-3.5 h-3.5" /> Ransomware Scenario
               </div>
               <h2 className="text-3xl font-bold text-foreground">When ransomware hits at 2am, this is your playbook</h2>
-              <p className="text-muted-foreground mt-2 max-w-xl mx-auto">Watch how Shieldio detects an attack, identifies the blast radius, and recovers your critical users first — automatically</p>
+              <p className="text-muted-foreground mt-2 max-w-xl mx-auto">Watch how KavachIQ detects an attack, identifies the blast radius, and recovers your critical users first — automatically</p>
             </div>
           </FadeUp>
           <CyberRecoveryStory />
@@ -368,22 +368,22 @@ export default function Landing() {
                   <tr className="border-b bg-muted/50">
                     <th className="text-left px-5 py-3 font-medium text-foreground">Capability</th>
                     <th className="text-center px-5 py-3 font-medium text-foreground">Microsoft 365</th>
-                    <th className="text-center px-5 py-3 font-semibold text-teal-500">Shieldio</th>
+                    <th className="text-center px-5 py-3 font-semibold text-teal-500">KavachIQ</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {[
-                    { cap: 'Recovery model', m365: '93-day recycle bin', shieldio: 'Unlimited point-in-time restore' },
-                    { cap: 'Ransomware detection', m365: 'None', shieldio: 'AI anomaly detection (Z-score baselines)' },
-                    { cap: 'Recovery plan', m365: 'None — restore manually', shieldio: 'Pre-computed 4-phase MVB plans' },
-                    { cap: 'Entra ID rollback', m365: 'No undo for CA policies or roles', shieldio: 'Full config snapshot + diff comparison' },
-                    { cap: 'Recovery order', m365: 'Manual, one mailbox at a time', shieldio: 'Criticality-ordered — CEO restored first' },
-                    { cap: 'Recovery confidence', m365: 'Unknown until you try', shieldio: 'Scored 0-100 with evidence' },
+                    { cap: 'Recovery model', m365: '93-day recycle bin', kavachiq: 'Unlimited point-in-time restore' },
+                    { cap: 'Ransomware detection', m365: 'None', kavachiq: 'AI anomaly detection (Z-score baselines)' },
+                    { cap: 'Recovery plan', m365: 'None — restore manually', kavachiq: 'Pre-computed 4-phase MVB plans' },
+                    { cap: 'Entra ID rollback', m365: 'No undo for CA policies or roles', kavachiq: 'Full config snapshot + diff comparison' },
+                    { cap: 'Recovery order', m365: 'Manual, one mailbox at a time', kavachiq: 'Criticality-ordered — CEO restored first' },
+                    { cap: 'Recovery confidence', m365: 'Unknown until you try', kavachiq: 'Scored 0-100 with evidence' },
                   ].map(row => (
                     <tr key={row.cap} className="hover:bg-muted/50">
                       <td className="px-5 py-3 font-medium text-foreground">{row.cap}</td>
                       <td className="px-5 py-3 text-center text-foreground">{row.m365}</td>
-                      <td className="px-5 py-3 text-center text-green-400 font-medium">{row.shieldio}</td>
+                      <td className="px-5 py-3 text-center text-green-400 font-medium">{row.kavachiq}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -426,7 +426,7 @@ export default function Landing() {
               </div>
               <h2 className="text-3xl font-bold">Recovery intelligence that no competitor has.</h2>
               <p className="text-muted-foreground mt-2 max-w-xl mx-auto">
-                Other vendors back up your data. Shieldio understands your organization and builds recovery plans automatically.
+                Other vendors back up your data. KavachIQ understands your organization and builds recovery plans automatically.
               </p>
             </div>
           </FadeUp>
@@ -495,7 +495,7 @@ export default function Landing() {
         <div className="max-w-3xl mx-auto">
           <FadeUp>
             <div className="text-center mb-10">
-              <h2 className="text-3xl font-bold text-foreground">Shieldio vs. Veeam, Rubrik, Druva</h2>
+              <h2 className="text-3xl font-bold text-foreground">KavachIQ vs. Veeam, Rubrik, Druva</h2>
               <p className="text-muted-foreground mt-2">Recovery intelligence that competitors charge extra for — or don't offer at all</p>
             </div>
           </FadeUp>
@@ -505,7 +505,7 @@ export default function Landing() {
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="text-left px-5 py-3 font-medium text-foreground">Feature</th>
-                    <th className="text-center px-5 py-3 font-semibold text-teal-400">Shieldio</th>
+                    <th className="text-center px-5 py-3 font-semibold text-teal-400">KavachIQ</th>
                     <th className="text-center px-5 py-3 font-medium text-foreground">Others</th>
                   </tr>
                 </thead>
@@ -579,7 +579,7 @@ export default function Landing() {
         <div className="max-w-3xl mx-auto text-center">
           <FadeUp>
             <h2 className="text-2xl font-bold mb-3">See it live with your data in 10 minutes</h2>
-            <p className="text-muted-foreground text-sm mb-6">Connect your M365 tenant. Watch Shieldio discover your org, score criticality, and build a recovery plan — in real time.</p>
+            <p className="text-muted-foreground text-sm mb-6">Connect your M365 tenant. Watch KavachIQ discover your org, score criticality, and build a recovery plan — in real time.</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link to="/login" className="px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-semibold rounded-xl hover:from-teal-400 hover:to-cyan-400 transition-all shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40 flex items-center gap-2">
                 Start Free <ArrowRight className="w-4 h-4" />
@@ -603,11 +603,11 @@ export default function Landing() {
           </FadeUp>
           <div className="space-y-3">
             {[
-              { q: 'How is Shieldio different from Microsoft\'s built-in backup?', a: 'Microsoft 365 has a 93-day recycle bin — not a backup. Shieldio provides unlimited point-in-time restore, criticality-ordered recovery plans, and anomaly detection that Microsoft doesn\'t offer.' },
-              { q: 'Do you store my Microsoft credentials?', a: 'No. Shieldio uses OAuth admin consent — your Global Admin approves read-only access via Microsoft\'s consent flow. We never see or store your password. Only a scoped API token is used.' },
-              { q: 'What happens during a ransomware attack?', a: 'Shieldio detects anomalies in real-time during backup (mass encryption, unusual deletions). It auto-pauses backups, isolates the clean snapshot, and provides a one-click recovery plan — identity first, then critical users, then everyone else.' },
-              { q: 'How does criticality-ordered backup work?', a: 'Shieldio reads your Microsoft Graph to discover org hierarchy, VIP groups, and privileged roles. Each user gets a 4-factor criticality score. Your CEO is backed up first, then VPs, then directors, then everyone else — automatically.' },
-              { q: 'Can I self-host Shieldio?', a: 'Yes. Shieldio is open source under Apache 2.0. Deploy to your own Azure subscription, AWS, or on-premises infrastructure. Your data never leaves your environment.' },
+              { q: 'How is KavachIQ different from Microsoft\'s built-in backup?', a: 'Microsoft 365 has a 93-day recycle bin — not a backup. KavachIQ provides unlimited point-in-time restore, criticality-ordered recovery plans, and anomaly detection that Microsoft doesn\'t offer.' },
+              { q: 'Do you store my Microsoft credentials?', a: 'No. KavachIQ uses OAuth admin consent — your Global Admin approves read-only access via Microsoft\'s consent flow. We never see or store your password. Only a scoped API token is used.' },
+              { q: 'What happens during a ransomware attack?', a: 'KavachIQ detects anomalies in real-time during backup (mass encryption, unusual deletions). It auto-pauses backups, isolates the clean snapshot, and provides a one-click recovery plan — identity first, then critical users, then everyone else.' },
+              { q: 'How does criticality-ordered backup work?', a: 'KavachIQ reads your Microsoft Graph to discover org hierarchy, VIP groups, and privileged roles. Each user gets a 4-factor criticality score. Your CEO is backed up first, then VPs, then directors, then everyone else — automatically.' },
+              { q: 'Can I self-host KavachIQ?', a: 'Yes. KavachIQ is open source under Apache 2.0. Deploy to your own Azure subscription, AWS, or on-premises infrastructure. Your data never leaves your environment.' },
               { q: 'What\'s included in the free tier?', a: 'Up to 25 objects across Exchange, OneDrive, and SharePoint. Basic Smart Engine, 30-day retention, and community support. No credit card required.' },
             ].map((faq, i) => (
               <FadeUp key={i} delay={i * 50}>
@@ -631,7 +631,7 @@ export default function Landing() {
         <div className="max-w-3xl mx-auto text-center text-white">
           <FadeUp>
             <h2 className="text-3xl font-bold mb-4">Ready to prove you can recover?</h2>
-            <p className="text-teal-100 mb-8">Most backup vendors prove you can back up. Shieldio proves you can recover.</p>
+            <p className="text-teal-100 mb-8">Most backup vendors prove you can back up. KavachIQ proves you can recover.</p>
             <Link to="/login" className="inline-flex items-center gap-2 px-8 py-3.5 bg-white text-teal-700 font-semibold rounded-xl hover:bg-teal-500/10 transition-colors text-lg">
               Get Started Free <ArrowRight className="w-5 h-5" />
             </Link>
@@ -646,7 +646,7 @@ export default function Landing() {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <Shield className="w-5 h-5 text-teal-400" />
-                <span className="font-semibold text-foreground">Shieldio</span>
+                <span className="font-semibold text-foreground">KavachIQ</span>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 SaaS Data Protection Platform.<br />
@@ -678,7 +678,7 @@ export default function Landing() {
             </div>
           </div>
           <div className="border-t border-border pt-6 text-center text-xs text-muted-foreground">
-            &copy; {new Date().getFullYear()} Shieldio. Open source under Apache 2.0 License.
+            &copy; {new Date().getFullYear()} KavachIQ. Open source under Apache 2.0 License.
           </div>
         </div>
       </footer>

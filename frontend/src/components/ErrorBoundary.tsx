@@ -25,7 +25,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('[Shieldio:ErrorBoundary]', error, info.componentStack);
+    console.error('[KavachIQ:ErrorBoundary]', error, info.componentStack);
   }
 
   handleCopy = () => {

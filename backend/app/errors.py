@@ -1,4 +1,4 @@
-"""Shieldio Error Code System — standardized error codes and structured error responses.
+"""KavachIQ Error Code System — standardized error codes and structured error responses.
 
 Every API error includes a machine-readable code, human-readable message,
 actionable fix suggestion, and correlation ID for support tracing.
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class ErrorDef:
-    """Definition for a Shieldio error code."""
+    """Definition for a KavachIQ error code."""
     code: str
     status: int
     message: str
@@ -63,7 +63,7 @@ class ErrorDef:
         return JSONResponse(status_code=self.status, content=body)
 
 
-class ShieldioError(Exception):
+class KavachIQError(Exception):
     """Raise from service code to produce a structured API error."""
 
     def __init__(self, error_def: ErrorDef, detail: str = "", extra: dict[str, Any] | None = None):

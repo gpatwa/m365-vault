@@ -9,8 +9,8 @@ Falls back to InProcessDispatcher on Redis failure (DB entry is already
 persisted so the worker will replay it on next startup if needed).
 
 Queues:
-- shieldio:backup_queue — backup object and backup job messages
-- shieldio:restore_queue — restore job messages
+- kavachiq:backup_queue — backup object and backup job messages
+- kavachiq:restore_queue — restore job messages
 """
 import json
 import logging
@@ -22,8 +22,8 @@ from app.interfaces.job_message import (
 
 logger = logging.getLogger(__name__)
 
-BACKUP_QUEUE = "shieldio:backup_queue"
-RESTORE_QUEUE = "shieldio:restore_queue"
+BACKUP_QUEUE = "kavachiq:backup_queue"
+RESTORE_QUEUE = "kavachiq:restore_queue"
 
 
 class RedisDispatcher(JobDispatcher):

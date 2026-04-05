@@ -7,7 +7,7 @@ from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.errors import ShieldioError, BACKUP_NO_OBJECTS, BACKUP_ALREADY_RUNNING
+from app.errors import KavachIQError, BACKUP_NO_OBJECTS, BACKUP_ALREADY_RUNNING
 from app.models.protected_object import ProtectedObject, WorkloadType, ProtectionStatus
 from app.models.snapshot import Snapshot, SnapshotItem, SnapshotStatus, ItemType
 from app.models.restore_job import RestoreJob, RestoreType, RestoreStatus
@@ -330,7 +330,7 @@ async def trigger_backup_all(
     mailboxes = result.scalars().all()
 
     if not mailboxes:
-        raise ShieldioError(BACKUP_NO_OBJECTS, detail="No Exchange mailboxes found for this tenant")
+        raise KavachIQError(BACKUP_NO_OBJECTS, detail="No Exchange mailboxes found for this tenant")
 
     # Create a BackupJob for tracking
     job = BackupJob(

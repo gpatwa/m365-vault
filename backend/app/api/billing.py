@@ -94,7 +94,7 @@ async def create_checkout(
         customer = stripe.Customer.create(
             email=current_user.email,
             name=tenant.name,
-            metadata={"tenant_id": str(tenant.id), "shieldio_user": current_user.username},
+            metadata={"tenant_id": str(tenant.id), "kavachiq_user": current_user.username},
         )
         tenant.stripe_customer_id = customer.id
         await db.commit()

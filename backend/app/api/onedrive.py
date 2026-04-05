@@ -7,7 +7,7 @@ from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.errors import ShieldioError, BACKUP_NO_OBJECTS
+from app.errors import KavachIQError, BACKUP_NO_OBJECTS
 from app.models.protected_object import ProtectedObject, WorkloadType, ProtectionStatus
 from app.models.snapshot import Snapshot, SnapshotStatus
 from app.models.restore_job import RestoreJob, RestoreType, RestoreStatus

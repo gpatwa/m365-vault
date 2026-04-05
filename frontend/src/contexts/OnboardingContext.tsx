@@ -34,7 +34,7 @@ const STEPS_ORDER: OnboardingStep[] = [
   'explore_recovery',
 ];
 
-const STORAGE_KEY = 'shieldio_onboarding';
+const STORAGE_KEY = 'kavachiq_onboarding';
 
 const OnboardingContext = createContext<OnboardingState | null>(null);
 

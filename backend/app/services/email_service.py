@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def _base_template(title: str, content: str) -> str:
-    """Shieldio-branded HTML email template."""
+    """KavachIQ-branded HTML email template."""
     return f"""<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>

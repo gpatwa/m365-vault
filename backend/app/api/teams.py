@@ -5,7 +5,7 @@ from sqlalchemy import select, func, desc, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.errors import ShieldioError, BACKUP_NO_OBJECTS
+from app.errors import KavachIQError, BACKUP_NO_OBJECTS
 from app.models.protected_object import ProtectedObject, WorkloadType
 from app.models.snapshot import Snapshot, SnapshotItem, SnapshotStatus, ItemType
 from app.models.user import User

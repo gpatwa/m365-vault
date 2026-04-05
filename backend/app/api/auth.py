@@ -18,7 +18,7 @@ from app.services.auth import (
 logger = logging.getLogger(__name__)
 from app.config import settings
 from app.errors import (
-    ShieldioError, AUTH_INVALID_CREDENTIALS, AUTH_ACCOUNT_DISABLED,
+    KavachIQError, AUTH_INVALID_CREDENTIALS, AUTH_ACCOUNT_DISABLED,
     AUTH_TOKEN_EXPIRED, VALIDATION_INVALID_INPUT, VALIDATION_DUPLICATE,
 )
 
@@ -58,14 +58,14 @@ async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
     # Validate password
     is_valid, error_msg = validate_password(req.password)
     if not is_valid:
-        raise ShieldioError(VALIDATION_INVALID_INPUT, detail=error_msg)
+        raise KavachIQError(VALIDATION_INVALID_INPUT, detail=error_msg)
 
     # Check existing
     result = await db.execute(
         select(User).where((User.username == req.username) | (User.email == req.email))
     )
     if result.scalar_one_or_none():
-        raise ShieldioError(VALIDATION_DUPLICATE, detail="Username or email already exists")
+        raise KavachIQError(VALIDATION_DUPLICATE, detail="Username or email already exists")
 
     import secrets
     verification_token = secrets.token_urlsafe(32)
@@ -108,10 +108,10 @@ async def login(
     user = result.scalar_one_or_none()
 
     if not user or not verify_password(form_data.password, user.password_hash):
-        raise ShieldioError(AUTH_INVALID_CREDENTIALS)
+        raise KavachIQError(AUTH_INVALID_CREDENTIALS)
 
     if not user.is_active:
-        raise ShieldioError(AUTH_ACCOUNT_DISABLED)
+        raise KavachIQError(AUTH_ACCOUNT_DISABLED)
 
     token = create_access_token(
         data={"sub": user.username, "role": user.role.value},
@@ -142,12 +142,12 @@ async def refresh_token(req: RefreshRequest, db: AsyncSession = Depends(get_db))
     """Exchange refresh token for new access + refresh tokens."""
     username = verify_refresh_token(req.refresh_token)
     if not username:
-        raise ShieldioError(AUTH_TOKEN_EXPIRED, detail="Invalid or expired refresh token")
+        raise KavachIQError(AUTH_TOKEN_EXPIRED, detail="Invalid or expired refresh token")
 
     result = await db.execute(select(User).where(User.username == username))
     user = result.scalar_one_or_none()
     if not user or not user.is_active:
-        raise ShieldioError(AUTH_ACCOUNT_DISABLED, detail="User not found or disabled")
+        raise KavachIQError(AUTH_ACCOUNT_DISABLED, detail="User not found or disabled")
 
     new_access = create_access_token(
         data={"sub": user.username, "role": user.role.value},
@@ -374,8 +374,8 @@ async def delete_account(
         from app.services.email_service import email_service
         await email_service.provider.send(
             to=current_user.email,
-            subject="Account Deleted — Shieldio",
-            html=f"<p>Your Shieldio account ({current_user.username}) has been deactivated. Data purge in 7 days.</p>",
+            subject="Account Deleted — KavachIQ",
+            html=f"<p>Your KavachIQ account ({current_user.username}) has been deactivated. Data purge in 7 days.</p>",
         )
     except Exception:
         pass

@@ -1,10 +1,10 @@
 """Microsoft 365 connector — OAuth admin consent flow.
 
-Uses the multi-tenant Shieldio Connector app registered in Azure AD.
+Uses the multi-tenant KavachIQ Connector app registered in Azure AD.
 Customer clicks "Connect Microsoft 365" → redirects to Microsoft admin
 consent → accepts permissions → redirected back with tenant_id.
 
-No client secrets stored per customer — Shieldio uses its own app
+No client secrets stored per customer — KavachIQ uses its own app
 credentials with consented access to customer's tenant.
 """
 import logging
@@ -117,10 +117,10 @@ class M365Connector(BaseConnector):
 
                     # AADSTS7000215 = invalid client secret — don't retry, it won't help
                     if 'AADSTS7000215' in last_error:
-                        logger.error(f"Invalid client secret for Shieldio Connector app. Check CONNECTOR_APP_SECRET env var.")
+                        logger.error(f"Invalid client secret for KavachIQ Connector app. Check CONNECTOR_APP_SECRET env var.")
                         return ConnectionResult(
                             success=False,
-                            error="Shieldio configuration error: the connector app secret is invalid. Please contact support.",
+                            error="KavachIQ configuration error: the connector app secret is invalid. Please contact support.",
                         )
 
                     # AADSTS700016 = app not found in tenant — consent may not have propagated
@@ -171,7 +171,7 @@ class M365Connector(BaseConnector):
     def _friendly_error(technical_error: str) -> str:
         """Convert AADSTS codes to user-friendly messages."""
         if 'AADSTS7000215' in technical_error:
-            return "Shieldio configuration error. The connector credentials need to be updated. Please contact support."
+            return "KavachIQ configuration error. The connector credentials need to be updated. Please contact support."
         if 'AADSTS700016' in technical_error:
             return "Microsoft hasn't finished processing your consent yet. Please wait a minute and try again."
         if 'AADSTS65001' in technical_error:

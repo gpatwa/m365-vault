@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # App
-    APP_NAME: str = "Shieldio"
+    APP_NAME: str = "KavachIQ"
     APP_VERSION: str = "3.0.0"
     DEBUG: bool = True
     SECRET_KEY: str = "change-me-in-production-use-openssl-rand-hex-32"
@@ -119,8 +119,8 @@ class Settings(BaseSettings):
     FEATURE_OVERRIDES: str = ""
 
     # Multi-tenant Connector (OAuth onboarding)
-    CONNECTOR_APP_ID: str = ""        # Shieldio Connector multi-tenant app ID
-    CONNECTOR_APP_SECRET: str = ""    # Shieldio Connector app secret
+    CONNECTOR_APP_ID: str = ""        # KavachIQ Connector multi-tenant app ID
+    CONNECTOR_APP_SECRET: str = ""    # KavachIQ Connector app secret
     CONNECTOR_REDIRECT_URI: str = "http://localhost:5173/onboard/callback"
 
     # Dispatcher (Control Plane / Data Plane separation)

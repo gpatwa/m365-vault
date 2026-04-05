@@ -1,7 +1,7 @@
 """MSP Branding model — white-label configuration for managed service providers.
 
-Singleton table: one row per Shieldio deployment. Stores the MSP's custom
-company name, logo, and brand colors that replace Shieldio defaults throughout the UI.
+Singleton table: one row per KavachIQ deployment. Stores the MSP's custom
+company name, logo, and brand colors that replace KavachIQ defaults throughout the UI.
 """
 from datetime import datetime
 
@@ -13,7 +13,7 @@ class MSPBranding(Base):
     __tablename__ = "msp_branding"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    company_name = Column(String(255), nullable=False, default="Shieldio")
+    company_name = Column(String(255), nullable=False, default="KavachIQ")
     tagline = Column(String(255), nullable=True, default="SaaS Data Protection")
     logo_url = Column(String(500), nullable=True)
     favicon_url = Column(String(500), nullable=True)

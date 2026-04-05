@@ -1,4 +1,4 @@
-"""Database models for Shieldio — SaaS Data Protection."""
+"""Database models for KavachIQ — SaaS Data Protection."""
 from app.models.user import User
 from app.models.tenant import Tenant
 from app.models.sla_policy import SLAPolicy

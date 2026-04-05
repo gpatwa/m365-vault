@@ -106,7 +106,7 @@ export default function Layout() {
   const [commandOpen, setCommandOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showTour, setShowTour] = useState(
-    !localStorage.getItem('shieldio_tour_completed')
+    !localStorage.getItem('kavachiq_tour_completed')
   );
 
   // Close mobile sidebar on route change
@@ -288,7 +288,7 @@ export default function Layout() {
         </button>
         <div className="flex items-center gap-2">
           <Shield className="w-5 h-5 text-blue-400" />
-          <span className="text-sm font-bold text-foreground">Shieldio</span>
+          <span className="text-sm font-bold text-foreground">KavachIQ</span>
         </div>
         <button onClick={() => setCommandOpen(true)} className="p-1 text-muted-foreground hover:text-foreground">
           <Search className="w-5 h-5" />

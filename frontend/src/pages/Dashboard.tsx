@@ -89,7 +89,7 @@ function OnboardingChecklist() {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(!isComplete);
   const [dismissed, setDismissed] = useState(
-    localStorage.getItem('shieldio_checklist_dismissed') === 'true'
+    localStorage.getItem('kavachiq_checklist_dismissed') === 'true'
   );
   const [backupRunning, setBackupRunning] = useState<Record<string, 'idle' | 'running' | 'done' | 'error'>>({});
   const tenantId = useTenantId();
@@ -112,7 +112,7 @@ function OnboardingChecklist() {
 
   const handleDismiss = () => {
     setDismissed(true);
-    localStorage.setItem('shieldio_checklist_dismissed', 'true');
+    localStorage.setItem('kavachiq_checklist_dismissed', 'true');
   };
 
   return (
@@ -140,7 +140,7 @@ function OnboardingChecklist() {
           </div>
           <div className="text-left">
             <h3 className="font-semibold text-foreground text-sm">
-              {isComplete ? 'Setup complete! 🎉' : 'Getting started with Shieldio'}
+              {isComplete ? 'Setup complete! 🎉' : 'Getting started with KavachIQ'}
             </h3>
             <p className="text-xs text-muted-foreground">
               {isComplete
@@ -462,7 +462,7 @@ export default function Dashboard() {
           <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-blue-500/20">
             <Shield className="w-10 h-10 text-foreground" />
           </div>
-          <h1 className="text-3xl font-extrabold text-foreground mb-3">Welcome to Shieldio</h1>
+          <h1 className="text-3xl font-extrabold text-foreground mb-3">Welcome to KavachIQ</h1>
           <p className="text-lg text-muted-foreground max-w-lg mx-auto">
             Protect your SaaS data in minutes. Connect your platform, discover workloads, and start backing up automatically.
           </p>
@@ -543,7 +543,7 @@ export default function Dashboard() {
         </div>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
-          Shieldio uses OAuth admin consent — your credentials are never stored. Only read-only permissions for backup.
+          KavachIQ uses OAuth admin consent — your credentials are never stored. Only read-only permissions for backup.
         </p>
       </div>
     );

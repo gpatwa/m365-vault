@@ -107,7 +107,7 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [workloadFilter, setWorkloadFilter] = useState<string | null>(null);
   const [recentSearches, setRecentSearches] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem('shieldio_recent') || '[]'); } catch { return []; }
+    try { return JSON.parse(localStorage.getItem('kavachiq_recent') || '[]'); } catch { return []; }
   });
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -163,7 +163,7 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
   const saveRecent = useCallback((q: string) => {
     const updated = [q, ...recentSearches.filter(s => s !== q)].slice(0, 5);
     setRecentSearches(updated);
-    localStorage.setItem('shieldio_recent', JSON.stringify(updated));
+    localStorage.setItem('kavachiq_recent', JSON.stringify(updated));
   }, [recentSearches]);
 
   const handleAction = (item: IntentResult, action: string) => {

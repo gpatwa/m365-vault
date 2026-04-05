@@ -108,7 +108,7 @@ export default function Onboard() {
       {showPreflight && (
         <div className="mb-8">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-foreground">How Shieldio Connects to Microsoft 365</h2>
+            <h2 className="text-2xl font-bold text-foreground">How KavachIQ Connects to Microsoft 365</h2>
             <p className="text-muted-foreground mt-1">Secure, read-only access — your credentials are never stored</p>
           </div>
 
@@ -333,7 +333,7 @@ export default function Onboard() {
 
       <div className="mt-8 text-center">
         <p className="text-xs text-muted-foreground">
-          Shieldio uses OAuth admin consent — your credentials are never stored.
+          KavachIQ uses OAuth admin consent — your credentials are never stored.
           <br />
           Only read-only permissions are requested for backup.
         </p>
@@ -367,10 +367,10 @@ const ENTRA_TYPE_LABELS: Record<string, { label: string; critical?: boolean }> =
   oauth2_permission_grant: { label: 'OAuth Permissions', critical: true },
 };
 
-const GapRow = ({ m365, shieldio }: { m365: string; shieldio: string }) => (
+const GapRow = ({ m365, kavachiq }: { m365: string; kavachiq: string }) => (
   <div className="bg-card border border-border rounded-xl p-3 space-y-1">
     <div className="flex items-center gap-2 text-sm"><span className="text-muted-foreground w-16 flex-shrink-0">M365:</span> <span className="text-red-500 font-medium">{m365}</span></div>
-    <div className="flex items-center gap-2 text-sm"><span className="text-muted-foreground w-16 flex-shrink-0">Shieldio:</span> <span className="text-green-600 font-medium">{shieldio}</span></div>
+    <div className="flex items-center gap-2 text-sm"><span className="text-muted-foreground w-16 flex-shrink-0">KavachIQ:</span> <span className="text-green-600 font-medium">{kavachiq}</span></div>
   </div>
 );
 
@@ -471,7 +471,7 @@ function TenantConnectedStep({ tenantName, tenantId, onContinue }: { tenantName:
               <div className="w-10 h-10 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center justify-center">
                 <Shield className="w-5 h-5 text-green-400" />
               </div>
-              <span className="text-[10px] text-muted-foreground">Shieldio</span>
+              <span className="text-[10px] text-muted-foreground">KavachIQ</span>
             </div>
           </div>
 
@@ -664,7 +664,7 @@ function IntelligenceStep({ tenantId, onContinue }: { tenantId?: number; onConti
           <Brain className="w-8 h-8 text-blue-400 animate-pulse" />
         </div>
         <h2 className="text-2xl font-bold text-foreground mb-2">Analyzing Your Organization</h2>
-        <p className="text-muted-foreground mb-8">Shieldio is learning who matters most...</p>
+        <p className="text-muted-foreground mb-8">KavachIQ is learning who matters most...</p>
         <div className="max-w-sm mx-auto space-y-3 text-left">
           {scanSteps.map((s, i) => (
             <div key={i} className="flex items-center gap-3 transition-all duration-500"
@@ -808,7 +808,7 @@ function IntelligenceStep({ tenantId, onContinue }: { tenantId?: number; onConti
       {/* Differentiator callout */}
       <div className="bg-muted rounded-xl p-4 mb-6 text-center border border-border">
         <p className="text-muted-foreground text-xs mb-1">What competitors require you to configure manually</p>
-        <p className="text-foreground font-semibold">Shieldio computes this automatically from Microsoft Graph</p>
+        <p className="text-foreground font-semibold">KavachIQ computes this automatically from Microsoft Graph</p>
       </div>
 
       <button onClick={onContinue}
@@ -1189,7 +1189,7 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
           <span className="text-sm text-green-600 ml-1">total items backed up</span>
         </div>
       </div>
-      <GapRow m365="93-day recycle bin. No point-in-time backup." shieldio={`${totalItems} items with unlimited point-in-time restore`} />
+      <GapRow m365="93-day recycle bin. No point-in-time backup." kavachiq={`${totalItems} items with unlimited point-in-time restore`} />
     </div>
   );
 
@@ -1350,7 +1350,7 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
         <div className="space-y-3 mt-2">
           <div className="text-center">
             <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-1">Choose a scenario to simulate</p>
-            <p className="text-[11px] text-muted-foreground">Click a button below to watch the attack unfold — then see Shieldio recover instantly</p>
+            <p className="text-[11px] text-muted-foreground">Click a button below to watch the attack unfold — then see KavachIQ recover instantly</p>
           </div>
           <div className={`grid grid-cols-1 ${openclawEnabled ? 'sm:grid-cols-2' : ''} gap-3`}>
             <button onClick={runCyberScenario}
@@ -1393,7 +1393,7 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
       )}
       {scenarioPhase === 'detected' && (
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 animate-pulse">
-          <p className="text-sm text-amber-400 font-medium">⚠ Shieldio Alert: {affectedMailboxes.length} mailboxes encrypted, MFA disabled, rogue admin detected</p>
+          <p className="text-sm text-amber-400 font-medium">⚠ KavachIQ Alert: {affectedMailboxes.length} mailboxes encrypted, MFA disabled, rogue admin detected</p>
         </div>
       )}
       {scenarioPhase === 'recoverable' && (
@@ -1420,7 +1420,7 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
       )}
       {scenarioPhase === 'agent_detected' && (
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 animate-pulse">
-          <p className="text-sm text-amber-400 font-medium">⚠ Shieldio Smart Engine: Anomalous Graph API access from unmanaged AI agent</p>
+          <p className="text-sm text-amber-400 font-medium">⚠ KavachIQ Smart Engine: Anomalous Graph API access from unmanaged AI agent</p>
         </div>
       )}
       {scenarioPhase === 'agent_recovered' && (
@@ -1430,7 +1430,7 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
       )}
 
       <GapRow m365="No Entra ID backup. No undo for rogue agents, disabled MFA, or stolen OAuth tokens."
-        shieldio="Full identity + email backup with instant revert from immutable snapshots" />
+        kavachiq="Full identity + email backup with instant revert from immutable snapshots" />
     </div>
   );
 
@@ -1486,7 +1486,7 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
         )}
       </div>
       <GapRow m365="Zero recoverability metrics. No way to know if backups actually work."
-        shieldio="Continuous confidence scoring across freshness, completeness, and validation" />
+        kavachiq="Continuous confidence scoring across freshness, completeness, and validation" />
     </div>
   );
 
@@ -1588,18 +1588,18 @@ function CyberRecoverySimulation({ tenantName, tenantId, disc: _disc, onComplete
           </div>
         )}
         <GapRow m365="Manually restore each identity config and mailbox one by one. Days to weeks."
-          shieldio="One click. Priority-ordered. Identity first, then data. Minutes." />
+          kavachiq="One click. Priority-ordered. Identity first, then data. Minutes." />
       </div>
     );
   };
 
   const scenes = [
     { key: 'browse_tenant', title: 'Browse Your Tenant', subtitle: `${tenantName} — your Exchange mailboxes and Entra ID directory.`, problem: null as string | null, explore: { label: 'Open Exchange', route: '/exchange' }, render: renderBrowseTenant },
-    { key: 'overview', title: 'Your Backup at a Glance', subtitle: `${tenantName} — here's what Shieldio captured.`, problem: null as string | null, explore: { label: 'Explore backups', route: '/exchange' }, render: renderScene0 },
-    { key: 'browse_backup', title: 'Browse Your Backup', subtitle: 'See what Shieldio captured — emails, identity objects, configs.', problem: null as string | null, explore: { label: 'Open Entra ID', route: '/entra-id' }, render: renderBrowseBackup },
+    { key: 'overview', title: 'Your Backup at a Glance', subtitle: `${tenantName} — here's what KavachIQ captured.`, problem: null as string | null, explore: { label: 'Explore backups', route: '/exchange' }, render: renderScene0 },
+    { key: 'browse_backup', title: 'Browse Your Backup', subtitle: 'See what KavachIQ captured — emails, identity objects, configs.', problem: null as string | null, explore: { label: 'Open Entra ID', route: '/entra-id' }, render: renderBrowseBackup },
     { key: 'attack', title: 'Cyber Attack Scenario', subtitle: 'Watch a real attack hit your data — then recover instantly.', problem: 'If attackers or rogue AI agents compromise your email and identity, can you recover?', explore: { label: 'Open Entra ID', route: '/entra-id' }, render: renderAttackScene },
     { key: 'confidence', title: 'Prove You Can Recover', subtitle: 'Know if you can actually recover — before you need to.', problem: null as string | null, explore: { label: 'Open Recovery Dashboard', route: '/recovery' }, render: renderScene2 },
-    { key: 'mass_recovery', title: 'One-Click Recovery', subtitle: 'NIST-ordered recovery — identity first, then communications.', problem: 'Without Shieldio, recovery means restoring each identity config and mailbox one by one. Days to weeks.', explore: { label: 'Open Recovery Dashboard', route: '/recovery' }, render: renderScene3 },
+    { key: 'mass_recovery', title: 'One-Click Recovery', subtitle: 'NIST-ordered recovery — identity first, then communications.', problem: 'Without KavachIQ, recovery means restoring each identity config and mailbox one by one. Days to weeks.', explore: { label: 'Open Recovery Dashboard', route: '/recovery' }, render: renderScene3 },
   ];
 
   const scene = scenes[simScene] || scenes[0];
@@ -1702,7 +1702,7 @@ export function DemoOnboard() {
 }
 
 // ── Session persistence helpers ──
-const ONBOARD_STATE_KEY = 'shieldio_onboard_state';
+const ONBOARD_STATE_KEY = 'kavachiq_onboard_state';
 
 function saveOnboardState(state: any) {
   try { sessionStorage.setItem(ONBOARD_STATE_KEY, JSON.stringify(state)); } catch {}
@@ -1962,7 +1962,7 @@ export function OnboardCallback() {
           <p className="text-sm text-muted-foreground mb-6">Microsoft can take up to 60 seconds to process admin consent for new tenants.</p>
         )}
         {isConfigError && (
-          <p className="text-sm text-muted-foreground mb-6">This is a Shieldio platform issue, not a problem with your M365 tenant.</p>
+          <p className="text-sm text-muted-foreground mb-6">This is a KavachIQ platform issue, not a problem with your M365 tenant.</p>
         )}
         {isConsentError && (
           <p className="text-sm text-muted-foreground mb-6">You need to sign in with a Global Administrator account to approve the connection.</p>
@@ -2410,7 +2410,7 @@ export function OnboardCallback() {
                 <div className="text-xs text-muted-foreground space-y-1.5">
                   <div className="flex items-start gap-2">
                     <span className="text-blue-400 mt-0.5">1.</span>
-                    <span>Shieldio analyzes your org to score each user by criticality</span>
+                    <span>KavachIQ analyzes your org to score each user by criticality</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-blue-400 mt-0.5">2.</span>

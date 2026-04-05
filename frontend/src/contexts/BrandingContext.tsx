@@ -12,7 +12,7 @@ interface BrandingState {
 }
 
 const DEFAULTS: BrandingState = {
-  companyName: 'Shieldio',
+  companyName: 'KavachIQ',
   tagline: 'SaaS Data Protection',
   logoUrl: null,
   faviconUrl: null,
@@ -38,7 +38,7 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
       .then(data => {
         if (data) {
           setBranding({
-            companyName: data.company_name || 'Shieldio',
+            companyName: data.company_name || 'KavachIQ',
             tagline: data.tagline || 'SaaS Data Protection',
             logoUrl: data.logo_url || null,
             faviconUrl: data.favicon_url || null,
@@ -51,7 +51,7 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
           document.documentElement.style.setProperty('--color-primary', data.primary_color || '#3b82f6');
           document.documentElement.style.setProperty('--color-secondary', data.secondary_color || '#1e293b');
           // Update page title
-          if (data.company_name && data.company_name !== 'Shieldio') {
+          if (data.company_name && data.company_name !== 'KavachIQ') {
             document.title = data.company_name;
           }
         } else {

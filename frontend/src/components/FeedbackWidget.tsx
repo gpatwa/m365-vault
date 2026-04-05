@@ -58,7 +58,7 @@ export default function FeedbackWidget() {
         <div className="p-5">
           {step === 'rating' && (
             <div>
-              <p className="text-sm text-muted-foreground font-medium mb-3">How's your experience with Shieldio?</p>
+              <p className="text-sm text-muted-foreground font-medium mb-3">How's your experience with KavachIQ?</p>
               <div className="flex justify-center gap-1 mb-4">
                 {[1, 2, 3, 4, 5].map(n => (
                   <button key={n} onClick={() => setRating(n)} className="p-1 transition-transform hover:scale-110">
@@ -123,7 +123,7 @@ export default function FeedbackWidget() {
                 <ThumbsUp className="w-6 h-6 text-green-600" />
               </div>
               <p className="text-sm font-semibold text-foreground">Thank you!</p>
-              <p className="text-xs text-muted-foreground mt-1">Your feedback helps us improve Shieldio.</p>
+              <p className="text-xs text-muted-foreground mt-1">Your feedback helps us improve KavachIQ.</p>
             </div>
           )}
         </div>

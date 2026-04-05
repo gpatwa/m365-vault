@@ -10,7 +10,7 @@ export default function Contact() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // In production: POST to /api/contact or email service
-    window.location.href = `mailto:hello@shieldio.com?subject=Contact from ${form.name} (${form.company})&body=${encodeURIComponent(form.message)}`;
+    window.location.href = `mailto:hello@kavachiq.com?subject=Contact from ${form.name} (${form.company})&body=${encodeURIComponent(form.message)}`;
     setSubmitted(true);
   };
 
@@ -21,7 +21,7 @@ export default function Contact() {
         <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
           <Link to="/welcome" className="flex items-center gap-2">
             <Shield className="w-6 h-6 text-teal-500" />
-            <span className="font-bold text-foreground">Shieldio</span>
+            <span className="font-bold text-foreground">KavachIQ</span>
           </Link>
           <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
             <Link to="/welcome" className="hover:text-foreground">Home</Link>
@@ -40,7 +40,7 @@ export default function Contact() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h1 className="text-3xl font-bold mb-3">Get in Touch</h1>
-            <p className="text-muted-foreground">Questions about Shieldio? We'd love to hear from you.</p>
+            <p className="text-muted-foreground">Questions about KavachIQ? We'd love to hear from you.</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
@@ -90,16 +90,16 @@ export default function Contact() {
               <div className="bg-card border border-border rounded-2xl p-6">
                 <h2 className="text-lg font-semibold mb-4">Other Ways to Reach Us</h2>
                 <div className="space-y-4">
-                  <a href="mailto:hello@shieldio.com" className="flex items-center gap-3 text-sm text-foreground hover:text-teal-400 transition-colors">
+                  <a href="mailto:hello@kavachiq.com" className="flex items-center gap-3 text-sm text-foreground hover:text-teal-400 transition-colors">
                     <div className="w-8 h-8 bg-teal-500/10 rounded-lg flex items-center justify-center"><Mail className="w-4 h-4 text-teal-400" /></div>
-                    hello@shieldio.com
+                    hello@kavachiq.com
                   </a>
                   <a href="https://github.com/gpatwa/m365-vault" target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-3 text-sm text-foreground hover:text-teal-400 transition-colors">
                     <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center"><Github className="w-4 h-4 text-foreground" /></div>
                     GitHub — Open Source
                   </a>
-                  <a href="https://linkedin.com/company/shieldio" target="_blank" rel="noopener noreferrer"
+                  <a href="https://linkedin.com/company/kavachiq" target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-3 text-sm text-foreground hover:text-teal-400 transition-colors">
                     <div className="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center"><Linkedin className="w-4 h-4 text-blue-400" /></div>
                     LinkedIn
@@ -110,7 +110,7 @@ export default function Contact() {
               <div className="bg-gradient-to-br from-teal-600 to-cyan-700 rounded-2xl p-6 text-white">
                 <Calendar className="w-8 h-8 mb-3 text-teal-200" />
                 <h3 className="text-lg font-semibold mb-2">Book a Demo</h3>
-                <p className="text-sm text-teal-100 mb-4">See Shieldio protect your M365 data in 10 minutes. Free, no commitment.</p>
+                <p className="text-sm text-teal-100 mb-4">See KavachIQ protect your M365 data in 10 minutes. Free, no commitment.</p>
                 <Link to="/login?register=true"
                   className="inline-flex items-center gap-2 px-4 py-2 bg-white text-teal-700 rounded-lg font-medium text-sm hover:bg-teal-50 transition-colors">
                   Start Free Trial <ArrowRight className="w-4 h-4" />

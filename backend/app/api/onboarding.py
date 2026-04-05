@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.database import get_db
 from app.errors import (
-    ShieldioError, CONNECTOR_NOT_CONFIGURED, CONNECTOR_SECRET_INVALID,
+    KavachIQError, CONNECTOR_NOT_CONFIGURED, CONNECTOR_SECRET_INVALID,
     CONNECTOR_GRAPH_UNREACHABLE, CONNECTOR_TENANT_NOT_FOUND,
     VALIDATION_RESOURCE_NOT_FOUND,
 )
@@ -37,7 +37,7 @@ _onboard_states: dict[str, dict] = {}
 
 @router.get("/connector-health")
 async def connector_health():
-    """Check if the Shieldio connector app is properly configured.
+    """Check if the KavachIQ connector app is properly configured.
 
     Returns health status so the frontend can show appropriate guidance
     if the connector credentials are missing or invalid.
@@ -124,11 +124,11 @@ async def start_connection(
     try:
         connector = get_connector(platform)
     except ValueError as e:
-        raise ShieldioError(VALIDATION_RESOURCE_NOT_FOUND, detail=str(e))
+        raise KavachIQError(VALIDATION_RESOURCE_NOT_FOUND, detail=str(e))
 
     info = connector.info()
     if not info.available:
-        raise ShieldioError(CONNECTOR_NOT_CONFIGURED, detail=f"{info.display_name} is not yet available")
+        raise KavachIQError(CONNECTOR_NOT_CONFIGURED, detail=f"{info.display_name} is not yet available")
 
     # Pre-flight check: verify connector secret works BEFORE sending user to Microsoft
     if platform == "microsoft365":
@@ -137,9 +137,9 @@ async def start_connection(
         check = await health.check_connector_secret()
         if not check.healthy:
             logger.error(f"Pre-flight connector check failed: {check.detail}")
-            raise ShieldioError(
+            raise KavachIQError(
                 CONNECTOR_SECRET_INVALID,
-                detail=f"Shieldio connector is not properly configured. {check.fix}",
+                detail=f"KavachIQ connector is not properly configured. {check.fix}",
             )
 
     # Generate state token for CSRF protection
@@ -263,7 +263,7 @@ async def complete_onboarding(
     """Finalize onboarding: assign SLA policy, activate tenant, start first backup."""
     tenant = await db.get(Tenant, req.tenant_id)
     if not tenant:
-        raise ShieldioError(CONNECTOR_TENANT_NOT_FOUND, detail="Tenant not found in database")
+        raise KavachIQError(CONNECTOR_TENANT_NOT_FOUND, detail="Tenant not found in database")
 
     # Auto-create default SLA policy if none provided or doesn't exist
     sla_id = req.sla_policy_id
@@ -337,7 +337,7 @@ async def selective_discovery(
     """
     tenant = await db.get(Tenant, req.tenant_id)
     if not tenant:
-        raise ShieldioError(CONNECTOR_TENANT_NOT_FOUND, detail="Tenant not found in database")
+        raise KavachIQError(CONNECTOR_TENANT_NOT_FOUND, detail="Tenant not found in database")
 
     from app.services.discovery import DiscoveryService
     discovery = DiscoveryService(db)
@@ -414,7 +414,7 @@ async def check_connection_status(
     )
     tenant = result.scalar_one_or_none()
     if not tenant:
-        raise ShieldioError(CONNECTOR_TENANT_NOT_FOUND, detail="Tenant not found in database")
+        raise KavachIQError(CONNECTOR_TENANT_NOT_FOUND, detail="Tenant not found in database")
 
     try:
         connector = get_connector(platform)
@@ -453,7 +453,7 @@ async def get_onboard_intelligence(
     """
     tenant = await db.get(Tenant, tenant_id)
     if not tenant:
-        raise ShieldioError(CONNECTOR_TENANT_NOT_FOUND, detail="Tenant not found")
+        raise KavachIQError(CONNECTOR_TENANT_NOT_FOUND, detail="Tenant not found")
 
     # Demo tenants: return simulated org intelligence
     if tenant.ms_tenant_id and tenant.ms_tenant_id.startswith("demo-"):

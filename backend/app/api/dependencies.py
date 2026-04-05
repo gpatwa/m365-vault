@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.errors import (
-    ShieldioError, BACKUP_TENANT_NOT_CONNECTED, CONNECTOR_GRAPH_UNREACHABLE,
+    KavachIQError, BACKUP_TENANT_NOT_CONNECTED, CONNECTOR_GRAPH_UNREACHABLE,
     STORAGE_UNAVAILABLE, DATABASE_ERROR,
 )
 from app.models.tenant import Tenant
@@ -30,9 +30,9 @@ async def get_tenant_with_credentials(
     """Resolve tenant and verify it has valid credentials."""
     tenant = await db.get(Tenant, tenant_id)
     if not tenant:
-        raise ShieldioError(BACKUP_TENANT_NOT_CONNECTED, detail="Tenant not found")
+        raise KavachIQError(BACKUP_TENANT_NOT_CONNECTED, detail="Tenant not found")
     if not tenant.client_id or not tenant.client_secret_encrypted:
-        raise ShieldioError(BACKUP_TENANT_NOT_CONNECTED, detail="Tenant has no connector credentials")
+        raise KavachIQError(BACKUP_TENANT_NOT_CONNECTED, detail="Tenant has no connector credentials")
     return tenant
 
 
@@ -42,7 +42,7 @@ async def run_backup_preflight(
 ) -> Tenant:
     """Pre-flight check: verify Graph API, storage, and DB before starting backup.
 
-    Raises ShieldioError if any dependency is unhealthy.
+    Raises KavachIQError if any dependency is unhealthy.
     Returns the tenant on success.
     """
     # Decrypt credentials for Graph API check
@@ -58,21 +58,21 @@ async def run_backup_preflight(
 
     if not graph_result.ok:
         logger.warning(f"Pre-flight FAILED: Graph API — {graph_result.detail}")
-        raise ShieldioError(
+        raise KavachIQError(
             CONNECTOR_GRAPH_UNREACHABLE,
             detail=f"Graph API check failed: {graph_result.detail}",
         )
 
     if not storage_result.ok:
         logger.warning(f"Pre-flight FAILED: Storage — {storage_result.detail}")
-        raise ShieldioError(
+        raise KavachIQError(
             STORAGE_UNAVAILABLE,
             detail=f"Storage check failed: {storage_result.detail}",
         )
 
     if not db_result.ok:
         logger.warning(f"Pre-flight FAILED: Database — {db_result.detail}")
-        raise ShieldioError(
+        raise KavachIQError(
             DATABASE_ERROR,
             detail=f"Database check failed: {db_result.detail}",
         )

@@ -100,7 +100,7 @@ export default function BulkOnboard() {
     const blob = new Blob([csvTemplate], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = 'shieldio-bulk-onboard-template.csv'; a.click();
+    a.href = url; a.download = 'kavachiq-bulk-onboard-template.csv'; a.click();
     URL.revokeObjectURL(url);
   };
 

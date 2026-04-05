@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 # 4-byte magic header placed inside the encrypted envelope
 # to signal that data has been processed by the compression/dedup pipeline.
-MAGIC = b"M3VZ"  # Shieldio Zstd (legacy: M365 Vault Zstd)
+MAGIC = b"M3VZ"  # KavachIQ Zstd (legacy: M365 Vault Zstd)
 HEADER_SIZE = 5   # 4 bytes magic + 1 byte flags
 
 # Flag bits

@@ -228,7 +228,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                 <p className="font-medium">Quick Setup Guide:</p>
                 <ol className="list-decimal list-inside space-y-1.5 text-blue-400">
                   <li>Go to <a href="https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade" target="_blank" rel="noopener noreferrer" className="underline inline-flex items-center gap-1">Azure Portal &gt; App Registrations <ExternalLink className="w-3 h-3" /></a></li>
-                  <li>Click "New registration" &gt; Name it "Shieldio Backup" &gt; Register</li>
+                  <li>Click "New registration" &gt; Name it "KavachIQ Backup" &gt; Register</li>
                   <li>Go to "API permissions" &gt; Add: <code className="bg-blue-100 px-1 rounded">Mail.Read</code>, <code className="bg-blue-100 px-1 rounded">Files.Read.All</code>, <code className="bg-blue-100 px-1 rounded">Sites.Read.All</code>, <code className="bg-blue-100 px-1 rounded">User.Read.All</code>, <code className="bg-blue-100 px-1 rounded">Directory.Read.All</code></li>
                   <li>Click "Grant admin consent"</li>
                   <li>Go to "Certificates & secrets" &gt; New client secret &gt; Copy the value</li>

@@ -453,7 +453,7 @@ async def provision_app_registration(
         # 1. Create app registration with all required permissions
         app_result = await app_provisioning.create_app_registration(
             access_token=access_token,
-            app_name=f"Shieldio - {tenant_name}",
+            app_name=f"KavachIQ - {tenant_name}",
         )
 
         # 2. Create client secret

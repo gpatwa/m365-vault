@@ -57,7 +57,7 @@ class GraphAPIMetrics:
         self._max_records = 2000  # Keep last N records per tenant
 
     def _classify_workload(self, path: str) -> str:
-        """Classify a Graph API path to a Shieldio workload."""
+        """Classify a Graph API path to a KavachIQ workload."""
         path_lower = path.lower()
         if '/messages' in path_lower or '/mailfolders' in path_lower or '/calendar' in path_lower or '/contacts' in path_lower:
             return 'exchange'

@@ -5,7 +5,7 @@ import { X, ArrowRight, ArrowLeft, Shield, LayoutDashboard, Mail, Activity, Brai
 const TOUR_STEPS = [
   // ── Getting Started ──
   {
-    title: 'Welcome to Shieldio',
+    title: 'Welcome to KavachIQ',
     description: 'Your SaaS data protection platform. This tour walks you through setup, operations, and advanced features — it only takes 90 seconds.',
     icon: Shield,
     color: 'bg-blue-600',
@@ -117,7 +117,7 @@ export default function ProductTour({ onComplete }: ProductTourProps) {
 
   const complete = () => {
     setIsVisible(false);
-    localStorage.setItem('shieldio_tour_completed', 'true');
+    localStorage.setItem('kavachiq_tour_completed', 'true');
     navigate('/');
     onComplete();
   };

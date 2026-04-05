@@ -1,7 +1,7 @@
-/* Shieldio Design Tokens — Based on shadcn/ui Official Dark Theme
+/* KavachIQ Design Tokens — Based on shadcn/ui Official Dark Theme
  *
  * Source: https://ui.shadcn.com/docs/theming (Neutral base, dark mode)
- * Adapted for Shieldio with blue brand primary instead of neutral gray primary.
+ * Adapted for KavachIQ with blue brand primary instead of neutral gray primary.
  *
  * Principle: Neutral gray backgrounds with blue brand accent.
  * No tinted backgrounds (no navy, no blue-gray).
@@ -38,7 +38,7 @@
   --radius: 0.625rem;
 }
 
-/* Dark mode — shadcn/ui official neutral dark + Shieldio blue brand */
+/* Dark mode — shadcn/ui official neutral dark + KavachIQ blue brand */
 [data-theme="dark"] {
   --background: #0a0a0a;
   --foreground: #fafafa;

@@ -174,7 +174,7 @@ async def msp_overview(
 
 
 BRANDING_DEFAULTS = {
-    "company_name": "Shieldio",
+    "company_name": "KavachIQ",
     "tagline": "SaaS Data Protection",
     "logo_url": None,
     "favicon_url": None,
@@ -359,7 +359,7 @@ async def export_billing_csv(
     output.seek(0)
     return StreamingResponse(
         iter([output.getvalue()]), media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename=shieldio-billing-{billing['month']}.csv"},
+        headers={"Content-Disposition": f"attachment; filename=kavachiq-billing-{billing['month']}.csv"},
     )
 
 

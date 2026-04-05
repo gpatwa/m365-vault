@@ -132,7 +132,7 @@ export default function DocViewer() {
         <div className="max-w-4xl mx-auto px-6 py-3 flex items-center justify-between">
           <Link to="/welcome" className="flex items-center gap-2">
             <Shield className="w-6 h-6 text-blue-600" />
-            <span className="font-bold text-foreground">Shieldio</span>
+            <span className="font-bold text-foreground">KavachIQ</span>
           </Link>
           <div className="flex items-center gap-3">
             <Link to="/docs" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">

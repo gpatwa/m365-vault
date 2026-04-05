@@ -40,16 +40,16 @@ function TermsOfService() {
       <p className="text-muted-foreground text-sm mb-6">Last updated: March 2026</p>
 
       <h3 className="text-lg font-semibold mt-6 mb-2">1. Acceptance of Terms</h3>
-      <p className="text-muted-foreground mb-4">By accessing or using Shieldio ("the Service"), you agree to be bound by these Terms of Service. If you do not agree, do not use the Service.</p>
+      <p className="text-muted-foreground mb-4">By accessing or using KavachIQ ("the Service"), you agree to be bound by these Terms of Service. If you do not agree, do not use the Service.</p>
 
       <h3 className="text-lg font-semibold mt-6 mb-2">2. Description of Service</h3>
-      <p className="text-muted-foreground mb-4">Shieldio provides backup, restore, and data protection services for Microsoft 365 workloads including Exchange Online, OneDrive for Business, SharePoint Online, Microsoft Teams, and Entra ID (Azure AD).</p>
+      <p className="text-muted-foreground mb-4">KavachIQ provides backup, restore, and data protection services for Microsoft 365 workloads including Exchange Online, OneDrive for Business, SharePoint Online, Microsoft Teams, and Entra ID (Azure AD).</p>
 
       <h3 className="text-lg font-semibold mt-6 mb-2">3. Account Registration</h3>
       <p className="text-muted-foreground mb-4">You must provide accurate information during registration. You are responsible for maintaining the security of your account credentials and for all activities under your account.</p>
 
       <h3 className="text-lg font-semibold mt-6 mb-2">4. Microsoft 365 Authorization</h3>
-      <p className="text-muted-foreground mb-4">You authorize Shieldio to access your Microsoft 365 tenant data via Microsoft Graph API for the sole purpose of performing backup and restore operations. You retain all ownership rights to your data.</p>
+      <p className="text-muted-foreground mb-4">You authorize KavachIQ to access your Microsoft 365 tenant data via Microsoft Graph API for the sole purpose of performing backup and restore operations. You retain all ownership rights to your data.</p>
 
       <h3 className="text-lg font-semibold mt-6 mb-2">5. Data Storage and Security</h3>
       <p className="text-muted-foreground mb-4">All backup data is encrypted at rest using AES-256-GCM with per-tenant data encryption keys (DEKs) wrapped by a master key encryption key (KEK). Data is stored in your configured storage backend (Azure Blob Storage, S3-compatible, or local storage).</p>
@@ -61,7 +61,7 @@ function TermsOfService() {
       <p className="text-muted-foreground mb-4">We will use commercially reasonable efforts to maintain service availability. Backup schedules are best-effort and depend on Microsoft Graph API availability and rate limits.</p>
 
       <h3 className="text-lg font-semibold mt-6 mb-2">8. Limitation of Liability</h3>
-      <p className="text-muted-foreground mb-4">Shieldio is provided "as is" without warranty of any kind. We are not liable for data loss, service interruptions, or damages arising from the use of the Service. Our total liability is limited to the fees paid in the 12 months preceding the claim.</p>
+      <p className="text-muted-foreground mb-4">KavachIQ is provided "as is" without warranty of any kind. We are not liable for data loss, service interruptions, or damages arising from the use of the Service. Our total liability is limited to the fees paid in the 12 months preceding the claim.</p>
 
       <h3 className="text-lg font-semibold mt-6 mb-2">9. Termination</h3>
       <p className="text-muted-foreground mb-4">Either party may terminate at any time. Upon termination, your backup data will be retained for 30 days, after which it will be permanently deleted unless a longer retention period is required by applicable law or WORM policy.</p>
@@ -111,7 +111,7 @@ function PrivacyPolicy() {
       <p className="text-muted-foreground mb-4">For EU users: you have the right to access, correct, delete, and port your data. Contact us to exercise these rights. Our sensitive data scanner can help you identify personal data in your backups.</p>
 
       <h3 className="text-lg font-semibold mt-6 mb-2">8. Contact</h3>
-      <p className="text-muted-foreground mb-4">For privacy inquiries, contact: privacy@shieldio.com</p>
+      <p className="text-muted-foreground mb-4">For privacy inquiries, contact: privacy@kavachiq.com</p>
     </div>
   );
 }

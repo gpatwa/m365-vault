@@ -10,7 +10,7 @@ export default function About() {
         <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
           <Link to="/welcome" className="flex items-center gap-2">
             <Shield className="w-6 h-6 text-teal-500" />
-            <span className="font-bold text-foreground">Shieldio</span>
+            <span className="font-bold text-foreground">KavachIQ</span>
           </Link>
           <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
             <Link to="/welcome" className="hover:text-foreground">Home</Link>
@@ -36,7 +36,7 @@ export default function About() {
             Data Protection, Reimagined
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold leading-[1.1] mb-6">
-            We built Shieldio because{' '}
+            We built KavachIQ because{' '}
             <span className="bg-gradient-to-r from-teal-500 to-cyan-500 bg-clip-text text-transparent">
               identity comes first.
             </span>
@@ -46,7 +46,7 @@ export default function About() {
             did the attacker change who has admin access?
           </p>
           <p className="text-base text-muted-foreground max-w-2xl mx-auto">
-            Shieldio is the first data protection platform built for the age of AI agents and identity-first recovery.
+            KavachIQ is the first data protection platform built for the age of AI agents and identity-first recovery.
             We back up your Entra ID configuration, score your users by criticality, and pre-compute NIST recovery plans
             — so when ransomware hits at 2am, recovery starts instantly. Identity first. CEO second. Then everyone else.
           </p>
@@ -64,13 +64,13 @@ export default function About() {
             </p>
           </div>
           <div className="grid md:grid-cols-2 gap-8">
-            {/* Without Shieldio */}
+            {/* Without KavachIQ */}
             <div className="bg-card border border-red-500/20 rounded-2xl p-6">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 bg-red-500/10 rounded-lg flex items-center justify-center">
                   <X className="w-4 h-4 text-red-400" />
                 </div>
-                <h3 className="font-bold text-red-400">Without Shieldio</h3>
+                <h3 className="font-bold text-red-400">Without KavachIQ</h3>
               </div>
               <div className="space-y-3 text-sm">
                 <div className="flex items-start gap-2 text-muted-foreground">
@@ -91,13 +91,13 @@ export default function About() {
                 </div>
               </div>
             </div>
-            {/* With Shieldio */}
+            {/* With KavachIQ */}
             <div className="bg-card border border-teal-500/20 rounded-2xl p-6">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 bg-teal-500/10 rounded-lg flex items-center justify-center">
                   <Check className="w-4 h-4 text-teal-400" />
                 </div>
-                <h3 className="font-bold text-teal-400">With Shieldio</h3>
+                <h3 className="font-bold text-teal-400">With KavachIQ</h3>
               </div>
               <div className="space-y-3 text-sm">
                 <div className="flex items-start gap-2 text-muted-foreground">
@@ -126,7 +126,7 @@ export default function About() {
       <section className="py-16 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold mb-3">How Shieldio compares</h2>
+            <h2 className="text-3xl font-bold mb-3">How KavachIQ compares</h2>
             <p className="text-muted-foreground">We're not trying to replace Rubrik or Veeam. We're solving a problem they don't.</p>
           </div>
           <div className="bg-card rounded-2xl border border-border overflow-x-auto">
@@ -134,7 +134,7 @@ export default function About() {
               <thead>
                 <tr className="border-b bg-muted/50">
                   <th className="text-left px-5 py-4 font-medium text-muted-foreground w-[200px]">Capability</th>
-                  <th className="text-center px-4 py-4 font-bold text-teal-400">Shieldio</th>
+                  <th className="text-center px-4 py-4 font-bold text-teal-400">KavachIQ</th>
                   <th className="text-center px-4 py-4 font-medium text-muted-foreground">Veeam</th>
                   <th className="text-center px-4 py-4 font-medium text-muted-foreground">Rubrik</th>
                   <th className="text-center px-4 py-4 font-medium text-muted-foreground">Druva</th>
@@ -181,8 +181,8 @@ export default function About() {
           <div className="grid md:grid-cols-3 gap-6">
             {[
               { icon: KeyRound, title: 'Identity-First Recovery', desc: 'We back up 12 Entra ID object types — conditional access policies, role assignments, OAuth grants, MFA configs. No competitor does this. When an attacker disables MFA, we revert it in seconds.', color: 'from-teal-500 to-cyan-500' },
-              { icon: Brain, title: 'Context-Aware Intelligence', desc: 'Shieldio reads your Microsoft Graph to discover org hierarchy, VIP groups, and privileged roles. Every user gets a 4-factor criticality score. Your CEO is backed up first. Automatically.', color: 'from-amber-500 to-orange-500' },
-              { icon: Bot, title: 'Agent Shield', desc: '88% of enterprises have had AI agent incidents. Shieldio detects shadow agents like OpenClaw, monitors Copilot actions, and enables one-click rollback. Enterprise competitors charge $6-15/user. We start at $1.50.', color: 'from-violet-500 to-purple-500' },
+              { icon: Brain, title: 'Context-Aware Intelligence', desc: 'KavachIQ reads your Microsoft Graph to discover org hierarchy, VIP groups, and privileged roles. Every user gets a 4-factor criticality score. Your CEO is backed up first. Automatically.', color: 'from-amber-500 to-orange-500' },
+              { icon: Bot, title: 'Agent Shield', desc: '88% of enterprises have had AI agent incidents. KavachIQ detects shadow agents like OpenClaw, monitors Copilot actions, and enables one-click rollback. Enterprise competitors charge $6-15/user. We start at $1.50.', color: 'from-violet-500 to-purple-500' },
               { icon: ShieldCheck, title: 'NIST SP 800-184 Recovery', desc: 'Pre-computed 4-phase recovery plans refreshed every 6 hours. Phase 1: Identity controls. Phase 2: Critical users. Phase 3: High priority. Phase 4: Full recovery. No manual triage needed.', color: 'from-green-500 to-emerald-500' },
               { icon: Server, title: 'Open Source & Self-Hosted', desc: 'Apache 2.0 license. Deploy on your Azure, AWS, or on-prem. Audit every line of code. No vendor lock-in. Your data sovereignty is non-negotiable — and we prove it by showing our source.', color: 'from-blue-500 to-indigo-500' },
               { icon: Zap, title: 'Zero-Cost Intelligence', desc: 'Anomaly detection, health scoring, criticality analysis — all pure Python + scipy. No LLM tokens. No external API calls. No per-query charges. Intelligence that runs on your existing infrastructure.', color: 'from-rose-500 to-pink-500' },
@@ -275,7 +275,7 @@ export default function About() {
           <Github className="w-12 h-12 text-foreground mx-auto mb-4" />
           <h2 className="text-3xl font-bold mb-3">Open source. Always.</h2>
           <p className="text-muted-foreground mb-2 max-w-xl mx-auto">
-            We believe the best security products are the ones you can audit. Shieldio is licensed under Apache 2.0
+            We believe the best security products are the ones you can audit. KavachIQ is licensed under Apache 2.0
             — view every line of code, run it on your own infrastructure, contribute back to the project.
           </p>
           <p className="text-sm text-muted-foreground mb-8">
@@ -318,7 +318,7 @@ export default function About() {
       {/* Footer */}
       <footer className="py-8 px-6 border-t border-border">
         <div className="max-w-4xl mx-auto text-center text-xs text-muted-foreground">
-          2026 Shieldio. Open source under Apache 2.0 License.
+          2026 KavachIQ. Open source under Apache 2.0 License.
         </div>
       </footer>
     </div>

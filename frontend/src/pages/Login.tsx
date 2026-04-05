@@ -63,9 +63,9 @@ export default function Login() {
         await api.register({ username, email, password, full_name: fullName || undefined, role: 'admin' });
       }
       await authLogin(username, password);
-      console.log('[Shieldio] Login success. Token:', api.getToken()?.substring(0, 20) + '...');
+      console.log('[KavachIQ] Login success. Token:', api.getToken()?.substring(0, 20) + '...');
       // Navigate to home — SmartHome will route based on user role
-      console.log('[Shieldio] Login success, navigating to /');
+      console.log('[KavachIQ] Login success, navigating to /');
       navigate('/', { replace: true });
     } catch (err: any) {
       setError(err.message || 'Authentication failed');
@@ -89,7 +89,7 @@ export default function Login() {
           <div className="flex items-center justify-between">
             <Link to="/welcome" className="flex items-center gap-2 group">
               <Shield className="w-7 h-7 text-blue-400 group-hover:text-blue-300 transition-colors" />
-              <span className="text-lg font-bold text-foreground">Shieldio</span>
+              <span className="text-lg font-bold text-foreground">KavachIQ</span>
             </Link>
             <Link to="/welcome" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
               Back to home
@@ -105,7 +105,7 @@ export default function Login() {
               </span>
             </h2>
             <p className="text-muted-foreground text-lg leading-relaxed mb-10">
-              Join organizations that trust Shieldio to protect their
+              Join organizations that trust KavachIQ to protect their
               most critical SaaS data — with zero vendor lock-in.
             </p>
 
@@ -139,7 +139,7 @@ export default function Login() {
           <div className="bg-card/30 border border-border rounded-xl p-5">
             <p className="text-sm text-muted-foreground italic leading-relaxed">
               "We needed a backup solution we could host ourselves for compliance.
-              Shieldio gave us enterprise-grade protection with full data sovereignty."
+              KavachIQ gave us enterprise-grade protection with full data sovereignty."
             </p>
             <div className="flex items-center gap-3 mt-3">
               <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-xs font-bold">IT</div>
@@ -158,7 +158,7 @@ export default function Login() {
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center justify-center gap-2 mb-8">
             <Shield className="w-8 h-8 text-primary" />
-            <span className="text-xl font-bold text-foreground">Shieldio</span>
+            <span className="text-xl font-bold text-foreground">KavachIQ</span>
           </div>
 
           {/* Heading */}
@@ -242,7 +242,7 @@ export default function Login() {
               </label>
               <input
                 type={isRegister ? 'email' : 'text'}
-                name="shieldio-username"
+                name="kavachiq-username"
                 autoComplete="off"
                 value={isRegister ? email : username}
                 onChange={e => {
@@ -284,7 +284,7 @@ export default function Login() {
               </div>
               <input
                 type="password"
-                name="shieldio-password"
+                name="kavachiq-password"
                 autoComplete="off"
                 value={password}
                 onChange={e => setPassword(e.target.value)}

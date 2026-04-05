@@ -355,7 +355,7 @@ async def get_runbooks(
                 "estimated_time": "4-8 hours",
                 "steps": [
                     {"order": 1, "action": "Backup source", "detail": "Run full backup of all workloads in the source tenant."},
-                    {"order": 2, "action": "Onboard target", "detail": "Connect the target tenant to Shieldio and run discovery."},
+                    {"order": 2, "action": "Onboard target", "detail": "Connect the target tenant to KavachIQ and run discovery."},
                     {"order": 3, "action": "Cross-tenant restore", "detail": "Use Cross-Tenant Restore to move Exchange, OneDrive, and SharePoint data to the target tenant."},
                     {"order": 4, "action": "Restore Entra ID", "detail": "Recreate groups, app registrations, and policies in the target tenant from backup."},
                     {"order": 5, "action": "Validate", "detail": "Run backup validation on migrated data. Compare item counts between source and target."},

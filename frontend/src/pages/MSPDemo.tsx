@@ -259,7 +259,7 @@ export default function MSPDemo() {
     <div className="space-y-6">
       <div className="text-center">
         <h2 className="text-2xl font-bold text-foreground">When Ransomware Hits Your Client</h2>
-        <p className="text-muted-foreground mt-1">Shieldio detects the attack, builds a recovery plan, and restores critical users first</p>
+        <p className="text-muted-foreground mt-1">KavachIQ detects the attack, builds a recovery plan, and restores critical users first</p>
       </div>
       <div className="space-y-3">
         {[

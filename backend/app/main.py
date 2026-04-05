@@ -79,10 +79,7 @@ async def lifespan(app: FastAPI):
     storage_module.storage_service = storage_module.StorageService(backend)
     logger.info(f"Storage backend: {settings.STORAGE_BACKEND}")
 
-    start_scheduler()
-    logger.info("Scheduler started")
-
-    # Auto-migrate: ensure all schema columns exist before any queries
+    # Auto-migrate: ensure all schema columns exist before scheduler starts
     try:
         from app.database import engine as _engine
         from sqlalchemy import text as _text
@@ -105,6 +102,9 @@ async def lifespan(app: FastAPI):
         logger.info("Auto-migration: schema columns verified")
     except Exception as e:
         logger.warning(f"Auto-migration skipped: {e}")
+
+    start_scheduler()
+    logger.info("Scheduler started")
 
     # Startup health validation — log warnings for broken dependencies
     from app.services.system_health import validate_startup_health

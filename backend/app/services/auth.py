@@ -49,12 +49,16 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         key = hashlib.pbkdf2_hmac("sha256", plain_password.encode("utf-8"), salt, iterations)
         return key.hex() == stored_key
     elif hashed_password.startswith("$2b$") or hashed_password.startswith("$2a$"):
-        # Legacy bcrypt hash — use bcrypt library
+        # Legacy bcrypt hash — try bcrypt, fall back to passlib
         try:
-            import bcrypt
-            return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+            import bcrypt as _bcrypt
+            return _bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
         except Exception:
-            return False
+            try:
+                from passlib.hash import bcrypt as _pbcrypt
+                return _pbcrypt.verify(plain_password, hashed_password)
+            except Exception:
+                return False
     return False
 
 

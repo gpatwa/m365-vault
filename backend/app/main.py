@@ -401,6 +401,36 @@ async def root():
     }
 
 
+@app.post("/api/admin/migrate")
+async def run_migration():
+    """Run pending DB migrations. Temporary endpoint — remove after first use."""
+    from app.database import engine
+    from sqlalchemy import text
+    results = []
+    async with engine.begin() as conn:
+        migrations = [
+            "ALTER TABLE restore_jobs ADD COLUMN IF NOT EXISTS initiated_by_user_id INTEGER REFERENCES users(id)",
+            "ALTER TABLE restore_jobs ADD COLUMN IF NOT EXISTS approval_required INTEGER DEFAULT 0",
+            "ALTER TABLE restore_jobs ADD COLUMN IF NOT EXISTS approval_status VARCHAR(20)",
+            "CREATE TABLE IF NOT EXISTS restore_approvals (id SERIAL PRIMARY KEY, restore_job_id INTEGER NOT NULL REFERENCES restore_jobs(id), requested_by_user_id INTEGER NOT NULL REFERENCES users(id), approved_by_user_id INTEGER REFERENCES users(id), status VARCHAR(20) DEFAULT 'pending', reason TEXT, requested_at TIMESTAMP DEFAULT NOW(), resolved_at TIMESTAMP, expires_at TIMESTAMP NOT NULL)",
+            "CREATE TABLE IF NOT EXISTS admin_invites (id SERIAL PRIMARY KEY, tenant_name VARCHAR(255) NOT NULL, invited_by_user_id INTEGER NOT NULL REFERENCES users(id), admin_email VARCHAR(255) NOT NULL, token VARCHAR(255) UNIQUE NOT NULL, status VARCHAR(20) DEFAULT 'pending', ms_tenant_id VARCHAR(255), completed_at TIMESTAMP, expires_at TIMESTAMP NOT NULL, created_at TIMESTAMP DEFAULT NOW())",
+            "CREATE TABLE IF NOT EXISTS tenant_workload_apps (id SERIAL PRIMARY KEY, tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE, workload VARCHAR(30) NOT NULL, client_id VARCHAR(255) NOT NULL, client_secret_encrypted TEXT NOT NULL, app_object_id VARCHAR(255), sp_object_id VARCHAR(255), consent_status VARCHAR(20) NOT NULL DEFAULT 'pending', permissions_requested TEXT, permissions_granted TEXT, backup_ready INTEGER DEFAULT 0, restore_ready INTEGER DEFAULT 0, config_json TEXT, secret_expires_at TIMESTAMP, secret_rotation_warned INTEGER DEFAULT 0, enabled INTEGER DEFAULT 1, last_used_at TIMESTAMP, error_message TEXT, created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW(), UNIQUE(tenant_id, workload))",
+        ]
+        for sql in migrations:
+            try:
+                await conn.execute(text(sql))
+                results.append(f"OK: {sql[:60]}...")
+            except Exception as e:
+                results.append(f"SKIP: {str(e)[:80]}")
+        # Try to add enum value (may fail if exists)
+        try:
+            await conn.execute(text("ALTER TYPE userrole ADD VALUE IF NOT EXISTS 'restore_operator'"))
+            results.append("OK: Added restore_operator enum value")
+        except Exception as e:
+            results.append(f"SKIP enum: {str(e)[:80]}")
+    return {"status": "complete", "results": results}
+
+
 @app.get("/health")
 async def health():
     """Deep health check — verifies DB and storage connectivity."""

@@ -12,7 +12,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { api } from '../api/client';
 import { PRIORITY_WORKLOADS as WORKLOADS } from '../config/workloads';
 import { getActivePlatformLabel } from '../config/platforms';
-import { useTenantId } from '../hooks/useTenant';
+import { useTenantId, useTenantInfo } from '../hooks/useTenant';
 import { HeroSummaryBar, ActionBanner, PlatformCard } from '../components/design-system';
 import type { HeroStat } from '../components/design-system/HeroSummaryBar';
 import type { ActionItem } from '../components/design-system/ActionBanner';
@@ -270,6 +270,7 @@ function OnboardingChecklist() {
 export default function Dashboard() {
   const navigate = useNavigate();
   const tenantId = useTenantId();
+  const { isDemoTenant, tenantName } = useTenantInfo();
 
   // Data Fetching
 
@@ -562,6 +563,29 @@ export default function Dashboard() {
           </div>
           <button onClick={() => navigate('/sla-policies')} className="px-3 py-1.5 bg-amber-600 text-white rounded-lg text-xs font-semibold hover:bg-amber-500/100">
             Protect Now →
+          </button>
+        </div>
+      )}
+
+      {/* Sandbox Banner — shown when viewing demo tenant data */}
+      {isDemoTenant && (
+        <div className="mb-6 bg-gradient-to-r from-teal-500/10 to-cyan-500/10 border border-teal-500/20 rounded-xl p-4 flex items-center gap-3">
+          <div className="p-2 bg-teal-500/20 rounded-lg flex-shrink-0">
+            <Eye className="w-5 h-5 text-teal-400" />
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-teal-300 text-sm">
+              You're viewing demo data{tenantName ? ` for ${tenantName}` : ''}
+            </p>
+            <p className="text-xs text-teal-400/70">
+              Explore the product with realistic sample data. Connect your real Microsoft 365 tenant to protect actual data.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate('/onboard')}
+            className="px-4 py-2 bg-teal-600 text-white rounded-lg text-xs font-semibold hover:bg-teal-500 flex items-center gap-1.5 whitespace-nowrap"
+          >
+            Connect Real M365 <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
       )}

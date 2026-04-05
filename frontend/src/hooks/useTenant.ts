@@ -25,3 +25,36 @@ export function useTenantId(): number | undefined {
 
   return active[0]?.id;
 }
+
+/**
+ * Returns whether the active tenant is a demo tenant + whether any real tenant exists.
+ */
+export function useTenantInfo(): {
+  tenantId: number | undefined;
+  isDemoTenant: boolean;
+  hasRealTenant: boolean;
+  tenantName: string | undefined;
+} {
+  const { data: tenants } = useQuery({
+    queryKey: ['tenants'],
+    queryFn: () => api.get<Tenant[]>('/tenants/'),
+    staleTime: 60000,
+  });
+
+  if (!tenants || tenants.length === 0) {
+    return { tenantId: undefined, isDemoTenant: false, hasRealTenant: false, tenantName: undefined };
+  }
+
+  const active = tenants.filter(t => t.status === 'active');
+  const real = active.find(t => t.ms_tenant_id && !t.ms_tenant_id.startsWith('demo-'));
+  const preferred = real || active[0] || tenants[0];
+  const isDemoTenant = preferred?.ms_tenant_id?.startsWith('demo-') ?? false;
+  const hasRealTenant = !!real;
+
+  return {
+    tenantId: preferred?.id,
+    isDemoTenant,
+    hasRealTenant,
+    tenantName: preferred?.name,
+  };
+}

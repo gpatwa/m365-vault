@@ -560,3 +560,180 @@ def _generate_demo_intelligence(tenant_name: str) -> dict:
             ]
         },
     }
+
+
+# ═══════════════════════════════════════════════════════
+# Invite Your Admin — OAuth delegation for non-admin users
+# ═══════════════════════════════════════════════════════
+
+class InviteAdminRequest(BaseModel):
+    tenant_name: str
+    admin_email: str
+
+
+@router.post("/invite-admin")
+async def invite_admin(
+    req: InviteAdminRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user),
+):
+    """Send an invite to a Global Admin to complete OAuth consent.
+
+    For prospects who aren't Global Admins — they can delegate the consent
+    step to their IT admin via a secure, time-limited link.
+    """
+    from app.models.admin_invite import AdminInvite
+    from datetime import timedelta
+
+    token = secrets.token_urlsafe(32)
+    expires_at = datetime.utcnow() + timedelta(days=7)
+
+    invite = AdminInvite(
+        tenant_name=req.tenant_name,
+        invited_by_user_id=current_user.id,
+        admin_email=req.admin_email,
+        token=token,
+        status="pending",
+        expires_at=expires_at,
+    )
+    db.add(invite)
+    await db.flush()
+
+    # Build invite URL
+    invite_url = f"{settings.FRONTEND_URL}/onboard/invite/{token}"
+
+    # Send email to admin
+    from app.services.email_service import email_service
+    try:
+        await email_service.send_email(
+            to=req.admin_email,
+            subject=f"{current_user.full_name or current_user.username} invited you to connect {req.tenant_name} to KavachIQ",
+            html=f"""
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 520px; margin: 0 auto;">
+              <h2 style="color: #0d9488;">KavachIQ — Admin Consent Request</h2>
+              <p><strong>{current_user.full_name or current_user.username}</strong> has invited you to connect
+              <strong>{req.tenant_name}</strong> to KavachIQ for Microsoft 365 data protection.</p>
+
+              <p>As a Global Admin, you can grant read-only access for backup:</p>
+              <ul>
+                <li>Mail.Read — backup mailbox data</li>
+                <li>Directory.Read.All — backup Entra ID config</li>
+                <li>No write or delete permissions requested</li>
+              </ul>
+
+              <div style="margin: 24px 0;">
+                <a href="{invite_url}"
+                   style="background: #0d9488; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                  Review &amp; Connect →
+                </a>
+              </div>
+
+              <p style="color: #6b7280; font-size: 13px;">
+                This link expires in 7 days. Only a Global Admin can complete this step.
+                <br>Questions? Reply to this email.
+              </p>
+            </div>
+            """,
+        )
+    except Exception as e:
+        logger.error(f"Failed to send admin invite email: {e}")
+
+    from app.services.audit import audit_log
+    await audit_log(
+        db, action="onboard.admin_invited", resource_type="admin_invite",
+        resource_id=invite.id, user_id=current_user.id,
+        details=f"Invited {req.admin_email} for {req.tenant_name}",
+    )
+
+    await db.commit()
+
+    return {
+        "invite_id": invite.id,
+        "admin_email": req.admin_email,
+        "invite_url": invite_url,
+        "expires_at": expires_at.isoformat(),
+        "status": "sent",
+    }
+
+
+@router.get("/invite/{token}")
+async def get_invite_status(
+    token: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Check invite status (public endpoint — admin clicks the link)."""
+    from app.models.admin_invite import AdminInvite
+    result = await db.execute(
+        select(AdminInvite).where(AdminInvite.token == token)
+    )
+    invite = result.scalar_one_or_none()
+    if not invite:
+        raise HTTPException(404, detail="Invite not found or expired")
+
+    if invite.expires_at < datetime.utcnow():
+        invite.status = "expired"
+        await db.commit()
+        raise HTTPException(410, detail="This invite has expired. Ask the user to send a new one.")
+
+    return {
+        "tenant_name": invite.tenant_name,
+        "status": invite.status,
+        "admin_email": invite.admin_email,
+    }
+
+
+@router.get("/invite/{token}/connect")
+async def start_invite_oauth(
+    token: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Admin clicks invite link → starts OAuth consent flow."""
+    from app.models.admin_invite import AdminInvite
+    result = await db.execute(
+        select(AdminInvite).where(
+            AdminInvite.token == token,
+            AdminInvite.status == "pending",
+        )
+    )
+    invite = result.scalar_one_or_none()
+    if not invite:
+        raise HTTPException(404, detail="Invite not found or already completed")
+
+    if invite.expires_at < datetime.utcnow():
+        invite.status = "expired"
+        await db.commit()
+        raise HTTPException(410, detail="Invite expired")
+
+    # Generate OAuth URL with invite token as state
+    from app.connectors.m365_connector import M365Connector
+    connector = M365Connector()
+    state = f"invite:{token}"
+    redirect_uri = settings.CONNECTOR_REDIRECT_URI
+
+    auth_url = (
+        f"https://login.microsoftonline.com/common/adminconsent"
+        f"?client_id={connector.app_id}"
+        f"&redirect_uri={redirect_uri}"
+        f"&state={state}"
+    )
+
+    return {"auth_url": auth_url, "tenant_name": invite.tenant_name}
+
+
+@router.get("/invite/status/{invite_id}")
+async def check_invite_completion(
+    invite_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user),
+):
+    """Check if the admin has completed the OAuth consent (polled by frontend)."""
+    from app.models.admin_invite import AdminInvite
+    invite = await db.get(AdminInvite, invite_id)
+    if not invite:
+        raise HTTPException(404, detail="Invite not found")
+
+    return {
+        "status": invite.status,
+        "ms_tenant_id": invite.ms_tenant_id,
+        "completed_at": invite.completed_at.isoformat() if invite.completed_at else None,
+    }

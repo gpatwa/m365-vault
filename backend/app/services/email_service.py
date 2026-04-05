@@ -128,6 +128,54 @@ class EmailService:
         await self.provider.send(to=email, subject=f"Backup failed — {tenant_name} ({workload})", html=_base_template("Backup Failed", content))
 
 
+    # ── Nurture Sequence ──────────────────────────────────────────────
+
+    async def send_nurture_day1(self, email: str, full_name: str):
+        """Day 1: Nudge to explore recovery simulation."""
+        name = full_name or email.split("@")[0]
+        content = f"""
+        <p>Hi {name},</p>
+        <p>Have you tried our <strong>recovery simulation</strong> yet?</p>
+        <p>See what happens when ransomware hits — and how KavachIQ restores everything in minutes:</p>
+        {_button("Try Recovery Simulation", _frontend_url("/onboard/demo"))}
+        <p style="color:#737373;font-size:12px;">This is the #1 feature our customers love. Takes 2 minutes.</p>
+        """
+        await self.provider.send(to=email, subject="Try the recovery simulation — KavachIQ", html=_base_template("Did you try the recovery simulation?", content))
+
+    async def send_nurture_day3_admin_pending(self, email: str, full_name: str, admin_email: str):
+        """Day 3: Admin hasn't connected yet."""
+        name = full_name or email.split("@")[0]
+        content = f"""
+        <p>Hi {name},</p>
+        <p>We noticed your admin (<strong>{admin_email}</strong>) hasn't connected your M365 tenant yet.</p>
+        <p>In the meantime, you can:</p>
+        <ul style="color:#b5b5b5;">
+          <li>Explore the sandbox with demo data</li>
+          <li>Run the attack simulation</li>
+          <li>Review the recovery plan</li>
+        </ul>
+        {_button("Explore Sandbox", _frontend_url("/"))}
+        <p style="color:#737373;font-size:12px;">Need help? Reply to this email.</p>
+        """
+        await self.provider.send(to=email, subject="Your admin hasn't connected yet — KavachIQ", html=_base_template("Waiting for admin consent?", content))
+
+    async def send_nurture_day7(self, email: str, full_name: str):
+        """Day 7: Last engagement push."""
+        name = full_name or email.split("@")[0]
+        content = f"""
+        <p>Hi {name},</p>
+        <p>It's been a week since you signed up. Here's what you're missing:</p>
+        <ul style="color:#b5b5b5;">
+          <li><strong>Identity-first recovery</strong> — restore Entra ID before anything else</li>
+          <li><strong>Criticality scoring</strong> — CEO's data recovered first, automatically</li>
+          <li><strong>One-click mass recovery</strong> — all workloads in 170 minutes</li>
+        </ul>
+        {_button("Connect Your M365", _frontend_url("/onboard"))}
+        <p style="color:#737373;font-size:12px;">Free for up to 25 objects. Takes 3 minutes to set up.</p>
+        """
+        await self.provider.send(to=email, subject="What you're missing — KavachIQ", html=_base_template("Your data isn't protected yet", content))
+
+
 def _frontend_url(path: str) -> str:
     """Get frontend URL for email links."""
     from app.config import settings

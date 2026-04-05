@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Shieldio are documented in this file.
+All notable changes to KavachIQ are documented in this file.
 
 ## [2.2.0] - 2026-03-28
 
@@ -74,10 +74,10 @@ All notable changes to Shieldio are documented in this file.
 ## [2.0.0] - 2026-03-25
 
 ### Rebranded
-- **M365 Vault renamed to Shieldio** — repositioned as SaaS Data Protection Platform
+- **M365 Vault renamed to KavachIQ** — repositioned as SaaS Data Protection Platform
 - New landing page with story-driven design (problem → solution → proof)
 - Redesigned login page with split-panel layout and SSO button
-- All docs, UI, API responses updated to Shieldio branding
+- All docs, UI, API responses updated to KavachIQ branding
 
 ### New Workloads
 - **Microsoft Teams Backup** — channels, messages (Export API), channel files, team settings

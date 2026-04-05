@@ -69,7 +69,7 @@ Closing this gap requires an independent backup solution — one that operates o
 
 **Full workload coverage.** ePHI lives across Exchange (email), OneDrive (files), SharePoint (sites), Teams (conversations), and Entra ID (identity and access configuration). A backup solution that covers only one or two workloads leaves gaps that auditors will find.
 
-Shieldio was built specifically for this use case. It provides AES-256-GCM encrypted, WORM immutable backup across all five Microsoft 365 workloads, with a full audit trail and recovery confidence scoring — starting at $1.50 per user per month. The free tier covers up to 25 users, which means a small clinic can be fully protected without any budget approval.
+KavachIQ was built specifically for this use case. It provides AES-256-GCM encrypted, WORM immutable backup across all five Microsoft 365 workloads, with a full audit trail and recovery confidence scoring — starting at $1.50 per user per month. The free tier covers up to 25 users, which means a small clinic can be fully protected without any budget approval.
 
 ---
 
@@ -77,7 +77,7 @@ Shieldio was built specifically for this use case. It provides AES-256-GCM encry
 
 If you are a healthcare organization running Microsoft 365, the backup gap described above applies to you. The fix takes about 10 minutes to deploy and costs nothing for your first 25 users.
 
-Visit **shieldio.com** to start, or contact **sales@shieldio.com** if you want a walkthrough with your compliance team.
+Visit **kavachiq.com** to start, or contact **sales@kavachiq.com** if you want a walkthrough with your compliance team.
 
 ---
 

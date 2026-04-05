@@ -1,4 +1,4 @@
-# Shieldio — Growth Strategy Analysis
+# KavachIQ — Growth Strategy Analysis
 
 **Date: 2026-03-30 | Status: Strategic Recommendation**
 
@@ -8,7 +8,7 @@
 
 ### Product Strengths (What We Have That Nobody Else Does)
 
-| Capability | Shieldio | Veeam | Druva | Rubrik | AvePoint |
+| Capability | KavachIQ | Veeam | Druva | Rubrik | AvePoint |
 |-----------|----------|-------|-------|--------|----------|
 | Context-aware recovery plans | Yes | No | No | Manual ($$$) | No |
 | Entra ID config backup (12 types) | Yes | No | No | No | No |
@@ -129,12 +129,12 @@ Month 6-12: SCALE with PLG + Channel
 **Week 1-2: Foundation**
 | Action | Owner | Outcome |
 |--------|-------|---------|
-| Create 1-page "Why Shieldio" PDF for each segment (healthcare, legal, finance) | Founder | Sales collateral |
+| Create 1-page "Why KavachIQ" PDF for each segment (healthcare, legal, finance) | Founder | Sales collateral |
 | Write blog: "Why Microsoft's Recycle Bin is Not HIPAA-Compliant Backup" | Founder | SEO + outreach content |
 | Identify 50 healthcare IT managers on LinkedIn (clinics, 50-300 users, M365) | Founder | Prospect list |
 | Identify 30 law firm IT contacts on LinkedIn | Founder | Prospect list |
 | Identify 10 HIPAA compliance consultants | Founder | Partner prospects |
-| Set up support@shieldio.com + GitHub Discussions | Founder | Support infrastructure |
+| Set up support@kavachiq.com + GitHub Discussions | Founder | Support infrastructure |
 
 **Week 3-4: Outreach Blitz**
 | Action | Volume | Expected Response |
@@ -180,13 +180,13 @@ Day 30:  Success → Customer has data backed up, can show auditor
 ### Messaging by Segment
 
 **Healthcare (primary target):**
-> "HIPAA requires independent backup of ePHI with encryption, audit trail, and retention policies. Microsoft's 93-day recycle bin doesn't qualify. Shieldio provides HIPAA-compliant M365 backup at $1.50/user — with recovery plans that prioritize your most critical staff automatically."
+> "HIPAA requires independent backup of ePHI with encryption, audit trail, and retention policies. Microsoft's 93-day recycle bin doesn't qualify. KavachIQ provides HIPAA-compliant M365 backup at $1.50/user — with recovery plans that prioritize your most critical staff automatically."
 
 **Law Firms:**
-> "Client privilege demands immutable backup with legal hold. When a partner accidentally deletes case files, you need point-in-time restore — not a 93-day recycle bin. Shieldio includes WORM storage, eDiscovery search, and full audit trail at $3/user."
+> "Client privilege demands immutable backup with legal hold. When a partner accidentally deletes case files, you need point-in-time restore — not a 93-day recycle bin. KavachIQ includes WORM storage, eDiscovery search, and full audit trail at $3/user."
 
 **Finance/Accounting:**
-> "SOX and SEC require backup with retention and audit evidence. Shieldio backs up all 5 M365 workloads including Entra ID — protecting your Conditional Access policies from tampering. $1.50/user, SOC 2 ready out of the box."
+> "SOX and SEC require backup with retention and audit evidence. KavachIQ backs up all 5 M365 workloads including Entra ID — protecting your Conditional Access policies from tampering. $1.50/user, SOC 2 ready out of the box."
 
 ---
 

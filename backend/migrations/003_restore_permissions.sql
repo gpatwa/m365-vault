@@ -1,4 +1,4 @@
--- Shieldio — Schema migration for Restore Permission Model
+-- KavachIQ — Schema migration for Restore Permission Model
 -- Adds: audit tracking, RESTORE_OPERATOR role, approval workflow
 --
 -- Usage:

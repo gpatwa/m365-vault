@@ -1,6 +1,6 @@
 # Create SLA Policies
 
-SLA policies define how frequently Shieldio backs up your data, how long backups are retained, and whether retention locks are enforced. Policies let you apply consistent protection standards across your Microsoft 365 environment.
+SLA policies define how frequently KavachIQ backs up your data, how long backups are retained, and whether retention locks are enforced. Policies let you apply consistent protection standards across your Microsoft 365 environment.
 
 ## What SLA Policies Control
 
@@ -11,7 +11,7 @@ Each SLA policy specifies the following parameters:
 | **Backup frequency** | How often backups run (e.g., every 4 hours, every 12 hours, daily). |
 | **Retention period** | How long backup snapshots are kept before automatic expiration (e.g., 30 days, 1 year, 7 years). |
 | **Retention lock (WORM)** | When enabled, backups cannot be deleted or modified before the retention period expires. This supports Write Once Read Many compliance requirements. |
-| **RPO target** | The recovery point objective defines the maximum acceptable data loss window. Shieldio alerts you when actual RPO exceeds the target. |
+| **RPO target** | The recovery point objective defines the maximum acceptable data loss window. KavachIQ alerts you when actual RPO exceeds the target. |
 
 ## Example Policies
 
@@ -67,7 +67,7 @@ To assign a policy:
 
 ## SLA Violation Alerts
 
-Shieldio continuously monitors whether each protected object meets its SLA targets. A violation occurs when:
+KavachIQ continuously monitors whether each protected object meets its SLA targets. A violation occurs when:
 
 - **RPO breach**: The time since the last successful backup exceeds the policy RPO target.
 - **Backup failure**: A scheduled backup job fails and is not resolved within the RPO window.

@@ -1,4 +1,4 @@
-# Shieldio — Customer Support Strategy
+# KavachIQ — Customer Support Strategy
 
 **Date: 2026-03-30 | Status: Strategy Document**
 
@@ -32,7 +32,7 @@
 
 ---
 
-## 2. Shieldio Support Strategy
+## 2. KavachIQ Support Strategy
 
 ### Philosophy
 
@@ -74,7 +74,7 @@ Our product already has built-in diagnostics, health scoring, error codes with f
 |------|---------|------|
 | **GitHub Discussions** | Community forum + feature requests | $0 (free) |
 | **Linear / GitHub Issues** | Internal ticket tracking | $0 (free tier) |
-| **Email (support@shieldio.com)** | Primary support channel | $0 (Google Workspace) |
+| **Email (support@kavachiq.com)** | Primary support channel | $0 (Google Workspace) |
 | **Docs site (built-in /docs)** | Knowledge base — already built | $0 |
 | **AI chatbot (Chatbase/Docsie)** | Self-service from knowledge base | $0-49/mo |
 | **Founder inbox** | All tickets go to founder initially | $0 |
@@ -219,9 +219,9 @@ Enterprise tier at $5/user includes everything — customer never feels nickel-a
 
 ---
 
-## 6. Comparison: Shieldio vs Competitors on Support
+## 6. Comparison: KavachIQ vs Competitors on Support
 
-| Capability | Shieldio | Veeam | Druva | Rubrik |
+| Capability | KavachIQ | Veeam | Druva | Rubrik |
 |-----------|----------|-------|-------|--------|
 | AI self-service chatbot | Included (all tiers) | No | No | No |
 | In-product error codes with fix steps | Yes (E1xxx-E7xxx) | No | No | No |
@@ -272,7 +272,7 @@ Enterprise tier at $5/user includes everything — customer never feels nickel-a
 
 | Phase | When | Key Actions |
 |-------|------|-------------|
-| **Now** | Week 1 | Set up support@shieldio.com, GitHub Discussions, write top 20 KB articles |
+| **Now** | Week 1 | Set up support@kavachiq.com, GitHub Discussions, write top 20 KB articles |
 | **Month 1** | With first customers | Founder handles all tickets, document common issues, refine error codes |
 | **Month 3** | At 10+ customers | Deploy AI chatbot on docs, add status page, measure ticket volume |
 | **Month 6** | At 30+ customers | Evaluate Intercom vs Zendesk, hire first support engineer (part-time) |
@@ -300,8 +300,8 @@ Enterprise tier at $5/user includes everything — customer never feels nickel-a
 | 16 | How to run a test restore | Verification |
 | 17 | Reading the anomaly detection alerts | Alert fatigue |
 | 18 | Bulk backup: using backup-all with idempotency | API usage |
-| 19 | HIPAA compliance with Shieldio | Compliance mapping |
-| 20 | SOC 2 compliance with Shieldio | Compliance mapping |
+| 19 | HIPAA compliance with KavachIQ | Compliance mapping |
+| 20 | SOC 2 compliance with KavachIQ | Compliance mapping |
 
 ---
 

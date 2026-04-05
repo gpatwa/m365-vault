@@ -2,7 +2,7 @@
 
 ## Overview
 
-Shieldio tracks Recovery Point Objective (RPO) and Recovery Time Objective (RTO) compliance on a per-workload basis, giving IT administrators and compliance teams continuous visibility into whether backup and recovery operations meet their defined service level targets.
+KavachIQ tracks Recovery Point Objective (RPO) and Recovery Time Objective (RTO) compliance on a per-workload basis, giving IT administrators and compliance teams continuous visibility into whether backup and recovery operations meet their defined service level targets.
 
 ## Key Definitions
 
@@ -20,7 +20,7 @@ RTO is influenced by data volume, storage throughput, API rate limits, and the n
 
 ## Per-Workload Tracking
 
-Shieldio tracks RPO and RTO independently for each workload:
+KavachIQ tracks RPO and RTO independently for each workload:
 
 | Workload | Typical RPO Range | Typical RTO Range |
 |---|---|---|
@@ -59,7 +59,7 @@ RPO and RTO targets are defined in the SLA policy attached to each tenant. When 
 - **RTO target** per workload (in hours)
 - **Measurement window** for worst-case calculations
 
-Shieldio evaluates compliance continuously, not just at the end of the policy period.
+KavachIQ evaluates compliance continuously, not just at the end of the policy period.
 
 ## Accessing RPO/RTO Data
 

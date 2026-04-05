@@ -1,10 +1,10 @@
 # Restore Data
 
-When data loss occurs, whether from accidental deletion, a departing employee, or a ransomware incident, Shieldio provides multiple restore options to get your organization back to normal quickly.
+When data loss occurs, whether from accidental deletion, a departing employee, or a ransomware incident, KavachIQ provides multiple restore options to get your organization back to normal quickly.
 
 ## Restore Types
 
-Shieldio supports five restore methods to cover different recovery scenarios:
+KavachIQ supports five restore methods to cover different recovery scenarios:
 
 | Restore Type | Description | Use Case |
 |---|---|---|
@@ -24,7 +24,7 @@ Shieldio supports five restore methods to cover different recovery scenarios:
 
 ### Step 2: Choose a Recovery Point
 
-Shieldio displays all available recovery points with timestamps. You can:
+KavachIQ displays all available recovery points with timestamps. You can:
 
 - **Browse the timeline**: Scroll through recovery points to find the exact point in time you need.
 - **Search by date**: Use the date picker to jump to a specific day.
@@ -49,7 +49,7 @@ Shieldio displays all available recovery points with timestamps. You can:
 
 ## Point-in-Time Selection
 
-Shieldio keeps every backup snapshot according to your SLA policy retention period. This means you can restore to any point in time for which a backup exists.
+KavachIQ keeps every backup snapshot according to your SLA policy retention period. This means you can restore to any point in time for which a backup exists.
 
 For example, if your policy backs up every 4 hours with 1-year retention, you have up to 2,190 recovery points per object to choose from.
 
@@ -61,7 +61,7 @@ When selecting a recovery point, consider:
 
 ## Restore Verification
 
-After a restore completes, Shieldio provides verification details:
+After a restore completes, KavachIQ provides verification details:
 
 - **Item count**: Number of items restored versus total items in the recovery point.
 - **Integrity check**: Confirmation that all restored items passed checksum verification.
@@ -73,7 +73,7 @@ We recommend spot-checking a few restored items in Microsoft 365 to confirm they
 
 ## Mass Recovery for Ransomware Scenarios
 
-When ransomware or a widespread attack affects multiple accounts, Shieldio's mass recovery feature enables rapid tenant-wide restoration.
+When ransomware or a widespread attack affects multiple accounts, KavachIQ's mass recovery feature enables rapid tenant-wide restoration.
 
 ### How to Perform Mass Recovery
 
@@ -81,7 +81,7 @@ When ransomware or a widespread attack affects multiple accounts, Shieldio's mas
 2. Click **Mass Recovery**.
 3. Select the affected workload type or choose **All Workloads**.
 4. Choose a recovery point strategy:
-   - **Last known good**: Shieldio automatically selects the most recent backup before the incident timestamp you specify.
+   - **Last known good**: KavachIQ automatically selects the most recent backup before the incident timestamp you specify.
    - **Specific date/time**: Manually choose a single recovery point for all objects.
 5. Review the list of objects that will be restored and the selected recovery points.
 6. Click **Start Mass Recovery**.
@@ -91,7 +91,7 @@ When ransomware or a widespread attack affects multiple accounts, Shieldio's mas
 - Mass recovery jobs are processed in parallel to minimize total recovery time.
 - Progress is tracked per object on the Jobs page, giving you visibility into the overall recovery status.
 - You can pause or cancel a mass recovery if needed. Objects already restored are not affected by cancellation.
-- For large-scale recovery (hundreds of accounts), plan for Microsoft Graph API write throttling. Shieldio manages throttling automatically, but full tenant recovery may take several hours depending on data volume.
+- For large-scale recovery (hundreds of accounts), plan for Microsoft Graph API write throttling. KavachIQ manages throttling automatically, but full tenant recovery may take several hours depending on data volume.
 
 ## Troubleshooting
 
@@ -109,4 +109,4 @@ When ransomware or a widespread attack affects multiple accounts, Shieldio's mas
 
 ## Next Steps
 
-You now know how to protect and restore your Microsoft 365 data with Shieldio. For additional topics, explore the Shieldio knowledge base or contact support at **support@shieldio.com**.
+You now know how to protect and restore your Microsoft 365 data with KavachIQ. For additional topics, explore the KavachIQ knowledge base or contact support at **support@kavachiq.com**.

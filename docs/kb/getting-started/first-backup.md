@@ -18,7 +18,7 @@ To back up everything that has an SLA policy assigned:
 1. Navigate to **Jobs > Backup**.
 2. Click **Backup All** in the top-right corner.
 3. Optionally filter by workload type if you only want to back up Exchange or SharePoint.
-4. Click **Start**. Shieldio queues one job per protected object and processes them in parallel.
+4. Click **Start**. KavachIQ queues one job per protected object and processes them in parallel.
 
 ### Scheduled Backups
 
@@ -26,19 +26,19 @@ If you have assigned SLA policies, backups run automatically according to the po
 
 ## What Happens During a Backup
 
-When a backup job runs, Shieldio executes the following steps:
+When a backup job runs, KavachIQ executes the following steps:
 
-1. **Data retrieval**: Shieldio reads data from your Microsoft 365 tenant via the Microsoft Graph API. For mailboxes, this includes messages, attachments, calendar items, contacts, and tasks. For OneDrive and SharePoint, this includes files and metadata.
+1. **Data retrieval**: KavachIQ reads data from your Microsoft 365 tenant via the Microsoft Graph API. For mailboxes, this includes messages, attachments, calendar items, contacts, and tasks. For OneDrive and SharePoint, this includes files and metadata.
 
 2. **Compression**: Data is compressed using the zstd algorithm with content-aware adaptive compression levels. Text-heavy content (emails, documents) achieves higher compression ratios than binary files (images, videos).
 
-3. **Deduplication**: Shieldio uses SHA-256 content-addressable storage with content-defined chunking for large files. If the same attachment exists in multiple mailboxes, it is stored only once.
+3. **Deduplication**: KavachIQ uses SHA-256 content-addressable storage with content-defined chunking for large files. If the same attachment exists in multiple mailboxes, it is stored only once.
 
 4. **Encryption**: All data is encrypted using AES-256-GCM before being written to storage. Each tenant has its own data encryption key, which is itself protected by a master key encryption key.
 
 5. **Storage**: Encrypted backup data is written to your designated storage target.
 
-6. **Verification**: Shieldio computes and stores checksums for every backed-up object to ensure data integrity during future restores.
+6. **Verification**: KavachIQ computes and stores checksums for every backed-up object to ensure data integrity during future restores.
 
 ## Monitoring Progress
 
@@ -84,13 +84,13 @@ After the job completes:
 
 ## Idempotency and Safe Retries
 
-Shieldio backup jobs are idempotent. If a job fails partway through or you accidentally trigger a duplicate backup:
+KavachIQ backup jobs are idempotent. If a job fails partway through or you accidentally trigger a duplicate backup:
 
-- Running the same backup again is always safe. Shieldio detects already-backed-up items via checksums and skips them.
+- Running the same backup again is always safe. KavachIQ detects already-backed-up items via checksums and skips them.
 - Duplicate runs do not create duplicate data in storage thanks to deduplication.
 - There is no risk of data corruption from overlapping or repeated jobs.
 
-If a job fails, simply retry it. Shieldio resumes from where it left off.
+If a job fails, simply retry it. KavachIQ resumes from where it left off.
 
 ## Troubleshooting
 
@@ -107,7 +107,7 @@ If a job fails, simply retry it. Shieldio resumes from where it left off.
 ### Backup is slower than expected
 
 - Large mailboxes (over 50 GB) or SharePoint sites with thousands of files may take longer on the first full backup. Subsequent incremental backups are significantly faster.
-- Microsoft Graph API throttling can slow down large backups. Shieldio handles throttling automatically with retry logic.
+- Microsoft Graph API throttling can slow down large backups. KavachIQ handles throttling automatically with retry logic.
 
 ## Next Steps
 

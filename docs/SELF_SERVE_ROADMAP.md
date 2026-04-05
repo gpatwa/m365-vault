@@ -1,4 +1,4 @@
-# Shieldio Self-Serve Roadmap — Path to First 20 Paying Customers
+# KavachIQ Self-Serve Roadmap — Path to First 20 Paying Customers
 
 **Date: 2026-04-03 | Status: Planning**
 
@@ -6,7 +6,7 @@
 
 ## Current State
 
-Shieldio is **~70% feature-complete** as a product but **0% ready for self-serve revenue**.
+KavachIQ is **~70% feature-complete** as a product but **0% ready for self-serve revenue**.
 The core backup/restore engine works well. What's missing is the commercial layer
 (payments, email, auth flows) and several Exchange/Entra ID features that competitors offer.
 
@@ -24,7 +24,7 @@ The core backup/restore engine works well. What's missing is the commercial laye
 | SendGrid integration | Replace SMTP with SendGrid API (free tier: 100 emails/day) |
 | Email templates | Welcome, password reset, trial reminder, backup failure, invoice |
 | Backend service | `backend/app/services/email.py` — send_welcome, send_reset, send_alert |
-| Template rendering | Jinja2 templates with Shieldio branding |
+| Template rendering | Jinja2 templates with KavachIQ branding |
 
 ### 1.2 Password Reset + Email Verification (Week 1, 16 hrs)
 **Why:** Users WILL forget passwords. Can't trust unverified emails.
@@ -69,7 +69,7 @@ The core backup/restore engine works well. What's missing is the commercial laye
 
 ### What Competitors Have That We Don't
 
-| Feature | Veeam | Rubrik | Druva | Shieldio | Priority |
+| Feature | Veeam | Rubrik | Druva | KavachIQ | Priority |
 |---|---|---|---|---|---|
 | Shared mailboxes | Yes | Yes | Yes | **Missing** | **P1** |
 | Archive mailboxes | Yes | Yes | Yes | **Missing** | **P1** |
@@ -120,7 +120,7 @@ UI: "Export as PST" button on mailbox snapshot page
 
 ### What Competitors Have That We Don't
 
-| Feature | Rubrik | Druva | Shieldio | Priority |
+| Feature | Rubrik | Druva | KavachIQ | Priority |
 |---|---|---|---|---|
 | Group membership restore | Yes | Yes | **Missing** — groups restored empty | **P1** |
 | PIM assignments | Yes | Partial | **Missing** | P2 |
@@ -223,7 +223,7 @@ Soft delete: 7-day recovery window before permanent purge
 
 ## Exchange Feature Comparison (Updated)
 
-| Feature | Shieldio (Current) | After Phase 2 | Veeam | Rubrik | Druva |
+| Feature | KavachIQ (Current) | After Phase 2 | Veeam | Rubrik | Druva |
 |---|---|---|---|---|---|
 | Email backup + restore | Yes | Yes | Yes | Yes | Yes |
 | Calendar backup + restore | Yes | Yes | Yes | Yes | Yes |
@@ -247,7 +247,7 @@ Soft delete: 7-day recovery window before permanent purge
 
 ## Entra ID Feature Comparison (Updated)
 
-| Object Type | Shieldio (Current) | After Phase 3 | Veeam | Rubrik | Druva |
+| Object Type | KavachIQ (Current) | After Phase 3 | Veeam | Rubrik | Druva |
 |---|---|---|---|---|---|
 | Users | Backup | Backup | Backup+Restore | Backup+Restore | Backup+Restore |
 | Groups | Backup (no members) | **Backup+Restore+Members** | Full | Full | Full |
@@ -265,7 +265,7 @@ Soft delete: 7-day recovery window before permanent purge
 | Auth Methods | No | Phase 4 | Partial | Partial | No |
 | Snapshot Diff | Partial | **Full** | Full | Full | Full |
 
-**Shieldio wins on:** Named Locations, Administrative Units, Domains, OAuth Grants, self-hosted, pricing
+**KavachIQ wins on:** Named Locations, Administrative Units, Domains, OAuth Grants, self-hosted, pricing
 **Competitors win on:** PIM, Auth Methods, relationship restore, full lifecycle management
 
 ---

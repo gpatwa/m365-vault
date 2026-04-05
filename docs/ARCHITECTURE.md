@@ -1,8 +1,8 @@
-# Shieldio — Architecture Guide
+# KavachIQ — Architecture Guide
 
 ## 1. System Overview
 
-Shieldio is a SaaS data protection platform for Microsoft 365 workloads
+KavachIQ is a SaaS data protection platform for Microsoft 365 workloads
 (Exchange Online, OneDrive for Business, SharePoint Online). It connects to tenants via
 the Microsoft Graph API, discovers protectable objects, runs SLA-driven backup schedules,
 stores encrypted point-in-time snapshots, and provides granular restore capabilities.
@@ -351,7 +351,7 @@ Implemented in Production Resilience Week 1-2:
 
 ### Error Code System (`backend/app/errors.py`)
 - 30+ structured error codes across 7 ranges (E1xxx-E7xxx)
-- `ShieldioError` exception class caught by global handler in `main.py`
+- `KavachIQError` exception class caught by global handler in `main.py`
 - Every error response includes `code`, `message`, `detail`, `fix`, and `correlation_id`
 
 ### Circuit Breaker (`backend/app/services/circuit_breaker.py`)
@@ -375,7 +375,7 @@ Implemented in Production Resilience Week 1-2:
 2. HTTPS redirect (production only, `FORCE_HTTPS=true`)
 3. Tiered rate limiting (auth: 20/min, onboard: 60/min, API: 600/min)
 4. Correlation ID middleware (auto-generates `X-Correlation-ID`)
-5. Global exception handlers (ShieldioError, RequestValidationError, unhandled)
+5. Global exception handlers (KavachIQError, RequestValidationError, unhandled)
 
 ### Shared API Dependencies (`backend/app/api/dependencies.py`)
 - `run_backup_preflight` — FastAPI dependency for pre-flight checks
@@ -523,7 +523,7 @@ The default database is **SQLite** (`sqlite+aiosqlite`) for development simplici
 For production:
 
 1. Change `DATABASE_URL` to a PostgreSQL async URL:
-   `postgresql+asyncpg://user:pass@host:5432/shieldio`
+   `postgresql+asyncpg://user:pass@host:5432/kavachiq`
 2. SQLAlchemy models use standard types compatible with both engines.
 3. Consider adding Alembic for schema migrations in production.
 4. SQLite's single-writer limitation makes it unsuitable for concurrent backup jobs.

@@ -49,9 +49,9 @@ Microsoft's own documentation acknowledges the shared responsibility model. The 
 4. **A regulatory audit requires data from 18 months ago** -- Native retention policies may not have been configured to retain that data. A backup with configurable retention ensures availability.
 5. **A compliance framework requires proof of recoverability** -- Auditors want evidence that you can restore data, not just that it exists somewhere.
 
-## How Shieldio Addresses the Gap
+## How KavachIQ Addresses the Gap
 
-Shieldio provides the data protection layer that sits on top of Microsoft's infrastructure:
+KavachIQ provides the data protection layer that sits on top of Microsoft's infrastructure:
 
 | Responsibility | Solution |
 |---|---|
@@ -65,4 +65,4 @@ Shieldio provides the data protection layer that sits on top of Microsoft's infr
 ## Further Reading
 
 - [Microsoft Shared Responsibility Model](https://learn.microsoft.com/en-us/azure/security/fundamentals/shared-responsibility) -- Microsoft's official documentation on shared responsibility in cloud services.
-- [Supported Workloads](/docs/kb/reference/supported-workloads.md) -- What Shieldio backs up across Microsoft 365.
+- [Supported Workloads](/docs/kb/reference/supported-workloads.md) -- What KavachIQ backs up across Microsoft 365.

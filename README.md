@@ -1,8 +1,8 @@
-# Shieldio
+# KavachIQ
 
 **SaaS Data Protection Platform — Protect Your Cloud Data**
 
-Shieldio is an open-source, self-hosted SaaS data protection platform. Currently protects Microsoft 365 workloads with a roadmap to support Google Workspace, Salesforce, and more. Features AI-powered intelligence, immutable storage, and enterprise-grade security — all at zero marginal cost.
+KavachIQ is an open-source, self-hosted SaaS data protection platform. Currently protects Microsoft 365 workloads with a roadmap to support Google Workspace, Salesforce, and more. Features AI-powered intelligence, immutable storage, and enterprise-grade security — all at zero marginal cost.
 
 > Version 2.3.0 | 152 API routes | 320 tests | Python 3.12+ | React 19 | FastAPI | Apache-2.0
 
@@ -99,7 +99,7 @@ Control Plane (API)                    Data Plane (Workers)
 ### Docker Compose (Recommended)
 
 ```bash
-git clone <repo-url> && cd shieldio
+git clone <repo-url> && cd kavachiq
 docker compose up -d
 
 # Open UI at http://localhost:5173 (login: admin / admin123)
@@ -125,7 +125,7 @@ make az-wake          # Resume Azure resources
 ## Project Structure
 
 ```
-shieldio/
+kavachiq/
 ├── backend/
 │   ├── app/
 │   │   ├── api/           # 31 API routers (152 routes)

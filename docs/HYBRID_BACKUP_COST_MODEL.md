@@ -1,4 +1,4 @@
-# Shieldio — Option A (Hybrid) Cost, Pricing & Margin Model
+# KavachIQ — Option A (Hybrid) Cost, Pricing & Margin Model
 
 **Date: 2026-03-30 | Status: Analysis**
 
@@ -8,14 +8,14 @@
 
 ```
                      ┌─────────────────────────┐
-                     │     Shieldio Platform     │
+                     │     KavachIQ Platform     │
                      │  (Intelligence + Control) │
                      └────────┬───────┬──────────┘
                               │       │
               ┌───────────────┘       └───────────────┐
               ▼                                       ▼
 ┌──────────────────────────┐          ┌──────────────────────────┐
-│  Microsoft Backup Storage │          │   Shieldio Own Storage   │
+│  Microsoft Backup Storage │          │   KavachIQ Own Storage   │
 │  (Exchange, SharePoint,   │          │  (Teams, Entra ID,       │
 │   OneDrive)               │          │   long-term retention,   │
 │                           │          │   WORM, eDiscovery)      │
@@ -26,7 +26,7 @@
 ```
 
 **Microsoft Backup Storage handles**: Exchange, SharePoint, OneDrive — the bulk data
-**Shieldio pipeline handles**: Teams, Entra ID, intelligence layer, anomaly detection, MVB plans
+**KavachIQ pipeline handles**: Teams, Entra ID, intelligence layer, anomaly detection, MVB plans
 
 ---
 
@@ -46,52 +46,52 @@ For Enterprise with heavy usage: 15-25 GB/user (executives, designers, legal)
 
 ---
 
-## 3. Cost Model: Current (Pure Shieldio) vs Hybrid
+## 3. Cost Model: Current (Pure KavachIQ) vs Hybrid
 
-### A. Current Model — Shieldio Stores Everything
+### A. Current Model — KavachIQ Stores Everything
 
 | Component | Cost Source | Per User/Mo |
 |-----------|-----------|-------------|
-| Azure Blob Storage (10 GB × $0.02/GB) | Shieldio pays | $0.20 |
-| Compute (Container Apps — amortized) | Shieldio pays | $0.15 |
-| Database (PostgreSQL — amortized) | Shieldio pays | $0.10 |
+| Azure Blob Storage (10 GB × $0.02/GB) | KavachIQ pays | $0.20 |
+| Compute (Container Apps — amortized) | KavachIQ pays | $0.15 |
+| Database (PostgreSQL — amortized) | KavachIQ pays | $0.10 |
 | **Total infrastructure per user** | | **$0.45** |
 
 At $1.50/user (Professional tier): **70% gross margin**
 At $3.00/user (Business tier): **85% gross margin**
 
-### B. Hybrid Model — Microsoft Stores Bulk, Shieldio Stores Intelligence
+### B. Hybrid Model — Microsoft Stores Bulk, KavachIQ Stores Intelligence
 
 | Component | Who Pays | Per User/Mo |
 |-----------|----------|-------------|
 | Microsoft Backup Storage (10 GB × $0.15/GB) | Customer pays Microsoft | $1.50 |
-| Shieldio compute (intelligence, API, UI) | Shieldio pays | $0.15 |
-| Shieldio storage (Teams + Entra ID ~1 GB) | Shieldio pays | $0.02 |
-| Database (PostgreSQL — amortized) | Shieldio pays | $0.10 |
-| **Total Shieldio infrastructure per user** | | **$0.27** |
-| **Total customer cost (Shieldio + Microsoft)** | | **Shieldio price + $1.50** |
+| KavachIQ compute (intelligence, API, UI) | KavachIQ pays | $0.15 |
+| KavachIQ storage (Teams + Entra ID ~1 GB) | KavachIQ pays | $0.02 |
+| Database (PostgreSQL — amortized) | KavachIQ pays | $0.10 |
+| **Total KavachIQ infrastructure per user** | | **$0.27** |
+| **Total customer cost (KavachIQ + Microsoft)** | | **KavachIQ price + $1.50** |
 
 ---
 
 ## 4. Pricing Strategies for Hybrid
 
 ### Strategy 1: Transparent Pass-Through
-Customer pays Microsoft directly for backup storage. Shieldio charges for intelligence only.
+Customer pays Microsoft directly for backup storage. KavachIQ charges for intelligence only.
 
-| Tier | Shieldio Price | Microsoft Cost | Total Customer Cost |
+| Tier | KavachIQ Price | Microsoft Cost | Total Customer Cost |
 |------|---------------|----------------|-------------------|
 | Professional | $1.50/user | $1.50/user (10 GB avg) | **$3.00/user** |
 | Business | $3.00/user | $1.50/user | **$4.50/user** |
 | Enterprise | $5.00/user | $1.50/user | **$6.50/user** |
 
-**Shieldio margin**: 82-94% (we only pay $0.27/user in infra)
+**KavachIQ margin**: 82-94% (we only pay $0.27/user in infra)
 **Customer total**: Competitive with Druva ($4-7) and Rubrik ($6-10)
 **Advantage**: Transparent — customer sees exactly what they pay for
 
-### Strategy 2: Bundled (Shieldio Absorbs Microsoft Cost)
-Shieldio pays Microsoft's $0.15/GB and bundles into price.
+### Strategy 2: Bundled (KavachIQ Absorbs Microsoft Cost)
+KavachIQ pays Microsoft's $0.15/GB and bundles into price.
 
-| Tier | Shieldio Price | Our Cost (infra + MSFT) | Gross Margin |
+| Tier | KavachIQ Price | Our Cost (infra + MSFT) | Gross Margin |
 |------|---------------|------------------------|-------------|
 | Professional | $3.00/user | $1.77/user ($0.27 infra + $1.50 MSFT) | **41%** |
 | Business | $4.50/user | $1.77/user | **61%** |
@@ -107,7 +107,7 @@ Keep current pricing for intelligence. Offer Microsoft Backup Storage as optiona
 |------|--------------------------|--------------------------|-------|
 | Professional | $1.50/user | +$0.15/GB (pass-through) | $1.50 + usage |
 | Business | $3.00/user | +$0.15/GB (pass-through) | $3.00 + usage |
-| Enterprise | $5.00/user | Included (Shieldio absorbs) | $5.00 flat |
+| Enterprise | $5.00/user | Included (KavachIQ absorbs) | $5.00 flat |
 
 **Why this works**:
 - Professional/Business: Customers who want fast restore pay for it, transparent
@@ -130,10 +130,10 @@ Keep current pricing for intelligence. Offer Microsoft Backup Storage as optiona
 **With Microsoft Backup Storage (customer pays Microsoft directly):**
 | Item | Monthly |
 |------|---------|
-| Shieldio revenue | $75 |
-| Shieldio infra | $14 |
+| KavachIQ revenue | $75 |
+| KavachIQ infra | $14 |
 | Customer pays Microsoft (10 GB × 50 users × $0.15) | $75 (not our cost) |
-| **Shieldio gross margin** | **$61 (81%)** |
+| **KavachIQ gross margin** | **$61 (81%)** |
 | **Customer total cost** | **$150 ($3/user)** |
 
 ### Mid-Market (200 users, Business $3.00 + optional MSFT)
@@ -148,10 +148,10 @@ Keep current pricing for intelligence. Offer Microsoft Backup Storage as optiona
 **With Microsoft Backup Storage (customer pays Microsoft):**
 | Item | Monthly |
 |------|---------|
-| Shieldio revenue | $600 |
-| Shieldio infra | $54 |
+| KavachIQ revenue | $600 |
+| KavachIQ infra | $54 |
 | Customer pays Microsoft (10 GB × 200 × $0.15) | $300 |
-| **Shieldio gross margin** | **$546 (91%)** |
+| **KavachIQ gross margin** | **$546 (91%)** |
 | **Customer total cost** | **$900 ($4.50/user)** |
 
 ### Enterprise (1,000 users, Enterprise $5.00 — MSFT absorbed)
@@ -159,7 +159,7 @@ Keep current pricing for intelligence. Offer Microsoft Backup Storage as optiona
 | Item | Monthly |
 |------|---------|
 | Revenue | $5,000 |
-| Shieldio infra ($0.27 × 1,000) | $270 |
+| KavachIQ infra ($0.27 × 1,000) | $270 |
 | Microsoft Backup cost ($1.50 × 1,000) | $1,500 |
 | **Total cost** | **$1,770** |
 | **Gross Margin** | **$3,230 (65%)** |
@@ -170,7 +170,7 @@ Even absorbing Microsoft's cost at Enterprise tier, margin is 65%. At Business, 
 
 ## 6. Operating Cost Comparison
 
-### Current (Pure Shieldio) — Medium Prod (50 tenants)
+### Current (Pure KavachIQ) — Medium Prod (50 tenants)
 
 | Component | Monthly Cost |
 |-----------|-------------|
@@ -191,7 +191,7 @@ Even absorbing Microsoft's cost at Enterprise tier, margin is 65%. At Business, 
 | Redis | $75 | Same |
 | ACR + Logs | $90 | Same |
 | Microsoft Backup Storage | $0 (customer pays) | N/A |
-| **Total Shieldio infra** | **$429** | **-4%** |
+| **Total KavachIQ infra** | **$429** | **-4%** |
 
 **Key insight**: Hybrid barely changes our infrastructure cost because storage was already cheap ($6/mo). The real benefit is **faster restore for customers** and **competitive positioning** as a Microsoft-integrated ISV.
 
@@ -199,18 +199,18 @@ Even absorbing Microsoft's cost at Enterprise tier, margin is 65%. At Business, 
 
 ## 7. What We Keep vs What Microsoft Handles
 
-| Capability | Current (Shieldio) | Hybrid | Who Benefits |
+| Capability | Current (KavachIQ) | Hybrid | Who Benefits |
 |-----------|-------------------|--------|-------------|
-| Exchange/SharePoint/OneDrive backup | Shieldio (Graph API reads) | Microsoft Backup Storage | Customer (faster restore) |
-| Teams backup | Shieldio | Shieldio (MSFT doesn't cover) | Customer (full coverage) |
-| Entra ID backup | Shieldio | Shieldio (MSFT doesn't cover) | Customer (unique value) |
-| Org Context / Criticality | Shieldio | Shieldio | Both (intelligence layer) |
-| MVB Recovery Plans | Shieldio | Shieldio | Customer (recovery speed) |
-| Anomaly Detection | Shieldio | Shieldio | Customer (ransomware defense) |
-| Recovery Confidence Score | Shieldio | Shieldio | Customer (audit evidence) |
-| WORM / Legal Hold | Shieldio | Shieldio | Customer (compliance) |
-| RPO/RTO Compliance | Shieldio | Shieldio | Customer (SLA tracking) |
-| Storage encryption | Shieldio (AES-256-GCM) | Microsoft (SSE) + Shieldio (Teams/Entra) | Both |
+| Exchange/SharePoint/OneDrive backup | KavachIQ (Graph API reads) | Microsoft Backup Storage | Customer (faster restore) |
+| Teams backup | KavachIQ | KavachIQ (MSFT doesn't cover) | Customer (full coverage) |
+| Entra ID backup | KavachIQ | KavachIQ (MSFT doesn't cover) | Customer (unique value) |
+| Org Context / Criticality | KavachIQ | KavachIQ | Both (intelligence layer) |
+| MVB Recovery Plans | KavachIQ | KavachIQ | Customer (recovery speed) |
+| Anomaly Detection | KavachIQ | KavachIQ | Customer (ransomware defense) |
+| Recovery Confidence Score | KavachIQ | KavachIQ | Customer (audit evidence) |
+| WORM / Legal Hold | KavachIQ | KavachIQ | Customer (compliance) |
+| RPO/RTO Compliance | KavachIQ | KavachIQ | Customer (SLA tracking) |
+| Storage encryption | KavachIQ (AES-256-GCM) | Microsoft (SSE) + KavachIQ (Teams/Entra) | Both |
 
 **Our moat stays intact**: Intelligence, Teams, Entra ID, compliance tools. Microsoft provides fast bulk backup/restore for the commodity workloads.
 
@@ -222,7 +222,7 @@ Even absorbing Microsoft's cost at Enterprise tier, margin is 65%. At Business, 
 "We're a backup vendor competing with Veeam and Rubrik on price and features"
 
 ### With Hybrid
-"We're the **intelligence layer** on top of Microsoft's backup infrastructure. Use Microsoft for speed. Use Shieldio for recovery plans, criticality scoring, anomaly detection, and the workloads Microsoft doesn't cover."
+"We're the **intelligence layer** on top of Microsoft's backup infrastructure. Use Microsoft for speed. Use KavachIQ for recovery plans, criticality scoring, anomaly detection, and the workloads Microsoft doesn't cover."
 
 This is the Veeam/AvePoint playbook — they're all doing it. The ISVs that DON'T integrate with Microsoft Backup Storage will look outdated.
 

@@ -406,7 +406,7 @@ test.describe('Public Pages', () => {
   test('About page loads with competitor comparison', async ({ page }) => {
     await page.goto(`${BASE}/about`);
     await page.waitForTimeout(2000);
-    await expect(page.locator('text=Shieldio').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=KavachIQ').first()).toBeVisible({ timeout: 10000 });
     // Check for competitor names
     await expect(page.locator('text=Veeam').first()).toBeVisible({ timeout: 5000 });
   });

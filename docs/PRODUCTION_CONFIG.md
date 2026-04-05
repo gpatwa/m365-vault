@@ -86,7 +86,7 @@ CONNECTOR_REDIRECT_URI=https://app.kavachiq.com/onboard/callback
 ```
 
 #### Update Azure App Registration
-1. Go to Azure Portal → App Registrations → Shieldio Connector
+1. Go to Azure Portal → App Registrations → KavachIQ Connector
 2. Authentication → Add redirect URI: `https://app.kavachiq.com/onboard/callback`
 3. Remove old: `https://m365vault-frontend-dev.happyflower-*.azurecontainerapps.io/onboard/callback`
 

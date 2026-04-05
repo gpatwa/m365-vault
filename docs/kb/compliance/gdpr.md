@@ -1,6 +1,6 @@
-# GDPR Compliance with Shieldio
+# GDPR Compliance with KavachIQ
 
-The General Data Protection Regulation (GDPR) imposes strict requirements on organizations that process personal data of EU residents. This article maps key GDPR articles to Shieldio's technical controls and explains how the platform supports your data protection obligations.
+The General Data Protection Regulation (GDPR) imposes strict requirements on organizations that process personal data of EU residents. This article maps key GDPR articles to KavachIQ's technical controls and explains how the platform supports your data protection obligations.
 
 ## Article Mapping
 
@@ -8,7 +8,7 @@ The General Data Protection Regulation (GDPR) imposes strict requirements on org
 
 **Requirement**: Personal data must be processed with appropriate security, including protection against unauthorized access, accidental loss, or destruction.
 
-**Shieldio Controls**:
+**KavachIQ Controls**:
 - AES-256-GCM encryption for all backup data at rest.
 - Per-tenant Data Encryption Keys (DEKs) ensure tenant isolation at the cryptographic level.
 - SHA-256 content hashing verifies data integrity on every restore operation.
@@ -18,7 +18,7 @@ The General Data Protection Regulation (GDPR) imposes strict requirements on org
 
 **Requirement**: Data subjects have the right to request deletion of their personal data.
 
-**Shieldio Controls**:
+**KavachIQ Controls**:
 - Tenant purge functionality permanently removes all backup data, encryption keys, and metadata for a specific tenant.
 - Per-snapshot DEK architecture means destroying the encryption key renders snapshot data unrecoverable, enabling cryptographic erasure.
 - Purge operations are recorded in the audit log for compliance evidence.
@@ -27,7 +27,7 @@ The General Data Protection Regulation (GDPR) imposes strict requirements on org
 
 **Requirement**: Implement appropriate technical measures to ensure data protection principles are embedded in processing.
 
-**Shieldio Controls**:
+**KavachIQ Controls**:
 - Per-snapshot DEKs limit the blast radius of any key compromise to a single backup snapshot.
 - Minimum-privilege RBAC roles (Viewer, Operator, Admin) enforce least-access by default.
 - New users are assigned the most restrictive role until explicitly promoted.
@@ -36,7 +36,7 @@ The General Data Protection Regulation (GDPR) imposes strict requirements on org
 
 **Requirement**: Maintain a record of processing activities under your responsibility.
 
-**Shieldio Controls**:
+**KavachIQ Controls**:
 - Append-only audit log records every backup, restore, access, and configuration event.
 - Each entry includes: actor, action, target resource, timestamp, result, and correlation ID.
 - Audit logs are exportable in CSV and JSON formats for inclusion in your Article 30 register.
@@ -45,7 +45,7 @@ The General Data Protection Regulation (GDPR) imposes strict requirements on org
 
 **Requirement**: Implement appropriate technical and organizational measures to ensure a level of security appropriate to the risk.
 
-**Shieldio Controls**:
+**KavachIQ Controls**:
 - Encryption: AES-256-GCM at rest, TLS 1.2+ in transit.
 - Access control: RBAC with JWT authentication and optional SSO/MFA.
 - Backup and recovery: Automated backups with verified restore capability (Recovery Confidence Score).
@@ -55,14 +55,14 @@ The General Data Protection Regulation (GDPR) imposes strict requirements on org
 
 **Requirement**: Notify the supervisory authority within 72 hours of becoming aware of a personal data breach.
 
-**Shieldio Controls**:
+**KavachIQ Controls**:
 - Anomaly detection identifies unusual patterns such as mass deletion, unexpected data volume changes, or unauthorized access attempts.
 - Alerts notify administrators immediately when anomalies are detected.
 - Audit logs provide the forensic detail needed to assess breach scope and impact within the 72-hour window.
 
 ## Data Residency
 
-Shieldio deployments on Azure allow you to select the region where backup data is stored. This supports compliance with GDPR data residency preferences and any additional requirements from local supervisory authorities.
+KavachIQ deployments on Azure allow you to select the region where backup data is stored. This supports compliance with GDPR data residency preferences and any additional requirements from local supervisory authorities.
 
 When configuring your deployment:
 - Choose an Azure region within the EU (e.g., West Europe, North Europe) if your data subjects are EU residents.
@@ -71,15 +71,15 @@ When configuring your deployment:
 
 ## Right to Erasure Process
 
-To fulfill an Article 17 erasure request for data within Shieldio backups:
+To fulfill an Article 17 erasure request for data within KavachIQ backups:
 
 1. Identify the tenant and objects associated with the data subject.
 2. Execute a tenant purge or selective object deletion via the API.
-3. Shieldio destroys the associated DEKs, rendering encrypted data unrecoverable.
+3. KavachIQ destroys the associated DEKs, rendering encrypted data unrecoverable.
 4. Export the audit log entry as evidence of deletion for your records.
 
 Note: Selective object-level deletion is available on Business and Enterprise tiers. Community and Professional tiers support full tenant purge.
 
 ## Disclaimer
 
-This document maps GDPR articles to Shieldio's technical capabilities. It does not constitute legal advice. Consult a qualified Data Protection Officer or legal counsel to determine your specific GDPR obligations.
+This document maps GDPR articles to KavachIQ's technical capabilities. It does not constitute legal advice. Consult a qualified Data Protection Officer or legal counsel to determine your specific GDPR obligations.

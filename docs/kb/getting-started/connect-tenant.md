@@ -1,18 +1,18 @@
 # Connect Your Microsoft 365 Tenant
 
-Connect your Microsoft 365 environment to Shieldio in minutes using secure OAuth consent. Once connected, Shieldio automatically discovers your workloads and prepares them for protection.
+Connect your Microsoft 365 environment to KavachIQ in minutes using secure OAuth consent. Once connected, KavachIQ automatically discovers your workloads and prepares them for protection.
 
 ## Prerequisites
 
 Before you begin, confirm the following:
 
-- You have **Global Administrator** privileges in your Microsoft 365 tenant, or a delegated admin has pre-approved the Shieldio enterprise application.
+- You have **Global Administrator** privileges in your Microsoft 365 tenant, or a delegated admin has pre-approved the KavachIQ enterprise application.
 - Your tenant allows third-party enterprise application consent (check **Azure AD > Enterprise applications > Consent and permissions**).
-- You have an active Shieldio account with the **Tenant Admin** role or higher.
+- You have an active KavachIQ account with the **Tenant Admin** role or higher.
 
 ## Step 1: Initiate the Connection
 
-1. Log in to the Shieldio dashboard.
+1. Log in to the KavachIQ dashboard.
 2. Navigate to **Settings > Tenants**.
 3. Click **Connect Tenant**.
 4. You will be redirected to the Microsoft identity platform consent screen.
@@ -22,19 +22,19 @@ Before you begin, confirm the following:
 On the Microsoft consent page:
 
 1. Sign in with your Global Administrator credentials.
-2. Review the permissions Shieldio requests. These include read access to Exchange, OneDrive, SharePoint, Teams, and Entra ID resources via the Microsoft Graph API.
+2. Review the permissions KavachIQ requests. These include read access to Exchange, OneDrive, SharePoint, Teams, and Entra ID resources via the Microsoft Graph API.
 3. Check **Consent on behalf of your organization**.
 4. Click **Accept**.
 
-You will be redirected back to Shieldio automatically.
+You will be redirected back to KavachIQ automatically.
 
 ## What Happens During Connection
 
-Once consent is granted, Shieldio performs the following steps:
+Once consent is granted, KavachIQ performs the following steps:
 
-- **Credential storage**: Your OAuth tokens are encrypted at rest using AES-256-GCM with a dedicated per-tenant data encryption key. Shieldio never stores your administrator password.
+- **Credential storage**: Your OAuth tokens are encrypted at rest using AES-256-GCM with a dedicated per-tenant data encryption key. KavachIQ never stores your administrator password.
 - **Automatic discovery**: A discovery job runs immediately to enumerate mailboxes, OneDrive accounts, SharePoint sites, Teams, and Entra ID objects in your tenant.
-- **Health check**: Shieldio validates API connectivity and confirms that the granted permissions are sufficient for backup operations.
+- **Health check**: KavachIQ validates API connectivity and confirms that the granted permissions are sufficient for backup operations.
 
 The entire process typically completes in under 60 seconds for tenants with fewer than 500 users.
 
@@ -56,7 +56,7 @@ After connecting, confirm a successful setup:
 
 ### Consent fails with "Need admin approval"
 
-- You must be a Global Administrator, or your tenant requires admin approval for enterprise apps. Ask your Global Admin to approve the Shieldio application in **Azure AD > Enterprise applications > Admin consent requests**.
+- You must be a Global Administrator, or your tenant requires admin approval for enterprise apps. Ask your Global Admin to approve the KavachIQ application in **Azure AD > Enterprise applications > Admin consent requests**.
 
 ### Connection shows "Degraded" status
 
@@ -70,9 +70,9 @@ After connecting, confirm a successful setup:
 
 ## Security Notes
 
-- Shieldio uses the OAuth 2.0 authorization code flow with PKCE. No client secrets are stored in the browser.
+- KavachIQ uses the OAuth 2.0 authorization code flow with PKCE. No client secrets are stored in the browser.
 - All tokens are encrypted with AES-256-GCM before being written to the database.
-- You can revoke Shieldio access at any time from **Azure AD > Enterprise applications > Shieldio > Properties > Delete**.
+- You can revoke KavachIQ access at any time from **Azure AD > Enterprise applications > KavachIQ > Properties > Delete**.
 
 ## Next Steps
 

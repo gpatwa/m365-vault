@@ -2,7 +2,7 @@
 
 ## Overview
 
-Shieldio provides comprehensive backup coverage for Microsoft Entra ID (formerly Azure Active Directory), protecting the identity and access configuration that underpins your entire Microsoft 365 environment. Entra ID backup captures 10+ object types, supports incremental delta queries for efficient data transfer, and enables snapshot comparison for configuration drift detection.
+KavachIQ provides comprehensive backup coverage for Microsoft Entra ID (formerly Azure Active Directory), protecting the identity and access configuration that underpins your entire Microsoft 365 environment. Entra ID backup captures 10+ object types, supports incremental delta queries for efficient data transfer, and enables snapshot comparison for configuration drift detection.
 
 ## Why Entra ID Backup Is Essential
 
@@ -12,7 +12,7 @@ Without a dedicated Entra ID backup, restoring these configurations after an inc
 
 ## Object Types Backed Up
 
-Shieldio backs up the following Entra ID object types:
+KavachIQ backs up the following Entra ID object types:
 
 | Object Type | Description | Graph API Source |
 |---|---|---|
@@ -38,22 +38,22 @@ Conditional access policies are the most critical Entra ID objects to protect. I
 3. With MFA disabled, the attacker establishes persistent access via additional compromised accounts or app registrations.
 4. Data exfiltration begins only after the security perimeter is weakened.
 
-If you restore mailboxes and files but do not restore the conditional access policies that were in place before the attack, the attacker's modifications remain active. Shieldio's MVB recovery plan restores conditional access policies in Phase 1, before any data restoration begins.
+If you restore mailboxes and files but do not restore the conditional access policies that were in place before the attack, the attacker's modifications remain active. KavachIQ's MVB recovery plan restores conditional access policies in Phase 1, before any data restoration begins.
 
 ## Delta Query Support
 
-Shieldio uses Microsoft Graph delta queries (`/users/delta`, `/groups/delta`, etc.) for incremental backups. After the initial full snapshot, subsequent backup cycles request only the changes since the last checkpoint. This approach:
+KavachIQ uses Microsoft Graph delta queries (`/users/delta`, `/groups/delta`, etc.) for incremental backups. After the initial full snapshot, subsequent backup cycles request only the changes since the last checkpoint. This approach:
 
 - Reduces Graph API call volume by 80--95% for stable tenants
 - Minimizes the risk of API throttling
 - Decreases backup cycle duration from minutes to seconds for most object types
 - Preserves a complete change history for audit and forensic review
 
-Delta tokens are managed automatically. If a delta token expires (tokens are valid for approximately 30 days), Shieldio performs a fresh full sync and establishes a new baseline.
+Delta tokens are managed automatically. If a delta token expires (tokens are valid for approximately 30 days), KavachIQ performs a fresh full sync and establishes a new baseline.
 
 ## Snapshot Comparison for Drift Detection
 
-Every Entra ID backup produces a timestamped snapshot. Shieldio compares consecutive snapshots to detect configuration drift, including:
+Every Entra ID backup produces a timestamped snapshot. KavachIQ compares consecutive snapshots to detect configuration drift, including:
 
 - Conditional access policies that were modified or deleted
 - New role assignments granted outside of change management processes

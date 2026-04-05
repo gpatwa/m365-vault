@@ -10,7 +10,7 @@ async def test_root_endpoint(client: AsyncClient):
     data = response.json()
     assert data["status"] == "running"
     assert "version" in data
-    assert data["name"] == "Shieldio"
+    assert data["name"] == "KavachIQ"
 
 
 @pytest.mark.asyncio

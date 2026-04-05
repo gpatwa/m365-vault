@@ -48,7 +48,7 @@ async function login(page: Page) {
   // Inject token into sessionStorage + dismiss product tour
   await page.evaluate((t) => {
     sessionStorage.setItem('token', t);
-    localStorage.setItem('shieldio_tour_completed', 'true');
+    localStorage.setItem('kavachiq_tour_completed', 'true');
   }, token);
 }
 

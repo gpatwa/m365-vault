@@ -26,10 +26,10 @@ class TestQueueNames:
     """Verify queue name constants match expected values."""
 
     def test_backup_queue_name(self):
-        assert BACKUP_QUEUE == "shieldio:backup_queue"
+        assert BACKUP_QUEUE == "kavachiq:backup_queue"
 
     def test_restore_queue_name(self):
-        assert RESTORE_QUEUE == "shieldio:restore_queue"
+        assert RESTORE_QUEUE == "kavachiq:restore_queue"
 
     def test_queue_names_distinct(self):
         assert BACKUP_QUEUE != RESTORE_QUEUE

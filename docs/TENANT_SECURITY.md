@@ -1,6 +1,6 @@
-# Shieldio — Tenant Security Guide
+# KavachIQ — Tenant Security Guide
 
-**Product:** Shieldio v2.3.0
+**Product:** KavachIQ v2.3.0
 **Classification:** Internal — Confidential
 **Audience:** Administrators, Security Engineers, Compliance Officers
 
@@ -8,7 +8,7 @@
 
 ## 1. Overview
 
-Each Microsoft 365 tenant connected to Shieldio represents a trust boundary. This document explains how Shieldio secures tenant credentials, isolates tenant data, enforces least-privilege access to the Microsoft Graph API, and controls which users can perform operations against each tenant.
+Each Microsoft 365 tenant connected to KavachIQ represents a trust boundary. This document explains how KavachIQ secures tenant credentials, isolates tenant data, enforces least-privilege access to the Microsoft Graph API, and controls which users can perform operations against each tenant.
 
 **Key principles:**
 
@@ -26,13 +26,13 @@ Each Microsoft 365 tenant connected to Shieldio represents a trust boundary. Thi
 Before connecting a tenant, create an **App Registration** in the target Azure AD tenant:
 
 1. Navigate to **Azure Portal > Azure Active Directory > App Registrations > New Registration**
-2. Name: `Shieldio Backup` (or your organization's naming convention)
+2. Name: `KavachIQ Backup` (or your organization's naming convention)
 3. Supported account types: **Single tenant**
 4. Click **Register**
 
 ### 2.2 Graph API Permissions (Least-Privilege)
 
-Shieldio v1.1.0 enforces separate permission sets for backup (read-only) and restore (read-write). Configure your Azure AD app with only the permissions you need:
+KavachIQ v1.1.0 enforces separate permission sets for backup (read-only) and restore (read-write). Configure your Azure AD app with only the permissions you need:
 
 #### Backup-Only Deployment (Recommended Starting Point)
 
@@ -75,7 +75,7 @@ All permissions above are **Application** type (not Delegated), requiring **Azur
 1. Navigate to **Certificates & secrets > Client secrets > New client secret**
 2. Set an appropriate expiry (recommended: 12 months with rotation reminders)
 3. Copy the secret value immediately — it is shown only once
-4. Store it securely until you register the tenant in Shieldio
+4. Store it securely until you register the tenant in KavachIQ
 
 ---
 
@@ -193,7 +193,7 @@ Each tenant connects to Microsoft Graph using its own Azure AD app credentials:
 
 ### 5.1 Access Modes
 
-Shieldio v1.1.0 introduced access mode separation in the `GraphClient`:
+KavachIQ v1.1.0 introduced access mode separation in the `GraphClient`:
 
 | Access Mode | Graph Scopes | HTTP Methods Allowed | Used By |
 |---|---|---|---|
@@ -219,8 +219,8 @@ For maximum security, register **two separate Azure AD apps** per tenant:
 
 | App | Permissions | Purpose |
 |---|---|---|
-| `Shieldio Backup` | Read-only scopes | Used by BackupEngine |
-| `Shieldio Restore` | Read-write scopes | Used by RestoreEngine |
+| `KavachIQ Backup` | Read-only scopes | Used by BackupEngine |
+| `KavachIQ Restore` | Read-write scopes | Used by RestoreEngine |
 
 This ensures that a compromised backup credential cannot be used to write data to the tenant, even by an attacker who bypasses the application-level guard.
 
@@ -299,7 +299,7 @@ Use this checklist when onboarding a new tenant:
 - [ ] **Admin consent** granted by Azure AD Global Administrator
 - [ ] Client secret generated with appropriate expiry (12 months recommended)
 - [ ] Client secret rotation reminder set in calendar/ticketing system
-- [ ] Tenant registered in Shieldio by an **ADMIN** user
+- [ ] Tenant registered in KavachIQ by an **ADMIN** user
 - [ ] Connection test passed (`POST /api/tenants/{id}/test`)
 - [ ] Discovery completed — expected mailboxes, OneDrive accounts, and SharePoint sites found
 - [ ] SLA policy created and assigned to discovered objects

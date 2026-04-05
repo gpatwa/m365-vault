@@ -1,5 +1,5 @@
 # Research Analysis: Databricks Lakewatch + Anthropic Cyber Capabilities
-## Impact on Shieldio Organizational Context Layer Design
+## Impact on KavachIQ Organizational Context Layer Design
 
 **Date: 2026-03-27 | Status: Research Analysis**
 
@@ -28,20 +28,20 @@ Our `ORG_CONTEXT_LAYER_DESIGN.md` was written based on the competitive landscape
 
 ---
 
-## 2. What This Means for Shieldio
+## 2. What This Means for KavachIQ
 
 ### The Opportunity
-Lakewatch validates our thesis but from the SIEM side: **security is a data problem that requires organizational context**. Lakewatch enriches security telemetry with business context for detection. Shieldio enriches backup data with business context for recovery.
+Lakewatch validates our thesis but from the SIEM side: **security is a data problem that requires organizational context**. Lakewatch enriches security telemetry with business context for detection. KavachIQ enriches backup data with business context for recovery.
 
 **Nobody is doing both.** The market is splitting into:
 - **Detection** (Lakewatch, CrowdStrike, Defender) — "What happened?"
-- **Recovery** (Rubrik, Shieldio) — "How do we get back?"
+- **Recovery** (Rubrik, KavachIQ) — "How do we get back?"
 
-The gap: detection systems don't know your backup state, and backup systems don't know your threat state. **Shieldio can bridge this.**
+The gap: detection systems don't know your backup state, and backup systems don't know your threat state. **KavachIQ can bridge this.**
 
 ### The Differentiators We Can Build
 
-| Capability | Rubrik | Lakewatch | Shieldio (Proposed) |
+| Capability | Rubrik | Lakewatch | KavachIQ (Proposed) |
 |-----------|--------|-----------|-------------------|
 | Org context source | Admin-defined VIP groups | SIEM telemetry + HR data | Auto-detected from M365 Graph + SIEM signals |
 | Data classification | Sensitivity labels only | Unity Catalog AI classification | Sensitivity labels + content-aware scoring |
@@ -58,9 +58,9 @@ The gap: detection systems don't know your backup state, and backup systems don'
 
 **Current design**: Our Context Collector syncs org signals from Microsoft Graph only.
 
-**Improved design**: Add an OCSF-compatible threat signal ingestion layer. This lets Shieldio consume security events from Lakewatch, CrowdStrike, Defender, or any OCSF-producing SIEM — and use those signals to inform recovery decisions.
+**Improved design**: Add an OCSF-compatible threat signal ingestion layer. This lets KavachIQ consume security events from Lakewatch, CrowdStrike, Defender, or any OCSF-producing SIEM — and use those signals to inform recovery decisions.
 
-**Why this matters**: When Lakewatch or CrowdStrike detects ransomware, Shieldio should automatically receive that signal, correlate it with backup state, and generate a recovery plan — without the admin manually switching between tools.
+**Why this matters**: When Lakewatch or CrowdStrike detects ransomware, KavachIQ should automatically receive that signal, correlate it with backup state, and generate a recovery plan — without the admin manually switching between tools.
 
 ```
 SIEM (Lakewatch/CrowdStrike/Defender)
@@ -148,7 +148,7 @@ This is directly inspired by Claude Code Security's "find, verify, rate confiden
 
 ### 3.4 Bronze/Silver/Gold for Backup Intelligence
 
-**Inspired by Lakewatch's lakehouse architecture**, apply the medallion pattern to Shieldio's backup metadata:
+**Inspired by Lakewatch's lakehouse architecture**, apply the medallion pattern to KavachIQ's backup metadata:
 
 ```
 Bronze (Raw):
@@ -173,7 +173,7 @@ The Gold layer is the killer feature: **pre-computed recovery plans ready to exe
 
 ### 3.5 Agent-to-Agent Trust (Inspired by Antimatter Acquisition)
 
-Databricks acquired Antimatter for agent-to-agent trust — solving "how do AI agents authenticate to each other securely?" This is relevant for Shieldio's agentic recovery:
+Databricks acquired Antimatter for agent-to-agent trust — solving "how do AI agents authenticate to each other securely?" This is relevant for KavachIQ's agentic recovery:
 
 - The Recovery Agent needs to authenticate to the Execution Engine
 - The Execution Engine needs to authenticate to Microsoft Graph
@@ -277,7 +277,7 @@ Redesigned around multi-stage verification:
 
 ## 6. Competitive Positioning After These Changes
 
-| Capability | Rubrik | Lakewatch | CrowdStrike | Shieldio (Revised) |
+| Capability | Rubrik | Lakewatch | CrowdStrike | KavachIQ (Revised) |
 |-----------|--------|-----------|-------------|-------------------|
 | Org context | Admin-defined VIP | SIEM enrichment | Threat graph | Auto-detected + SIEM-enriched |
 | Threat detection | No | Yes (core) | Yes (core) | Via SIEM integration |
@@ -291,7 +291,7 @@ Redesigned around multi-stage verification:
 
 ### The Unique Differentiator
 
-**Shieldio becomes the only product that combines:**
+**KavachIQ becomes the only product that combines:**
 1. Organizational context (who matters)
 2. Threat intelligence (what happened)
 3. Backup state (what's recoverable)
@@ -301,7 +301,7 @@ Rubrik has 1 + 3 but not 2.
 Lakewatch has 1 + 2 but not 3.
 CrowdStrike has 2 but not 1 or 3.
 
-**Only Shieldio has all four.** This is the moat.
+**Only KavachIQ has all four.** This is the moat.
 
 ---
 

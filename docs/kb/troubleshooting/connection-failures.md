@@ -1,6 +1,6 @@
 # Fixing Connection Failures
 
-A healthy connection between Shieldio and your Microsoft 365 tenant is required before backups can run. This article covers common causes of connection failures, how to diagnose them, and step-by-step fixes for each error code.
+A healthy connection between KavachIQ and your Microsoft 365 tenant is required before backups can run. This article covers common causes of connection failures, how to diagnose them, and step-by-step fixes for each error code.
 
 ## Diagnostic Endpoints
 
@@ -20,7 +20,7 @@ If `/api/diagnostics/health` shows all services healthy but `/api/onboard/connec
 **Symptom**: Connector health returns E1001.
 
 **Fix**:
-- Open the Shieldio dashboard and navigate to **Settings > Connectors**.
+- Open the KavachIQ dashboard and navigate to **Settings > Connectors**.
 - Enter your Azure AD Application (client) ID and Directory (tenant) ID.
 - Save and re-test connector health.
 
@@ -69,7 +69,7 @@ If `/api/diagnostics/health` shows all services healthy but `/api/onboard/connec
 
 **Fix**:
 - Check [Microsoft 365 service health](https://status.office.com) for active incidents.
-- Verify the Shieldio host can resolve and reach `graph.microsoft.com` on port 443.
+- Verify the KavachIQ host can resolve and reach `graph.microsoft.com` on port 443.
 - If behind a corporate firewall or proxy, ensure `login.microsoftonline.com` and `graph.microsoft.com` are allowlisted.
 - For Azure-hosted deployments, check the Network Security Group (NSG) rules for outbound HTTPS.
 
@@ -79,7 +79,7 @@ When verifying your app registration in the Azure Portal:
 
 1. Sign in at [portal.azure.com](https://portal.azure.com).
 2. Search for **App registrations** in the top search bar.
-3. Select the app registration used by Shieldio.
+3. Select the app registration used by KavachIQ.
 4. Check **Overview** for Application ID and Tenant ID.
 5. Check **Certificates & secrets** for secret expiration.
 6. Check **API permissions** for required Graph API scopes.

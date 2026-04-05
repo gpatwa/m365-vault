@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shieldio — Documentation</title>
+  <title>KavachIQ — Documentation</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .prose h2 { margin-top: 2rem; padding-bottom: 0.5rem; border-bottom: 1px solid #e5e7eb; }
@@ -26,7 +26,7 @@
     <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
       <div class="flex items-center gap-2">
         <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-        <span class="text-xl font-bold text-gray-900">Shieldio</span>
+        <span class="text-xl font-bold text-gray-900">KavachIQ</span>
         <span class="text-sm text-gray-400 ml-1">Documentation</span>
       </div>
       <div class="flex-1"></div>
@@ -78,7 +78,7 @@
     <!-- Content -->
     <main class="flex-1 p-8 prose max-w-none">
       <section id="overview">
-        <h1 class="text-3xl font-bold mb-2">Shieldio Documentation</h1>
+        <h1 class="text-3xl font-bold mb-2">KavachIQ Documentation</h1>
         <p class="text-lg text-gray-600 mb-8">Open-source Microsoft 365 data protection platform. Back up and restore Exchange, OneDrive, SharePoint, Teams, and Entra ID.</p>
 
         <div class="grid grid-cols-3 gap-4 not-prose mb-8">
@@ -209,7 +209,7 @@ make acr-push</code></pre>
         <p>All configuration is via environment variables:</p>
         <table>
           <tr><th>Variable</th><th>Default</th><th>Description</th></tr>
-          <tr><td><code>DATABASE_URL</code></td><td>sqlite+aiosqlite:///./shieldio.db</td><td>Database connection string</td></tr>
+          <tr><td><code>DATABASE_URL</code></td><td>sqlite+aiosqlite:///./kavachiq.db</td><td>Database connection string</td></tr>
           <tr><td><code>SECRET_KEY</code></td><td>(random)</td><td>JWT signing key</td></tr>
           <tr><td><code>STORAGE_BACKEND</code></td><td>local</td><td>local, minio, or azure</td></tr>
           <tr><td><code>FORCE_HTTPS</code></td><td>false</td><td>Redirect HTTP to HTTPS</td></tr>
@@ -290,7 +290,7 @@ Content-Type: application/json
 
       <section id="permissions">
         <h2>Microsoft Graph API Permissions</h2>
-        <p>Shieldio requires these application permissions on your Azure AD app registration:</p>
+        <p>KavachIQ requires these application permissions on your Azure AD app registration:</p>
 
         <h3>Backup (Read)</h3>
         <table>
@@ -325,7 +325,7 @@ Content-Type: application/json
       </section>
 
       <footer class="mt-16 pt-8 border-t text-sm text-gray-400">
-        <p>Shieldio &mdash; SaaS Data Protection Platform. <a href="https://github.com/gpatwa/m365-vault" class="text-blue-500">GitHub</a></p>
+        <p>KavachIQ &mdash; SaaS Data Protection Platform. <a href="https://github.com/gpatwa/m365-vault" class="text-blue-500">GitHub</a></p>
       </footer>
     </main>
   </div>

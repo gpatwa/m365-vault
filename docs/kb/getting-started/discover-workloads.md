@@ -1,10 +1,10 @@
 # Discover Your Workloads
 
-After connecting your Microsoft 365 tenant, Shieldio discovers the workloads and objects available for protection. This article explains how discovery works, what gets discovered, and how to customize the process.
+After connecting your Microsoft 365 tenant, KavachIQ discovers the workloads and objects available for protection. This article explains how discovery works, what gets discovered, and how to customize the process.
 
 ## Supported Workloads
 
-Shieldio protects five Microsoft 365 workloads:
+KavachIQ protects five Microsoft 365 workloads:
 
 | Workload | What Gets Discovered | Typical Duration |
 |---|---|---|
@@ -20,7 +20,7 @@ Discovery times are approximate and depend on tenant size and Microsoft Graph AP
 
 ### Automatic Discovery
 
-When you first connect a tenant, Shieldio runs a full discovery automatically. Subsequent automatic discoveries run on a daily schedule (configurable under **Settings > Discovery Schedule**).
+When you first connect a tenant, KavachIQ runs a full discovery automatically. Subsequent automatic discoveries run on a daily schedule (configurable under **Settings > Discovery Schedule**).
 
 ### Manual Discovery
 
@@ -97,11 +97,11 @@ Click any workload category to drill down into individual objects.
 ### Discovery returns fewer objects than expected
 
 - Verify that the connected service account has the required Graph API permissions. A missing permission can cause an entire workload to return zero results.
-- Check whether Conditional Access policies are blocking the Shieldio service principal.
+- Check whether Conditional Access policies are blocking the KavachIQ service principal.
 
 ### Discovery is slow
 
-- Large tenants (10,000+ users) may experience Graph API throttling. Shieldio automatically retries throttled requests with exponential backoff. Allow up to 30 minutes for very large tenants.
+- Large tenants (10,000+ users) may experience Graph API throttling. KavachIQ automatically retries throttled requests with exponential backoff. Allow up to 30 minutes for very large tenants.
 
 ### A specific mailbox or site is missing
 

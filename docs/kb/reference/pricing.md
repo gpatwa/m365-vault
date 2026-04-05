@@ -1,6 +1,6 @@
 # Pricing
 
-Shieldio offers four tiers designed to scale from individual administrators evaluating the product to large enterprises with complex compliance requirements. All tiers include the Smart Engine intelligence layer at no additional cost.
+KavachIQ offers four tiers designed to scale from individual administrators evaluating the product to large enterprises with complex compliance requirements. All tiers include the Smart Engine intelligence layer at no additional cost.
 
 ## Plan Comparison
 
@@ -30,7 +30,7 @@ Shieldio offers four tiers designed to scale from individual administrators eval
 
 ### Community (Free)
 
-Ideal for evaluating Shieldio or protecting a small environment. Includes backup and restore for up to 25 objects across Exchange, OneDrive, and SharePoint with 30-day retention. The Smart Engine provides basic baselining to help you understand your backup health.
+Ideal for evaluating KavachIQ or protecting a small environment. Includes backup and restore for up to 25 objects across Exchange, OneDrive, and SharePoint with 30-day retention. The Smart Engine provides basic baselining to help you understand your backup health.
 
 ### Professional ($1.50/user/month)
 
@@ -46,7 +46,7 @@ For organizations with strict compliance and security requirements. Adds Agentic
 
 ## Competitor Comparison
 
-| Capability | Shieldio | Legacy Vendors | Native Microsoft |
+| Capability | KavachIQ | Legacy Vendors | Native Microsoft |
 |---|---|---|---|
 | Intelligence layer | Included ($0 extra) | Add-on or absent | Not available |
 | Per-object pricing | Per user, flat | Per user + storage fees | Per user + compliance add-ons |
@@ -66,10 +66,10 @@ No. There is a $0 surcharge for intelligence features. The Smart Engine (baselin
 You are billed for the number of unique Microsoft 365 users with at least one protected object (mailbox, OneDrive, or Teams account). Shared mailboxes and service accounts that are explicitly protected count as users.
 
 **Can I mix tiers across tenants?**
-No. Your Shieldio subscription applies a single tier across all managed tenants. Upgrade to the tier that meets the requirements of your most demanding tenant.
+No. Your KavachIQ subscription applies a single tier across all managed tenants. Upgrade to the tier that meets the requirements of your most demanding tenant.
 
 **Is there an annual billing discount?**
-Yes. Annual prepayment provides a 15% discount on Professional, Business, and Enterprise tiers. Contact sales@shieldio.com for annual pricing.
+Yes. Annual prepayment provides a 15% discount on Professional, Business, and Enterprise tiers. Contact sales@kavachiq.com for annual pricing.
 
 **What happens when my Community tier reaches 25 objects?**
 New objects beyond the 25-object limit are not backed up. Existing objects continue to be protected. Upgrade to Professional to remove the limit.

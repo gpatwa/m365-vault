@@ -23,7 +23,7 @@ USER="m365vault"
 PASS="M365vault_Dev2026!"
 BASE_URL="${SHIELDIO_API_URL:-https://m365vault-backend-dev.mangodesert-7599c248.centralus.azurecontainerapps.io/api}"
 
-echo "=== Shieldio Azure Seed Script ==="
+echo "=== KavachIQ Azure Seed Script ==="
 echo "Host: $HOST"
 echo "API:  $BASE_URL"
 echo ""
@@ -31,11 +31,11 @@ echo ""
 # Step 1: Create user accounts via API (handles password hashing)
 echo "--- Creating user accounts ---"
 for USER_DATA in \
-  '{"username":"admin","password":"Admin123","email":"admin@shieldio.com","full_name":"Admin"}' \
-  '{"username":"demo","password":"ShieldiDemo2026!","email":"demo@shieldio.com","full_name":"Demo User"}' \
-  '{"username":"prospect","password":"Prospect2026!","email":"prospect@shieldio.com","full_name":"Prospect"}' \
-  '{"username":"msp","password":"MSPDemo2026!","email":"msp@shieldio.com","full_name":"MSP Admin"}' \
-  '{"username":"viewer","password":"Viewer2026!","email":"viewer@shieldio.com","full_name":"Viewer"}'; do
+  '{"username":"admin","password":"Admin123","email":"admin@kavachiq.com","full_name":"Admin"}' \
+  '{"username":"demo","password":"ShieldiDemo2026!","email":"demo@kavachiq.com","full_name":"Demo User"}' \
+  '{"username":"prospect","password":"Prospect2026!","email":"prospect@kavachiq.com","full_name":"Prospect"}' \
+  '{"username":"msp","password":"MSPDemo2026!","email":"msp@kavachiq.com","full_name":"MSP Admin"}' \
+  '{"username":"viewer","password":"Viewer2026!","email":"viewer@kavachiq.com","full_name":"Viewer"}'; do
   UNAME=$(echo "$USER_DATA" | python3 -c "import sys,json; print(json.load(sys.stdin)['username'])")
   RESULT=$(curl -s -X POST "$BASE_URL/auth/register" -H 'Content-Type: application/json' -d "$USER_DATA" 2>&1)
   echo "  $UNAME: $(echo "$RESULT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('username','') or d.get('detail','exists'))" 2>/dev/null || echo 'created')"

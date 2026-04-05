@@ -1,8 +1,8 @@
-# Shieldio — Architecture Guide
+# KavachIQ — Architecture Guide
 
 ## 1. System Overview
 
-Shieldio is a SaaS data protection platform for Microsoft 365 workloads
+KavachIQ is a SaaS data protection platform for Microsoft 365 workloads
 (Exchange Online, OneDrive for Business, SharePoint Online). It connects to tenants via
 the Microsoft Graph API, discovers protectable objects, runs SLA-driven backup schedules,
 stores encrypted point-in-time snapshots, and provides granular restore capabilities.
@@ -436,7 +436,7 @@ The default database is **SQLite** (`sqlite+aiosqlite`) for development simplici
 For production:
 
 1. Change `DATABASE_URL` to a PostgreSQL async URL:
-   `postgresql+asyncpg://user:pass@host:5432/shieldio`
+   `postgresql+asyncpg://user:pass@host:5432/kavachiq`
 2. SQLAlchemy models use standard types compatible with both engines.
 3. Consider adding Alembic for schema migrations in production.
 4. SQLite's single-writer limitation makes it unsuitable for concurrent backup jobs.

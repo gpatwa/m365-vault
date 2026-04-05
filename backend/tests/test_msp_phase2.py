@@ -101,7 +101,7 @@ class TestBranding:
         response = await client.get("/api/msp/branding")
         assert response.status_code == 200
         data = response.json()
-        assert data["company_name"] == "Shieldio"
+        assert data["company_name"] == "KavachIQ"
         assert data["primary_color"] == "#3b82f6"
 
     @pytest.mark.asyncio

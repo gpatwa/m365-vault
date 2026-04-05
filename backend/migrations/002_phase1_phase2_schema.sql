@@ -1,4 +1,4 @@
--- Shieldio — Schema migration for Phase 1 + Phase 2 features
+-- KavachIQ — Schema migration for Phase 1 + Phase 2 features
 -- Run against Azure PostgreSQL after deploying new container images
 --
 -- Usage:

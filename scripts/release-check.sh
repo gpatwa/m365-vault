@@ -1,6 +1,6 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════════
-# Shieldio Release Quality Gate
+# KavachIQ Release Quality Gate
 # ═══════════════════════════════════════════════════════════════════
 # Runs all quality checks before a release. Stops on first failure.
 # Usage: make release-check (or ./scripts/release-check.sh)
@@ -166,18 +166,18 @@ fi
 gate 5 "Docker Image Build"
 if command -v docker &>/dev/null; then
   # Use native platform for speed (just verify it builds)
-  if docker build -t shieldio-backend:check ./backend -q 2>&1 | tail -1; then
+  if docker build -t kavachiq-backend:check ./backend -q 2>&1 | tail -1; then
     pass "Backend Docker image builds"
   else
     fail "Backend Docker build failed"
   fi
-  if docker build -t shieldio-frontend:check ./frontend -q 2>&1 | tail -1; then
+  if docker build -t kavachiq-frontend:check ./frontend -q 2>&1 | tail -1; then
     pass "Frontend Docker image builds"
   else
     fail "Frontend Docker build failed"
   fi
   # Clean up
-  docker rmi shieldio-backend:check shieldio-frontend:check 2>/dev/null || true
+  docker rmi kavachiq-backend:check kavachiq-frontend:check 2>/dev/null || true
 else
   skip "Docker (not installed)"
 fi

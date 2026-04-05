@@ -1,4 +1,4 @@
-# Shieldio — MSP Interactive Demo Experience
+# KavachIQ — MSP Interactive Demo Experience
 
 **Date: 2026-03-30 | Status: Design + Implementation**
 
@@ -8,7 +8,7 @@
 
 An in-product interactive demo at `/msp/demo` that walks through the **complete MSP lifecycle** in 8 scenes. Designed for two audiences:
 
-- **MSP partners** evaluating whether to resell Shieldio
+- **MSP partners** evaluating whether to resell KavachIQ
 - **Investors** seeing the full product capability
 
 The demo uses pre-seeded data (no real M365 tenants needed) and guides the user through onboarding clients, managing multi-tenant operations, responding to incidents, billing, and offboarding — all from one console.
@@ -103,7 +103,7 @@ Scene 8: Offboard + Summary (Complete Lifecycle)
 - Phase 3: Confidence score reveals (0-100 with breakdown)
 - Phase 4: One-click recovery plan generated from real backup data
 
-**Narrative:** "Shieldio detects the attack WHILE backups run. The recovery plan is already built — identity controls first, then critical users, then everyone else. Your client is back online before their morning coffee."
+**Narrative:** "KavachIQ detects the attack WHILE backups run. The recovery plan is already built — identity controls first, then critical users, then everyone else. Your client is back online before their morning coffee."
 
 **Engagement gate:** User completes all 4 phases
 
@@ -152,7 +152,7 @@ Scene 8: Offboard + Summary (Complete Lifecycle)
   - Monthly revenue: $937.50
 - CTA: "Start Your MSP Pilot — 3 Months Free"
 
-**Narrative:** "You just onboarded, protected, monitored, recovered, reported, billed, and offboarded — all from one console. This is Shieldio for MSPs."
+**Narrative:** "You just onboarded, protected, monitored, recovered, reported, billed, and offboarded — all from one console. This is KavachIQ for MSPs."
 
 **Engagement gate:** None (final scene)
 
@@ -205,7 +205,7 @@ The seed is **idempotent** — re-running it skips existing demo tenants.
 
 ### Demo Account
 - Login as `admin` / `Admin123` → navigate to `/msp/demo`
-- Or direct URL: `https://app.shieldio.com/msp/demo`
+- Or direct URL: `https://app.kavachiq.com/msp/demo`
 
 ---
 
@@ -217,7 +217,7 @@ The seed is **idempotent** — re-running it skips existing demo tenants.
 | 1:00 | Scene 2 | "Onboard 3 new clients in 60 seconds. CSV upload, secrets encrypted." |
 | 2:00 | Scene 3 | "Your brand, not ours. Custom logo, colors, company name." |
 | 3:00 | Scene 4 | "Drill into any client. 5 workloads including Entra ID — no competitor has this." |
-| 4:00 | Scene 5 | "Ransomware hits. Shieldio detects it, builds a recovery plan, CEO restored first." |
+| 4:00 | Scene 5 | "Ransomware hits. KavachIQ detects it, builds a recovery plan, CEO restored first." |
 | 6:00 | Scene 6 | "Generate HIPAA/SOC2 compliance evidence. One click per client." |
 | 7:00 | Scene 7 | "You pay $1.50/user. Sell at $6. That's 75% margin on $10K+/month." |
 | 8:00 | Scene 8 | "Offboard when you're done. Data retained per SLA. Full lifecycle." |

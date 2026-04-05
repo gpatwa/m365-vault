@@ -19,7 +19,7 @@ import { test, expect, Page } from '@playwright/test';
 async function login(page: Page) {
   // Dismiss product tour by setting localStorage before navigating
   await page.goto('/login');
-  await page.evaluate(() => localStorage.setItem('shieldio_tour_completed', 'true'));
+  await page.evaluate(() => localStorage.setItem('kavachiq_tour_completed', 'true'));
 
   try {
     await page.waitForSelector('nav', { timeout: 2000 });
@@ -32,7 +32,7 @@ async function login(page: Page) {
   await page.click('button[type="submit"]');
   await page.waitForSelector('nav', { timeout: 15000 });
   // Dismiss tour if it appeared
-  await page.evaluate(() => localStorage.setItem('shieldio_tour_completed', 'true'));
+  await page.evaluate(() => localStorage.setItem('kavachiq_tour_completed', 'true'));
 }
 
 // ═══════════════════════════════════════════════════════

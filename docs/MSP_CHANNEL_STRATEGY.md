@@ -1,4 +1,4 @@
-# Shieldio — MSP Channel Strategy
+# KavachIQ — MSP Channel Strategy
 
 **Date: 2026-03-30 | Status: Strategy Document**
 
@@ -55,7 +55,7 @@
 
 ---
 
-## 3. Shieldio's MSP Value Proposition
+## 3. KavachIQ's MSP Value Proposition
 
 ### The Pitch
 
@@ -63,7 +63,7 @@
 
 ### Competitive Comparison
 
-| Capability | Shieldio | Veeam | Datto | AvePoint |
+| Capability | KavachIQ | Veeam | Datto | AvePoint |
 |-----------|----------|-------|-------|----------|
 | **Wholesale cost** | **$1.50/user** | $3-5 | $3-4 | $3-5 |
 | **5 workload coverage** | Yes (incl Teams + Entra ID) | Partial (weak Entra) | Partial (no Entra) | Yes (no Entra) |
@@ -79,14 +79,14 @@
 
 ### MSP Margin Comparison
 
-| Scenario (100-user client) | Veeam | Datto | Shieldio |
+| Scenario (100-user client) | Veeam | Datto | KavachIQ |
 |---------------------------|-------|-------|----------|
 | MSP wholesale cost | $400/mo | $350/mo | **$150/mo** |
 | MSP sells at | $10/user ($1,000) | $8/user ($800) | $6/user ($600) |
 | MSP gross margin | $600 (60%) | $450 (56%) | **$450 (75%)** |
 | Client pays less than | — | — | Both Veeam and Datto retail |
 
-**Key insight:** Shieldio enables MSPs to charge clients LESS while making HIGHER margins. Clients get better pricing AND better intelligence.
+**Key insight:** KavachIQ enables MSPs to charge clients LESS while making HIGHER margins. Clients get better pricing AND better intelligence.
 
 ---
 
@@ -111,7 +111,7 @@
 
 ### What Each MSP Package Could Include
 
-**Basic ($5/user):** Shieldio backup + daily monitoring
+**Basic ($5/user):** KavachIQ backup + daily monitoring
 **Managed ($7/user):** Basic + weekly health reports + anomaly alert forwarding + SLA compliance reports
 **Premium ($10/user):** Managed + quarterly recovery plan review + compliance evidence exports + priority support
 
@@ -121,13 +121,13 @@
 
 ### Per-MSP Revenue Model
 
-| MSP Size | Clients | Avg Users/Client | Total Users | Shieldio Revenue | MSP Revenue (at $6/user) | MSP Margin |
+| MSP Size | Clients | Avg Users/Client | Total Users | KavachIQ Revenue | MSP Revenue (at $6/user) | MSP Margin |
 |----------|---------|-----------------|-------------|-----------------|--------------------------|-----------|
 | **Small** | 5 | 100 | 500 | $750/mo | $3,000/mo | $2,250 (75%) |
 | **Medium** | 15 | 150 | 2,250 | $2,813/mo ($1.25) | $13,500/mo | $10,688 (79%) |
 | **Large** | 40 | 200 | 8,000 | $6,800/mo ($0.85) | $56,000/mo | $49,200 (88%) |
 
-### Shieldio Channel Revenue (First 12 Months)
+### KavachIQ Channel Revenue (First 12 Months)
 
 | Quarter | MSP Partners | Total Users | MRR | ARR |
 |---------|-------------|-------------|-----|-----|
@@ -136,7 +136,7 @@
 | Q4 2026 | 15 | 12,000 | $12,000 | $144K |
 | Q1 2027 | 25 | 25,000 | $21,250 | $255K |
 
-At 25 MSP partners managing ~25,000 users, Shieldio reaches **$255K ARR** from the MSP channel alone.
+At 25 MSP partners managing ~25,000 users, KavachIQ reaches **$255K ARR** from the MSP channel alone.
 
 ---
 
@@ -160,7 +160,7 @@ At 25 MSP partners managing ~25,000 users, Shieldio reaches **$255K ARR** from t
 | Feature | Priority | Effort | Impact | Description |
 |---------|----------|--------|--------|-------------|
 | **MSP multi-tenant dashboard** | P0 | 2-3 weeks | Must-have | Single pane of glass: all clients, health scores, backup status, alerts |
-| **White-label / custom branding** | P1 | 1 week | High | MSP logo, colors, domain — client sees MSP brand, not Shieldio |
+| **White-label / custom branding** | P1 | 1 week | High | MSP logo, colors, domain — client sees MSP brand, not KavachIQ |
 | **MSP billing portal** | P1 | 1-2 weeks | High | Per-client usage reports, CSV export for invoicing, usage-based billing |
 | **Bulk tenant onboarding** | P2 | 1 week | Medium | Connect 10+ tenants in one session, template SLA policies |
 | **Per-client compliance reports** | P2 | 1 week | Medium | Downloadable PDF: HIPAA/SOC 2 evidence per tenant for client auditors |
@@ -187,7 +187,7 @@ At 25 MSP partners managing ~25,000 users, Shieldio reaches **$255K ARR** from t
 | 3-4 | Onboard pilot MSPs. Document pain points, feature requests, workflow gaps. |
 | 5-8 | Iterate on product based on MSP feedback. Prioritize P0/P1 features. |
 
-**Success criteria:** 3 MSPs actively using Shieldio for 10+ client tenants. Feature gap list prioritized.
+**Success criteria:** 3 MSPs actively using KavachIQ for 10+ client tenants. Feature gap list prioritized.
 
 ### Phase 2: Build MSP Features (Q3 2026)
 
@@ -229,12 +229,12 @@ At 25 MSP partners managing ~25,000 users, Shieldio reaches **$255K ARR** from t
 | Objection | Response |
 |-----------|----------|
 | "We already use Veeam/Datto" | "What are you paying per user? We're $1.50 wholesale vs $3-5. Same 5 workloads plus Entra ID config backup and recovery intelligence that Veeam doesn't have. Try it free for 3 months alongside your current tool." |
-| "Never heard of Shieldio" | "We're open-source — you can audit every line of code. 320 tests, SOC 2 + HIPAA ready, deployed on Azure. We're not asking you to trust a black box." |
+| "Never heard of KavachIQ" | "We're open-source — you can audit every line of code. 320 tests, SOC 2 + HIPAA ready, deployed on Azure. We're not asking you to trust a black box." |
 | "My clients need compliance" | "Every tier includes SOC 2, HIPAA, GDPR, and DORA compliance controls. Audit trail, WORM storage, encryption — all built in. We'll generate compliance evidence reports per client." |
 | "Can I white-label it?" | "Coming Q3 2026. For now, you manage it through our admin dashboard. Your clients see the backup results, not our brand." |
 | "What about support?" | "We handle L3 support. You handle L1 (client relationship). Our error codes tell clients exactly what's wrong — most issues self-resolve. We back you up (pun intended)." |
 | "Is it production-ready?" | "320 tests, circuit breaker, pre-flight validation, AES-256-GCM encryption, deployed on Azure Container Apps. We're running in production with live M365 tenants." |
-| "What if you go away?" | "Open source, Apache 2.0. Your client's data is in your own Azure storage. Even if Shieldio disappeared tomorrow, the data is yours and decryptable." |
+| "What if you go away?" | "Open source, Apache 2.0. Your client's data is in your own Azure storage. Even if KavachIQ disappeared tomorrow, the data is yours and decryptable." |
 
 ---
 
@@ -244,12 +244,12 @@ At 25 MSP partners managing ~25,000 users, Shieldio reaches **$255K ARR** from t
 
 | Material | Purpose | Format |
 |----------|---------|--------|
-| **MSP one-pager** | "Why switch to Shieldio" — margins, features, pricing | PDF |
+| **MSP one-pager** | "Why switch to KavachIQ" — margins, features, pricing | PDF |
 | **Client-facing datasheet** | "M365 backup included in your managed services" | PDF (white-label ready) |
-| **ROI calculator** | MSP inputs: users, current vendor, current price → shows Shieldio savings | Excel / web tool |
-| **Compliance evidence template** | Per-client HIPAA/SOC 2 report generated from Shieldio data | PDF (auto-generated) |
+| **ROI calculator** | MSP inputs: users, current vendor, current price → shows KavachIQ savings | Excel / web tool |
+| **Compliance evidence template** | Per-client HIPAA/SOC 2 report generated from KavachIQ data | PDF (auto-generated) |
 | **Demo script (MSP version)** | 10-min demo focused on multi-tenant, intelligence, margin | Internal doc |
-| **Competitive battlecard** | Shieldio vs Veeam vs Datto vs AvePoint — point-by-point | PDF |
+| **Competitive battlecard** | KavachIQ vs Veeam vs Datto vs AvePoint — point-by-point | PDF |
 
 ### MSP Demo Script (10 minutes)
 
@@ -288,8 +288,8 @@ At 25 MSP partners managing ~25,000 users, Shieldio reaches **$255K ARR** from t
 | Risk | Impact | Mitigation |
 |------|--------|------------|
 | MSPs slow to switch from Veeam/Datto | Low adoption | Free 3-month pilot, run alongside existing tool |
-| White-label delay | MSPs need their brand | Prioritize in Q3 build, interim: minimal Shieldio branding |
-| Support burden from MSP clients | Scale issue | L1/L2 handled by MSP, Shieldio handles L3 only. Error codes self-resolve most issues. |
+| White-label delay | MSPs need their brand | Prioritize in Q3 build, interim: minimal KavachIQ branding |
+| Support burden from MSP clients | Scale issue | L1/L2 handled by MSP, KavachIQ handles L3 only. Error codes self-resolve most issues. |
 | Microsoft Backup Storage API disruption | Commoditizes basic backup | Our intelligence layer is the moat — pivot to "intelligence on top of MSFT backup" |
 | Competitor price match | Margin pressure | Volume discounts + intelligence differentiation. Hard to match $1.50 + free intelligence. |
 | MSP consolidation (M&A) | Partner loss | Diversify across 25+ MSPs, no single MSP >15% of revenue |

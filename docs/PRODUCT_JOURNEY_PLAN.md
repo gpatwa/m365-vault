@@ -1,4 +1,4 @@
-# Shieldio — Product Journey Plan v3.2
+# KavachIQ — Product Journey Plan v3.2
 
 ## Two Connected Journeys
 
@@ -10,7 +10,7 @@
 ### Journey 2: Day-to-Day Operations → M365 Gaps (Ongoing)
 **Purpose:** Daily value that M365 native features cannot provide.
 **Duration:** Every day after onboarding
-**Emotion:** "I use this every day. M365 can't do what Shieldio does."
+**Emotion:** "I use this every day. M365 can't do what KavachIQ does."
 
 **The key insight:** Journey 1 creates the emotional connection ("I need this"). Journey 2 creates the daily habit ("I can't live without this").
 
@@ -18,7 +18,7 @@
 
 ## Journey 1: Onboarding → Simulated Attack → Recovery
 
-The customer doesn't just SET UP backup — they EXPERIENCE the full 6-phase cyber recovery story. By the end, they've seen with their own eyes how Shieldio protects them.
+The customer doesn't just SET UP backup — they EXPERIENCE the full 6-phase cyber recovery story. By the end, they've seen with their own eyes how KavachIQ protects them.
 
 ### Act 1: PROTECT (Steps 1-3, ~4 minutes)
 
@@ -63,8 +63,8 @@ The customer doesn't just SET UP backup — they EXPERIENCE the full 6-phase cyb
 - Guided walk-through of the DETECT → RESPOND flow:
   - **DETECT**: "Here's what our AI detected. Click to see the blast radius."
   - Blast radius page: visual showing affected workloads, users, items
-  - Timeline: "2:47 PM — first encrypted file, 2:48 PM — mass rename started, 2:49 PM — Shieldio detected"
-  - **RESPOND**: "Shieldio auto-paused new backups to preserve the clean point."
+  - Timeline: "2:47 PM — first encrypted file, 2:48 PM — mass rename started, 2:49 PM — KavachIQ detected"
+  - **RESPOND**: "KavachIQ auto-paused new backups to preserve the clean point."
   - Clean restore point identified: "Last clean snapshot: 2:45 PM (2 minutes before attack)"
   - "In a real attack, this is where you'd start recovery. Let's do it now."
 
@@ -112,7 +112,7 @@ After the simulated attack experience, the customer transitions to daily operati
 A persistent widget on the dashboard showing:
 
 ```
-┌─ Why You Need Shieldio (M365 Can't Do This) ──────────────┐
+┌─ Why You Need KavachIQ (M365 Can't Do This) ──────────────┐
 │                                                              │
 │  📧 Exchange: Recover emails up to 365 days                 │
 │     M365 limit: 28 days, then gone forever                  │
@@ -139,12 +139,12 @@ On each workload page, a subtle info banner:
 
 | Page | Hint |
 |------|------|
-| Exchange | "M365 keeps deleted emails for 28 days. Shieldio keeps them for up to 365 days." |
-| OneDrive | "M365 has no point-in-time restore. Shieldio lets you restore to any backup snapshot." |
-| SharePoint | "M365 recycle bin loses document versions. Shieldio preserves every version in every snapshot." |
-| Teams | "M365 has no Teams chat recovery. Shieldio backs up all messages via Export API." |
-| Entra ID | "M365 doesn't backup Conditional Access policies. Shieldio backs up 12 Entra ID object types." |
-| Dashboard | "M365 has no backup health dashboard. Shieldio monitors everything with AI-powered anomaly detection." |
+| Exchange | "M365 keeps deleted emails for 28 days. KavachIQ keeps them for up to 365 days." |
+| OneDrive | "M365 has no point-in-time restore. KavachIQ lets you restore to any backup snapshot." |
+| SharePoint | "M365 recycle bin loses document versions. KavachIQ preserves every version in every snapshot." |
+| Teams | "M365 has no Teams chat recovery. KavachIQ backs up all messages via Export API." |
+| Entra ID | "M365 doesn't backup Conditional Access policies. KavachIQ backs up 12 Entra ID object types." |
+| Dashboard | "M365 has no backup health dashboard. KavachIQ monitors everything with AI-powered anomaly detection." |
 
 ### Daily Scenario Flows
 
@@ -215,7 +215,7 @@ M365: No anomaly detection for storage changes
 ### Weekly Value Report (Automated Email)
 
 ```
-Subject: Your Shieldio Weekly Protection Report
+Subject: Your KavachIQ Weekly Protection Report
 
 This week (Mar 20-27):
 ━━━━━━━━━━━━━━━━━━━━

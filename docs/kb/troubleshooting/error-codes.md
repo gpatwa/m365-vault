@@ -1,6 +1,6 @@
 # Error Code Reference
 
-Every Shieldio API response that indicates a failure includes a structured JSON error body. Understanding error codes helps you diagnose issues quickly and take the right corrective action.
+Every KavachIQ API response that indicates a failure includes a structured JSON error body. Understanding error codes helps you diagnose issues quickly and take the right corrective action.
 
 ## Error Response Format
 
@@ -11,7 +11,7 @@ All errors follow a consistent JSON structure:
   "code": "E3001",
   "message": "Graph API throttled",
   "detail": "Microsoft returned 429 Too Many Requests for mailbox user@contoso.com",
-  "fix": "Wait for the current backup window to complete. Shieldio automatically retries with exponential backoff.",
+  "fix": "Wait for the current backup window to complete. KavachIQ automatically retries with exponential backoff.",
   "correlation_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 }
 ```
@@ -28,7 +28,7 @@ All errors follow a consistent JSON structure:
 
 | Code | Message | Fix | Context |
 |---|---|---|---|
-| E1001 | Connector not configured | Navigate to Settings > Connectors and register your Azure AD app. Provide the Application ID and Tenant ID. | No app registration has been linked to Shieldio. |
+| E1001 | Connector not configured | Navigate to Settings > Connectors and register your Azure AD app. Provide the Application ID and Tenant ID. | No app registration has been linked to KavachIQ. |
 | E1002 | Client secret invalid | Rotate the client secret in Azure Portal, then update it in Settings > Connectors. | The stored secret has expired or was revoked. |
 | E1003 | Admin consent pending | An Azure AD Global Admin must grant consent at the URL provided in the error detail. | Required Graph API permissions have not been consented. |
 | E1004 | Tenant not found | Verify the Tenant ID in Settings > Connectors matches your Azure AD directory. | The configured tenant does not exist or is unreachable. |
@@ -41,15 +41,15 @@ All errors follow a consistent JSON structure:
 |---|---|---|---|
 | E2001 | Invalid credentials | Re-enter your email and password. If using SSO, verify your identity provider configuration. | Login attempt failed authentication. |
 | E2002 | Token expired | Sign out and sign back in. If using the API, request a new token from /api/auth/login. | Your session or API token has expired. |
-| E2003 | Account disabled | Contact your Shieldio administrator to re-enable the account. | The user account has been deactivated by an admin. |
-| E2004 | Insufficient permissions | Contact your Shieldio administrator to assign the required role (admin, operator, or viewer). | Your role does not have permission for the requested action. |
+| E2003 | Account disabled | Contact your KavachIQ administrator to re-enable the account. | The user account has been deactivated by an admin. |
+| E2004 | Insufficient permissions | Contact your KavachIQ administrator to assign the required role (admin, operator, or viewer). | Your role does not have permission for the requested action. |
 | E2005 | Rate limited | Wait 60 seconds before retrying. If persistent, check for automated scripts sending excessive requests. | Too many authentication attempts in a short period. |
 
 ## E3xxx -- Backup Errors
 
 | Code | Message | Fix | Context |
 |---|---|---|---|
-| E3001 | Graph API throttled | No action required. Shieldio automatically retries with exponential backoff and reduced concurrency. | Microsoft returned HTTP 429. See [Graph Throttling](/docs/kb/troubleshooting/graph-throttling.md). |
+| E3001 | Graph API throttled | No action required. KavachIQ automatically retries with exponential backoff and reduced concurrency. | Microsoft returned HTTP 429. See [Graph Throttling](/docs/kb/troubleshooting/graph-throttling.md). |
 | E3002 | Storage write failed | Check storage health at /api/diagnostics/health. For Azure Blob, verify the storage account is accessible. | The backup payload could not be written to storage. |
 | E3003 | No objects to back up | Verify that workload discovery has completed and that at least one object (mailbox, site, etc.) is selected. | The backup job found zero eligible objects. |
 | E3004 | Backup already running | Wait for the current job to finish or cancel it from the Jobs page before starting a new one. | A backup job for this tenant and workload is already in progress. |
@@ -88,4 +88,4 @@ All errors follow a consistent JSON structure:
 
 - **Always include the correlation_id** when opening a support ticket. It lets the team trace your request across every service layer.
 - **Check /api/diagnostics/health** first for any E5xxx errors. Infrastructure issues often resolve themselves within minutes.
-- **Error codes are stable** across Shieldio versions. You can safely build automation around them.
+- **Error codes are stable** across KavachIQ versions. You can safely build automation around them.

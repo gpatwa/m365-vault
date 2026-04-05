@@ -1,4 +1,4 @@
-# Shieldio — Go-to-Market: First 20 Customers
+# KavachIQ — Go-to-Market: First 20 Customers
 
 **Date: 2026-03-30 | Updated: 2026-04-03 (v5.0.0) | Status: GTM Strategy**
 
@@ -61,7 +61,7 @@ Replace old 10-minute demo with:
 
 ## 1. Why These Segments
 
-Shieldio's competitive advantages that determine target segments:
+KavachIQ's competitive advantages that determine target segments:
 
 | Advantage | What It Means | Who Cares Most |
 |-----------|--------------|----------------|
@@ -82,7 +82,7 @@ Shieldio's competitive advantages that determine target segments:
 
 #### A. Healthcare Clinics & Medical Groups (50-300 users)
 
-**Why perfect for Shieldio:**
+**Why perfect for KavachIQ:**
 - HIPAA requires backup with encryption, audit trail, and retention
 - Most clinics have M365 but no third-party backup — they assume Microsoft handles it
 - Entra ID backup is critical — CA policies protect patient data access
@@ -103,7 +103,7 @@ Shieldio's competitive advantages that determine target segments:
 
 #### B. Law Firms (20-200 users)
 
-**Why perfect for Shieldio:**
+**Why perfect for KavachIQ:**
 - Legal hold / WORM is a must-have (client privilege, litigation holds)
 - eDiscovery search across backup data — needed for cases
 - Data sovereignty matters — some firms won't use cloud-only backup (self-hosted option)
@@ -124,7 +124,7 @@ Shieldio's competitive advantages that determine target segments:
 
 #### C. Financial Services / Accounting Firms (50-500 users)
 
-**Why perfect for Shieldio:**
+**Why perfect for KavachIQ:**
 - SOX, SEC, FINRA all require backup + retention + audit
 - Handle extremely sensitive financial data — per-tenant encryption matters
 - Seasonal workloads (tax season) = need reliable recovery
@@ -146,7 +146,7 @@ Shieldio's competitive advantages that determine target segments:
 
 #### D. MSPs Managing 5-20 M365 Tenants
 
-**Why perfect for Shieldio:**
+**Why perfect for KavachIQ:**
 - One MSP = 5-20 end customers overnight (multiplier effect)
 - Already selling M365, backup is a natural add-on service
 - Multi-tenant architecture fits their operating model
@@ -167,7 +167,7 @@ Shieldio's competitive advantages that determine target segments:
 
 #### E. Education (K-12 Districts, Small Colleges)
 
-**Why perfect for Shieldio:**
+**Why perfect for KavachIQ:**
 - FERPA compliance requires data protection
 - Budget-constrained — $1.50/user is very attractive vs $5+ alternatives
 - Large user counts (500+ teachers/staff) but small IT teams
@@ -187,7 +187,7 @@ Shieldio's competitive advantages that determine target segments:
 
 #### F. Cybersecurity-Conscious Startups (50-200 users)
 
-**Why perfect for Shieldio:**
+**Why perfect for KavachIQ:**
 - Already pursuing SOC 2 for their own customers
 - Tech-savvy — appreciate open-source, self-hosted angle
 - Decision cycle is fast (CTO decides in 1 meeting)
@@ -256,7 +256,7 @@ Shieldio's competitive advantages that determine target segments:
 | 1 | Post in r/msp: "Open-source M365 backup at $1.50/user — looking for MSP beta partners" |
 | 2 | Attend local IT networking events / virtual MSP meetups |
 | 3 | Offer first 3 months free for MSP partners |
-| 4 | MSP sells to their clients at $3-5/user, Shieldio provides platform |
+| 4 | MSP sells to their clients at $3-5/user, KavachIQ provides platform |
 | 5 | Provide MSP co-branded marketing materials |
 
 **Expected conversion**: 10 MSP conversations → 3 partnerships → 10-40 end tenants

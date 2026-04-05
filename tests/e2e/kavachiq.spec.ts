@@ -1,5 +1,5 @@
 /**
- * Shieldio E2E Tests — Playwright
+ * KavachIQ E2E Tests — Playwright
  *
  * Tests the full user journey through the browser:
  * 1. Landing page → Login
@@ -76,9 +76,9 @@ async function login(page: Page) {
 // ═══════════════════════════════════════════════════════
 
 test.describe('Public Pages', () => {
-  test('landing page loads with Shieldio branding', async ({ page }) => {
+  test('landing page loads with KavachIQ branding', async ({ page }) => {
     await page.goto('/welcome');
-    await expect(page.getByRole('link', { name: 'Shieldio' }).first()).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('link', { name: 'KavachIQ' }).first()).toBeVisible({ timeout: 5000 });
   });
 
   test('landing page has Get Started button', async ({ page }) => {
@@ -113,7 +113,7 @@ test.describe('Authentication', () => {
 
   test('unauthenticated access shows login or landing', async ({ page }) => {
     await page.goto('/');
-    const hasContent = page.locator('text=Shieldio').or(page.locator('text=Sign in')).or(page.locator('text=Dashboard'));
+    const hasContent = page.locator('text=KavachIQ').or(page.locator('text=Sign in')).or(page.locator('text=Dashboard'));
     await expect(hasContent.first()).toBeVisible({ timeout: 5000 });
   });
 });

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Shieldio — Data Simulation Script
+KavachIQ — Data Simulation Script
 
 Exercises the full compression + dedup + encryption pipeline by simulating
 three real-world backup scenarios:
@@ -231,7 +231,7 @@ async def store_and_catalog(
 
 async def main():
     print("=" * 70)
-    print("  Shieldio — Data Simulation")
+    print("  KavachIQ — Data Simulation")
     print("=" * 70)
     print()
 

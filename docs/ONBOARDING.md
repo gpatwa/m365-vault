@@ -1,6 +1,6 @@
-# Shieldio — Onboarding Guide
+# KavachIQ — Onboarding Guide
 
-This guide walks you through setting up Shieldio, connecting your first Microsoft 365 tenant, and running your first backup.
+This guide walks you through setting up KavachIQ, connecting your first Microsoft 365 tenant, and running your first backup.
 
 ---
 
@@ -8,10 +8,10 @@ This guide walks you through setting up Shieldio, connecting your first Microsof
 
 ### Azure AD App Registration
 
-Before connecting Shieldio to your tenant, create an App Registration in Azure AD:
+Before connecting KavachIQ to your tenant, create an App Registration in Azure AD:
 
 1. Go to **Azure Portal > Azure Active Directory > App Registrations > New Registration**
-2. Name: `Shieldio Backup` (or your preferred name)
+2. Name: `KavachIQ Backup` (or your preferred name)
 3. Supported account types: **Single tenant**
 4. Click **Register**
 
@@ -75,7 +75,7 @@ Then log in at [http://localhost:5173](http://localhost:5173).
 
 ## Step 2: Connect Your M365 Tenant (OAuth Flow)
 
-Shieldio uses a multi-tenant OAuth connector app. Navigate to **Settings** or the **Onboarding** page, or use the API:
+KavachIQ uses a multi-tenant OAuth connector app. Navigate to **Settings** or the **Onboarding** page, or use the API:
 
 ### 2a. Check connector health (pre-flight)
 

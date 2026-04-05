@@ -1,6 +1,6 @@
 # Organizational Context Layer — Architecture Design for Agentic Cyber Recovery
 
-**Shieldio | Data Protection for Microsoft 365**
+**KavachIQ | Data Protection for Microsoft 365**
 **Date: 2026-03-27 | Status: Design Proposal**
 
 ---
@@ -14,7 +14,7 @@
 5. [Architecture Design — Organizational Context Layer](#5-architecture-design)
 6. [Data Model](#6-data-model)
 7. [Agentic Cyber Recovery — From Context to Action](#7-agentic-cyber-recovery)
-8. [Integration with Existing Shieldio Architecture](#8-integration)
+8. [Integration with Existing KavachIQ Architecture](#8-integration)
 9. [Privacy and Compliance](#9-privacy)
 10. [Implementation Phases](#10-phases)
 
@@ -22,7 +22,7 @@
 
 ## 1. Executive Summary
 
-The Organizational Context Layer is a subsystem that builds and maintains a continuously-updated model of the customer's M365 organizational structure, data criticality, user importance, and collaboration patterns. This context transforms Shieldio from a workload-level backup tool into a **business-aware recovery platform** that can answer: *"Which people and data matter most to keep this organization running?"*
+The Organizational Context Layer is a subsystem that builds and maintains a continuously-updated model of the customer's M365 organizational structure, data criticality, user importance, and collaboration patterns. This context transforms KavachIQ from a workload-level backup tool into a **business-aware recovery platform** that can answer: *"Which people and data matter most to keep this organization running?"*
 
 The layer serves two primary functions:
 
@@ -119,7 +119,7 @@ Microsoft's own security ecosystem builds organizational context through:
 
 ## 3. Microsoft Graph API — Org Context Signal Inventory
 
-These are the specific API endpoints Shieldio can call to build organizational context for each connected tenant. All require appropriate Graph API permissions consented during tenant onboarding.
+These are the specific API endpoints KavachIQ can call to build organizational context for each connected tenant. All require appropriate Graph API permissions consented during tenant onboarding.
 
 ### 3.1 Organizational Hierarchy
 
@@ -140,7 +140,7 @@ These are the specific API endpoints Shieldio can call to build organizational c
 | Shared with user | `GET /users/{id}/insights/shared` | `Sites.Read.All` | Collaboration patterns |
 | People API | `GET /users/{id}/people` | `People.Read.All` | Virtual teams — who works with whom |
 
-Microsoft's Insights API uses ML to compute these signals from user activity. Documents returned include `resourceVisualization` (title, preview) and `resourceReference` (web URL, type). These signals let Shieldio identify which files a user actually depends on, beyond mere presence in OneDrive.
+Microsoft's Insights API uses ML to compute these signals from user activity. Documents returned include `resourceVisualization` (title, preview) and `resourceReference` (web URL, type). These signals let KavachIQ identify which files a user actually depends on, beyond mere presence in OneDrive.
 
 *Source: [Microsoft Graph — Item Insights Overview](https://learn.microsoft.com/en-us/graph/item-insights-overview)*
 
@@ -310,7 +310,7 @@ exchange_criticality = base_score
 **Decision: PostgreSQL, not a graph database.**
 
 Rationale:
-- Shieldio already runs PostgreSQL. Adding Neo4j/Neptune would double operational complexity for a startup.
+- KavachIQ already runs PostgreSQL. Adding Neo4j/Neptune would double operational complexity for a startup.
 - The organizational relationships we model (manager chains, group membership, department hierarchy) are bounded-depth trees, not unbounded graph traversals.
 - PostgreSQL with `jsonb` columns, recursive CTEs for hierarchy traversal, and materialized views for precomputed scores covers all requirements.
 - If graph queries become a bottleneck later (unlikely at our scale), we can add a read-replica with Apache AGE (PostgreSQL graph extension) without changing the primary database.
@@ -703,7 +703,7 @@ This denormalized field avoids joins for the most common query pattern (list obj
 "Agentic" recovery means the system can **reason about the situation, generate a plan, and execute it** — with human approval at critical decision points. This is distinct from:
 
 - **Rule-based recovery:** IF ransomware THEN restore all from yesterday. No reasoning, no prioritization.
-- **Runbook-based recovery:** Human follows a static checklist. The existing Shieldio runbooks in `recovery.py` are this model.
+- **Runbook-based recovery:** Human follows a static checklist. The existing KavachIQ runbooks in `recovery.py` are this model.
 - **Agentic recovery:** The system analyzes the blast radius, cross-references org context to identify affected VIPs, determines optimal recovery ordering, presents a plan to the admin, and executes upon approval.
 
 ### 7.2 Agent Architecture — Recovery Agent
@@ -817,7 +817,7 @@ Agent determines:
 
 **Step 4: Human Approval**
 ```
-The plan is presented to the admin in the Shieldio UI.
+The plan is presented to the admin in the KavachIQ UI.
 Admin can:
   - Approve as-is → Execute
   - Modify (add/remove users, change phase ordering)
@@ -875,7 +875,7 @@ Agent handles: find snapshot, decrypt, restore, verify
 
 ### 7.5 Human-in-the-Loop Patterns
 
-Every agentic action in Shieldio follows the **bounded autonomy** model:
+Every agentic action in KavachIQ follows the **bounded autonomy** model:
 
 | Action Type | Autonomy Level | Approval Required |
 |-------------|---------------|-------------------|
@@ -890,12 +890,12 @@ Every agentic action in Shieldio follows the **bounded autonomy** model:
 
 ---
 
-## 8. Integration with Existing Shieldio Architecture
+## 8. Integration with Existing KavachIQ Architecture
 
 ### 8.1 Where Org Context Plugs In
 
 ```
-Existing Shieldio                    New Org Context Layer
+Existing KavachIQ                    New Org Context Layer
 ────────────────                     ─────────────────────
 Discovery (tenant sync)    ──────▶   Context Collector runs after discovery
 SLA Policies               ──────▶   Criticality score influences SLA assignment
@@ -1029,9 +1029,9 @@ Required Microsoft Graph permissions (incremental over existing):
 
 ### 9.4 Admin Consent and Transparency
 
-- During tenant onboarding, Shieldio requests these additional permissions with clear explanations of what each is used for.
+- During tenant onboarding, KavachIQ requests these additional permissions with clear explanations of what each is used for.
 - Admins can opt out of specific signal categories (e.g., "Don't collect usage reports").
-- An admin dashboard shows exactly what org context Shieldio has collected for their tenant.
+- An admin dashboard shows exactly what org context KavachIQ has collected for their tenant.
 - All context sync operations are logged in the existing audit trail.
 
 ---
@@ -1082,7 +1082,7 @@ Required Microsoft Graph permissions (incremental over existing):
 ## Appendix A: Graph API Permission Mapping
 
 ```
-Current Shieldio Permissions:
+Current KavachIQ Permissions:
   - Mail.ReadWrite            (Exchange backup/restore)
   - Files.ReadWrite.All       (OneDrive/SharePoint backup/restore)
   - Sites.ReadWrite.All       (SharePoint site operations)
@@ -1102,7 +1102,7 @@ New Permissions for Org Context Layer:
 
 ## Appendix B: Competitive Positioning
 
-| Capability | Rubrik | Cohesity | Shieldio (Proposed) |
+| Capability | Rubrik | Cohesity | KavachIQ (Proposed) |
 |-----------|--------|----------|-------------------|
 | MVB / Priority Users | Admin-defined groups | No | Admin-defined + auto-detected from Graph |
 | Data Criticality Scoring | Sensitivity labels + email analysis | ML classifiers (230+) | Multi-signal scoring (Graph + usage + security) |
@@ -1113,4 +1113,4 @@ New Permissions for Org Context Layer:
 | Real-time Context | Not public | No | Graph webhooks + periodic sync |
 | Agentic Orchestration | Emerging | No | LLM-powered agent with bounded autonomy |
 
-**Shieldio differentiator:** Deep Graph API integration gives us organizational context signals that are unique to the M365 ecosystem. Rubrik and Cohesity are multi-cloud platforms that must abstract across providers. Shieldio's M365-native focus means we can exploit every Graph API endpoint for richer context than any cross-platform competitor.
+**KavachIQ differentiator:** Deep Graph API integration gives us organizational context signals that are unique to the M365 ecosystem. Rubrik and Cohesity are multi-cloud platforms that must abstract across providers. KavachIQ's M365-native focus means we can exploit every Graph API endpoint for richer context than any cross-platform competitor.

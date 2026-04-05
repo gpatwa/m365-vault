@@ -1,6 +1,6 @@
 # Observability, Throughput, Health Visibility & Auto-Scale Design
 
-**Shieldio | Date: 2026-03-28 | Status: Design Proposal**
+**KavachIQ | Date: 2026-03-28 | Status: Design Proposal**
 
 ---
 
@@ -15,7 +15,7 @@ Microsoft Graph API has **hard limits** that every M365 backup vendor hits:
 | Per-app per-tenant (Outlook) | 3,500-8,000 ResourceUnits / 10s (varies by tenant size) | Backup speed capped |
 | Per-mailbox | 150 MB / 5 min | Can't speed up individual mailbox backup |
 | Per-tenant overall | Shared across all apps | Other apps in tenant compete for budget |
-| **Sep 2025 change** | Per-app limit cut to 50% of tenant total | Directly impacts Shieldio |
+| **Sep 2025 change** | Per-app limit cut to 50% of tenant total | Directly impacts KavachIQ |
 
 **All competitors are throttled equally** — Veeam reports ~15-20 MB/s, ~1TB per 12 hours. The new M365 Backup Storage API bypasses throttling (1+ TB/hr) but requires a separate integration.
 
@@ -86,7 +86,7 @@ class GraphMetrics:
 | **Rubrik** | "AI-driven orchestration" to bypass throttling (marketing) — actually uses M365 Backup Storage API |
 | **Commvault** | Parallel streams with per-tenant throttle budgeting |
 
-### Shieldio Approach
+### KavachIQ Approach
 
 Phase 1 (now): Track and display Graph API metrics per tenant
 Phase 2: Auto-adjust backup concurrency based on throttle rate
@@ -107,7 +107,7 @@ Phase 3: Integrate M365 Backup Storage API (bypass throttling entirely)
 | **Discovery speed** | Time to discover all workloads | < 30 seconds |
 | **Snapshot size** | Compressed size per snapshot | Track trend |
 | **Dedup ratio** | Data reduction from deduplication | Track trend |
-| **API response time (p50/p95/p99)** | Shieldio API latency | p50 < 50ms, p95 < 200ms |
+| **API response time (p50/p95/p99)** | KavachIQ API latency | p50 < 50ms, p95 < 200ms |
 
 ### Implementation: Performance Dashboard
 
@@ -146,7 +146,7 @@ Phase 3: Integrate M365 Backup Storage API (bypass throttling entirely)
 
 ### Industry Benchmarks
 
-| Metric | Veeam | Microsoft Native | Shieldio Target |
+| Metric | Veeam | Microsoft Native | KavachIQ Target |
 |--------|-------|-----------------|----------------|
 | Mailbox backup | ~15-20 MB/s | 1+ TB/hr (Backup Storage API) | Track our actual numbers |
 | Full tenant backup (1000 users) | 8-12 hours | 15 min initial | Depends on Graph limits |
@@ -159,7 +159,7 @@ Phase 3: Integrate M365 Backup Storage API (bypass throttling entirely)
 
 ### What Best-in-Class Shows
 
-| Component | Datadog | Veeam | What Shieldio Needs |
+| Component | Datadog | Veeam | What KavachIQ Needs |
 |-----------|---------|-------|---------------------|
 | **Uptime** | Service uptime % (99.99%) | Backup success rate | Both |
 | **Latency** | P50/P95/P99 by endpoint | Job duration trends | API + backup latency |
@@ -224,7 +224,7 @@ Add to `/admin/diagnostics` (admin only):
 | **Schedule** | Scale up at 9am, down at 6pm | Predictable backup windows |
 | **TCP connections** | Scale on connection count | WebSocket or streaming |
 
-### Current Shieldio Config
+### Current KavachIQ Config
 
 ```hcl
 # From infra/environments/dev.tfvars
@@ -266,7 +266,7 @@ scale:
       custom:
         type: redis
         metadata:
-          listName: "shieldio:backup_queue"
+          listName: "kavachiq:backup_queue"
           listLength: "5"  # Scale up when > 5 jobs queued
           host: "<redis-host>"
           port: "6380"
@@ -294,7 +294,7 @@ scale:
 | **Rubrik** | Dedicated appliance + cloud scale-out; hardware-limited |
 | **Commvault** | MediaAgent pools, user-managed scaling |
 
-### Shieldio Approach
+### KavachIQ Approach
 
 | Phase | What | How |
 |-------|------|-----|

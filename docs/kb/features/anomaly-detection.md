@@ -2,11 +2,11 @@
 
 ## Overview
 
-Shieldio's anomaly detection system continuously monitors backup data patterns to identify threats such as ransomware encryption, data exfiltration, and unusual deletion activity. Detection is based on statistical Z-score analysis against rolling baselines, with zero external dependencies. There are no LLM tokens, no third-party threat intelligence feeds, and no cloud-based ML services involved. The system runs on pure math applied to your backup telemetry.
+KavachIQ's anomaly detection system continuously monitors backup data patterns to identify threats such as ransomware encryption, data exfiltration, and unusual deletion activity. Detection is based on statistical Z-score analysis against rolling baselines, with zero external dependencies. There are no LLM tokens, no third-party threat intelligence feeds, and no cloud-based ML services involved. The system runs on pure math applied to your backup telemetry.
 
 ## How Z-Score Baselines Work
 
-For each protected workload and account, Shieldio maintains a **7-day rolling average** and standard deviation for key metrics including:
+For each protected workload and account, KavachIQ maintains a **7-day rolling average** and standard deviation for key metrics including:
 
 - Total backup size (bytes)
 - Item count (emails, files, objects)
@@ -59,7 +59,7 @@ A health score of 100 means all metrics are within normal bounds. The score decr
 
 ## Alert Generation
 
-When a Z-score crosses the elevated or critical threshold, Shieldio generates an alert containing:
+When a Z-score crosses the elevated or critical threshold, KavachIQ generates an alert containing:
 
 - The affected tenant and workload
 - The specific metric that triggered the alert

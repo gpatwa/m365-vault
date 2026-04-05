@@ -206,8 +206,8 @@ class TestQueueNameConsistency:
         """Verify queue name constants are as expected (not accidentally changed)."""
         from app.interfaces.redis_dispatcher import BACKUP_QUEUE, RESTORE_QUEUE
 
-        assert BACKUP_QUEUE == "shieldio:backup_queue"
-        assert RESTORE_QUEUE == "shieldio:restore_queue"
+        assert BACKUP_QUEUE == "kavachiq:backup_queue"
+        assert RESTORE_QUEUE == "kavachiq:restore_queue"
 
     def test_worker_uses_same_redis_url_scheme(self, compose):
         """Worker REDIS_URL uses the redis service hostname."""

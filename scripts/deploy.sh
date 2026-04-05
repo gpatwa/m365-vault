@@ -1,5 +1,5 @@
 #!/bin/bash
-# Shieldio Deploy Script — build, push, deploy with health gates.
+# KavachIQ Deploy Script — build, push, deploy with health gates.
 #
 # Usage:
 #   ./scripts/deploy.sh              # Full deploy: build → push → apply → verify
@@ -237,7 +237,7 @@ step_verify() {
 
 echo ""
 echo -e "${CYAN}╔══════════════════════════════════════╗${NC}"
-echo -e "${CYAN}║   Shieldio Deploy — Health Gated     ║${NC}"
+echo -e "${CYAN}║   KavachIQ Deploy — Health Gated     ║${NC}"
 echo -e "${CYAN}╚══════════════════════════════════════╝${NC}"
 echo ""
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Shieldio — PostgreSQL backup script
+# KavachIQ — PostgreSQL backup script
 # Run via cron: 0 2 * * * /path/to/db-backup.sh
 #
 # Supports:

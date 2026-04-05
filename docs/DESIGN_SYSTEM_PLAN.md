@@ -1,4 +1,4 @@
-# Shieldio — Design System Overhaul Plan
+# KavachIQ — Design System Overhaul Plan
 
 **Date: 2026-03-31 | Status: Planned**
 

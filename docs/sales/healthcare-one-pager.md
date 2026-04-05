@@ -1,4 +1,4 @@
-# Shieldio for Healthcare — HIPAA-Compliant M365 Backup
+# KavachIQ for Healthcare — HIPAA-Compliant M365 Backup
 
 ---
 
@@ -10,7 +10,7 @@ HIPAA mandates that covered entities maintain recoverable backups of electronic 
 
 ## The Solution
 
-Shieldio provides fully encrypted, auditable, immutable backup for all five Microsoft 365 workloads — purpose-built for healthcare organizations that need to prove HIPAA compliance. Starting at **$1.50/user/month**, Shieldio closes the backup gap that auditors flag most often.
+KavachIQ provides fully encrypted, auditable, immutable backup for all five Microsoft 365 workloads — purpose-built for healthcare organizations that need to prove HIPAA compliance. Starting at **$1.50/user/month**, KavachIQ closes the backup gap that auditors flag most often.
 
 ---
 
@@ -29,7 +29,7 @@ Shieldio provides fully encrypted, auditable, immutable backup for all five Micr
 
 ## HIPAA Technical Safeguard Mapping
 
-| HIPAA Requirement | 45 CFR Section | How Shieldio Addresses It |
+| HIPAA Requirement | 45 CFR Section | How KavachIQ Addresses It |
 |---|---|---|
 | **Access Control** | 164.312(a)(1) | Role-based access, per-tenant isolation, MFA-protected admin console |
 | **Audit Controls** | 164.312(b) | Immutable audit logs for every backup, restore, and config change |
@@ -53,6 +53,6 @@ Shieldio provides fully encrypted, auditable, immutable backup for all five Micr
 
 ## Get Started
 
-Start free at **shieldio.com** — protect your first 25 users in under 10 minutes with zero infrastructure to manage.
+Start free at **kavachiq.com** — protect your first 25 users in under 10 minutes with zero infrastructure to manage.
 
-Need a walkthrough? Contact sales at **sales@shieldio.com** or schedule a demo at **shieldio.com/demo**.
+Need a walkthrough? Contact sales at **sales@kavachiq.com** or schedule a demo at **kavachiq.com/demo**.

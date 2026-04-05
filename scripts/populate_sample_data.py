@@ -280,7 +280,7 @@ SAMPLE_FILES = [
 ]
 
 SHAREPOINT_SITE_NAME = "DataProtectionProject"
-SHAREPOINT_SITE_DESC = "Shieldio Data Protection Project collaboration site"
+SHAREPOINT_SITE_DESC = "KavachIQ Data Protection Project collaboration site"
 
 SHAREPOINT_DOCS = [
     {"name": "Project_Charter.docx", "content": "Data Protection Project Charter\n\nObjective: Build enterprise-grade M365 backup and recovery solution.\n\nScope: Exchange, OneDrive, SharePoint workloads.\n\nTimeline: Q1-Q2 2026\n\nTeam: Engineering, Security, Operations"},

@@ -1,6 +1,6 @@
 # Production Resilience & Operational Excellence Design
 
-**Shieldio | Date: 2026-03-28 | Status: Design Proposal**
+**KavachIQ | Date: 2026-03-28 | Status: Design Proposal**
 
 ---
 
@@ -22,7 +22,7 @@ Companies like Stripe, Datadog, Linear, and Vercel have set the bar for SaaS rel
 
 ---
 
-## 2. Current Shieldio Gaps
+## 2. Current KavachIQ Gaps
 
 | Gap | Impact | Priority |
 |-----|--------|----------|
@@ -78,7 +78,7 @@ Define error codes so every error is identifiable and documentable:
 
 ```python
 # backend/app/errors.py
-class ShieldioError:
+class KavachIQError:
     # Connector errors (1000s)
     CONNECTOR_NOT_CONFIGURED = "E1001"
     CONNECTOR_SECRET_INVALID = "E1002"
@@ -106,7 +106,7 @@ Every API error response includes:
     "message": "The connector app secret is invalid",
     "detail": "Azure AD rejected the client secret for app d5c6ca1d...",
     "fix": "Go to Azure Portal → App Registrations → Certificates & Secrets → create new secret",
-    "docs": "https://docs.shieldio.com/errors/E1002",
+    "docs": "https://docs.kavachiq.com/errors/E1002",
     "correlation_id": "abc-123"
   }
 }
@@ -277,7 +277,7 @@ Can be extended to LaunchDarkly/Flagsmith later. Start with config-based flags.
 
 ```tsx
 // Global error boundary
-class ShieldioErrorBoundary extends React.Component {
+class KavachIQErrorBoundary extends React.Component {
     render() {
         if (this.state.hasError) {
             return (
@@ -371,7 +371,7 @@ For common issues, auto-detect and auto-fix:
 
 **Phase A (Observability Foundation) — COMPLETE:**
 - A1. Structured JSON logging with enhanced formatter (service, correlation_id, user_id, duration_ms)
-- A2. Error code system: `backend/app/errors.py` with 30+ codes (E1xxx-E7xxx), `ShieldioError` exception class
+- A2. Error code system: `backend/app/errors.py` with 30+ codes (E1xxx-E7xxx), `KavachIQError` exception class
 - A3. Correlation ID middleware: auto-generates `X-Correlation-ID`, logs with every request, returns in response
 
 **Phase B (Resilient External Calls) — COMPLETE:**

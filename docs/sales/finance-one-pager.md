@@ -1,4 +1,4 @@
-# Shieldio for Financial Services — SOC 2 + SOX Ready M365 Backup
+# KavachIQ for Financial Services — SOC 2 + SOX Ready M365 Backup
 
 ---
 
@@ -10,7 +10,7 @@ Financial services firms operate under overlapping regulatory frameworks — SEC
 
 ## The Solution
 
-Shieldio provides automated Microsoft 365 backup with built-in compliance controls — per-tenant encryption, auditable retention, recovery confidence scoring, and pre-mapped regulatory coverage. Deploy in minutes, prove compliance in your next audit.
+KavachIQ provides automated Microsoft 365 backup with built-in compliance controls — per-tenant encryption, auditable retention, recovery confidence scoring, and pre-mapped regulatory coverage. Deploy in minutes, prove compliance in your next audit.
 
 ---
 
@@ -29,7 +29,7 @@ Shieldio provides automated Microsoft 365 backup with built-in compliance contro
 
 ## Compliance Coverage
 
-| Framework | How Shieldio Helps |
+| Framework | How KavachIQ Helps |
 |---|---|
 | **SOC 2 Type II** | Certified platform. Audit logs, encryption, access controls, and availability monitoring map directly to Trust Services Criteria. |
 | **SOX (Sarbanes-Oxley)** | Backup of financial records in Exchange and SharePoint with tamper-proof retention. Recovery confidence scoring proves IT general control effectiveness. |
@@ -53,6 +53,6 @@ Shieldio provides automated Microsoft 365 backup with built-in compliance contro
 
 ## Get Started
 
-Free for 25 users. Start today at **shieldio.com**.
+Free for 25 users. Start today at **kavachiq.com**.
 
-Contact sales: **sales@shieldio.com** | Book a demo: **shieldio.com/demo**
+Contact sales: **sales@kavachiq.com** | Book a demo: **kavachiq.com/demo**

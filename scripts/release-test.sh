@@ -41,7 +41,7 @@ check "Storage healthy" "$HEALTH" '"storage":"healthy"'
 echo ""
 echo "── API Info ──"
 ROOT=$(curl -s "$BACKEND/")
-check "App name is Shieldio" "$ROOT" 'Shieldio'
+check "App name is KavachIQ" "$ROOT" 'KavachIQ'
 check "Status running" "$ROOT" '"status":"running"'
 
 ROUTES=$(curl -s "$BACKEND/openapi.json" | python3 -c "import sys,json; print(len(json.load(sys.stdin)['paths']))" 2>/dev/null)
@@ -112,7 +112,7 @@ echo ""
 echo "── Frontend ──"
 check "Frontend loads" "$(curl -s "$FRONTEND" -o /dev/null -w "%{http_code}")" "200"
 FRONTEND_HTML=$(curl -s "$FRONTEND")
-check "Frontend has Shieldio" "$FRONTEND_HTML" "Shieldio"
+check "Frontend has KavachIQ" "$FRONTEND_HTML" "KavachIQ"
 
 # 9. E2E Data Flow — verify click-through works (list → detail → browse)
 echo ""

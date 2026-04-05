@@ -1,4 +1,4 @@
--- Shieldio — Admin Invite model for non-admin user onboarding
+-- KavachIQ — Admin Invite model for non-admin user onboarding
 -- Allows prospects to invite their Global Admin to complete OAuth consent.
 
 CREATE TABLE IF NOT EXISTS admin_invites (

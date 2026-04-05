@@ -1,12 +1,12 @@
-# Shieldio Compliance Mapping
+# KavachIQ Compliance Mapping
 
-Maps Shieldio security controls to SOC 2, GDPR, and HIPAA requirements.
+Maps KavachIQ security controls to SOC 2, GDPR, and HIPAA requirements.
 
 ---
 
 ## SOC 2 Trust Services Criteria
 
-| Criteria | Requirement | Shieldio Control | Status |
+| Criteria | Requirement | KavachIQ Control | Status |
 |----------|------------|-----------------|--------|
 | **CC1.1** | Control environment | RBAC roles (Admin/Operator/Viewer), documented security policies | ✅ |
 | **CC2.1** | Information & communication | Audit logging, alert notifications, structured logging | ✅ |
@@ -29,7 +29,7 @@ Maps Shieldio security controls to SOC 2, GDPR, and HIPAA requirements.
 
 ## GDPR Compliance
 
-| Article | Requirement | Shieldio Control | Status |
+| Article | Requirement | KavachIQ Control | Status |
 |---------|------------|-----------------|--------|
 | **Art. 5(1)(f)** | Integrity and confidentiality | AES-256-GCM encryption, per-tenant key isolation | ✅ |
 | **Art. 17** | Right to erasure | Tenant purge feature, cascade data deletion | ✅ |
@@ -44,7 +44,7 @@ Maps Shieldio security controls to SOC 2, GDPR, and HIPAA requirements.
 
 ## HIPAA Security Rule
 
-| Safeguard | Standard | Shieldio Control | Status |
+| Safeguard | Standard | KavachIQ Control | Status |
 |-----------|----------|-----------------|--------|
 | **Administrative** | §164.308(a)(1) | Risk assessment via Smart Engine, security policies documented | ✅ |
 | **Administrative** | §164.308(a)(3) | RBAC (Admin/Operator/Viewer), role-based endpoint protection | ✅ |
@@ -65,7 +65,7 @@ Maps Shieldio security controls to SOC 2, GDPR, and HIPAA requirements.
 
 ## DORA (Digital Operational Resilience Act)
 
-| Article | Requirement | Shieldio Control | Status |
+| Article | Requirement | KavachIQ Control | Status |
 |---------|------------|-----------------|--------|
 | **Art. 6** | ICT risk management | Smart Engine risk assessment, anomaly detection | ✅ |
 | **Art. 9** | Protection and prevention | WORM storage, malware scanning, encryption | ✅ |

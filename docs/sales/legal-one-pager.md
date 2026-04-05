@@ -1,4 +1,4 @@
-# Shieldio for Law Firms — Immutable Backup with Legal Hold
+# KavachIQ for Law Firms — Immutable Backup with Legal Hold
 
 ---
 
@@ -10,7 +10,7 @@ Law firms handle privileged client communications, case files, and sensitive doc
 
 ## The Solution
 
-Shieldio delivers WORM (write-once, read-many) immutable storage with built-in legal hold, cross-workload eDiscovery search, and point-in-time restore — so your firm can protect client data, respond to discovery requests, and prove compliance with a clear audit trail.
+KavachIQ delivers WORM (write-once, read-many) immutable storage with built-in legal hold, cross-workload eDiscovery search, and point-in-time restore — so your firm can protect client data, respond to discovery requests, and prove compliance with a clear audit trail.
 
 ---
 
@@ -55,6 +55,6 @@ Shieldio delivers WORM (write-once, read-many) immutable storage with built-in l
 
 ## Schedule a Demo
 
-See how Shieldio protects client privilege and simplifies legal hold.
+See how KavachIQ protects client privilege and simplifies legal hold.
 
-**shieldio.com/demo** | **sales@shieldio.com**
+**kavachiq.com/demo** | **sales@kavachiq.com**

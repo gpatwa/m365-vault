@@ -1,6 +1,6 @@
 # Using Correlation IDs
 
-Every request processed by Shieldio is assigned a unique correlation ID. This identifier follows the request through every layer of the system, making it possible to trace a single operation from the browser all the way to the Microsoft Graph API. When you contact support, providing a correlation ID allows the team to locate your specific request instantly.
+Every request processed by KavachIQ is assigned a unique correlation ID. This identifier follows the request through every layer of the system, making it possible to trace a single operation from the browser all the way to the Microsoft Graph API. When you contact support, providing a correlation ID allows the team to locate your specific request instantly.
 
 ## What Is a Correlation ID?
 
@@ -36,7 +36,7 @@ All error responses include the correlation ID in the JSON body:
 
 ### Dashboard Error Boundary
 
-When an unhandled error occurs in the Shieldio web dashboard, the ErrorBoundary component displays a user-friendly error screen that includes the correlation ID. Copy this value before navigating away.
+When an unhandled error occurs in the KavachIQ web dashboard, the ErrorBoundary component displays a user-friendly error screen that includes the correlation ID. Copy this value before navigating away.
 
 ### Job Detail Page
 
@@ -68,7 +68,7 @@ This end-to-end tracing means that a single correlation ID can be used to:
 
 ## Sharing Correlation IDs with Support
 
-When opening a support ticket or contacting the Shieldio team:
+When opening a support ticket or contacting the KavachIQ team:
 
 1. **Include the correlation ID** -- this is the single most useful piece of information for debugging.
 2. **Note the approximate time** the error occurred (with timezone).
@@ -79,16 +79,16 @@ With a correlation ID, the support team can typically identify the root cause wi
 
 ## Generating Your Own Correlation IDs
 
-If you are building automation against the Shieldio API, you can pass your own correlation ID in the request header:
+If you are building automation against the KavachIQ API, you can pass your own correlation ID in the request header:
 
 ```
 X-Correlation-ID: my-custom-id-12345
 ```
 
-If provided, Shieldio uses your value instead of generating a new one. This is useful for correlating Shieldio API calls with your own internal systems.
+If provided, KavachIQ uses your value instead of generating a new one. This is useful for correlating KavachIQ API calls with your own internal systems.
 
 ## Tips
 
 - Correlation IDs are included in the append-only audit log and are retained for the full audit retention period.
-- When Microsoft Graph returns a `request-id` header, Shieldio logs it alongside the correlation ID, enabling cross-vendor tracing.
+- When Microsoft Graph returns a `request-id` header, KavachIQ logs it alongside the correlation ID, enabling cross-vendor tracing.
 - If you lose a correlation ID, the support team can still search by tenant, user, timestamp, and error code -- but it takes longer.

@@ -1,4 +1,4 @@
-# Shieldio — Cost Optimization & Competitive Pricing Deep Dive
+# KavachIQ — Cost Optimization & Competitive Pricing Deep Dive
 
 **Date: 2026-03-29 | Status: Analysis & Recommendations**
 
@@ -159,7 +159,7 @@ Container Apps free grant: 180,000 vCPU-seconds/mo (~50 vCPU-hours). A 0.5 vCPU 
 | **Druva** | $4-7 | Per-user/consumption | Cloud-native, but complex credits |
 | **Commvault Cloud** | $4-6 | Per-user | Managed storage included |
 | **Rubrik M365** | $6-10 | Per-user | Enterprise MVB, but expensive |
-| **Shieldio (current)** | $3-8 | Per-user | Auto-MVB, org context, agentic recovery |
+| **KavachIQ (current)** | $3-8 | Per-user | Auto-MVB, org context, agentic recovery |
 
 ### Critical Insight: Veeam Has Moved Downmarket
 

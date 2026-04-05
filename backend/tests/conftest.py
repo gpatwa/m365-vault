@@ -9,7 +9,7 @@ from httpx import AsyncClient, ASGITransport
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///./test.db"
 os.environ["SECRET_KEY"] = "test-secret-key-for-testing-only"
 os.environ["STORAGE_BACKEND"] = "local"
-os.environ["STORAGE_LOCAL_PATH"] = "/tmp/shieldio-test-storage"
+os.environ["STORAGE_LOCAL_PATH"] = "/tmp/kavachiq-test-storage"
 os.environ["DISPATCH_MODE"] = "in_process"
 os.environ["ENCRYPTION_MASTER_KEY"] = "dGVzdC1tYXN0ZXIta2V5LWZvci10ZXN0aW5nLW9ubHk="
 

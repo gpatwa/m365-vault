@@ -1,5 +1,5 @@
 #!/bin/bash
-# Shieldio Security Audit Script
+# KavachIQ Security Audit Script
 # Runs automated security checks and generates a report.
 # Usage: make security-scan  OR  bash scripts/security-audit.sh
 
@@ -227,7 +227,7 @@ import json
 from datetime import datetime
 
 report = {
-    'tool': 'Shieldio Security Audit',
+    'tool': 'KavachIQ Security Audit',
     'version': '2.0',
     'timestamp': datetime.utcnow().isoformat() + 'Z',
     'summary': {

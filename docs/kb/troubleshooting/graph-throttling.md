@@ -1,6 +1,6 @@
 # Understanding Graph API Throttling
 
-Microsoft Graph API enforces per-tenant rate limits to protect service health. When your backup jobs trigger these limits, Microsoft returns HTTP 429 (Too Many Requests). This article explains why throttling happens, how Shieldio handles it, and what you can do if it persists.
+Microsoft Graph API enforces per-tenant rate limits to protect service health. When your backup jobs trigger these limits, Microsoft returns HTTP 429 (Too Many Requests). This article explains why throttling happens, how KavachIQ handles it, and what you can do if it persists.
 
 ## Why Microsoft Throttles Requests
 
@@ -12,13 +12,13 @@ Microsoft applies throttling at multiple levels:
 
 Throttling is normal during large backup operations. It does not indicate a misconfiguration.
 
-## How Shieldio Handles Throttling
+## How KavachIQ Handles Throttling
 
-Shieldio's backup engine includes three layers of throttling mitigation:
+KavachIQ's backup engine includes three layers of throttling mitigation:
 
 ### 1. Exponential Backoff with Jitter
 
-When a 429 response is received, Shieldio waits for the duration specified in the `Retry-After` header. If no header is present, it applies exponential backoff starting at 5 seconds, doubling on each retry, with random jitter to prevent synchronized retries across workers.
+When a 429 response is received, KavachIQ waits for the duration specified in the `Retry-After` header. If no header is present, it applies exponential backoff starting at 5 seconds, doubling on each retry, with random jitter to prevent synchronized retries across workers.
 
 ### 2. Adaptive Concurrency Reduction
 
@@ -57,4 +57,4 @@ If backup jobs consistently fail to complete due to throttling:
 ## Further Reading
 
 - [Microsoft Graph throttling guidance](https://learn.microsoft.com/en-us/graph/throttling) -- Official documentation on Graph API rate limits, best practices, and Retry-After handling.
-- [Error Code Reference](/docs/kb/troubleshooting/error-codes.md) -- Full list of Shieldio error codes.
+- [Error Code Reference](/docs/kb/troubleshooting/error-codes.md) -- Full list of KavachIQ error codes.

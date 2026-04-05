@@ -19,7 +19,7 @@ Each account receives a composite score from 0 to 100 based on four weighted fac
 
 ## Auto-Detection from Microsoft Graph
 
-Shieldio pulls the following data via Microsoft Graph to compute scores without manual input:
+KavachIQ pulls the following data via Microsoft Graph to compute scores without manual input:
 
 - **Directory role assignments** via `/directoryRoles` and `/roleManagement/directory/roleAssignments`
 - **Sensitivity labels** via Information Protection APIs

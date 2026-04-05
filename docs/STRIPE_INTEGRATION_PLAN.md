@@ -1,4 +1,4 @@
-# Shieldio Stripe Integration Plan
+# KavachIQ Stripe Integration Plan
 
 ## Overview
 
@@ -13,7 +13,7 @@ subscriptions without manual intervention.
 ## Architecture
 
 ```
-Customer Browser                    Shieldio Backend              Stripe
+Customer Browser                    KavachIQ Backend              Stripe
     |                                    |                          |
     |-- Click "Start Trial" ------------>|                          |
     |                                    |-- Create Customer ------>|
@@ -69,7 +69,7 @@ POST /api/billing/usage-report      -- Report metered usage to Stripe
 **Key endpoints:**
 
 1. **Checkout Session** — When user clicks "Start Trial" or "Upgrade":
-   - Create Stripe Customer (link to Shieldio user)
+   - Create Stripe Customer (link to KavachIQ user)
    - Create Checkout Session with selected price
    - Include 14-day free trial for Professional/Business
    - Return checkout URL for redirect
@@ -222,7 +222,7 @@ stripe.checkout.Session.create(
 
 - Stripe secret key stored in Azure Key Vault (not in code)
 - Webhook signature verification on every request
-- No credit card data touches Shieldio servers (Stripe Checkout handles PCI)
+- No credit card data touches KavachIQ servers (Stripe Checkout handles PCI)
 - Customer Portal for self-serve card management (no card storage needed)
 - Audit log entry for every billing event
 

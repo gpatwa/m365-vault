@@ -72,4 +72,4 @@ MVB plans are displayed on the Recovery Dashboard under the Recovery Plans secti
 
 ## Executing a Recovery
 
-During an actual recovery event, the MVB plan serves as the execution guide. Administrators initiate recovery phase by phase, with Shieldio tracking progress and updating the Recovery Confidence Score as each phase completes.
+During an actual recovery event, the MVB plan serves as the execution guide. Administrators initiate recovery phase by phase, with KavachIQ tracking progress and updating the Recovery Confidence Score as each phase completes.

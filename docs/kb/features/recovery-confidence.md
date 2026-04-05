@@ -32,7 +32,7 @@ Scores map to letter grades for quick interpretation:
 
 ## Actionable Recommendations
 
-When any sub-score drops below threshold, Shieldio generates specific recommendations:
+When any sub-score drops below threshold, KavachIQ generates specific recommendations:
 
 - **Low Freshness**: "Backup for Exchange workload is 6 hours behind RPO target. Check connector health and Graph API throttle rates."
 - **Low Completeness**: "14 of 312 mailboxes have no backup in the last 7 days. Review excluded accounts and license assignments."

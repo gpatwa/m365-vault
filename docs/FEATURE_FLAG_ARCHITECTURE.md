@@ -1,4 +1,4 @@
-# Shieldio — Feature Flag Architecture & Decision Record
+# KavachIQ — Feature Flag Architecture & Decision Record
 
 **Date: 2026-03-31 | Status: Implemented (v1) + Future Migration Path**
 
@@ -8,7 +8,7 @@
 
 ### Context
 
-Shieldio needs feature gating for two reasons:
+KavachIQ needs feature gating for two reasons:
 1. **Pricing enforcement** — different tiers unlock different features
 2. **Production readiness** — enable/disable features before they're ready for customers
 

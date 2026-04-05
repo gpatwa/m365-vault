@@ -1,4 +1,4 @@
--- Shieldio — Schema migration for Per-Workload App Separation (Phase 8)
+-- KavachIQ — Schema migration for Per-Workload App Separation (Phase 8)
 -- Each workload (Entra ID, Exchange, SharePoint, etc.) gets its own Entra app registration.
 --
 -- Usage:

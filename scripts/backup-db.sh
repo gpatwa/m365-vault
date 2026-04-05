@@ -1,5 +1,5 @@
 #!/bin/bash
-# PostgreSQL backup script for Shieldio
+# PostgreSQL backup script for KavachIQ
 # Run via cron: 0 2 * * * /path/to/backup-db.sh
 #
 # For Azure: Azure Flexible Server has built-in automated backups (7-35 days).

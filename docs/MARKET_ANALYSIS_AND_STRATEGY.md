@@ -1,4 +1,4 @@
-# Shieldio — Market Analysis, Opex/Capex/Margin, and Growth Strategy
+# KavachIQ — Market Analysis, Opex/Capex/Margin, and Growth Strategy
 
 **Date: 2026-03-31 | Status: Strategic Analysis**
 
@@ -64,7 +64,7 @@
                           │
                     Low Price ($1-3/user)
                           │
-                  Shieldio ●  ← OPPORTUNITY: Low price + Intelligence + Multi-platform
+                  KavachIQ ●  ← OPPORTUNITY: Low price + Intelligence + Multi-platform
 ```
 
 **The gap we exploit: Low price + built-in intelligence + multi-platform.** Nobody occupies this position.
@@ -111,7 +111,7 @@
 
 ### Pricing vs Competitors
 
-| Platform | Shieldio | Cheapest Competitor | Premium Competitor |
+| Platform | KavachIQ | Cheapest Competitor | Premium Competitor |
 |----------|----------|--------------------|--------------------|
 | **Microsoft 365** | $1.50/user | Veeam $2.00 | Rubrik $6-10 |
 | **Google Workspace** (roadmap) | $1.50/user | CubeBackup $0.42 (self-hosted) | Afi.ai $3.00 |
@@ -174,7 +174,7 @@
 
 ### Phase 4: Platform Play (2027)
 
-**The endgame:** Shieldio becomes the **recovery intelligence platform** — not just backup, but context-aware recovery across ALL SaaS.
+**The endgame:** KavachIQ becomes the **recovery intelligence platform** — not just backup, but context-aware recovery across ALL SaaS.
 
 | SaaS | Connector | Status |
 |------|-----------|--------|
@@ -236,7 +236,7 @@
 | **MSP multi-SaaS bundle** | MSP tools focus on M365 only (Veeam, Datto). | MSPs manage clients using M365 + Google + Salesforce. Bundle = $2-3/user. |
 | **Self-hosted / data sovereignty** | Cloud-only vendors can't serve EU data residency needs. | Our open-source, self-hosted option is unique. |
 | **Compliance-as-a-Service for MSPs** | No competitor auto-generates per-client HIPAA/SOC2 reports. | We already built this — it's a demo highlight. |
-| **Entra ID / identity backup** | Only Shieldio backs up CA policies, directory roles, OAuth grants. | In ransomware, identity is the FIRST thing to restore. |
+| **Entra ID / identity backup** | Only KavachIQ backs up CA policies, directory roles, OAuth grants. | In ransomware, identity is the FIRST thing to restore. |
 
 ### The #1 Gap: Intelligence at Affordable Price
 
@@ -245,7 +245,7 @@ Every competitor either:
 - **Charges enterprise prices for intelligence** (Rubrik $6-10/user, Druva $4-7)
 - **Doesn't exist for Google/Salesforce intelligence** (nobody)
 
-**Shieldio's position: Intelligence included at $1.50-3.00/user across M365, Google, and Salesforce.** This position is unoccupied.
+**KavachIQ's position: Intelligence included at $1.50-3.00/user across M365, Google, and Salesforce.** This position is unoccupied.
 
 ---
 

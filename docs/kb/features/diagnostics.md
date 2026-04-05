@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Diagnostics Dashboard provides real-time visibility into the health of your Shieldio deployment, including infrastructure checks, Microsoft Graph API performance, backup and restore throughput, and system resilience status. Use this dashboard as your first stop when troubleshooting issues, before filing a support ticket.
+The Diagnostics Dashboard provides real-time visibility into the health of your KavachIQ deployment, including infrastructure checks, Microsoft Graph API performance, backup and restore throughput, and system resilience status. Use this dashboard as your first stop when troubleshooting issues, before filing a support ticket.
 
 ## Seven Health Checks
 
@@ -31,7 +31,7 @@ The Diagnostics Dashboard tracks Microsoft Graph API usage per tenant:
 | **Average Latency** | Mean response time for Graph API requests in milliseconds. Elevated latency may indicate Microsoft service degradation or network issues. |
 | **Error Rate** | Percentage of requests returning 5xx server errors. Persistent errors suggest a Microsoft service issue or a problem with the app registration permissions. |
 
-These metrics help distinguish between Shieldio-side issues and Microsoft-side issues when diagnosing backup failures.
+These metrics help distinguish between KavachIQ-side issues and Microsoft-side issues when diagnosing backup failures.
 
 ## Performance Metrics
 
@@ -44,7 +44,7 @@ These metrics help distinguish between Shieldio-side issues and Microsoft-side i
 
 ## Circuit Breaker Status
 
-Shieldio implements circuit breakers on external service calls (Graph API, storage, database) to prevent cascading failures. The dashboard displays the current state of each circuit breaker:
+KavachIQ implements circuit breakers on external service calls (Graph API, storage, database) to prevent cascading failures. The dashboard displays the current state of each circuit breaker:
 
 | State | Meaning |
 |---|---|

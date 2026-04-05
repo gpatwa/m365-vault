@@ -1,4 +1,4 @@
-# Shieldio — API Reference
+# KavachIQ — API Reference
 
 Base URL: `/api`
 

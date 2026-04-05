@@ -1,4 +1,4 @@
-# Agentic AI Data Protection — Market Research & Shieldio Opportunity
+# Agentic AI Data Protection — Market Research & KavachIQ Opportunity
 
 **Date: 2026-04-03 | Research Status: Complete**
 
@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-Agentic AI is the defining enterprise technology shift of 2026. Autonomous AI agents are acting on enterprise data at machine speed — modifying files, updating configurations, sending emails, managing identities. **When agents go wrong, organizations need to undo what happened.** This is a data protection problem, and it's Shieldio's next market opportunity.
+Agentic AI is the defining enterprise technology shift of 2026. Autonomous AI agents are acting on enterprise data at machine speed — modifying files, updating configurations, sending emails, managing identities. **When agents go wrong, organizations need to undo what happened.** This is a data protection problem, and it's KavachIQ's next market opportunity.
 
 ---
 
@@ -128,9 +128,9 @@ Positions as "trusted data platform for the agentic enterprise."
 
 ---
 
-## 4. Shieldio Opportunity: Agent Protection for M365
+## 4. KavachIQ Opportunity: Agent Protection for M365
 
-### Why Shieldio Is Uniquely Positioned
+### Why KavachIQ Is Uniquely Positioned
 
 | Existing Capability | Agent Protection Application |
 |---|---|
@@ -168,7 +168,7 @@ Positions as "trusted data platform for the agentic enterprise."
 
 ### Competitive Positioning
 
-| Feature | Rubrik | Veeam | Shieldio (Proposed) |
+| Feature | Rubrik | Veeam | KavachIQ (Proposed) |
 |---|---|---|---|
 | Agent action visibility | Agent Cloud | Agent Commander (detect) | Agent Audit |
 | Selective rollback | Agent Rewind | Agent Commander (undo) | Agent Rewind |
@@ -183,9 +183,9 @@ Positions as "trusted data platform for the agentic enterprise."
 
 Rubrik and Veeam treat agent protection as a **data problem** — rollback files and databases.
 
-Shieldio treats it as an **identity problem** — when an agent goes rogue, the first thing to check is: did it modify Entra ID? Did it escalate privileges? Did it disable MFA? Did it grant itself Global Admin?
+KavachIQ treats it as an **identity problem** — when an agent goes rogue, the first thing to check is: did it modify Entra ID? Did it escalate privileges? Did it disable MFA? Did it grant itself Global Admin?
 
-**Shieldio's identity-first approach means:**
+**KavachIQ's identity-first approach means:**
 1. Check Entra ID changes FIRST (roles, policies, permissions)
 2. Then check what data the agent accessed/modified
 3. Restore identity controls before restoring data
@@ -197,14 +197,14 @@ Shieldio treats it as an **identity problem** — when an agent goes rogue, the 
 
 ### Addressable Market for Agent Protection
 
-| Segment | Size | Shieldio Target |
+| Segment | Size | KavachIQ Target |
 |---|---|---|
 | M365 Copilot users (2026) | ~50M licensed | Focus on SMBs with 50-500 users |
 | Custom agent deployers | Growing rapidly | Enterprises building on Copilot Studio |
 | MSPs managing M365 + agents | 370B market | MSP partners enabling agent protection for clients |
 | Guardian agents market (2030) | $5-8B (10-15% of $52B) | Capture SMB segment |
 
-### Revenue Impact for Shieldio
+### Revenue Impact for KavachIQ
 
 | Scenario | Additional Revenue |
 |---|---|
@@ -232,14 +232,14 @@ Microsoft Graph API
   └── Activity Feed (Copilot actions)
        │
        ▼
-Shieldio Agent Monitor Service
+KavachIQ Agent Monitor Service
   ├── Classify: agent vs human action
   ├── Score: risk level (based on what was modified)
   ├── Alert: if high-risk action detected
   └── Trigger: pre-action snapshot if needed
        │
        ▼
-Shieldio Smart Engine
+KavachIQ Smart Engine
   ├── Anomaly detection (existing)
   ├── Agent-specific baselines (new)
   └── Cross-workload correlation (new)
@@ -249,12 +249,12 @@ Shieldio Smart Engine
 
 ```
 1. Agent modifies Entra ID role assignment
-2. Graph API audit log captured by Shieldio monitor
-3. Shieldio compares current state to latest snapshot
+2. Graph API audit log captured by KavachIQ monitor
+3. KavachIQ compares current state to latest snapshot
 4. Diff generated: "Agent added Global Admin role to ServicePrincipal-XYZ"
-5. Admin reviews diff in Shieldio UI
+5. Admin reviews diff in KavachIQ UI
 6. One-click rewind: restore Entra ID to pre-agent snapshot
-7. Audit log: "Agent action reverted by admin via Shieldio"
+7. Audit log: "Agent action reverted by admin via KavachIQ"
 ```
 
 ---
@@ -265,7 +265,7 @@ Shieldio Smart Engine
 
 **For CISOs**: "Your AI agents have the same permissions as your admins. Can you undo what they do?"
 
-**For IT admins**: "Copilot just modified 50 mailbox rules. Shieldio shows you exactly what changed and lets you undo it."
+**For IT admins**: "Copilot just modified 50 mailbox rules. KavachIQ shows you exactly what changed and lets you undo it."
 
 **For MSPs**: "Add agent protection to your M365 backup offering. $1-2/user add-on. Your clients are asking for it."
 
@@ -274,7 +274,7 @@ Shieldio Smart Engine
 1. **Blog post**: "Why Your M365 Backup Doesn't Protect Against AI Agents" (thought leadership)
 2. **Landing page section**: Add "Agent Shield" to the landing page feature comparison
 3. **Demo scenario**: Add agent attack to the onboarding playbook (Scene 3 variant)
-4. **MSP pitch**: "Shieldio + Agent Protection = the only SMB-accessible agent recovery solution"
+4. **MSP pitch**: "KavachIQ + Agent Protection = the only SMB-accessible agent recovery solution"
 
 ---
 

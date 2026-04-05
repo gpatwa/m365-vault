@@ -2,7 +2,7 @@
 
 ## Overview
 
-Shieldio supports WORM (Write-Once-Read-Many) immutable storage for backup data, ensuring that once a backup is written, it cannot be modified, overwritten, or deleted until the retention period expires. WORM storage is a critical defense against ransomware that targets backup infrastructure and a requirement for several regulatory compliance frameworks.
+KavachIQ supports WORM (Write-Once-Read-Many) immutable storage for backup data, ensuring that once a backup is written, it cannot be modified, overwritten, or deleted until the retention period expires. WORM storage is a critical defense against ransomware that targets backup infrastructure and a requirement for several regulatory compliance frameworks.
 
 ## What WORM Means
 

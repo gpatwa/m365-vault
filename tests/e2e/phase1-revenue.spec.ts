@@ -131,7 +131,7 @@ test.describe('Forgot Password', () => {
 
   test('forgot password API creates reset token for real user', async ({ request }) => {
     const res = await request.post(`${API}/auth/forgot-password`, {
-      data: { email: 'admin@shieldio.local' },
+      data: { email: 'admin@kavachiq.local' },
     });
     expect(res.ok()).toBeTruthy();
   });

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shieldio Benchmark Suite — measures real backup/restore performance.
+"""KavachIQ Benchmark Suite — measures real backup/restore performance.
 
 Runs against the live system (Docker Compose or Azure) and records:
 - Backup throughput per workload (items/sec, MB/sec)

@@ -1,4 +1,4 @@
-# Shieldio — Cost, Margin & Pricing Analysis
+# KavachIQ — Cost, Margin & Pricing Analysis
 
 **Date: 2026-03-29 | Version 2.3.0 | Pricing: Option B**
 
@@ -17,14 +17,14 @@
 
 ### Competitive Positioning
 
-| Vendor | Price/user/mo | vs Shieldio |
+| Vendor | Price/user/mo | vs KavachIQ |
 |--------|--------------|-------------|
 | **Microsoft Native M365 Backup** | ~$0.75/user (est.) | Cheaper, but no intelligence/MVB/recovery orchestration |
-| **Veeam Data Cloud** | $2.00 (reseller) | Shieldio Professional beats at $1.50 |
-| **AvePoint** | $3-5 | Shieldio Business matches at $3.00 with more intelligence |
-| **Druva** | $4-7 | Shieldio Enterprise undercuts at $5.00 |
-| **Commvault Cloud** | $4-6 | Shieldio Business/Enterprise cheaper with more automation |
-| **Rubrik M365** | $6-10 | Shieldio Enterprise at $5.00 is 50% less |
+| **Veeam Data Cloud** | $2.00 (reseller) | KavachIQ Professional beats at $1.50 |
+| **AvePoint** | $3-5 | KavachIQ Business matches at $3.00 with more intelligence |
+| **Druva** | $4-7 | KavachIQ Enterprise undercuts at $5.00 |
+| **Commvault Cloud** | $4-6 | KavachIQ Business/Enterprise cheaper with more automation |
+| **Rubrik M365** | $6-10 | KavachIQ Enterprise at $5.00 is 50% less |
 
 **Why we win:** Auto-detected MVB recovery plans, org context, criticality scoring, and agentic recovery at 50-70% of Rubrik/Druva pricing. Intelligence is the moat, not storage.
 
@@ -129,7 +129,7 @@ At Option B pricing, **breakeven on multi-tenant with support staff is ~13 custo
 
 ## 5. Pricing vs Competitors — Feature Matrix
 
-| Feature | Microsoft Native | Veeam | AvePoint | Shieldio Pro ($1.50) | Shieldio Biz ($3) | Shieldio Ent ($5) |
+| Feature | Microsoft Native | Veeam | AvePoint | KavachIQ Pro ($1.50) | KavachIQ Biz ($3) | KavachIQ Ent ($5) |
 |---------|-----------------|-------|----------|---------------------|-------------------|-------------------|
 | Exchange backup | Yes | Yes | Yes | Yes | Yes | Yes |
 | OneDrive backup | Yes | Yes | Yes | Yes | Yes | Yes |

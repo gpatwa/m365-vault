@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Seed demo data for Shieldio — creates realistic sample data for prospect demos.
+"""Seed demo data for KavachIQ — creates realistic sample data for prospect demos.
 
 Usage:
   make seed-demo
@@ -95,24 +95,24 @@ async def seed():
             print("⚠️  Demo data already exists. Run 'make seed-clean' first to reset.")
             return
 
-        print("🌱 Seeding demo data for Shieldio...")
+        print("🌱 Seeding demo data for KavachIQ...")
         now = datetime.utcnow()
 
         # ── 1. Demo Accounts ──
         DEMO_ACCOUNTS = [
-            {"username": "admin", "email": "admin@shieldio.local", "password": "Admin123",
+            {"username": "admin", "email": "admin@kavachiq.local", "password": "Admin123",
              "full_name": "Platform Admin", "role": UserRole.ADMIN,
              "purpose": "Full product with data — dashboard, all features"},
-            {"username": "demo", "email": "demo@shieldio.local", "password": "ShieldiDemo2026!",
+            {"username": "demo", "email": "demo@kavachiq.local", "password": "ShieldiDemo2026!",
              "full_name": "Demo User", "role": UserRole.ADMIN,
              "purpose": "Clean onboarding Storyline — fresh tenant setup"},
-            {"username": "prospect", "email": "prospect@shieldio.local", "password": "Prospect2026!",
+            {"username": "prospect", "email": "prospect@kavachiq.local", "password": "Prospect2026!",
              "full_name": "Prospect Demo", "role": UserRole.ADMIN,
              "purpose": "Post-auth onboarding — tenant connected, start at discovery"},
-            {"username": "msp", "email": "msp@shieldio.local", "password": "MSPDemo2026!",
+            {"username": "msp", "email": "msp@kavachiq.local", "password": "MSPDemo2026!",
              "full_name": "MSP Partner", "role": UserRole.MSP_ADMIN,
              "purpose": "MSP evaluation — multi-tenant dashboard, billing, branding"},
-            {"username": "viewer", "email": "viewer@shieldio.local", "password": "Viewer2026!",
+            {"username": "viewer", "email": "viewer@kavachiq.local", "password": "Viewer2026!",
              "full_name": "Compliance Auditor", "role": UserRole.VIEWER,
              "purpose": "Read-only — browse dashboard, reports, audit log"},
         ]

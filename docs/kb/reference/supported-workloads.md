@@ -1,6 +1,6 @@
 # Supported Workloads
 
-Shieldio protects data across five Microsoft 365 workloads. This article details the specific object types, backup methods, and capabilities for each workload.
+KavachIQ protects data across five Microsoft 365 workloads. This article details the specific object types, backup methods, and capabilities for each workload.
 
 ## Coverage Matrix
 
@@ -23,7 +23,7 @@ Shieldio protects data across five Microsoft 365 workloads. This article details
 
 ### Backup Method
 
-Shieldio uses Microsoft Graph delta queries on a per-folder basis. On the first run, a full sync captures all items. Subsequent runs retrieve only new, modified, or deleted items since the last sync, minimizing API calls and processing time.
+KavachIQ uses Microsoft Graph delta queries on a per-folder basis. On the first run, a full sync captures all items. Subsequent runs retrieve only new, modified, or deleted items since the last sync, minimizing API calls and processing time.
 
 ### Restore Capabilities
 
@@ -60,7 +60,7 @@ Delta queries track changes at the drive level. File content is downloaded and e
 
 ### Backup Method
 
-Shieldio uses multi-drive delta queries to track changes across all document libraries on a site. Lists are expanded separately, backing up both schema and item data.
+KavachIQ uses multi-drive delta queries to track changes across all document libraries on a site. Lists are expanded separately, backing up both schema and item data.
 
 ### Restore Capabilities
 
@@ -98,7 +98,7 @@ Channel messages and chats are retrieved via the Microsoft Teams Export API. Fil
 
 ### What Is Backed Up
 
-Shieldio backs up 10+ Entra ID object types:
+KavachIQ backs up 10+ Entra ID object types:
 
 | Object Type | Description |
 |---|---|

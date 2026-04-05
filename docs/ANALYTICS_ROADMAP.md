@@ -1,4 +1,4 @@
-# Shieldio Analytics Roadmap — PostHog + Plausible + Clarity
+# KavachIQ Analytics Roadmap — PostHog + Plausible + Clarity
 
 ## Overview
 
@@ -76,7 +76,7 @@ clickhouse:
 
 **Frontend** — Add script tag to `index.html` (landing pages only):
 ```html
-<script defer data-domain="shieldio.com" src="http://localhost:8100/js/script.js"></script>
+<script defer data-domain="kavachiq.com" src="http://localhost:8100/js/script.js"></script>
 ```
 
 **Goals to track**:
@@ -163,7 +163,7 @@ import posthog from 'posthog-js'
 export function initPostHog() {
   if (typeof window === 'undefined') return
   posthog.init('phc_YOUR_PROJECT_KEY', {
-    api_host: 'https://analytics.shieldio.com', // self-hosted
+    api_host: 'https://analytics.kavachiq.com', // self-hosted
     autocapture: true,          // auto-track clicks, pageviews
     capture_pageview: true,
     capture_pageleave: true,
@@ -190,7 +190,7 @@ from posthog import Posthog
 
 posthog_client = Posthog(
     api_key='phc_YOUR_PROJECT_KEY',
-    host='https://analytics.shieldio.com'
+    host='https://analytics.kavachiq.com'
 )
 
 def track_server_event(user_id: str, event: str, properties: dict = None):
@@ -255,7 +255,7 @@ def track_server_event(user_id: str, event: str, properties: dict = None):
 ## Phase 4: Google Search Console — Week 1
 
 ### What
-Free SEO monitoring — how people find Shieldio via Google.
+Free SEO monitoring — how people find KavachIQ via Google.
 
 ### Implementation
 1. Verify domain ownership (DNS TXT record)
@@ -274,7 +274,7 @@ Free SEO monitoring — how people find Shieldio via Google.
 ## Phase 5: Custom Analytics Dashboard — Month 1
 
 ### What
-Build an internal analytics dashboard in Shieldio admin that shows:
+Build an internal analytics dashboard in KavachIQ admin that shows:
 - Product health metrics from PostHog
 - Landing page stats from Plausible
 - Backup/restore trends from internal data

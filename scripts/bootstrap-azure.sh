@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ──────────────────────────────────────────────────────────────────────
-# Shieldio — Fully automated Azure + GitHub bootstrap
+# KavachIQ — Fully automated Azure + GitHub bootstrap
 #
 # Zero prerequisites required — this script handles everything:
 #   1. Auto-installs missing tools (az, gh, jq, terraform) via Homebrew
@@ -210,11 +210,11 @@ az role assignment create \
   -o none 2>/dev/null || warn "Role assignment may already exist."
 ok "Service principal can access tfstate storage."
 
-# ── Step 4: Create Shieldio Connector App Registration ───────────────
+# ── Step 4: Create KavachIQ Connector App Registration ───────────────
 echo ""
-info "Step 4/6: Creating Shieldio Connector multi-tenant app registration..."
+info "Step 4/6: Creating KavachIQ Connector multi-tenant app registration..."
 
-CONNECTOR_APP_NAME="Shieldio Connector"
+CONNECTOR_APP_NAME="KavachIQ Connector"
 EXISTING_CONNECTOR=$(az ad app list --display-name "$CONNECTOR_APP_NAME" --query "[0].appId" -o tsv 2>/dev/null || true)
 
 if [[ -n "$EXISTING_CONNECTOR" ]]; then
@@ -288,7 +288,7 @@ ok "Set secret: AZURE_TENANT_ID"
 gh secret set AZURE_SUBSCRIPTION_ID --repo "$GITHUB_REPO" --body "$SUBSCRIPTION_ID"
 ok "Set secret: AZURE_SUBSCRIPTION_ID"
 
-# Set Shieldio Connector secrets
+# Set KavachIQ Connector secrets
 gh secret set CONNECTOR_APP_ID --repo "$GITHUB_REPO" --body "$CONNECTOR_APP_ID"
 ok "Set secret: CONNECTOR_APP_ID"
 if [[ "$CONNECTOR_SECRET" != "(existing"* ]]; then

@@ -1,6 +1,6 @@
-# Shieldio Knowledge Base
+# KavachIQ Knowledge Base
 
-Welcome to the Shieldio Knowledge Base. Find guides, troubleshooting help, and best practices for protecting your Microsoft 365 data.
+Welcome to the KavachIQ Knowledge Base. Find guides, troubleshooting help, and best practices for protecting your Microsoft 365 data.
 
 ---
 
@@ -19,7 +19,7 @@ Welcome to the Shieldio Knowledge Base. Find guides, troubleshooting help, and b
 | Article | Description |
 |---------|-------------|
 | [Recovery Confidence Score](features/recovery-confidence.md) | Understand the 0-100 score that proves you can recover |
-| [Criticality Scoring](features/criticality-scoring.md) | How Shieldio auto-prioritizes your most important users |
+| [Criticality Scoring](features/criticality-scoring.md) | How KavachIQ auto-prioritizes your most important users |
 | [MVB Recovery Plans](features/mvb-recovery-plans.md) | Pre-computed 4-phase NIST-ordered recovery plans |
 | [Anomaly Detection](features/anomaly-detection.md) | Z-score baselines detect ransomware while backups run |
 | [Entra ID Backup](features/entra-id-backup.md) | Back up Conditional Access, roles, groups, and OAuth grants |
@@ -31,8 +31,8 @@ Welcome to the Shieldio Knowledge Base. Find guides, troubleshooting help, and b
 
 | Article | Description |
 |---------|-------------|
-| [Error Code Reference](troubleshooting/error-codes.md) | Complete list of Shieldio error codes (E1xxx-E7xxx) |
-| [Graph API Throttling](troubleshooting/graph-throttling.md) | Why backups slow down and how Shieldio handles it |
+| [Error Code Reference](troubleshooting/error-codes.md) | Complete list of KavachIQ error codes (E1xxx-E7xxx) |
+| [Graph API Throttling](troubleshooting/graph-throttling.md) | Why backups slow down and how KavachIQ handles it |
 | [Connection Failures](troubleshooting/connection-failures.md) | Fixing OAuth, consent, and credential issues |
 | [Backup Failures](troubleshooting/backup-failures.md) | Common backup errors and resolution steps |
 | [Correlation IDs](troubleshooting/correlation-ids.md) | Using correlation IDs for support and debugging |
@@ -41,7 +41,7 @@ Welcome to the Shieldio Knowledge Base. Find guides, troubleshooting help, and b
 
 | Article | Description |
 |---------|-------------|
-| [HIPAA Compliance](compliance/hipaa.md) | How Shieldio meets HIPAA requirements for M365 backup |
+| [HIPAA Compliance](compliance/hipaa.md) | How KavachIQ meets HIPAA requirements for M365 backup |
 | [SOC 2 Compliance](compliance/soc2.md) | SOC 2 Trust Services Criteria mapping |
 | [GDPR Compliance](compliance/gdpr.md) | Data protection, erasure, and portability |
 | [DORA Compliance](compliance/dora.md) | Digital Operational Resilience for financial services |

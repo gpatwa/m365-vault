@@ -21,17 +21,14 @@ class ContextCollectorService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    def _get_graph_client(self, tenant: Tenant) -> GraphClient:
-        client_secret = encryption_service.decrypt_string(tenant.client_secret_encrypted)
-        return GraphClient(
-            tenant_id=tenant.ms_tenant_id,
-            client_id=tenant.client_id,
-            client_secret=client_secret,
-        )
+    async def _get_graph_client(self, tenant: Tenant, workload: str = "entra_id") -> GraphClient:
+        """Get Graph client using per-workload credentials."""
+        from app.services.credential_resolver import get_graph_client
+        return await get_graph_client(self.db, tenant, workload, access_mode="backup")
 
     async def collect_all(self, tenant: Tenant) -> dict:
         """Run full context collection for a tenant. Returns summary."""
-        graph = self._get_graph_client(tenant)
+        graph = await self._get_graph_client(tenant, "entra_id")
         now = datetime.utcnow()
         results = {"users_synced": 0, "sites_synced": 0, "errors": []}
 

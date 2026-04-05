@@ -32,19 +32,14 @@ class RestoreEngine:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    def _get_graph_client(self, tenant: Tenant) -> GraphClient:
-        """Create a read-write Graph client for restore operations.
+    async def _get_graph_client(self, tenant: Tenant, workload: str) -> GraphClient:
+        """Get a read-write Graph client for restore using per-workload credentials.
 
-        Restore operations need write access to M365 data (POST/PUT) to
-        recreate messages, upload files, and restore SharePoint items.
+        Each workload has its own Entra app. Restore operations need write
+        access (POST/PUT) to recreate messages, files, and config objects.
         """
-        client_secret = encryption_service.decrypt_string(tenant.client_secret_encrypted)
-        return GraphClient(
-            tenant_id=tenant.ms_tenant_id,
-            client_id=tenant.client_id,
-            client_secret=client_secret,
-            access_mode="restore",
-        )
+        from app.services.credential_resolver import get_graph_client
+        return await get_graph_client(self.db, tenant, workload, access_mode="restore")
 
     async def execute_restore(self, restore_job: RestoreJob) -> RestoreJob:
         """Execute a restore job."""
@@ -64,7 +59,7 @@ class RestoreEngine:
             if snapshot.status != SnapshotStatus.COMPLETED:
                 raise ValueError(f"Snapshot {snapshot.id} is not in completed state")
 
-            graph = self._get_graph_client(tenant)
+            graph = await self._get_graph_client(tenant, source_obj.workload_type.value)
 
             # Get wrapped DEK for decryption
             wrapped_dek = await storage_service.get_wrapped_dek(

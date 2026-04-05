@@ -54,13 +54,56 @@ REQUIRED_APP_PERMISSIONS = {
     "RoleManagement.ReadWrite.Directory": "d01b97e9-cbc0-49fe-810a-e34c8e7e3c50",
 }
 
-# Minimum backup-only permissions
+# Minimum backup-only permissions (legacy — used for single-app tenants)
 BACKUP_PERMISSIONS = {
     "Mail.Read", "Calendars.Read", "Contacts.Read",
     "Files.Read.All", "Sites.Read.All", "User.Read.All",
     "Directory.Read.All", "Chat.Read.All", "ChannelMessage.Read.All",
     "Team.ReadBasic.All", "TeamSettings.Read.All", "Group.Read.All",
 }
+
+# ── Per-Workload Permission Maps ────────────────────────────────────
+# Each workload gets its own Entra app with only its required permissions.
+WORKLOAD_PERMISSIONS = {
+    "entra_id": {
+        "backup": ["Directory.Read.All", "User.Read.All", "Group.Read.All"],
+        "restore": ["User.ReadWrite.All", "Group.ReadWrite.All", "Application.ReadWrite.All",
+                    "Policy.ReadWrite.ConditionalAccess", "RoleManagement.ReadWrite.Directory"],
+        "display_name": "KavachIQ-EntraID",
+    },
+    "exchange": {
+        "backup": ["Mail.Read", "Calendars.Read", "Contacts.Read", "User.Read.All"],
+        "restore": ["Mail.ReadWrite", "Calendars.ReadWrite", "Contacts.ReadWrite"],
+        "display_name": "KavachIQ-Exchange",
+    },
+    "sharepoint": {
+        "backup": ["Sites.Read.All", "User.Read.All"],
+        "restore": ["Sites.ReadWrite.All"],
+        "display_name": "KavachIQ-SharePoint",
+    },
+    "onedrive": {
+        "backup": ["Files.Read.All", "User.Read.All"],
+        "restore": ["Files.ReadWrite.All"],
+        "display_name": "KavachIQ-OneDrive",
+    },
+    "teams": {
+        "backup": ["Chat.Read.All", "ChannelMessage.Read.All", "Team.ReadBasic.All",
+                   "TeamSettings.Read.All", "Group.Read.All"],
+        "restore": [],
+        "display_name": "KavachIQ-Teams",
+    },
+}
+
+
+def get_workload_permissions(workload: str, include_restore: bool = True) -> set:
+    """Get the set of Graph API permissions needed for a workload."""
+    wl = WORKLOAD_PERMISSIONS.get(workload)
+    if not wl:
+        raise ValueError(f"Unknown workload: {workload}")
+    perms = set(wl["backup"])
+    if include_restore and wl["restore"]:
+        perms |= set(wl["restore"])
+    return perms
 
 
 class AppProvisioningService:

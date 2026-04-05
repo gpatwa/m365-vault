@@ -126,9 +126,8 @@ async def test_connection(
         raise HTTPException(status_code=404, detail="Tenant not found")
 
     try:
-        from app.services.graph_client import GraphClient
-        client_secret = encryption_service.decrypt_string(tenant.client_secret_encrypted)
-        graph = GraphClient(tenant.ms_tenant_id, tenant.client_id, client_secret)
+        from app.services.credential_resolver import get_graph_client
+        graph = await get_graph_client(db, tenant, "entra_id")
         users = await graph.get("/users", params={"$top": "1", "$select": "id"})
         user_count = len(users.get("value", []))
         return TenantTestResponse(
@@ -508,36 +507,63 @@ async def check_permissions(
     """Check which Graph API permissions have been granted for a tenant.
 
     Returns per-workload permission status (backup ready / restore ready).
-    Includes a consent URL to grant missing permissions.
+    Checks each per-workload app separately if configured.
     """
     tenant = await db.get(Tenant, tenant_id)
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant not found")
 
     from app.services.app_provisioning import app_provisioning
-    from app.services.graph_client import GraphClient
+    from app.services.credential_resolver import get_workload_apps, get_graph_client
 
-    consent_url = app_provisioning.get_admin_consent_url(
-        tenant_id=tenant.ms_tenant_id,
-        client_id=tenant.client_id,
-    )
+    # Check per-workload apps
+    workload_apps = await get_workload_apps(db, tenant_id)
+    if workload_apps:
+        results = {}
+        for wl_app in workload_apps:
+            try:
+                graph = await get_graph_client(db, tenant, wl_app.workload)
+                token = await graph._get_token()
+                wl_result = await app_provisioning.check_granted_permissions(
+                    access_token=token, app_id=wl_app.client_id,
+                )
+                consent_url = app_provisioning.get_admin_consent_url(
+                    tenant_id=tenant.ms_tenant_id, client_id=wl_app.client_id,
+                )
+                results[wl_app.workload] = {
+                    "app_type": "per_workload",
+                    "consent_status": wl_app.consent_status,
+                    "workloads": wl_result.get("workloads", {}),
+                    "consent_url": consent_url,
+                }
+            except Exception as e:
+                results[wl_app.workload] = {"app_type": "per_workload", "error": str(e)}
 
+        return {
+            "mode": "per_workload",
+            "total_apps": len(workload_apps),
+            "all_backup_ready": all(wa.backup_ready for wa in workload_apps),
+            "workloads": results,
+        }
+
+    # Fallback: legacy single-app check
     try:
+        from app.services.graph_client import GraphClient
         client_secret = encryption_service.decrypt_string(tenant.client_secret_encrypted)
         graph = GraphClient(tenant.ms_tenant_id, tenant.client_id, client_secret)
         token = await graph._get_token()
-
         result = await app_provisioning.check_granted_permissions(
-            access_token=token,
-            app_id=tenant.client_id,
+            access_token=token, app_id=tenant.client_id,
         )
+        consent_url = app_provisioning.get_admin_consent_url(
+            tenant_id=tenant.ms_tenant_id, client_id=tenant.client_id,
+        )
+        result["mode"] = "legacy"
         result["consent_url"] = consent_url
-
         return result
-
     except Exception as e:
         logger.error(f"Permission check failed for tenant {tenant_id}: {e}")
-        return {"error": str(e), "consent_url": consent_url}
+        return {"error": str(e)}
 
 
 @router.post("/{tenant_id}/configure-permissions")

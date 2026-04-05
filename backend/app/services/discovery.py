@@ -24,13 +24,10 @@ class DiscoveryService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    def _get_graph_client(self, tenant: Tenant) -> GraphClient:
-        client_secret = encryption_service.decrypt_string(tenant.client_secret_encrypted)
-        return GraphClient(
-            tenant_id=tenant.ms_tenant_id,
-            client_id=tenant.client_id,
-            client_secret=client_secret,
-        )
+    async def _get_graph_client(self, tenant: Tenant, workload: str) -> GraphClient:
+        """Get Graph client for discovery using per-workload credentials."""
+        from app.services.credential_resolver import get_graph_client
+        return await get_graph_client(self.db, tenant, workload, access_mode="backup")
 
     async def discover_all(self, tenant: Tenant, workloads: list[str] = None) -> dict:
         """Run discovery for a tenant. Optionally filter to specific workloads.
@@ -127,7 +124,8 @@ class DiscoveryService:
 
     async def _discover_all_workloads(self, tenant: Tenant) -> dict:
         """Run full discovery for a tenant. Returns counts."""
-        graph = self._get_graph_client(tenant)
+        # Use entra_id app for user enumeration (all workloads need User.Read.All)
+        graph = await self._get_graph_client(tenant, "entra_id")
         results = {
             "mailboxes": 0,
             "onedrives": 0,
@@ -519,7 +517,8 @@ class DiscoveryService:
 
     async def _discover_filtered(self, tenant: Tenant, workloads: set[str]) -> dict:
         """Discover only specific workloads. Calls individual discovery methods."""
-        graph = self._get_graph_client(tenant)
+        # Use entra_id app for user enumeration (shared across workloads)
+        graph = await self._get_graph_client(tenant, "entra_id")
         results = {
             "mailboxes": 0, "onedrives": 0, "sites": 0,
             "teams": 0, "entra_objects": 0, "removed": 0, "errors": [],

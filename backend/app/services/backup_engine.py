@@ -29,19 +29,14 @@ class BackupEngine:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    def _get_graph_client(self, tenant: Tenant) -> GraphClient:
-        """Create a read-only Graph client for backup operations.
+    async def _get_graph_client(self, tenant: Tenant, workload: str) -> GraphClient:
+        """Get a read-only Graph client for backup using per-workload credentials.
 
-        Backup operations only need read access to M365 data (GET requests).
-        Write operations (POST/PUT/DELETE) are blocked at the client level.
+        Each workload has its own Entra app with only the permissions it needs.
+        Backup operations only need read access (GET). Writes are blocked.
         """
-        client_secret = encryption_service.decrypt_string(tenant.client_secret_encrypted)
-        return GraphClient(
-            tenant_id=tenant.ms_tenant_id,
-            client_id=tenant.client_id,
-            client_secret=client_secret,
-            access_mode="backup",
-        )
+        from app.services.credential_resolver import get_graph_client
+        return await get_graph_client(self.db, tenant, workload, access_mode="backup")
 
     async def process_queued_jobs(self):
         """Process all queued backup jobs."""
@@ -88,7 +83,7 @@ class BackupEngine:
         if not tenant:
             raise ValueError(f"Tenant {protected_object.tenant_id} not found")
 
-        graph = self._get_graph_client(tenant)
+        graph = await self._get_graph_client(tenant, protected_object.workload_type.value)
 
         # Determine snapshot type (full if first backup, incremental otherwise)
         last_snapshot = await self._get_last_snapshot(protected_object.id)

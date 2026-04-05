@@ -427,6 +427,14 @@ async def run_migration():
     results = []
     async with engine.begin() as conn:
         migrations = [
+            # Phase 1/2 schema (002)
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified INTEGER DEFAULT 0",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_token VARCHAR(255)",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_token VARCHAR(255)",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_expires TIMESTAMP",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS sso_provider VARCHAR(50)",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS sso_subject_id VARCHAR(255)",
+            # Phase 3 (003)
             "ALTER TABLE restore_jobs ADD COLUMN IF NOT EXISTS initiated_by_user_id INTEGER REFERENCES users(id)",
             "ALTER TABLE restore_jobs ADD COLUMN IF NOT EXISTS approval_required INTEGER DEFAULT 0",
             "ALTER TABLE restore_jobs ADD COLUMN IF NOT EXISTS approval_status VARCHAR(20)",

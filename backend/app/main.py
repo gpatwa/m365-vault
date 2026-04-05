@@ -401,6 +401,24 @@ async def root():
     }
 
 
+@app.get("/api/admin/debug-auth")
+async def debug_auth():
+    """Debug auth issues. Remove after fix."""
+    import traceback
+    try:
+        from app.database import async_session
+        from app.models.user import User
+        from sqlalchemy import select
+        async with async_session() as db:
+            result = await db.execute(select(User).limit(1))
+            user = result.scalar_one_or_none()
+            if user:
+                return {"status": "ok", "user": user.username, "role": str(user.role), "hash_prefix": user.password_hash[:10] if user.password_hash else "none"}
+            return {"status": "no_users"}
+    except Exception as e:
+        return {"status": "error", "error": str(e), "traceback": traceback.format_exc()}
+
+
 @app.post("/api/admin/migrate")
 async def run_migration():
     """Run pending DB migrations. Temporary endpoint — remove after first use."""

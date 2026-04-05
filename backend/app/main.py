@@ -82,6 +82,30 @@ async def lifespan(app: FastAPI):
     start_scheduler()
     logger.info("Scheduler started")
 
+    # Auto-migrate: ensure all schema columns exist before any queries
+    try:
+        from app.database import engine as _engine
+        from sqlalchemy import text as _text
+        async with _engine.begin() as _conn:
+            for sql in [
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified INTEGER DEFAULT 0",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_token VARCHAR(255)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_token VARCHAR(255)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_expires TIMESTAMP",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS sso_provider VARCHAR(50)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS sso_subject_id VARCHAR(255)",
+                "ALTER TABLE restore_jobs ADD COLUMN IF NOT EXISTS initiated_by_user_id INTEGER",
+                "ALTER TABLE restore_jobs ADD COLUMN IF NOT EXISTS approval_required INTEGER DEFAULT 0",
+                "ALTER TABLE restore_jobs ADD COLUMN IF NOT EXISTS approval_status VARCHAR(20)",
+            ]:
+                try:
+                    await _conn.execute(_text(sql))
+                except Exception:
+                    pass
+        logger.info("Auto-migration: schema columns verified")
+    except Exception as e:
+        logger.warning(f"Auto-migration skipped: {e}")
+
     # Startup health validation — log warnings for broken dependencies
     from app.services.system_health import validate_startup_health
     await validate_startup_health()

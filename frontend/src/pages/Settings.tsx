@@ -483,6 +483,15 @@ export default function Settings() {
                     {permsData.error}
                   </div>
                 )}
+
+                {/* Per-Workload mode indicator */}
+                {permsTenant === t.id && permsData?.mode === 'per_workload' && (
+                  <div className="mt-2">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-teal-500/10 text-teal-400 border border-teal-500/20">
+                      Per-Workload Apps ({permsData.total_apps})
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           );

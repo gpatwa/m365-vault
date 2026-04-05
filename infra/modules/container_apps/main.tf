@@ -75,10 +75,10 @@ resource "azurerm_container_app" "postgres" {
       }
     }
 
+    # Use ephemeral storage — Azure Files doesn't support PostgreSQL's chmod/chown
     volume {
       name         = "pgdata"
-      storage_name = azurerm_container_app_environment_storage.pgdata.name
-      storage_type = "AzureFile"
+      storage_type = "EmptyDir"
     }
   }
 

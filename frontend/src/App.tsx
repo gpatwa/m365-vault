@@ -11,6 +11,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { api } from './api/client';
 import Layout from './components/Layout';
 import Landing from './pages/Landing';
+import Tour from './pages/Tour';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Exchange from './pages/Exchange';
@@ -116,6 +117,7 @@ function AppRoutes() {
     <Routes>
       {/* Public routes */}
       <Route path="/welcome" element={<Landing />} />
+      <Route path="/tour" element={<Tour />} />
       <Route path="/login" element={<Login />} />
       <Route path="/sso/callback" element={<SSOCallback />} />
       <Route path="/legal" element={<Legal />} />

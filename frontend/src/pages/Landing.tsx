@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Shield, Mail, HardDrive, Globe, MessageSquare, KeyRound,
-  AlertTriangle, ArrowRight, Server, Check, X,
+  AlertTriangle, ArrowRight, Check, X,
   Eye, Brain, ShieldCheck, ChevronRight,
 } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
@@ -271,6 +271,7 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle />
+            <Link to="/tour" className="text-sm text-muted-foreground hover:text-foreground">Product Tour</Link>
             <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">Sign In</Link>
             <Link to="/login?register=true" className="px-4 py-1.5 bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-sm font-medium rounded-lg hover:from-teal-400 hover:to-cyan-400 transition-all shadow-lg shadow-teal-500/20">
               Start Free
@@ -308,10 +309,9 @@ export default function Landing() {
             <Link to="/login?register=true" className="px-6 py-3 bg-teal-600 text-white font-semibold rounded-xl hover:bg-teal-700 transition-all hover:shadow-lg hover:shadow-teal-200/20 flex items-center gap-2">
               Start Free <ArrowRight className="w-4 h-4" />
             </Link>
-            <a href="https://github.com/gpatwa/m365-vault" target="_blank" rel="noopener noreferrer"
-              className="px-6 py-3 bg-muted text-muted-foreground font-medium rounded-xl hover:bg-accent transition-colors flex items-center gap-2">
-              <Server className="w-4 h-4" /> View Source
-            </a>
+            <Link to="/tour" className="px-6 py-3 border border-teal-500/30 text-teal-400 font-medium rounded-xl hover:bg-teal-500/10 transition-colors flex items-center gap-2">
+              <Eye className="w-4 h-4" /> See It In Action
+            </Link>
           </div>
 
           {/* Stats — CISO-focused value props */}

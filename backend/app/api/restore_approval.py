@@ -185,7 +185,8 @@ async def approve_restore(
     job.status = RestoreStatus.QUEUED
 
     # Dispatch the restore
-    from app.services.job_dispatcher import get_dispatcher, RestoreJobMessage
+    from app.interfaces.dispatcher_factory import get_dispatcher
+    from app.interfaces.job_message import RestoreJobMessage
     await get_dispatcher().dispatch_restore(
         RestoreJobMessage(restore_job_id=job.id), db=db
     )

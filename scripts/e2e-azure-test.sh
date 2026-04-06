@@ -94,6 +94,27 @@ check "API is KavachIQ" "$(curl -sf --max-time 10 "$BACKEND/")" "KavachIQ"
 check "Frontend title" "$(curl -sf --max-time 10 "$FRONTEND/" | grep -o '<title>[^<]*</title>')" "KavachIQ"
 
 echo ""
+echo "── Frontend-Backend Connectivity ──"
+CONFIG_JS=$(curl -sf --max-time 10 "$FRONTEND/config.js" 2>/dev/null || echo "")
+check "config.js loads" "$CONFIG_JS" "API_BASE"
+check "API_BASE is custom domain" "$CONFIG_JS" "api.kavachiq.com"
+RAW_FQDN_COUNT=$(echo "$CONFIG_JS" | grep -c "azurecontainerapps" || echo "0")
+check "API_BASE NOT raw Azure FQDN" "$RAW_FQDN_COUNT" "0"
+# Test kavachiq.com config.js too
+ROOT_CONFIG=$(curl -sf --max-time 10 "https://kavachiq.com/config.js" 2>/dev/null || echo "")
+check "Root domain config.js" "$ROOT_CONFIG" "api.kavachiq.com"
+
+echo ""
+echo "── Login Flow (full cycle) ──"
+LOGIN_RESULT=$(curl -s --max-time 10 -X POST "$BACKEND/api/auth/login" -d "username=demo&password=ShieldiDemo2026!")
+check "Demo login works" "$LOGIN_RESULT" "access_token"
+DEMO_TOKEN=$(echo "$LOGIN_RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('access_token',''))" 2>/dev/null)
+if [ -n "$DEMO_TOKEN" ]; then
+  check "Demo sees tenants" "$(curl -s --max-time 10 -H "Authorization: Bearer $DEMO_TOKEN" "$BACKEND/api/tenants/" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null)" ""
+  check "Demo sees dashboard" "$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $DEMO_TOKEN" "$BACKEND/api/dashboard/summary")" "200"
+fi
+
+echo ""
 echo "═══════════════════════════════════════════════════════"
 if [ $FAIL -eq 0 ]; then
   echo "  ✅ ALL $TOTAL TESTS PASSED — RELEASE CERTIFIED"

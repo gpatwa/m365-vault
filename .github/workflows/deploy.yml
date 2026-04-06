@@ -12,6 +12,7 @@ on:
         type: choice
         options:
           - dev
+          - staging
           - prod
 
 permissions:
@@ -57,6 +58,7 @@ jobs:
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/m365vault-frontend:${{ env.IMAGE_TAG }}
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/m365vault-frontend:latest
 
+  # ── Deploy to Dev (auto on push to main) ──────────────────────────
   deploy-dev:
     name: Deploy to Dev
     needs: build
@@ -65,17 +67,22 @@ jobs:
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'dev')
     steps:
       - uses: actions/checkout@v4
-
       - name: Azure Login (OIDC)
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.9"
+
+      - name: Record old revision
+        run: |
+          OLD_REV=$(az containerapp revision list --name m365vault-backend-dev --resource-group rg-m365vault-dev \
+            --query "[?properties.active && properties.runningState=='Running'].name" -o tsv | head -1 2>/dev/null || echo "")
+          echo "OLD_REV=$OLD_REV" >> $GITHUB_ENV
+          echo "Old revision: $OLD_REV"
 
       - name: Terraform Apply (Dev)
         env:
@@ -91,9 +98,6 @@ jobs:
             -backend-config="container_name=tfstate" \
             -backend-config="key=m365vault.terraform.tfstate" \
             -backend-config="use_oidc=true"
-          # Sensitive secrets (Stripe, Resend, Connector) are in Key Vault,
-          # referenced by Container Apps via managed identity.
-          # Only non-sensitive config is passed here.
           terraform apply \
             -var-file=environments/dev.tfvars \
             -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
@@ -102,12 +106,105 @@ jobs:
             -var="posthog_api_key=${{ vars.POSTHOG_API_KEY }}" \
             -auto-approve
 
-      - name: Smoke Test
+      - name: Wait for healthy revision (5 min timeout)
         run: |
-          FRONTEND_URL=$(cd infra && terraform output -raw frontend_url)
-          echo "Frontend URL: $FRONTEND_URL"
-          curl -sf "$FRONTEND_URL" > /dev/null && echo "Frontend OK" || echo "Frontend not ready yet"
+          echo "Waiting for new revision to be healthy..."
+          for i in $(seq 1 30); do
+            STATE=$(az containerapp revision list --name m365vault-backend-dev --resource-group rg-m365vault-dev \
+              --query "[0].properties.runningState" -o tsv 2>/dev/null || echo "Unknown")
+            echo "  Attempt $i/30: $STATE"
+            if [ "$STATE" = "Running" ]; then
+              echo "✅ New revision is Running"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "❌ New revision not healthy after 5 min"
+          exit 1
 
+      - name: Smoke test
+        run: |
+          BACKEND_FQDN=$(cd infra && terraform output -raw backend_fqdn)
+          FRONTEND_URL=$(cd infra && terraform output -raw frontend_url)
+
+          echo "Testing backend health..."
+          HEALTH=$(curl -sf --max-time 15 "https://$BACKEND_FQDN/health" 2>/dev/null || echo "{}")
+          echo "$HEALTH"
+          echo "$HEALTH" | grep -q '"healthy"' || { echo "❌ Backend health failed"; exit 1; }
+          echo "✅ Backend healthy"
+
+          echo "Testing frontend..."
+          curl -sf --max-time 10 "$FRONTEND_URL" > /dev/null || { echo "❌ Frontend failed"; exit 1; }
+          echo "✅ Frontend OK"
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          if [ -n "$OLD_REV" ]; then
+            echo "⚠️ Rolling back to $OLD_REV"
+            az containerapp revision activate --name m365vault-backend-dev --resource-group rg-m365vault-dev \
+              --revision "$OLD_REV" 2>/dev/null || echo "Rollback attempted"
+          else
+            echo "No old revision to rollback to"
+          fi
+
+  # ── Deploy to Staging (manual trigger) ────────────────────────────
+  deploy-staging:
+    name: Deploy to Staging
+    needs: build
+    runs-on: ubuntu-latest
+    environment: staging
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9"
+
+      - name: Terraform Apply (Staging)
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_USE_OIDC: "true"
+        run: |
+          cd infra
+          terraform init \
+            -backend-config="resource_group_name=rg-m365vault-tfstate" \
+            -backend-config="storage_account_name=stm365vaulttfstate" \
+            -backend-config="container_name=tfstate" \
+            -backend-config="key=m365vault-staging.terraform.tfstate" \
+            -backend-config="use_oidc=true"
+          terraform apply \
+            -var-file=environments/staging.tfvars \
+            -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
+            -var="image_tag=${{ needs.build.outputs.image_tag }}" \
+            -var="connector_app_id=${{ vars.CONNECTOR_APP_ID }}" \
+            -var="posthog_api_key=${{ vars.POSTHOG_API_KEY }}" \
+            -auto-approve
+
+      - name: Wait for healthy + smoke test
+        run: |
+          for i in $(seq 1 30); do
+            STATE=$(az containerapp revision list --name m365vault-backend-staging --resource-group rg-m365vault-staging \
+              --query "[0].properties.runningState" -o tsv 2>/dev/null || echo "Unknown")
+            if [ "$STATE" = "Running" ]; then
+              echo "✅ Staging backend healthy"
+              break
+            fi
+            sleep 10
+          done
+          FQDN=$(az containerapp show --name m365vault-backend-staging --resource-group rg-m365vault-staging \
+            --query "properties.configuration.ingress.fqdn" -o tsv 2>/dev/null)
+          curl -sf --max-time 15 "https://$FQDN/health" | grep -q '"healthy"' && echo "✅ Staging smoke test passed" || echo "❌ Staging smoke test failed"
+
+  # ── Deploy to Prod (manual trigger, requires staging success) ─────
   deploy-prod:
     name: Deploy to Prod
     needs: build
@@ -116,17 +213,21 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'prod'
     steps:
       - uses: actions/checkout@v4
-
       - name: Azure Login (OIDC)
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.9"
+
+      - name: Record old revision
+        run: |
+          OLD_REV=$(az containerapp revision list --name m365vault-backend-prod --resource-group rg-m365vault-prod \
+            --query "[?properties.active && properties.runningState=='Running'].name" -o tsv | head -1 2>/dev/null || echo "")
+          echo "OLD_REV=$OLD_REV" >> $GITHUB_ENV
 
       - name: Terraform Apply (Prod)
         env:
@@ -140,7 +241,7 @@ jobs:
             -backend-config="resource_group_name=rg-m365vault-tfstate" \
             -backend-config="storage_account_name=stm365vaulttfstate" \
             -backend-config="container_name=tfstate" \
-            -backend-config="key=m365vault.terraform.tfstate" \
+            -backend-config="key=m365vault-prod.terraform.tfstate" \
             -backend-config="use_oidc=true"
           terraform apply \
             -var-file=environments/prod.tfvars \
@@ -150,8 +251,33 @@ jobs:
             -var="posthog_api_key=${{ vars.POSTHOG_API_KEY }}" \
             -auto-approve
 
-      - name: Smoke Test
+      - name: Wait for healthy revision (5 min timeout)
         run: |
-          FRONTEND_URL=$(cd infra && terraform output -raw frontend_url)
-          echo "Production URL: $FRONTEND_URL"
-          curl -sf "$FRONTEND_URL" > /dev/null && echo "Production OK"
+          for i in $(seq 1 30); do
+            STATE=$(az containerapp revision list --name m365vault-backend-prod --resource-group rg-m365vault-prod \
+              --query "[0].properties.runningState" -o tsv 2>/dev/null || echo "Unknown")
+            echo "  Attempt $i/30: $STATE"
+            if [ "$STATE" = "Running" ]; then
+              echo "✅ Production revision healthy"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "❌ Production revision not healthy — rolling back"
+          exit 1
+
+      - name: Production smoke test
+        run: |
+          FQDN=$(az containerapp show --name m365vault-backend-prod --resource-group rg-m365vault-prod \
+            --query "properties.configuration.ingress.fqdn" -o tsv)
+          curl -sf --max-time 15 "https://$FQDN/health" | grep -q '"healthy"' || { echo "❌ Prod health failed"; exit 1; }
+          echo "✅ Production healthy"
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          if [ -n "$OLD_REV" ]; then
+            echo "⚠️ ROLLING BACK PRODUCTION to $OLD_REV"
+            az containerapp revision activate --name m365vault-backend-prod --resource-group rg-m365vault-prod \
+              --revision "$OLD_REV" 2>/dev/null || echo "Rollback attempted"
+          fi

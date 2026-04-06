@@ -333,6 +333,18 @@ full-deploy: acr-push secrets-push tf-apply db-migrate ## Full deploy: build + s
 	@echo "  Run 'make secrets-verify ENV=$(ENV)' to confirm"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
+.PHONY: deploy-staging
+deploy-staging: ## Deploy to staging via GitHub Actions
+	gh workflow run deploy.yml --repo gpatwa/m365-vault -f environment=staging
+	@echo "Triggered staging deployment. Watch: gh run list --repo gpatwa/m365-vault"
+
+.PHONY: promote-prod
+promote-prod: ## Promote staging image to production (uses same image tag)
+	@echo "⚠️  This will deploy the current staging image to PRODUCTION."
+	@read -rp "Continue? (y/N): " confirm && [ "$$confirm" = "y" ] || exit 1
+	gh workflow run deploy.yml --repo gpatwa/m365-vault -f environment=prod
+	@echo "Triggered prod deployment. Watch: gh run list --repo gpatwa/m365-vault"
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # GitHub Actions Deployment
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

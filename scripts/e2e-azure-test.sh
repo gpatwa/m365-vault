@@ -26,7 +26,7 @@ ENV="${1:-dev}"
 
 # Resolve URLs
 BACKEND="https://api.kavachiq.com"
-FRONTEND="https://app.kavachiq.com"
+FRONTEND="https://kavachiq.com"        # Primary domain (app.kavachiq.com redirects here)
 ROOT="https://kavachiq.com"
 
 if [ "$ENV" != "dev" ] && [ "$ENV" != "prod" ]; then
@@ -196,8 +196,9 @@ fi
 echo ""
 echo "── 9. Custom Domains & SSL ──"
 check "api.kavachiq.com SSL" "$(curl -sf --max-time 10 -o /dev/null -w "%{http_code}" https://api.kavachiq.com/health)" "200"
-check "app.kavachiq.com SSL" "$(curl -sf --max-time 10 -o /dev/null -w "%{http_code}" https://app.kavachiq.com/)" "200"
 check "kavachiq.com SSL" "$(curl -sf --max-time 10 -o /dev/null -w "%{http_code}" https://kavachiq.com/)" "200"
+# app.kavachiq.com should 301 redirect to kavachiq.com (single domain)
+check "app.kavachiq.com redirects" "$(curl -sI --max-time 10 https://app.kavachiq.com/ | head -1)" "301"
 # Verify no redirect loop — kavachiq.com should NOT redirect to app.kavachiq.com
 ROOT_REDIRECT=$(curl -sI --max-time 10 https://kavachiq.com/ | grep -i "^location:" || echo "none")
 check "kavachiq.com no redirect" "$ROOT_REDIRECT" "none"

@@ -437,6 +437,9 @@ app.include_router(billing_router)
 app.include_router(security_posture_router)
 app.include_router(restore_approval_router)
 
+from app.api.restore_consent import router as restore_consent_router
+app.include_router(restore_consent_router)
+
 from app.api.workload_apps import router as workload_apps_router
 app.include_router(workload_apps_router)
 

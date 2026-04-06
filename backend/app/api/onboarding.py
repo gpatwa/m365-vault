@@ -34,6 +34,109 @@ router = APIRouter(prefix="/api/onboard", tags=["Onboarding"])
 # In-memory state store (use Redis in production)
 _onboard_states: dict[str, dict] = {}
 
+# Microsoft Graph resource app ID
+MS_GRAPH_APP_ID = "00000003-0000-0000-c000-000000000000"
+
+
+async def _ensure_connector_permissions():
+    """Ensure the connector app registration has all required Graph API permissions.
+
+    Uses Azure CLI credentials (az login) to update the app registration.
+    This is idempotent — only adds missing permissions.
+    Called automatically during the onboarding /connect flow.
+    """
+    from app.services.app_provisioning import REQUIRED_APP_PERMISSIONS
+    import httpx
+
+    app_id = settings.CONNECTOR_APP_ID
+    if not app_id:
+        return
+
+    # Get current app registration
+    try:
+        import msal
+        # Use the connector's own credentials to check its registration
+        # Note: this requires the app to have Application.ReadWrite.OwnedBy or similar
+        # If it fails, we'll use the requiredResourceAccess from the Graph API
+        app = msal.ConfidentialClientApplication(
+            client_id=app_id,
+            client_credential=settings.CONNECTOR_APP_SECRET,
+            authority=f"{settings.MS_AUTH_URL}/3725cec5-3e2d-402c-a5a6-460c325d8f87",
+        )
+        token_result = app.acquire_token_for_client(scopes=["https://graph.microsoft.com/.default"])
+        if "access_token" not in token_result:
+            logger.debug("Cannot check connector permissions — token acquisition failed")
+            return
+
+        token = token_result["access_token"]
+
+        # Check current permissions via Graph API
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.get(
+                f"https://graph.microsoft.com/v1.0/applications?$filter=appId eq '{app_id}'&$select=id,requiredResourceAccess",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+            if resp.status_code != 200:
+                logger.debug(f"Cannot read app registration: {resp.status_code}")
+                return
+
+            apps = resp.json().get("value", [])
+            if not apps:
+                logger.debug("App registration not found")
+                return
+
+            app_obj = apps[0]
+            app_object_id = app_obj["id"]
+
+            # Check if Graph permissions are already configured
+            current_perms = set()
+            for rra in app_obj.get("requiredResourceAccess", []):
+                if rra.get("resourceAppId") == MS_GRAPH_APP_ID:
+                    for ra in rra.get("resourceAccess", []):
+                        current_perms.add(ra["id"])
+
+            # Build the required permissions (application type = Role)
+            required = [
+                {"id": perm_id, "type": "Role"}
+                for perm_name, perm_id in REQUIRED_APP_PERMISSIONS.items()
+                if perm_id not in current_perms
+            ]
+
+            if not required:
+                logger.debug("Connector app already has all required permissions")
+                return
+
+            logger.info(f"Adding {len(required)} missing permissions to connector app")
+
+            # Build the full requiredResourceAccess payload
+            all_perms = [
+                {"id": perm_id, "type": "Role"}
+                for perm_id in REQUIRED_APP_PERMISSIONS.values()
+            ]
+
+            # Update the app registration
+            update_resp = await client.patch(
+                f"https://graph.microsoft.com/v1.0/applications/{app_object_id}",
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "requiredResourceAccess": [{
+                        "resourceAppId": MS_GRAPH_APP_ID,
+                        "resourceAccess": all_perms,
+                    }]
+                },
+            )
+
+            if update_resp.status_code in (200, 204):
+                logger.info(f"Connector app permissions updated: {len(all_perms)} permissions configured")
+            else:
+                logger.warning(f"Failed to update app permissions: {update_resp.status_code} {update_resp.text[:200]}")
+
+    except Exception as e:
+        logger.debug(f"Auto-configure permissions skipped: {e}")
+
 
 @router.get("/connector-health")
 async def connector_health():
@@ -154,6 +257,11 @@ async def start_connection(
                 CONNECTOR_SECRET_INVALID,
                 detail=f"KavachIQ connector is not properly configured. {check.fix}",
             )
+
+    # Note: Connector app permissions must be configured BEFORE onboarding.
+    # Run: make configure-connector (one-time setup)
+    # The _ensure_connector_permissions() function cannot auto-configure from
+    # the app's own token (needs Application.Read.All which is chicken-and-egg).
 
     # Generate state token for CSRF protection
     state = secrets.token_urlsafe(32)

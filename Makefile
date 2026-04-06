@@ -434,6 +434,10 @@ benchmark: ## Run performance benchmark suite against local or remote API
 security-scan: ## Run automated security audit (static analysis, dependency scan, OWASP checks)
 	@bash scripts/security-audit.sh
 
+.PHONY: configure-connector
+configure-connector: ## ONE-TIME: Configure connector app permissions + admin consent
+	@./scripts/configure-connector-permissions.sh
+
 .PHONY: seed-real
 seed-real: ## Connect real M365 tenant: discover objects + run first backup (requires .env creds)
 	@echo "Connecting to real M365 tenant..."

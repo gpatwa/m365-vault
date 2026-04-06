@@ -34,13 +34,15 @@ router = APIRouter(prefix="/api/restore-consent", tags=["Restore Consent"])
 _restore_tokens: dict[str, dict] = {}
 
 # Delegated scopes for restore (write permissions)
+# Delegated scopes for restore (write permissions)
+# Note: Do NOT include 'offline_access' here — MSAL adds it automatically
+# when the app requests it via the 'offline_access' scope in the Entra app config
 RESTORE_DELEGATED_SCOPES = [
     "Mail.ReadWrite",
     "Calendars.ReadWrite",
     "Contacts.ReadWrite",
     "User.ReadWrite.All",
     "Group.ReadWrite.All",
-    "offline_access",  # Required to get refresh_token
 ]
 
 

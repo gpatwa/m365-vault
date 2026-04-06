@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Shield, ShieldAlert, Clock, CheckCircle, XCircle, AlertTriangle, ArrowRight, PlayCircle, Loader2, BookOpen, RotateCcw } from 'lucide-react';
+import { Shield, ShieldAlert, Clock, CheckCircle, XCircle, AlertTriangle, ArrowRight, PlayCircle, Loader2, BookOpen, RotateCcw, KeyRound } from 'lucide-react';
 import { api } from '../api/client';
 import { useTenantId } from '../hooks/useTenant';
 import { PRIORITY_WORKLOAD_KEYS } from '../config/workloads';
@@ -113,6 +113,22 @@ export default function Recovery() {
         >
           {testMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlayCircle className="w-4 h-4" />}
           Run Test Restore
+        </button>
+        <button
+          onClick={async () => {
+            try {
+              const data: any = await api.get(`/restore-consent/authorize?tenant_id=${tenantId}`);
+              if (data.auth_url) {
+                window.location.href = data.auth_url;
+              }
+            } catch (err) {
+              console.error('Restore consent failed:', err);
+            }
+          }}
+          className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 flex items-center gap-2"
+        >
+          <KeyRound className="w-4 h-4" />
+          Authorize Live Restore
         </button>
       </div>
 

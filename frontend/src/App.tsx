@@ -47,6 +47,7 @@ import DocViewer from './pages/DocViewer';
 import Performance from './pages/Performance';
 import OrgContext from './pages/OrgContext';
 import Onboard, { OnboardCallback, DemoOnboard } from './pages/Onboard';
+import RestoreCallback from './pages/RestoreCallback';
 import MSPDashboard from './pages/MSPDashboard';
 import MSPBrandingPage from './pages/MSPBranding';
 import BillingPortal from './pages/BillingPortal';
@@ -129,6 +130,7 @@ function AppRoutes() {
       <Route path="/docs/view/:filename" element={<DocViewer />} />
       <Route path="/onboard" element={<ProtectedRoute><Onboard /></ProtectedRoute>} />
       <Route path="/onboard/callback" element={<ProtectedRoute><OnboardCallback /></ProtectedRoute>} />
+      <Route path="/restore/callback" element={<ProtectedRoute><RestoreCallback /></ProtectedRoute>} />
       <Route path="/onboard/demo" element={<ProtectedRoute><DemoOnboard /></ProtectedRoute>} />
 
       {/* Root: Landing for anonymous, Dashboard for authenticated */}

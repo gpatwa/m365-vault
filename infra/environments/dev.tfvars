@@ -36,7 +36,7 @@ redis_family          = "C"
 #
 # Non-sensitive values:
 backend_custom_domain     = "api.kavachiq.com"
-cors_origins              = "https://app.kavachiq.com,https://kavachiq.com"
+cors_origins              = "https://kavachiq.com,https://app.kavachiq.com"
 email_provider            = "resend"
-frontend_url              = "https://app.kavachiq.com"
-connector_redirect_uri    = "https://app.kavachiq.com/onboard/callback"
+frontend_url              = "https://kavachiq.com"
+connector_redirect_uri    = "https://kavachiq.com/onboard/callback"

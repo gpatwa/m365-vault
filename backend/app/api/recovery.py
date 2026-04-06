@@ -185,26 +185,46 @@ async def get_recovery_confidence(
 
 
 def _get_recommendations(freshness, completeness, restore, validation) -> list[dict]:
-    """Generate actionable recommendations based on scores."""
+    """Generate actionable recommendations with links to fix them."""
     recs = []
     if freshness < 80:
-        recs.append({"priority": "high", "action": "Run backups for stale objects",
-                     "detail": "Some protected objects haven't been backed up in over 7 days."})
+        recs.append({
+            "priority": "high", "action": "Run backups for stale objects",
+            "detail": "Some protected objects haven't been backed up in over 7 days.",
+            "link": "/jobs", "link_label": "View Jobs →",
+        })
     if completeness < 90:
-        recs.append({"priority": "high", "action": "Protect unprotected objects",
-                     "detail": "Assign SLA policies to unprotected objects to ensure full coverage."})
+        recs.append({
+            "priority": "high", "action": "Protect unprotected objects",
+            "detail": "Assign SLA policies to unprotected objects to ensure full coverage.",
+            "link": "/sla-policies", "link_label": "Manage SLA Policies →",
+        })
     if restore < 80 and restore > 0:
-        recs.append({"priority": "medium", "action": "Investigate restore failures",
-                     "detail": "Some restore operations have failed. Check failed items for root cause."})
+        recs.append({
+            "priority": "medium", "action": "Investigate restore failures",
+            "detail": "Some restore operations have failed. Check failed items for root cause.",
+            "link": "/failed-items", "link_label": "View Protection Gaps →",
+        })
     if restore == 50:
-        recs.append({"priority": "medium", "action": "Run a test restore",
-                     "detail": "No restores have been attempted. Run a test restore to verify recoverability."})
+        recs.append({
+            "priority": "medium", "action": "Run a test restore",
+            "detail": "No restores have been attempted. Run a test restore to verify recoverability.",
+            "link": "/recovery", "link_label": "Run Test Restore →",
+            "action_tab": "test",
+        })
     if validation < 50:
-        recs.append({"priority": "medium", "action": "Validate backup integrity",
-                     "detail": "Most backups haven't been validated. Run backup validation to check data integrity."})
+        recs.append({
+            "priority": "medium", "action": "Validate backup integrity",
+            "detail": "Most backups haven't been validated. Run backup validation to check data integrity.",
+            "link": "/recovery", "link_label": "Run Validation →",
+            "action_tab": "test",
+        })
     if not recs:
-        recs.append({"priority": "low", "action": "Maintain current practices",
-                     "detail": "Recovery posture is strong. Continue regular backups and periodic test restores."})
+        recs.append({
+            "priority": "low", "action": "Maintain current practices",
+            "detail": "Recovery posture is strong. Continue regular backups and periodic test restores.",
+            "link": None, "link_label": None,
+        })
     return recs
 
 

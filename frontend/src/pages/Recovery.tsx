@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Shield, ShieldAlert, Clock, CheckCircle, XCircle, AlertTriangle, ArrowRight, PlayCircle, Loader2, BookOpen, RotateCcw, KeyRound } from 'lucide-react';
 import { api } from '../api/client';
@@ -11,7 +12,7 @@ interface ConfidenceScore {
   label: string;
   color: string;
   factors: Record<string, { score: number; weight: number; detail: string }>;
-  recommendations: { priority: string; action: string; detail: string }[];
+  recommendations: { priority: string; action: string; detail: string; link?: string; link_label?: string; action_tab?: string }[];
 }
 
 interface RPORTOData {
@@ -56,6 +57,7 @@ const SEVERITY_COLORS: Record<string, string> = {
 };
 
 export default function Recovery() {
+  const navigate = useNavigate();
   const tenantId = useTenantId();
   const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState<'overview' | 'runbooks' | 'test'>('overview');
@@ -253,10 +255,21 @@ export default function Recovery() {
                     <ArrowRight className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
                       rec.priority === 'high' ? 'text-red-500' : rec.priority === 'medium' ? 'text-amber-500' : 'text-muted-foreground'
                     }`} />
-                    <div>
+                    <div className="flex-1">
                       <p className="text-sm font-medium text-foreground">{rec.action}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">{rec.detail}</p>
                     </div>
+                    {rec.link && (
+                      <button
+                        onClick={() => {
+                          if (rec.action_tab) setActiveTab(rec.action_tab as any);
+                          else navigate(rec.link!);
+                        }}
+                        className="px-3 py-1 bg-teal-600 text-white text-xs font-medium rounded-lg hover:bg-teal-500 whitespace-nowrap flex-shrink-0"
+                      >
+                        {rec.link_label || 'Fix →'}
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>

@@ -97,7 +97,26 @@ async def get_recovery_confidence(
         )
     )).scalar() or 0
 
-    restore_score = (successful_restores / total_restores * 100) if total_restores > 0 else 50  # 50% if no restores attempted
+    # Restore score: count test-restore validations too (not just live restores)
+    # Test restores prove data recoverability without requiring write permissions
+    validated_for_restore = (await db.execute(
+        select(func.count()).where(
+            Snapshot.protected_object_id.in_(
+                select(ProtectedObject.id).where(ProtectedObject.tenant_id == tenant_id)
+            ),
+            Snapshot.validation_status.in_(["passed", "partial"]),
+        )
+    )).scalar() or 0
+
+    if total_restores > 0 and successful_restores > 0:
+        restore_score = successful_restores / total_restores * 100
+    elif validated_for_restore > 0:
+        # Test restores validated — data is recoverable even if live restore not tested
+        restore_score = min(validated_for_restore / max(total_snapshots, 1) * 200, 80)  # Cap at 80% without live restore
+    elif total_restores == 0:
+        restore_score = 50  # No restores attempted — benefit of the doubt
+    else:
+        restore_score = max(10, successful_restores / total_restores * 100)  # Floor at 10% if all fail
 
     # Factor 4: Validation & Scan (25%) — have backups been validated?
     validated_snapshots = (await db.execute(

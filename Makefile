@@ -83,6 +83,29 @@ dev-frontend: ## Run frontend directly (without Docker) — requires local Node
 	cd frontend && npm run dev
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Local Integration Test (run BEFORE deploying to Azure)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+.PHONY: test-local
+test-local: ## Full local integration test: units + docker + API + frontend + auth + data
+	@./scripts/test-local.sh
+
+.PHONY: test-unit
+test-unit: ## Run unit tests only (fast, no Docker)
+	@python3 -m pytest backend/tests/test_restore_permissions.py backend/tests/test_restore_consent.py backend/tests/test_workload_apps.py backend/tests/test_workload_e2e.py -q --tb=short
+
+.PHONY: release
+release: test-local acr-push safe-deploy e2e-test ## Full release: local test → build → deploy → verify
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "  ✅ RELEASE COMPLETE — tested locally + deployed + verified"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+.PHONY: e2e-test
+e2e-test: ## Run Azure E2E certification (56 tests)
+	@./scripts/e2e-azure-test.sh --env $(ENV)
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Simulation & Testing
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -311,10 +334,6 @@ safe-deploy: ## Safe deploy: build → push → wait for healthy → deactivate 
 blue-green: ## Blue-green deploy: canary 10% → monitor → promote or rollback (ENV=dev|prod)
 	@./scripts/blue-green-deploy.sh --env $(ENV)
 
-.PHONY: e2e-test
-e2e-test: ## Run E2E certification tests against Azure (ENV=dev|prod)
-	@./scripts/e2e-azure-test.sh --env $(ENV)
-
 .PHONY: setup-monitoring
 setup-monitoring: ## Set up Azure Monitor alerts + health check endpoints (ENV=dev|prod)
 	@./scripts/setup-monitoring.sh --env $(ENV)
@@ -432,7 +451,5 @@ release-check: ## Full quality gate: types → tests → coverage → build → 
 release-test: ## Run release smoke tests (API checks) against running stack
 	@bash scripts/release-test.sh
 
-.PHONY: release
-release: release-check acr-push ## Full release: quality gate → build → push
-	@echo "✅ Images pushed. Run: make az-wake to deploy."
+# release target is defined above (test-local → acr-push → safe-deploy → e2e-test)
 

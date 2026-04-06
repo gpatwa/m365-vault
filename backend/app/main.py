@@ -126,6 +126,21 @@ async def lifespan(app: FastAPI):
             except Exception as seed_err:
                 logger.warning(f"Auto-seed skipped: {seed_err}")
 
+            # 3. Fix stale tenant counters (denormalized fields)
+            if not _is_sqlite:
+                try:
+                    await _conn.execute(_text("""
+                        UPDATE tenants SET
+                          total_mailboxes = (SELECT COUNT(*) FROM protected_objects WHERE tenant_id = tenants.id AND workload_type = 'EXCHANGE'),
+                          total_entra_objects = (SELECT COUNT(*) FROM protected_objects WHERE tenant_id = tenants.id AND workload_type = 'ENTRA_ID'),
+                          total_onedrives = (SELECT COUNT(*) FROM protected_objects WHERE tenant_id = tenants.id AND workload_type = 'ONEDRIVE'),
+                          total_sites = (SELECT COUNT(*) FROM protected_objects WHERE tenant_id = tenants.id AND workload_type = 'SHAREPOINT'),
+                          total_teams = (SELECT COUNT(*) FROM protected_objects WHERE tenant_id = tenants.id AND workload_type = 'TEAMS')
+                    """))
+                    logger.info("Auto-fix: tenant object counters synced")
+                except Exception:
+                    pass
+
     except Exception as e:
         logger.warning(f"Auto-migration skipped: {e}")
 

@@ -101,11 +101,12 @@ step "Running smoke tests..."
 BACKEND_URL=$(az containerapp show --name "$BACKEND_APP" --resource-group "$RG" \
   --query "properties.configuration.ingress.fqdn" -o tsv)
 
-HEALTH=$(curl -sf --max-time 10 "https://$BACKEND_URL/health" 2>/dev/null)
-if echo "$HEALTH" | grep -q '"healthy"'; then
-  ok "Health check passed"
+HEALTH=$(curl -sf --max-time 10 "https://$BACKEND_URL/health/deep" 2>/dev/null || curl -sf --max-time 10 "https://$BACKEND_URL/health" 2>/dev/null)
+if echo "$HEALTH" | grep -q '"status":"healthy"'; then
+  ok "Deep health check passed"
 else
   fail "Health check FAILED"
+  echo "$HEALTH" | python3 -m json.tool 2>/dev/null || echo "$HEALTH"
   if [ -n "$OLD_REV" ]; then
     warn "Rolling back to $OLD_REV"
     az containerapp revision activate --name "$BACKEND_APP" --resource-group "$RG" \

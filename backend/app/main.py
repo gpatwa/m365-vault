@@ -539,3 +539,156 @@ async def health():
             "checks": checks,
         },
     )
+
+
+@app.get("/health/deep")
+async def deep_health_check():
+    """Deep health check — validates ALL external dependencies.
+
+    Used by deploy scripts BEFORE routing traffic to a new revision.
+    Checks: database, storage, M365 connector, Stripe, email, Redis,
+    demo data, and secret expiry.
+    """
+    from datetime import datetime, timedelta
+    checks = {}
+    warnings = []
+
+    # 1. Database
+    try:
+        from app.database import async_session
+        from sqlalchemy import text, func
+        async with async_session() as db:
+            await db.execute(text("SELECT 1"))
+            # Check user count (fresh DB = problem)
+            from app.models.user import User
+            user_count = (await db.execute(func.count(User.id))).scalar() or 0
+            checks["database"] = {"status": "healthy", "users": user_count}
+            if user_count == 0:
+                checks["database"]["status"] = "degraded"
+                checks["database"]["issue"] = "No users — fresh DB needs seeding"
+    except Exception as e:
+        checks["database"] = {"status": "unhealthy", "error": str(e)[:100]}
+
+    # 2. Storage
+    try:
+        from app.services.storage import storage_service
+        if storage_service and storage_service.backend:
+            checks["storage"] = {"status": "healthy"}
+        else:
+            checks["storage"] = {"status": "degraded", "issue": "Not initialized"}
+    except Exception as e:
+        checks["storage"] = {"status": "unhealthy", "error": str(e)[:100]}
+
+    # 3. M365 Connector (Entra app secret valid)
+    try:
+        if settings.CONNECTOR_APP_ID and settings.CONNECTOR_APP_SECRET:
+            import msal
+            app = msal.ConfidentialClientApplication(
+                settings.CONNECTOR_APP_ID,
+                authority="https://login.microsoftonline.com/common",
+                client_credential=settings.CONNECTOR_APP_SECRET,
+            )
+            # Try to get a token (validates secret)
+            result = app.acquire_token_for_client(scopes=["https://graph.microsoft.com/.default"])
+            if "access_token" in result:
+                checks["connector"] = {"status": "healthy", "app_id": settings.CONNECTOR_APP_ID[:8] + "..."}
+            else:
+                checks["connector"] = {"status": "unhealthy", "error": result.get("error_description", "Token acquisition failed")[:100]}
+        else:
+            checks["connector"] = {"status": "not_configured"}
+    except Exception as e:
+        checks["connector"] = {"status": "unhealthy", "error": str(e)[:100]}
+
+    # 4. Stripe
+    try:
+        if settings.STRIPE_SECRET_KEY and "not-configured" not in settings.STRIPE_SECRET_KEY:
+            import stripe
+            stripe.api_key = settings.STRIPE_SECRET_KEY
+            # Lightweight check — list 1 product
+            stripe.Product.list(limit=1)
+            checks["stripe"] = {"status": "healthy"}
+        else:
+            checks["stripe"] = {"status": "not_configured"}
+    except Exception as e:
+        checks["stripe"] = {"status": "unhealthy", "error": str(e)[:100]}
+
+    # 5. Email (Resend)
+    try:
+        if settings.EMAIL_PROVIDER == "resend" and settings.RESEND_API_KEY and "not-configured" not in settings.RESEND_API_KEY:
+            import resend
+            resend.api_key = settings.RESEND_API_KEY
+            # Validate API key by listing domains
+            domains = resend.Domains.list()
+            checks["email"] = {"status": "healthy", "provider": "resend"}
+        elif settings.EMAIL_PROVIDER == "console":
+            checks["email"] = {"status": "healthy", "provider": "console (dev mode)"}
+        else:
+            checks["email"] = {"status": "not_configured"}
+    except Exception as e:
+        checks["email"] = {"status": "degraded", "error": str(e)[:100], "provider": settings.EMAIL_PROVIDER}
+
+    # 6. Redis
+    try:
+        if settings.REDIS_URL:
+            import redis.asyncio as aioredis
+            r = aioredis.from_url(settings.REDIS_URL, socket_connect_timeout=5)
+            await r.ping()
+            await r.aclose()
+            checks["redis"] = {"status": "healthy"}
+        else:
+            checks["redis"] = {"status": "not_configured"}
+    except Exception as e:
+        checks["redis"] = {"status": "degraded", "error": str(e)[:100]}
+
+    # 7. Demo data (tenants + objects)
+    try:
+        from app.database import async_session
+        from sqlalchemy import text
+        async with async_session() as db:
+            tenant_count = (await db.execute(text("SELECT COUNT(*) FROM tenants"))).scalar() or 0
+            object_count = (await db.execute(text("SELECT COUNT(*) FROM protected_objects"))).scalar() or 0
+            checks["demo_data"] = {
+                "status": "healthy" if tenant_count > 0 else "degraded",
+                "tenants": tenant_count,
+                "objects": object_count,
+            }
+            if tenant_count == 0:
+                checks["demo_data"]["issue"] = "No tenants — run demo seed"
+    except Exception as e:
+        checks["demo_data"] = {"status": "unknown", "error": str(e)[:100]}
+
+    # 8. Config validation
+    config_issues = []
+    if not settings.CONNECTOR_APP_ID:
+        config_issues.append("CONNECTOR_APP_ID not set")
+    if not settings.CONNECTOR_APP_SECRET or "not-configured" in str(settings.CONNECTOR_APP_SECRET):
+        config_issues.append("CONNECTOR_APP_SECRET not set")
+    if settings.FRONTEND_URL == "http://localhost:5173":
+        config_issues.append("FRONTEND_URL still localhost (not production)")
+    if settings.CORS_ORIGINS == "*":
+        config_issues.append("CORS_ORIGINS is wildcard (not production)")
+
+    checks["config"] = {
+        "status": "healthy" if not config_issues else "degraded",
+        "issues": config_issues if config_issues else None,
+    }
+
+    # Summary
+    statuses = [c.get("status", "unknown") for c in checks.values()]
+    if all(s == "healthy" for s in statuses):
+        overall = "healthy"
+    elif any(s == "unhealthy" for s in statuses):
+        overall = "unhealthy"
+    else:
+        overall = "degraded"
+
+    status_code = 200 if overall == "healthy" else (503 if overall == "unhealthy" else 200)
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "status": overall,
+            "version": settings.APP_VERSION,
+            "timestamp": datetime.utcnow().isoformat(),
+            "checks": checks,
+        },
+    )

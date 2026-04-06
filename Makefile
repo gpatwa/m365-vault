@@ -309,6 +309,14 @@ blue-green: ## Blue-green deploy: canary 10% → monitor → promote or rollback
 e2e-test: ## Run E2E certification tests against Azure (ENV=dev|prod)
 	@./scripts/e2e-azure-test.sh --env $(ENV)
 
+.PHONY: setup-monitoring
+setup-monitoring: ## Set up Azure Monitor alerts + health check endpoints (ENV=dev|prod)
+	@./scripts/setup-monitoring.sh --env $(ENV)
+
+.PHONY: dr-rebuild
+dr-rebuild: ## Disaster recovery: destroy + rebuild entire environment (ENV=dev|prod)
+	@./scripts/dr-rebuild.sh --env $(ENV)
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Secrets Management (Azure Key Vault)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

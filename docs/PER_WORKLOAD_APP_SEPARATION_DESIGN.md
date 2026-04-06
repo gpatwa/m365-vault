@@ -1,7 +1,7 @@
 # Per-Workload Entra ID App Separation Architecture
 
-**Status:** Design Draft
-**Date:** 2026-04-04
+**Status:** Design v2 (Updated 2026-04-06)
+**Date:** 2026-04-04 (created), 2026-04-06 (revised)
 **Author:** KavachIQ Engineering
 **Affects:** Backend, Frontend, Onboarding, Graph Client, Provisioning
 
@@ -15,10 +15,25 @@ Today, each KavachIQ tenant has a **single Entra ID app registration** (`tenants
 2. **Blast radius:** If the single app secret leaks, the attacker has read/write access to *all* M365 workloads.
 3. **Compliance friction:** Security-conscious customers (financial, healthcare, government) refuse to grant "all permissions upfront" and delay onboarding.
 
-### Decision Record
+### Decision Record (Updated 2026-04-06)
 
-- We decided **NOT** to split backup vs. restore into separate apps (since per-workload separation makes that split redundant -- each workload app gets Read for backup and ReadWrite for restore).
-- Per-workload separation is the primary axis: each workload (Entra ID, Exchange, SharePoint, OneDrive, Teams) gets its own Entra app registration.
+- Per-workload separation is the primary axis — each workload gets its own multi-tenant app.
+- **SaaS model (default):** Apps live in KavachIQ's Entra tenant. KavachIQ manages secrets.
+  Customers consent per-workload — only the workloads they need.
+- **Self-hosted model (enterprise):** Bootstrap pattern creates apps in customer's tenant.
+  Customer manages secrets via their own Key Vault / Managed Identity.
+- **Restore permissions:** Delegated consent flow (no standing write access). Not per-app.
+- **Throttling:** Per-workload apps are NOT for throttling (Microsoft blocks multi-app
+  throttling workaround since March 2026). They're for security isolation ONLY.
+- **Customer choice:** Customer picks which workloads to protect during onboarding.
+  Only Exchange? Only Entra ID? Exchange + SharePoint? Their choice → only those
+  apps get consented. No unnecessary permissions.
+
+### Microsoft 365 Backup Storage API (Future)
+
+The industry is moving to Microsoft's first-party Backup Storage API (no throttling,
+fast restore). KavachIQ will adopt this as a secondary path while keeping Graph API
+for air-gap copies and workloads Backup Storage doesn't support (Teams, Entra ID).
 
 ---
 

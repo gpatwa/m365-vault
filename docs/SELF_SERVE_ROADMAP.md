@@ -318,8 +318,94 @@ See full design: `docs/CONFIG_DRIFT_DESIGN.md`
 | 5 | 11 | **DONE** | GDPR: Data export, account deletion |
 | 6 | 12-15 | **PLANNED** | Configuration Drift Detection (THE MOAT) |
 | 7 | 15 | **DONE** | Restore Permission Model: audit, roles, approval workflow |
-| 8 | 16+ | Backlog | Per-Workload App Separation (Sites.Selected, RBAC for Apps) |
-| 9 | 17+ | Backlog | Hybrid Backup (Microsoft Backup Storage API) |
+| 8 | 16 | **DONE** | Deployment Resilience: P0-P2 (pin deps, safe deploy, blue-green, Flexible Server) |
+| 9 | 16 | **DONE** | KavachIQ Rebrand + Custom Domain (kavachiq.com) |
+| 10 | 16 | **DONE** | Prospect Experience: sandbox banner, invite admin, email nurture, product tour |
+| 11 | 16 | **DONE** | /health/deep endpoint + 56-test E2E certification + make test-local |
+| 12 | 16 | **DONE** | Delegated Restore Consent: zero standing write access |
+| 13 | 17 | **IN PROGRESS** | Per-Workload App Architecture (security isolation) |
+| 14 | 18 | **PLANNED** | Data Parity: local ↔ Azure (99% test confidence) |
+| 15 | 19-20 | **PLANNED** | Configuration Drift Detection (THE MOAT) |
+| 16 | 21+ | **BACKLOG** | Microsoft 365 Backup Storage API (no throttling, fast restore) |
+
+---
+
+## Architecture: Per-Workload App Model (Phase 13)
+
+### Why Per-Workload Apps (Security, NOT Throttling)
+
+**As of March 2026, Microsoft blocks the multi-app throttling workaround.**
+Multiple apps doing the same operation (e.g., 10 apps all doing Mail.Read) now
+share a single throttling quota. Creating multiple apps for throughput is dead.
+
+**Per-workload apps are for SECURITY ISOLATION:**
+- Exchange app can only read email — cannot access directory
+- Entra ID app can only read users/groups — cannot read email
+- If one app's secret leaks, blast radius is limited to that workload
+- Customer can revoke Exchange without losing Entra ID backup
+
+### Architecture (SaaS Model — KavachIQ Manages)
+
+```
+KavachIQ's Entra Tenant (we own and manage):
+  ├── "KavachIQ-EntraID" (multi-tenant app)
+  │     Permissions: Directory.Read.All, User.Read.All, Group.Read.All
+  │     Used for: Entra ID backup across all customers
+  │
+  ├── "KavachIQ-Exchange" (multi-tenant app)
+  │     Permissions: Mail.Read, Calendars.Read, Contacts.Read, User.Read.All
+  │     Used for: Exchange backup across all customers
+  │
+  ├── "KavachIQ-SharePoint" (multi-tenant app)  [future]
+  │     Permissions: Sites.Selected (per-site consent)
+  │     Used for: SharePoint backup
+  │
+  ├── "KavachIQ-OneDrive" (multi-tenant app)  [future]
+  │     Permissions: Files.Read.All
+  │     Used for: OneDrive backup
+  │
+  └── "KavachIQ-Teams" (multi-tenant app)  [future]
+        Permissions: Chat.Read.All, ChannelMessage.Read.All
+        Used for: Teams backup
+
+Customer Onboarding:
+  Step 1: Customer selects workloads (Entra ID + Exchange default)
+  Step 2: Admin consent for selected apps (can be one click if bundled)
+  Step 3: Discovery runs using per-workload app credentials
+  Step 4: Backup starts immediately
+```
+
+### Self-Hosted Model (Customer Owns)
+
+For enterprise/regulated customers who host KavachIQ themselves:
+- Bootstrap pattern creates per-workload apps in THEIR tenant
+- Customer manages secrets via their own Key Vault / Managed Identity
+- Full air-gap from KavachIQ SaaS
+- Same per-workload isolation, different ownership model
+
+### Throttling Strategy (Per Microsoft's Recommendation)
+
+| Workload | Limit | Strategy |
+|---|---|---|
+| Exchange | 10K req/10min per mailbox | Parallelize across mailboxes (generous) |
+| SharePoint | 1,250-6,250 RU/min per tenant | Use delta queries, $select, batch requests |
+| Teams | 1 req/sec per channel | Accept slow backup, use change notifications |
+| Entra ID | 8,000 RU/10sec | Read-optimized, no throttling concern |
+| All | — | Honor Retry-After headers, ISV User-Agent decoration |
+
+**Multi-app for throughput is DEAD (March 2026).** Per-tenant ceiling is the hard cap.
+Scale throughput via: delta queries, change notifications, batch requests, $select.
+
+### Future: Microsoft 365 Backup Storage API (Phase 16)
+
+Microsoft's first-party backup platform. No Graph API throttling.
+All major competitors (Veeam, Rubrik, Druva, Commvault, AvePoint) adopting.
+
+- Supports: Exchange, SharePoint, OneDrive
+- Does NOT support: Teams, Entra ID (still need Graph API)
+- Data stays in Microsoft's infrastructure (fast restore)
+- KavachIQ would be a "controller" on top of Backup Storage
+- Hybrid: Backup Storage for speed + Graph API for air-gap copies + Entra ID/Teams
 
 ---
 

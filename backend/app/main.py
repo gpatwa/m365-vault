@@ -79,47 +79,52 @@ async def lifespan(app: FastAPI):
     storage_module.storage_service = storage_module.StorageService(backend)
     logger.info(f"Storage backend: {settings.STORAGE_BACKEND}")
 
-    # Auto-migrate: ensure all schema columns exist before scheduler starts
+    # Auto-migrate + auto-seed: ensure schema columns and demo users exist
+    # Skip ALTER TABLE on SQLite (pre-deploy check uses SQLite)
+    _is_sqlite = "sqlite" in settings.DATABASE_URL
     try:
         from app.database import engine as _engine
         from sqlalchemy import text as _text
         async with _engine.begin() as _conn:
-            for sql in [
-                "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified INTEGER DEFAULT 0",
-                "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_token VARCHAR(255)",
-                "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_token VARCHAR(255)",
-                "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_expires TIMESTAMP",
-                "ALTER TABLE users ADD COLUMN IF NOT EXISTS sso_provider VARCHAR(50)",
-                "ALTER TABLE users ADD COLUMN IF NOT EXISTS sso_subject_id VARCHAR(255)",
-                "ALTER TABLE restore_jobs ADD COLUMN IF NOT EXISTS initiated_by_user_id INTEGER",
-                "ALTER TABLE restore_jobs ADD COLUMN IF NOT EXISTS approval_required INTEGER DEFAULT 0",
-                "ALTER TABLE restore_jobs ADD COLUMN IF NOT EXISTS approval_status VARCHAR(20)",
-            ]:
-                try:
-                    await _conn.execute(_text(sql))
-                except Exception:
-                    pass
-        logger.info("Auto-migration: schema columns verified")
-
-        # Auto-seed: create admin + demo users if DB is empty (fresh deploy)
-        try:
-            user_count = await _conn.execute(_text("SELECT COUNT(*) FROM users"))
-            if user_count.scalar() == 0:
-                from app.services.auth import hash_password as _hash
-                for uname, email, pwd, role in [
-                    ("admin", "admin@kavachiq.com", "Admin123!", "ADMIN"),
-                    ("demo", "demo@kavachiq.com", "ShieldiDemo2026!", "ADMIN"),
-                    ("prospect", "prospect@kavachiq.com", "Prospect2026!", "ADMIN"),
-                    ("viewer", "viewer@kavachiq.com", "Viewer2026!", "VIEWER"),
+            # 1. Schema migration (PostgreSQL only — SQLite uses create_all)
+            if not _is_sqlite:
+                for sql in [
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified INTEGER DEFAULT 0",
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_token VARCHAR(255)",
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_token VARCHAR(255)",
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_expires TIMESTAMP",
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS sso_provider VARCHAR(50)",
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS sso_subject_id VARCHAR(255)",
+                    "ALTER TABLE restore_jobs ADD COLUMN IF NOT EXISTS initiated_by_user_id INTEGER",
+                    "ALTER TABLE restore_jobs ADD COLUMN IF NOT EXISTS approval_required INTEGER DEFAULT 0",
+                    "ALTER TABLE restore_jobs ADD COLUMN IF NOT EXISTS approval_status VARCHAR(20)",
                 ]:
-                    hashed = _hash(pwd)
-                    await _conn.execute(_text(
-                        f"INSERT INTO users (username, email, password_hash, full_name, role, is_active, email_verified) "
-                        f"VALUES ('{uname}', '{email}', '{hashed}', '{uname.title()} User', '{role}', 1, 1)"
-                    ))
-                logger.info("Auto-seed: created admin + demo + prospect + viewer users (fresh DB)")
-        except Exception as seed_err:
-            logger.warning(f"Auto-seed skipped: {seed_err}")
+                    try:
+                        await _conn.execute(_text(sql))
+                    except Exception:
+                        pass
+                logger.info("Auto-migration: schema columns verified")
+
+            # 2. Auto-seed demo users if DB is empty (fresh deploy)
+            try:
+                result = await _conn.execute(_text("SELECT COUNT(*) FROM users"))
+                user_count = result.scalar() or 0
+                if user_count == 0:
+                    from app.services.auth import hash_password as _hash
+                    for uname, email, pwd, role in [
+                        ("admin", "admin@kavachiq.com", "Admin123!", "ADMIN"),
+                        ("demo", "demo@kavachiq.com", "ShieldiDemo2026!", "ADMIN"),
+                        ("prospect", "prospect@kavachiq.com", "Prospect2026!", "ADMIN"),
+                        ("viewer", "viewer@kavachiq.com", "Viewer2026!", "VIEWER"),
+                    ]:
+                        hashed = _hash(pwd)
+                        await _conn.execute(_text(
+                            "INSERT INTO users (username, email, password_hash, full_name, role, is_active, email_verified) "
+                            f"VALUES ('{uname}', '{email}', '{hashed}', '{uname.title()} User', '{role}', 1, 1)"
+                        ))
+                    logger.info("Auto-seed: created admin + demo + prospect + viewer users (fresh DB)")
+            except Exception as seed_err:
+                logger.warning(f"Auto-seed skipped: {seed_err}")
 
     except Exception as e:
         logger.warning(f"Auto-migration skipped: {e}")

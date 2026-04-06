@@ -185,6 +185,7 @@ pre-deploy-check: ## Test backend Docker image locally before pushing (catches b
 		-e ENCRYPTION_MASTER_KEY=pre-deploy-test-key-32-chars-ok \
 		-e STORAGE_BACKEND=local \
 		-e DISPATCH_MODE=in_process \
+		-e SKIP_ADVANCED_MIGRATION=1 \
 		kavachiq-test:latest > /dev/null 2>&1
 	@echo "⏳ Waiting for startup..."
 	@sleep 8

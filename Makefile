@@ -177,18 +177,22 @@ tf-set-acr-secrets: ## Set ACR GitHub secrets from Terraform output (run after f
 pre-deploy-check: ## Test backend Docker image locally before pushing (catches bcrypt, import errors)
 	@echo "🔍 Building backend image..."
 	@docker build $(DOCKER_PLATFORM_FLAG) -t kavachiq-test:latest ./backend > /dev/null 2>&1
-	@echo "🚀 Starting test container..."
-	@docker rm -f kavachiq-pre-deploy 2>/dev/null || true
-	@docker run -d --name kavachiq-pre-deploy -p 8099:8000 \
-		-e DATABASE_URL=sqlite+aiosqlite:///./test.db \
+	@echo "🚀 Starting test container with PostgreSQL..."
+	@docker rm -f kavachiq-pre-deploy kavachiq-pre-deploy-db 2>/dev/null || true
+	@docker network create kavachiq-pre-test 2>/dev/null || true
+	@docker run -d --name kavachiq-pre-deploy-db --network kavachiq-pre-test \
+		-e POSTGRES_DB=testdb -e POSTGRES_USER=test -e POSTGRES_PASSWORD=test \
+		postgres:16-alpine > /dev/null 2>&1
+	@sleep 5
+	@docker run -d --name kavachiq-pre-deploy --network kavachiq-pre-test -p 8099:8000 \
+		-e DATABASE_URL=postgresql+asyncpg://test:test@kavachiq-pre-deploy-db:5432/testdb \
 		-e SECRET_KEY=pre-deploy-test-key-32-chars-ok \
 		-e ENCRYPTION_MASTER_KEY=pre-deploy-test-key-32-chars-ok \
 		-e STORAGE_BACKEND=local \
 		-e DISPATCH_MODE=in_process \
-		-e SKIP_ADVANCED_MIGRATION=1 \
 		kavachiq-test:latest > /dev/null 2>&1
 	@echo "⏳ Waiting for startup..."
-	@sleep 8
+	@sleep 15
 	@echo "🏥 Health check..."
 	@curl -sf http://localhost:8099/health > /dev/null 2>&1 && echo "  ✅ Health OK" || \
 		(echo "  ❌ Health FAILED" && docker logs kavachiq-pre-deploy --tail 20 && docker rm -f kavachiq-pre-deploy && exit 1)
@@ -198,7 +202,8 @@ pre-deploy-check: ## Test backend Docker image locally before pushing (catches b
 	@echo "📋 OpenAPI check..."
 	@curl -sf http://localhost:8099/openapi.json > /dev/null 2>&1 && echo "  ✅ All routes loaded" || \
 		(echo "  ❌ Routes FAILED" && docker rm -f kavachiq-pre-deploy && exit 1)
-	@docker rm -f kavachiq-pre-deploy > /dev/null 2>&1
+	@docker rm -f kavachiq-pre-deploy kavachiq-pre-deploy-db > /dev/null 2>&1
+	@docker network rm kavachiq-pre-test 2>/dev/null || true
 	@echo "✅ Pre-deploy check PASSED — safe to push"
 
 .PHONY: acr-push

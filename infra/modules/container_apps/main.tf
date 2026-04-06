@@ -274,7 +274,7 @@ resource "azurerm_container_app" "frontend" {
 
       env {
         name  = "BACKEND_URL"
-        value = "https://${azurerm_container_app.backend.ingress[0].fqdn}"
+        value = var.backend_custom_domain != "" ? "https://${var.backend_custom_domain}" : "https://${azurerm_container_app.backend.ingress[0].fqdn}"
       }
     }
   }

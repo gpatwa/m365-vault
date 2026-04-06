@@ -35,6 +35,7 @@ redis_family          = "C"
 #   TF_VAR_connector_app_secret
 #
 # Non-sensitive values:
+backend_custom_domain     = "api.kavachiq.com"
 cors_origins              = "https://app.kavachiq.com,https://kavachiq.com"
 email_provider            = "resend"
 frontend_url              = "https://app.kavachiq.com"

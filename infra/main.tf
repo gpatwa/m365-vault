@@ -160,5 +160,6 @@ module "container_apps" {
   connector_app_id          = var.connector_app_id
   connector_redirect_uri    = var.connector_redirect_uri
   posthog_api_key           = var.posthog_api_key
+  backend_custom_domain     = var.backend_custom_domain
   tags                      = local.tags
 }

@@ -199,3 +199,9 @@ variable "posthog_api_key" {
   type    = string
   default = ""
 }
+
+variable "backend_custom_domain" {
+  description = "Custom domain for the backend API (e.g. api.kavachiq.com). If empty, uses Azure FQDN."
+  type        = string
+  default     = ""
+}

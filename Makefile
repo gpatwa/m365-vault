@@ -173,8 +173,35 @@ tf-set-acr-secrets: ## Set ACR GitHub secrets from Terraform output (run after f
 	gh secret set ACR_LOGIN_SERVER --repo gpatwa/m365-vault --body "$$ACR_SERVER" && \
 	echo "Set ACR_NAME=$$ACR_NAME and ACR_LOGIN_SERVER=$$ACR_SERVER"
 
+.PHONY: pre-deploy-check
+pre-deploy-check: ## Test backend Docker image locally before pushing (catches bcrypt, import errors)
+	@echo "🔍 Building backend image..."
+	@docker build $(DOCKER_PLATFORM_FLAG) -t kavachiq-test:latest ./backend > /dev/null 2>&1
+	@echo "🚀 Starting test container..."
+	@docker rm -f kavachiq-pre-deploy 2>/dev/null || true
+	@docker run -d --name kavachiq-pre-deploy -p 8099:8000 \
+		-e DATABASE_URL=sqlite+aiosqlite:///./test.db \
+		-e SECRET_KEY=pre-deploy-test-key-32-chars-ok \
+		-e ENCRYPTION_MASTER_KEY=pre-deploy-test-key-32-chars-ok \
+		-e STORAGE_BACKEND=local \
+		-e DISPATCH_MODE=in_process \
+		kavachiq-test:latest > /dev/null 2>&1
+	@echo "⏳ Waiting for startup..."
+	@sleep 8
+	@echo "🏥 Health check..."
+	@curl -sf http://localhost:8099/health > /dev/null 2>&1 && echo "  ✅ Health OK" || \
+		(echo "  ❌ Health FAILED" && docker logs kavachiq-pre-deploy --tail 20 && docker rm -f kavachiq-pre-deploy && exit 1)
+	@echo "🔐 Auth check..."
+	@curl -sf http://localhost:8099/api/auth/sso/config > /dev/null 2>&1 && echo "  ✅ Auth module OK" || \
+		(echo "  ❌ Auth module FAILED" && docker rm -f kavachiq-pre-deploy && exit 1)
+	@echo "📋 OpenAPI check..."
+	@curl -sf http://localhost:8099/openapi.json > /dev/null 2>&1 && echo "  ✅ All routes loaded" || \
+		(echo "  ❌ Routes FAILED" && docker rm -f kavachiq-pre-deploy && exit 1)
+	@docker rm -f kavachiq-pre-deploy > /dev/null 2>&1
+	@echo "✅ Pre-deploy check PASSED — safe to push"
+
 .PHONY: acr-push
-acr-push: ## Build and push Docker images to ACR (run before first tf-apply)
+acr-push: pre-deploy-check ## Build and push Docker images to ACR (runs pre-deploy check first)
 	@ACR_NAME=$${ACR_NAME:-acrm365vault$(ENV)}; \
 	echo "Logging into ACR: $$ACR_NAME..."; \
 	az acr login --name $$ACR_NAME && \
@@ -269,6 +296,10 @@ az-wake: ## Resume all Azure resources (start DB + scale apps back up)
 .PHONY: deploy-dev
 deploy: ## Full health-gated deploy: pre-check → build → push → apply → verify
 	@bash scripts/deploy.sh
+
+.PHONY: safe-deploy
+safe-deploy: ## Safe deploy: build → push → wait for healthy → deactivate old (ENV=dev|prod)
+	@./scripts/safe-deploy.sh --env $(ENV)
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Secrets Management (Azure Key Vault)

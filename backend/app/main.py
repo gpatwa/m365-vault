@@ -100,6 +100,27 @@ async def lifespan(app: FastAPI):
                 except Exception:
                     pass
         logger.info("Auto-migration: schema columns verified")
+
+        # Auto-seed: create admin + demo users if DB is empty (fresh deploy)
+        try:
+            user_count = await _conn.execute(_text("SELECT COUNT(*) FROM users"))
+            if user_count.scalar() == 0:
+                from app.services.auth import hash_password as _hash
+                for uname, email, pwd, role in [
+                    ("admin", "admin@kavachiq.com", "Admin123!", "ADMIN"),
+                    ("demo", "demo@kavachiq.com", "ShieldiDemo2026!", "ADMIN"),
+                    ("prospect", "prospect@kavachiq.com", "Prospect2026!", "ADMIN"),
+                    ("viewer", "viewer@kavachiq.com", "Viewer2026!", "VIEWER"),
+                ]:
+                    hashed = _hash(pwd)
+                    await _conn.execute(_text(
+                        f"INSERT INTO users (username, email, password_hash, full_name, role, is_active, email_verified) "
+                        f"VALUES ('{uname}', '{email}', '{hashed}', '{uname.title()} User', '{role}', 1, 1)"
+                    ))
+                logger.info("Auto-seed: created admin + demo + prospect + viewer users (fresh DB)")
+        except Exception as seed_err:
+            logger.warning(f"Auto-seed skipped: {seed_err}")
+
     except Exception as e:
         logger.warning(f"Auto-migration skipped: {e}")
 

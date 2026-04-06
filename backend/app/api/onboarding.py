@@ -207,6 +207,7 @@ async def oauth_callback(
         if existing_tenant:
             # Return existing tenant with real name + object counts
             from sqlalchemy import func as _func
+            from app.models.protected_object import ProtectedObject
             obj_count = (await db.execute(
                 select(_func.count(ProtectedObject.id)).where(ProtectedObject.tenant_id == existing_tenant.id)
             )).scalar() or 0
@@ -219,10 +220,10 @@ async def oauth_callback(
                 "db_tenant_id": existing_tenant.id,
                 "discovery": {
                     "total_objects": obj_count,
-                    "exchange": existing_tenant.total_mailboxes or 0,
-                    "entra_id": existing_tenant.total_entra_objects or 0,
-                    "sharepoint": existing_tenant.total_sites or 0,
-                    "onedrive": existing_tenant.total_onedrives or 0,
+                    "mailboxes": existing_tenant.total_mailboxes or 0,
+                    "entra_objects": existing_tenant.total_entra_objects or 0,
+                    "sites": existing_tenant.total_sites or 0,
+                    "onedrives": existing_tenant.total_onedrives or 0,
                     "teams": existing_tenant.total_teams or 0,
                 },
             }

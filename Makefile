@@ -434,10 +434,14 @@ benchmark: ## Run performance benchmark suite against local or remote API
 security-scan: ## Run automated security audit (static analysis, dependency scan, OWASP checks)
 	@bash scripts/security-audit.sh
 
-.PHONY: seed-demo
-seed-demo: ## Populate demo data (Acme Corp tenant + 14 days of backup history)
-	docker cp scripts/seed-demo.py $$($(DOCKER_COMPOSE) ps -q backend):/app/seed-demo.py
-	$(DOCKER_COMPOSE) exec backend python3 /app/seed-demo.py
+.PHONY: seed-real
+seed-real: ## Connect real M365 tenant: discover objects + run first backup (requires .env creds)
+	@echo "Connecting to real M365 tenant..."
+	@echo "1. Open http://localhost:5173/onboard in your browser"
+	@echo "2. Click 'Connect Microsoft 365' and sign in as Global Admin"
+	@echo "3. Complete the onboarding wizard"
+	@echo ""
+	@echo "After onboarding, run 'make test-local' to verify data."
 
 .PHONY: fresh
 fresh: dev-clean seed-clean dev ## Full clean restart: wipe everything + rebuild + start

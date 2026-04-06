@@ -42,15 +42,14 @@ async def list_failed_items(
 
     # Hide internal/transient errors by default — customers shouldn't see DB pool errors
     if not include_transient:
-        HIDDEN_CATEGORIES = [ErrorCategory.INTERNAL_TRANSIENT]
-        # Also hide unknown errors that are clearly internal (SQLAlchemy, connection pool)
-        stmt = stmt.where(FailedItem.error_category.notin_(HIDDEN_CATEGORIES))
-        # Additionally filter out "unknown" errors with internal error messages
+        # Filter out internal error messages that are not customer-actionable
         stmt = stmt.where(
             ~FailedItem.error_message.ilike("%sqlalchemy%")
             & ~FailedItem.error_message.ilike("%connection pool%")
             & ~FailedItem.error_message.ilike("%concurrent operations%")
             & ~FailedItem.error_message.ilike("%session is provisioning%")
+            & ~FailedItem.error_message.ilike("%no active connection%")
+            & ~FailedItem.error_message.ilike("%asyncpg%")
         )
 
     if workload_type:
@@ -109,10 +108,11 @@ async def failed_items_summary(
         func.sum(case((FailedItem.is_resolved == True, 1), else_=0)).label("resolved"),
         func.sum(case((FailedItem.can_retry == True, 1), else_=0)).label("retriable"),
     ).where(
-        FailedItem.error_category != ErrorCategory.INTERNAL_TRANSIENT,
         ~FailedItem.error_message.ilike("%sqlalchemy%"),
         ~FailedItem.error_message.ilike("%concurrent operations%"),
         ~FailedItem.error_message.ilike("%session is provisioning%"),
+        ~FailedItem.error_message.ilike("%no active connection%"),
+        ~FailedItem.error_message.ilike("%asyncpg%"),
     ).group_by(FailedItem.error_category)
 
     if snapshot_id:

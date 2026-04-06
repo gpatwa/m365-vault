@@ -115,6 +115,18 @@ check "API has 100+ routes" "$([ "$ROUTE_COUNT" -ge 100 ] 2>/dev/null && echo "y
 # 5. NEW FEATURES
 # ═══════════════════════════════════════════════════════
 echo ""
+echo "── 4b. External Dependencies ──"
+if [ -n "$ADMIN_TOKEN" ]; then
+  AUTH_HDR="Authorization: Bearer $ADMIN_TOKEN"
+  # Connector health — catches expired Entra app secrets
+  CONNECTOR=$(curl -s --max-time 10 -H "$AUTH_HDR" "$BACKEND/api/onboard/connector-health")
+  check "M365 Connector healthy" "$CONNECTOR" '"healthy":true'
+  # Stripe configured
+  STRIPE_CFG=$(curl -s --max-time 10 -H "$AUTH_HDR" "$BACKEND/api/billing/config")
+  check "Stripe configured" "$STRIPE_CFG" "publishable_key"
+fi
+
+echo ""
 echo "── 5. New Features ──"
 check "Restore approvals API" "$(curl -s --max-time 10 "$BACKEND/api/restore-approvals/pending")" "Not authenticated"
 check "Workload apps API" "$(curl -s --max-time 10 "$BACKEND/api/tenants/1/workloads")" "Not authenticated"

@@ -60,12 +60,25 @@ async def connector_health():
     # Verify the app registration exists and secret format is valid
     try:
         import httpx
-        # Use the app's home tenant to validate credentials
-        home_tenant = "common"
+        # Use a known tenant for validation — 'common' fails with security defaults
+        # Try to find a real tenant in the DB, fall back to 'organizations'
+        from app.database import async_session
+        from app.models.tenant import Tenant
+        test_authority = "organizations"
+        async with async_session() as _db:
+            result = await _db.execute(
+                select(Tenant).where(
+                    ~Tenant.ms_tenant_id.like("demo-%")
+                ).limit(1)
+            )
+            tenant = result.scalar_one_or_none()
+            if tenant and tenant.ms_tenant_id and not tenant.ms_tenant_id.startswith("demo-"):
+                test_authority = tenant.ms_tenant_id
+
         msal_app = msal.ConfidentialClientApplication(
             client_id=app_id,
             client_credential=app_secret,
-            authority=f"https://login.microsoftonline.com/{home_tenant}",
+            authority=f"https://login.microsoftonline.com/{test_authority}",
         )
         token = msal_app.acquire_token_for_client(scopes=["https://graph.microsoft.com/.default"])
         if "error" in token:

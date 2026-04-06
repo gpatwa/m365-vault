@@ -30,10 +30,27 @@ jobs:
           DATABASE_URL: "sqlite+aiosqlite:///./test.db"
           SECRET_KEY: "ci-test-secret-key"
           STORAGE_BACKEND: "local"
-          STORAGE_LOCAL_PATH: "/tmp/m365vault-test"
+          STORAGE_LOCAL_PATH: "/tmp/kavachiq-test"
+          DISPATCH_MODE: "in_process"
+          ENCRYPTION_MASTER_KEY: "dGVzdC1tYXN0ZXIta2V5LWZvci10ZXN0aW5nLW9ubHk="
         run: |
           cd backend
           pytest tests/ -v --tb=short --cov=app --cov-report=term-missing
+
+      - name: Dependency audit
+        run: |
+          pip install pip-audit
+          cd backend && pip-audit --requirement requirements.txt || true
+        continue-on-error: true
+
+      - name: Check pinned deps
+        run: |
+          cd backend
+          if grep -E '>=|~=' requirements.txt; then
+            echo "❌ Unpinned dependencies found"
+            exit 1
+          fi
+          echo "✅ All dependencies pinned"
 
   frontend-build:
     name: Frontend Build & Type Check

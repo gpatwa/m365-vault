@@ -301,6 +301,14 @@ deploy: ## Full health-gated deploy: pre-check → build → push → apply → 
 safe-deploy: ## Safe deploy: build → push → wait for healthy → deactivate old (ENV=dev|prod)
 	@./scripts/safe-deploy.sh --env $(ENV)
 
+.PHONY: blue-green
+blue-green: ## Blue-green deploy: canary 10% → monitor → promote or rollback (ENV=dev|prod)
+	@./scripts/blue-green-deploy.sh --env $(ENV)
+
+.PHONY: e2e-test
+e2e-test: ## Run E2E certification tests against Azure (ENV=dev|prod)
+	@./scripts/e2e-azure-test.sh --env $(ENV)
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Secrets Management (Azure Key Vault)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

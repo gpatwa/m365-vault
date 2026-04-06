@@ -176,7 +176,7 @@ class SystemHealthService:
                     "Set AZURE_STORAGE_CONNECTION_STRING")
             return HealthCheck("storage", True, f"Azure Blob Storage configured")
         elif backend == "local":
-            return HealthCheck("storage", True, f"Local storage at {settings.STORAGE_LOCAL_PATH}")
+            return HealthCheck("storage", True, f"Local storage at {getattr(settings, 'STORAGE_LOCAL_PATH', '/tmp/kavachiq-storage')}")
         elif backend == "minio":
             return HealthCheck("storage", True, "MinIO S3-compatible storage")
         return HealthCheck("storage", False, f"Unknown backend: {backend}", "Set STORAGE_BACKEND to azure, local, or minio")

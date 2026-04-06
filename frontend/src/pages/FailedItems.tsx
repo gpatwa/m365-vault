@@ -222,14 +222,14 @@ export default function FailedItems() {
     },
     {
       label: 'At Risk',
-      value: (summary?.total_unresolved ?? 0) - (summary?.categories?.reduce((sum: number, c: FailedItemCategory) => sum + (c.retriable || 0), 0) ?? 0),
+      value: Math.max(0, (summary?.total_unresolved ?? 0) - (summary?.categories?.reduce((sum: number, c: FailedItemCategory) => sum + Math.min(c.retriable || 0, c.unresolved || 0), 0) ?? 0)),
       subtitle: 'Needs manual action',
       icon: XCircle,
       color: (summary?.total_unresolved ?? 0) > 0 ? 'red' : 'gray',
     },
     {
       label: 'Auto-Fixable',
-      value: summary?.categories?.reduce((sum: number, c: FailedItemCategory) => sum + (c.retriable || 0), 0) ?? 0,
+      value: summary?.categories?.reduce((sum: number, c: FailedItemCategory) => sum + Math.min(c.retriable || 0, c.unresolved || 0), 0) ?? 0,
       subtitle: 'Ready to retry',
       icon: RotateCcw,
       color: 'amber',

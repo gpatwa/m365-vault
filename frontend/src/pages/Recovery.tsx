@@ -116,16 +116,27 @@ export default function Recovery() {
         </button>
         <button
           onClick={async () => {
+            if (!tenantId) {
+              alert('No tenant selected. Please connect a Microsoft 365 tenant first.');
+              return;
+            }
             try {
               const data: any = await api.get(`/restore-consent/authorize?tenant_id=${tenantId}`);
               if (data.auth_url) {
                 window.location.href = data.auth_url;
+              } else {
+                alert('Failed to generate authorization URL. Please try again.');
               }
-            } catch (err) {
-              console.error('Restore consent failed:', err);
+            } catch (err: any) {
+              if (err?.status === 401 || err?.message?.includes('401')) {
+                window.location.href = '/login';
+              } else {
+                alert(`Restore consent failed: ${err?.message || 'Unknown error'}`);
+              }
             }
           }}
-          className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 flex items-center gap-2"
+          disabled={!tenantId}
+          className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <KeyRound className="w-4 h-4" />
           Authorize Live Restore

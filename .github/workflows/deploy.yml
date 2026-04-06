@@ -29,7 +29,7 @@ jobs:
     outputs:
       image_tag: ${{ env.IMAGE_TAG }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Azure Login (OIDC)
         uses: azure/login@v2
@@ -66,7 +66,7 @@ jobs:
     environment: dev
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'dev')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Azure Login (OIDC)
         uses: azure/login@v2
         with:
@@ -156,7 +156,7 @@ jobs:
     environment: staging
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Azure Login (OIDC)
         uses: azure/login@v2
         with:
@@ -212,7 +212,7 @@ jobs:
     environment: production
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'prod'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Azure Login (OIDC)
         uses: azure/login@v2
         with:

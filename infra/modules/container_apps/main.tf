@@ -185,6 +185,12 @@ resource "azurerm_container_app" "backend" {
         value = var.frontend_url
       }
 
+      # ── License ──
+      env {
+        name  = "LICENSE_TIER"
+        value = "enterprise"
+      }
+
       # ── Microsoft 365 Connector ──
       env {
         name  = "CONNECTOR_APP_ID"

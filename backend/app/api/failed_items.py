@@ -28,11 +28,30 @@ async def list_failed_items(
     is_resolved: bool = Query(None),
     can_retry: bool = Query(None),
     workload_type: str = Query(None),
+    include_transient: bool = Query(False, description="Include internal/transient errors (hidden by default)"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """List failed items with filtering, sorting, and pagination."""
+    """List failed items with filtering, sorting, and pagination.
+
+    By default, hides internal transient errors (DB pool, connection issues)
+    that are auto-retried. Only shows customer-actionable protection gaps.
+    Pass include_transient=true to see all errors (admin debugging).
+    """
     stmt = select(FailedItem)
+
+    # Hide internal/transient errors by default — customers shouldn't see DB pool errors
+    if not include_transient:
+        HIDDEN_CATEGORIES = [ErrorCategory.INTERNAL_TRANSIENT]
+        # Also hide unknown errors that are clearly internal (SQLAlchemy, connection pool)
+        stmt = stmt.where(FailedItem.error_category.notin_(HIDDEN_CATEGORIES))
+        # Additionally filter out "unknown" errors with internal error messages
+        stmt = stmt.where(
+            ~FailedItem.error_message.ilike("%sqlalchemy%")
+            & ~FailedItem.error_message.ilike("%connection pool%")
+            & ~FailedItem.error_message.ilike("%concurrent operations%")
+            & ~FailedItem.error_message.ilike("%session is provisioning%")
+        )
 
     if workload_type:
         stmt = stmt.join(ProtectedObject, FailedItem.protected_object_id == ProtectedObject.id).where(
@@ -80,12 +99,20 @@ async def failed_items_summary(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Get aggregated summary of failed items grouped by error category."""
+    """Get aggregated summary of failed items grouped by error category.
+
+    Excludes internal transient errors — only shows customer-actionable gaps.
+    """
     stmt = select(
         FailedItem.error_category,
         func.count(FailedItem.id).label("count"),
         func.sum(case((FailedItem.is_resolved == True, 1), else_=0)).label("resolved"),
         func.sum(case((FailedItem.can_retry == True, 1), else_=0)).label("retriable"),
+    ).where(
+        FailedItem.error_category != ErrorCategory.INTERNAL_TRANSIENT,
+        ~FailedItem.error_message.ilike("%sqlalchemy%"),
+        ~FailedItem.error_message.ilike("%concurrent operations%"),
+        ~FailedItem.error_message.ilike("%session is provisioning%"),
     ).group_by(FailedItem.error_category)
 
     if snapshot_id:

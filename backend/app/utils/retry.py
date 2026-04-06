@@ -167,6 +167,15 @@ def categorize_error(error: Exception) -> str:
     if "storage" in error_str or "disk" in error_str:
         return "storage_error"
 
+    # Internal/transient errors — should be retried, NOT shown to customers
+    if any(phrase in error_str for phrase in [
+        "sqlalchemy", "connection pool", "concurrent operations",
+        "session is provisioning", "no active connection",
+        "database", "asyncpg", "connection refused",
+        "redis", "celery", "worker", "dispatch",
+    ]):
+        return "internal_transient"
+
     return "unknown"
 
 
@@ -199,6 +208,9 @@ async def record_failed_item(
     # Determine if retryable
     can_retry = category_str not in ("not_found", "permission_denied", "file_too_large", "invalid_data")
 
+    # Internal transient errors: auto-resolve immediately — never show to customer
+    is_transient = category_str == "internal_transient"
+
     # Parse item type
     item_type = None
     if item_type_str:
@@ -207,6 +219,7 @@ async def record_failed_item(
         except ValueError:
             pass
 
+    from datetime import datetime as _dt
     failed = FailedItem(
         snapshot_id=snapshot_id,
         protected_object_id=protected_object_id,
@@ -221,6 +234,10 @@ async def record_failed_item(
         retries_attempted=retries_attempted,
         resolution_hint=ERROR_RESOLUTION_GUIDE.get(category, ""),
         can_retry=can_retry,
+        # Auto-resolve transient errors — they'll be retried silently
+        is_resolved=is_transient,
+        resolved_at=_dt.utcnow() if is_transient else None,
+        resolved_by="system" if is_transient else None,
     )
     db.add(failed)
 

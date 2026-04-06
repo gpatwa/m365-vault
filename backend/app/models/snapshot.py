@@ -120,6 +120,7 @@ class ErrorCategory(str, enum.Enum):
     AUTH_EXPIRED = "auth_expired"                    # 401 — token/credentials expired
     SERVER_ERROR = "server_error"                    # 5xx from Graph
     NETWORK_ERROR = "network_error"                  # Connection/DNS failure
+    INTERNAL_TRANSIENT = "internal_transient"        # DB pool, worker crash — auto-retry, never show to customer
     UNKNOWN = "unknown"                              # Unclassified
 
 

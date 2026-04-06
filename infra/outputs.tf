@@ -14,8 +14,8 @@ output "acr_login_server" {
 }
 
 output "postgresql_fqdn" {
-  value       = "postgres-${var.environment} (Container App)"
-  description = "PostgreSQL container hostname"
+  value       = module.postgresql.fqdn
+  description = "Azure PostgreSQL Flexible Server FQDN"
 }
 
 output "storage_account" {

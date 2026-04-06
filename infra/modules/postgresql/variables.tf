@@ -10,19 +10,9 @@ variable "location" {
   type = string
 }
 
-variable "container_app_environment_id" {
-  type        = string
-  description = "Container App Environment ID to deploy PostgreSQL into"
-}
-
-variable "storage_account_name" {
-  type        = string
-  description = "Storage account for persistent PostgreSQL data volume"
-}
-
 variable "admin_username" {
   type    = string
-  default = "m365vault_admin"
+  default = "kavachiq_admin"
 }
 
 variable "admin_password" {
@@ -32,27 +22,18 @@ variable "admin_password" {
 
 variable "database_name" {
   type    = string
-  default = "m365vault"
+  default = "kavachiq"
 }
 
 variable "sku_name" {
-  type    = string
-  default = "B_Standard_B1ms"
+  type        = string
+  default     = "B_Standard_B1ms"
+  description = "B1ms: 1 vCore, 2 GB RAM (~$13/mo)"
 }
 
 variable "storage_mb" {
   type    = number
   default = 32768
-}
-
-variable "backup_retention_days" {
-  type    = number
-  default = 7
-}
-
-variable "geo_redundant_backup" {
-  type    = bool
-  default = false
 }
 
 variable "tags" {

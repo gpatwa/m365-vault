@@ -74,12 +74,24 @@ module "storage" {
   tags                = local.tags
 }
 
-# PostgreSQL runs as a Container App (avoids Flexible Server quota restrictions)
+# PostgreSQL — Azure Flexible Server (persistent, managed, auto-backup)
+module "postgresql" {
+  source              = "./modules/postgresql"
+  environment         = var.environment
+  resource_group_name = module.resource_group.name
+  location            = var.postgresql_location != "" ? var.postgresql_location : module.resource_group.location
+  admin_username      = local.db_username
+  admin_password      = random_password.db_password.result
+  database_name       = local.db_name
+  sku_name            = var.postgresql_sku
+  storage_mb          = var.postgresql_storage_mb
+  tags                = local.tags
+}
+
 locals {
-  db_username = "m365vault_admin"
-  db_name     = "m365vault"
-  # Connection URL for container-to-container communication within the Container App Environment
-  database_url = "postgresql+asyncpg://${local.db_username}:${random_password.db_password.result}@postgres-${var.environment}:5432/${local.db_name}"
+  db_username  = "kavachiq_admin"
+  db_name      = "kavachiq"
+  database_url = module.postgresql.connection_string
 }
 
 module "keyvault" {

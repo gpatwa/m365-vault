@@ -112,7 +112,7 @@ async def get_recovery_confidence(
         restore_score = successful_restores / total_restores * 100
     elif validated_for_restore > 0:
         # Test restores validated — data is recoverable even if live restore not tested
-        restore_score = min(validated_for_restore / max(total_snapshots, 1) * 200, 80)  # Cap at 80% without live restore
+        restore_score = min(validated_for_restore * 10, 80)  # Each validated snapshot = +10%, cap at 80%
     elif total_restores == 0:
         restore_score = 50  # No restores attempted — benefit of the doubt
     else:

@@ -383,6 +383,8 @@ class EntraRestoreRequest(BaseModel):
     snapshot_id: int
     restore_type: str = "item_level"
     item_ids: list[int] = None
+    target_tenant_id: int = None  # Cross-tenant restore (DR scenarios)
+    restore_relationships: bool = True  # Restore group/admin unit members
 
 
 @router.post("/restore")

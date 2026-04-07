@@ -351,8 +351,20 @@ resource "azurerm_container_app" "worker" {
     min_replicas = var.worker_min_replicas
     max_replicas = var.worker_max_replicas
 
-    # Worker scales to zero when no jobs in queue
-    # Scales up when backup/restore jobs are dispatched
+    # KEDA scaler: scale workers based on Redis queue depth
+    # Queue length 0 → scale to min_replicas (0 in staging = scale-to-zero)
+    # Queue length 5+ → scale up additional workers
+    # Queue length 20+ → scale to max (handles backup-all across tenants)
+    custom_scale_rule {
+      name             = "redis-queue-depth"
+      custom_rule_type = "redis"
+      metadata = {
+        address       = var.redis_url
+        listName      = "kavachiq:worker:queue"
+        listLength    = "5"
+        enableTLS     = "false"
+      }
+    }
 
     container {
       name    = "worker"

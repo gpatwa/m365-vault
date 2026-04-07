@@ -16,6 +16,8 @@ from app.services.auth import require_restore_permission, require_tenant_access_
 from app.utils.query import ListParams, apply_sorting, apply_pagination
 from pydantic import BaseModel
 
+# Entra ID keeps its own router (most endpoints are workload-specific)
+# Unlike Exchange/OneDrive/SharePoint which use workload_base factory
 router = APIRouter(prefix="/api/entra-id", tags=["Entra ID"], dependencies=[Depends(require_tenant_access_dep())])
 
 # Entra ID item types for filtering

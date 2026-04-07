@@ -117,24 +117,9 @@ class BackupEngine:
         snapshot.encryption_key_id = wrapped_dek[:50]  # Store reference
 
         try:
-            # Dispatch to appropriate worker
-            from app.workers.exchange_worker import ExchangeWorker
-            from app.workers.onedrive_worker import OneDriveWorker
-            from app.workers.sharepoint_worker import SharePointWorker
-            from app.workers.entra_id_worker import EntraIDWorker
-            from app.workers.teams_worker import TeamsWorker
-
-            worker_map = {
-                WorkloadType.EXCHANGE: ExchangeWorker,
-                WorkloadType.ONEDRIVE: OneDriveWorker,
-                WorkloadType.SHAREPOINT: SharePointWorker,
-                WorkloadType.ENTRA_ID: EntraIDWorker,
-                WorkloadType.TEAMS: TeamsWorker,
-            }
-
-            worker_class = worker_map.get(protected_object.workload_type)
-            if not worker_class:
-                raise ValueError(f"Unknown workload type: {protected_object.workload_type}")
+            # Dispatch to appropriate worker via registry (no hard-coded imports)
+            from app.workers import get_worker_class
+            worker_class = get_worker_class(protected_object.workload_type)
 
             worker = worker_class(
                 db=self.db,

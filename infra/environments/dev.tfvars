@@ -17,11 +17,11 @@ backend_memory        = "1Gi"
 backend_min_replicas  = 1
 backend_max_replicas  = 3
 
-# Worker — small for dev
+# Worker — scale-to-zero when idle, scales on Redis queue depth (saves ~$15/mo)
 worker_cpu            = 0.5
 worker_memory         = "1Gi"
-worker_min_replicas   = 1
-worker_max_replicas   = 2
+worker_min_replicas   = 0
+worker_max_replicas   = 3
 
 # Redis — Basic C0 for dev (~$16/mo)
 redis_sku             = "Basic"

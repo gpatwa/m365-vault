@@ -34,6 +34,39 @@ from app.utils.retry import record_failed_item
 logger = logging.getLogger(__name__)
 
 
+def require_feature(feature_name: str):
+    """Decorator: skip discovery/backup method if feature not enabled for current tier.
+
+    Returns empty list for discover methods, 0 for restore methods.
+    Uses tenant context from log_context to resolve per-tenant tier.
+
+    Usage:
+        @require_feature("archive_mailbox")
+        async def _discover_archive(self, user_id, ...):
+            ...  # Only runs if Professional+ tier
+    """
+    import functools
+
+    def decorator(func):
+        @functools.wraps(func)
+        async def wrapper(self, *args, **kwargs):
+            from app.services.feature_flags import feature_flags
+            # Try to get tenant_id from logging context for per-tenant tier
+            tenant_id = None
+            try:
+                from app.utils.log_context import tenant_ctx
+                tenant_id = tenant_ctx.get()
+            except Exception:
+                pass
+
+            if not feature_flags.is_enabled(feature_name, tenant_id=tenant_id):
+                logger.debug(f"Feature '{feature_name}' not enabled — skipping {func.__name__}")
+                return [] if 'discover' in func.__name__ else 0
+            return await func(self, *args, **kwargs)
+        return wrapper
+    return decorator
+
+
 class BackupItem:
     """Standardized item representation for the backup pipeline.
 

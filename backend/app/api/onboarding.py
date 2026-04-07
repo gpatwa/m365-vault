@@ -31,8 +31,9 @@ from app.connectors.registry import get_connector, list_connectors
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/onboard", tags=["Onboarding"])
 
-# In-memory state store (use Redis in production)
-_onboard_states: dict[str, dict] = {}
+# OAuth state store — Redis in production, in-memory fallback for dev
+# Survives pod restarts, works across replicas
+from app.services.redis_state import set_state as _set_state, get_state as _get_state, delete_state as _delete_state
 
 # Microsoft Graph resource app ID
 MS_GRAPH_APP_ID = "00000003-0000-0000-c000-000000000000"
@@ -266,13 +267,14 @@ async def start_connection(
     # The _ensure_connector_permissions() function cannot auto-configure from
     # the app's own token (needs Application.Read.All which is chicken-and-egg).
 
-    # Generate state token for CSRF protection
+    # Generate state token for CSRF protection (stored in Redis, survives pod restart)
     state = secrets.token_urlsafe(32)
-    _onboard_states[state] = {
+    import asyncio
+    asyncio.ensure_future(_set_state(f"onboard:{state}", {
         "platform": platform,
         "user_id": current_user.id,
         "mode": mode,
-    }
+    }, ttl_seconds=600))  # 10 min TTL
 
     redirect_uri = settings.CONNECTOR_REDIRECT_URI
     auth_url = connector.get_auth_url(redirect_uri=redirect_uri, state=state)
@@ -310,10 +312,12 @@ async def oauth_callback(
     platform = "microsoft365"  # Default for admin consent flow
     onboard_mode = "fast"  # Default mode
     connecting_user_id = None
-    if state and state in _onboard_states:
-        state_data = _onboard_states.pop(state)
-        platform = state_data["platform"]
-        onboard_mode = state_data.get("mode", "fast")
+    if state:
+        state_data = await _get_state(f"onboard:{state}")
+        if state_data:
+            await _delete_state(f"onboard:{state}")  # One-time use
+            platform = state_data.get("platform", "microsoft365")
+            onboard_mode = state_data.get("mode", "fast")
         connecting_user_id = state_data.get("user_id")
 
     try:

@@ -264,26 +264,46 @@ class EntraIDWorker(BaseWorker):
 
                     group_with_members = {**group, "_members": members}
 
-                    # Determine group type for metadata
+                    # Determine group type + distribution list classification
                     group_types = group.get("groupTypes", [])
                     is_dynamic = "DynamicMembership" in group_types
                     is_m365 = "Unified" in group_types
-                    group_kind = "dynamic" if is_dynamic else ("m365" if is_m365 else "security")
+                    mail_enabled = group.get("mailEnabled", False)
+                    security_enabled = group.get("securityEnabled", False)
+
+                    # Distribution list: mail-enabled but NOT security-enabled, NOT M365 group
+                    if mail_enabled and not security_enabled and not is_m365:
+                        group_kind = "distribution_list"
+                    elif is_dynamic:
+                        group_kind = "dynamic"
+                    elif is_m365:
+                        group_kind = "m365"
+                    elif security_enabled and mail_enabled:
+                        group_kind = "mail_enabled_security"
+                    elif security_enabled:
+                        group_kind = "security"
+                    else:
+                        group_kind = "other"
+
+                    # Add subtype to data for filtering/display
+                    group_with_members["_subtype"] = group_kind
 
                     await self._store_item(
                         obj=group_with_members,
                         item_type=ItemType.GROUP,
                         ms_item_id=group["id"],
                         name=group.get("displayName", "Unknown Group"),
-                        path="Groups",
+                        path=f"Groups/{group_kind.replace('_', ' ').title()}",
                         protected_object=protected_object,
                         snapshot=snapshot,
                         wrapped_dek=wrapped_dek,
                         metadata={
                             "groupType": group_kind,
-                            "securityEnabled": group.get("securityEnabled"),
-                            "mailEnabled": group.get("mailEnabled"),
+                            "isDistributionList": group_kind == "distribution_list",
+                            "securityEnabled": security_enabled,
+                            "mailEnabled": mail_enabled,
                             "memberCount": len(members),
+                            "mail": group.get("mail"),
                         },
                     )
                     count += 1
@@ -866,11 +886,13 @@ class EntraIDWorker(BaseWorker):
         snapshot: Snapshot,
         wrapped_dek: str,
         protected_object: ProtectedObject = None,
+        restore_relationships: bool = True,
     ) -> int:
         """Restore Entra ID objects by recreating them via Graph API.
 
-        Supports: Conditional Access policies, groups, app registrations, named locations.
-        Users and directory roles are read-only (can't be created via API).
+        Supports: Conditional Access policies, groups (with members), app registrations,
+        named locations, administrative units (with members), role assignments, OAuth grants.
+        Users, directory roles, devices, and domains are read-only.
         """
         from sqlalchemy import select
         result = await self.db.execute(
@@ -879,26 +901,36 @@ class EntraIDWorker(BaseWorker):
         items = result.scalars().all()
         restored = 0
 
+        # Restore type dispatcher
+        RESTORE_HANDLERS = {
+            ItemType.CONDITIONAL_ACCESS_POLICY: self._restore_ca_policy,
+            ItemType.GROUP: self._restore_group,
+            ItemType.APP_REGISTRATION: self._restore_app,
+            ItemType.NAMED_LOCATION: self._restore_named_location,
+            ItemType.ADMINISTRATIVE_UNIT: self._restore_admin_unit,
+            ItemType.ROLE_ASSIGNMENT: self._restore_role_assignment,
+            ItemType.OAUTH_PERMISSION_GRANT: self._restore_oauth_grant,
+        }
+
+        # Read-only types that cannot be restored via API
+        READ_ONLY_TYPES = {
+            ItemType.USER, ItemType.DIRECTORY_ROLE, ItemType.DEVICE, ItemType.DOMAIN,
+            ItemType.SERVICE_PRINCIPAL,
+        }
+
         for item in items:
             try:
-                # Retrieve and decrypt the backed-up JSON
                 data = await self.storage.retrieve_item(item.blob_path, wrapped_dek)
                 obj_data = json.loads(data)
 
-                if item.item_type == ItemType.CONDITIONAL_ACCESS_POLICY:
-                    await self._restore_ca_policy(obj_data)
+                handler = RESTORE_HANDLERS.get(item.item_type)
+                if handler:
+                    await handler(obj_data)
                     restored += 1
-                elif item.item_type == ItemType.GROUP:
-                    await self._restore_group(obj_data)
-                    restored += 1
-                elif item.item_type == ItemType.APP_REGISTRATION:
-                    await self._restore_app(obj_data)
-                    restored += 1
-                elif item.item_type == ItemType.NAMED_LOCATION:
-                    await self._restore_named_location(obj_data)
-                    restored += 1
-                else:
+                elif item.item_type in READ_ONLY_TYPES:
                     logger.info(f"Skipping restore of {item.item_type.value} — read-only object type")
+                else:
+                    logger.info(f"No restore handler for {item.item_type.value}")
 
             except Exception as e:
                 logger.error(f"Failed to restore {item.item_type.value} {item.ms_item_id}: {e}")
@@ -977,3 +1009,109 @@ class EntraIDWorker(BaseWorker):
         elif "countryNamedLocation" in odata_type:
             restore_body["countriesAndRegions"] = obj_data.get("countriesAndRegions", [])
         await self.graph.post("/identity/conditionalAccess/namedLocations", json_data=restore_body)
+
+    async def _restore_admin_unit(self, obj_data: dict):
+        """Recreate an administrative unit with its members.
+
+        Administrative units scope admin roles to a subset of users/groups.
+        Members are restored if entra_member_restore feature is enabled.
+        """
+        restore_body = {
+            "displayName": f"[Restored] {obj_data.get('displayName', 'Unknown')}",
+            "description": obj_data.get("description"),
+        }
+        result = await self.graph.post("/directory/administrativeUnits", json_data=restore_body)
+        new_au_id = result.get("id") if isinstance(result, dict) else None
+
+        if new_au_id:
+            from app.services.feature_flags import feature_flags
+            members = obj_data.get("_members", [])
+            if members and feature_flags.is_enabled("entra_member_restore"):
+                restored = 0
+                for member in members:
+                    member_id = member.get("id")
+                    if not member_id:
+                        continue
+                    try:
+                        await self.graph.post(
+                            f"/directory/administrativeUnits/{new_au_id}/members/$ref",
+                            json_data={
+                                "@odata.id": f"https://graph.microsoft.com/v1.0/directoryObjects/{member_id}"
+                            },
+                        )
+                        restored += 1
+                    except Exception as e:
+                        logger.warning(f"Failed to add member {member_id} to admin unit {new_au_id}: {e}")
+                if restored:
+                    logger.info(f"Restored {restored}/{len(members)} members to admin unit {new_au_id}")
+
+    async def _restore_role_assignment(self, obj_data: dict):
+        """Recreate a role assignment. Validates that the principal exists before assigning.
+
+        Role assignments bind a principal (user/group/SP) to a directory role.
+        The role itself is built-in (cannot be created), but assignments can be restored.
+        """
+        principal_id = obj_data.get("principalId")
+        role_def_id = obj_data.get("roleDefinitionId")
+        dir_scope = obj_data.get("directoryScopeId", "/")
+
+        if not principal_id or not role_def_id:
+            logger.warning("Skipping role assignment restore — missing principalId or roleDefinitionId")
+            return
+
+        # Validate principal exists in target tenant
+        try:
+            await self.graph.get(f"/directoryObjects/{principal_id}")
+        except Exception:
+            logger.warning(f"Principal {principal_id} not found in tenant — skipping role assignment")
+            return
+
+        restore_body = {
+            "@odata.type": "#microsoft.graph.unifiedRoleAssignment",
+            "principalId": principal_id,
+            "roleDefinitionId": role_def_id,
+            "directoryScopeId": dir_scope,
+        }
+        try:
+            await self.graph.post(
+                "/roleManagement/directory/roleAssignments",
+                json_data=restore_body,
+            )
+        except Exception as e:
+            if "already exists" in str(e).lower():
+                logger.info(f"Role assignment already exists for principal {principal_id}")
+            else:
+                raise
+
+    async def _restore_oauth_grant(self, obj_data: dict):
+        """Recreate an OAuth2 permission grant.
+
+        Validates that both clientId (SP) and resourceId (target SP) exist.
+        """
+        client_id = obj_data.get("clientId")
+        resource_id = obj_data.get("resourceId")
+        scope = obj_data.get("scope", "")
+        consent_type = obj_data.get("consentType", "AllPrincipals")
+
+        if not client_id or not resource_id:
+            logger.warning("Skipping OAuth grant restore — missing clientId or resourceId")
+            return
+
+        # Validate both SPs exist
+        for sp_id in [client_id, resource_id]:
+            try:
+                await self.graph.get(f"/servicePrincipals/{sp_id}")
+            except Exception:
+                logger.warning(f"Service principal {sp_id} not found — skipping OAuth grant restore")
+                return
+
+        restore_body = {
+            "clientId": client_id,
+            "consentType": consent_type,
+            "resourceId": resource_id,
+            "scope": scope,
+        }
+        if consent_type == "Principal" and obj_data.get("principalId"):
+            restore_body["principalId"] = obj_data["principalId"]
+
+        await self.graph.post("/oauth2PermissionGrants", json_data=restore_body)

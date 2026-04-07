@@ -78,24 +78,9 @@ class RestoreEngine:
                 if target_obj:
                     target_user_id = target_obj.ms_object_id
 
-            # Dispatch to appropriate worker
-            from app.workers.exchange_worker import ExchangeWorker
-            from app.workers.onedrive_worker import OneDriveWorker
-            from app.workers.sharepoint_worker import SharePointWorker
-            from app.workers.teams_worker import TeamsWorker
-            from app.workers.entra_id_worker import EntraIDWorker
-
-            worker_map = {
-                WorkloadType.EXCHANGE: ExchangeWorker,
-                WorkloadType.ONEDRIVE: OneDriveWorker,
-                WorkloadType.SHAREPOINT: SharePointWorker,
-                WorkloadType.TEAMS: TeamsWorker,
-                WorkloadType.ENTRA_ID: EntraIDWorker,
-            }
-
-            worker_class = worker_map.get(source_obj.workload_type)
-            if not worker_class:
-                raise ValueError(f"Unknown workload type: {source_obj.workload_type}")
+            # Dispatch to appropriate worker via registry (no hard-coded imports)
+            from app.workers import get_worker_class
+            worker_class = get_worker_class(source_obj.workload_type)
 
             worker = worker_class(
                 db=self.db, graph=graph,

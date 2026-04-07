@@ -107,18 +107,38 @@ async def lifespan(app: FastAPI):
                         pass
                 logger.info("Auto-migration: schema columns verified")
 
-            # 2. Auto-seed demo users if DB is empty (fresh deploy)
+            # 2. Auto-seed users if DB is empty (fresh deploy)
+            # Passwords from env vars or auto-generated (never hardcoded in source)
             try:
                 result = await _conn.execute(_text("SELECT COUNT(*) FROM users"))
                 user_count = result.scalar() or 0
                 if user_count == 0:
+                    import os as _os
+                    import secrets as _secrets
                     from app.services.auth import hash_password as _hash
-                    for uname, email, pwd, role in [
-                        ("admin", "admin@kavachiq.com", "Admin123!", "ADMIN"),
-                        ("demo", "demo@kavachiq.com", "ShieldiDemo2026!", "ADMIN"),
-                        ("prospect", "prospect@kavachiq.com", "Prospect2026!", "ADMIN"),
-                        ("viewer", "viewer@kavachiq.com", "Viewer2026!", "VIEWER"),
+
+                    def _get_seed_password(username: str) -> str:
+                        """Get seed password from env var or generate a secure random one."""
+                        env_key = f"SEED_PASSWORD_{username.upper()}"
+                        pwd = _os.environ.get(env_key)
+                        if pwd:
+                            return pwd
+                        # Auto-generate: 16 chars, URL-safe (letters + digits + _-)
+                        generated = _secrets.token_urlsafe(12)
+                        logger.warning(
+                            f"Auto-generated password for '{username}'. "
+                            f"Set {env_key} env var for deterministic password. "
+                            f"Generated: {generated}"
+                        )
+                        return generated
+
+                    for uname, email, role in [
+                        ("admin", "admin@kavachiq.com", "ADMIN"),
+                        ("demo", "demo@kavachiq.com", "ADMIN"),
+                        ("prospect", "prospect@kavachiq.com", "ADMIN"),
+                        ("viewer", "viewer@kavachiq.com", "VIEWER"),
                     ]:
+                        pwd = _get_seed_password(uname)
                         hashed = _hash(pwd)
                         await _conn.execute(_text(
                             "INSERT INTO users (username, email, password_hash, full_name, role, is_active, email_verified) "
@@ -508,64 +528,13 @@ async def root():
     }
 
 
-@app.get("/api/admin/debug-auth")
-async def debug_auth():
-    """Debug auth issues. Remove after fix."""
-    import traceback
-    try:
-        from app.database import async_session
-        from app.models.user import User
-        from sqlalchemy import select
-        async with async_session() as db:
-            result = await db.execute(select(User).limit(1))
-            user = result.scalar_one_or_none()
-            if user:
-                return {"status": "ok", "user": user.username, "role": str(user.role), "hash_prefix": user.password_hash[:10] if user.password_hash else "none"}
-            return {"status": "no_users"}
-    except Exception as e:
-        return {"status": "error", "error": str(e), "traceback": traceback.format_exc()}
+# DEBUG ENDPOINTS REMOVED — were leaking password hashes and stack traces.
+# Auto-migration handles schema changes in lifespan startup.
+# Use /health/deep for diagnostics instead.
 
 
-@app.post("/api/admin/migrate")
-async def run_migration():
-    """Run pending DB migrations. Temporary endpoint — remove after first use."""
-    from app.database import engine
-    from sqlalchemy import text
-    results = []
-    async with engine.begin() as conn:
-        migrations = [
-            # Phase 1/2 schema (002)
-            "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified INTEGER DEFAULT 0",
-            "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_token VARCHAR(255)",
-            "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_token VARCHAR(255)",
-            "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_expires TIMESTAMP",
-            "ALTER TABLE users ADD COLUMN IF NOT EXISTS sso_provider VARCHAR(50)",
-            "ALTER TABLE users ADD COLUMN IF NOT EXISTS sso_subject_id VARCHAR(255)",
-            # Phase 3 (003)
-            "ALTER TABLE restore_jobs ADD COLUMN IF NOT EXISTS initiated_by_user_id INTEGER REFERENCES users(id)",
-            "ALTER TABLE restore_jobs ADD COLUMN IF NOT EXISTS approval_required INTEGER DEFAULT 0",
-            "ALTER TABLE restore_jobs ADD COLUMN IF NOT EXISTS approval_status VARCHAR(20)",
-            "CREATE TABLE IF NOT EXISTS restore_approvals (id SERIAL PRIMARY KEY, restore_job_id INTEGER NOT NULL REFERENCES restore_jobs(id), requested_by_user_id INTEGER NOT NULL REFERENCES users(id), approved_by_user_id INTEGER REFERENCES users(id), status VARCHAR(20) DEFAULT 'pending', reason TEXT, requested_at TIMESTAMP DEFAULT NOW(), resolved_at TIMESTAMP, expires_at TIMESTAMP NOT NULL)",
-            "CREATE TABLE IF NOT EXISTS admin_invites (id SERIAL PRIMARY KEY, tenant_name VARCHAR(255) NOT NULL, invited_by_user_id INTEGER NOT NULL REFERENCES users(id), admin_email VARCHAR(255) NOT NULL, token VARCHAR(255) UNIQUE NOT NULL, status VARCHAR(20) DEFAULT 'pending', ms_tenant_id VARCHAR(255), completed_at TIMESTAMP, expires_at TIMESTAMP NOT NULL, created_at TIMESTAMP DEFAULT NOW())",
-            "CREATE TABLE IF NOT EXISTS tenant_workload_apps (id SERIAL PRIMARY KEY, tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE, workload VARCHAR(30) NOT NULL, client_id VARCHAR(255) NOT NULL, client_secret_encrypted TEXT NOT NULL, app_object_id VARCHAR(255), sp_object_id VARCHAR(255), consent_status VARCHAR(20) NOT NULL DEFAULT 'pending', permissions_requested TEXT, permissions_granted TEXT, backup_ready INTEGER DEFAULT 0, restore_ready INTEGER DEFAULT 0, config_json TEXT, secret_expires_at TIMESTAMP, secret_rotation_warned INTEGER DEFAULT 0, enabled INTEGER DEFAULT 1, last_used_at TIMESTAMP, error_message TEXT, created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW(), UNIQUE(tenant_id, workload))",
-            # Phase 4: SaaS workload apps (platform-owned per-workload Entra apps)
-            "CREATE TABLE IF NOT EXISTS saas_workload_apps (id SERIAL PRIMARY KEY, workload VARCHAR(30) NOT NULL UNIQUE, display_name VARCHAR(255) NOT NULL, app_id VARCHAR(255) NOT NULL, app_object_id VARCHAR(255), client_secret_encrypted TEXT NOT NULL, permissions_configured TEXT, sign_in_audience VARCHAR(50) DEFAULT 'AzureADMultipleOrgs', redirect_uris TEXT, secret_expires_at TIMESTAMP, secret_key_id VARCHAR(255), status VARCHAR(20) DEFAULT 'active', error_message TEXT, last_validated_at TIMESTAMP, created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())",
-            # Phase 5: User-tenant membership (multi-tenant isolation)
-            "CREATE TABLE IF NOT EXISTS user_tenants (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE, role VARCHAR(20) DEFAULT 'member', is_default INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT NOW(), UNIQUE(user_id, tenant_id))",
-        ]
-        for sql in migrations:
-            try:
-                await conn.execute(text(sql))
-                results.append(f"OK: {sql[:60]}...")
-            except Exception as e:
-                results.append(f"SKIP: {str(e)[:80]}")
-        # Try to add enum value (may fail if exists)
-        try:
-            await conn.execute(text("ALTER TYPE userrole ADD VALUE IF NOT EXISTS 'restore_operator'"))
-            results.append("OK: Added restore_operator enum value")
-        except Exception as e:
-            results.append(f"SKIP enum: {str(e)[:80]}")
-    return {"status": "complete", "results": results}
+# /api/admin/migrate REMOVED — migrations run automatically in lifespan startup.
+# Schema changes are handled by auto-migration in the startup sequence above.
 
 
 @app.get("/health")

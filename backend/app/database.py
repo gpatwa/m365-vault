@@ -10,8 +10,9 @@ if "postgresql" in settings.DATABASE_URL:
     _engine_kwargs.update(
         pool_pre_ping=True,       # Validate connections before use (resilience)
         pool_recycle=300,          # Recycle stale connections every 5 min
-        pool_size=10,              # Connection pool size
-        max_overflow=20,           # Burst capacity
+        pool_size=25,              # 25 steady-state (was 10 — supports 25 concurrent backup sessions)
+        max_overflow=50,           # Burst to 75 during backup-all across tenants (was 20)
+        pool_timeout=30,           # Fail fast after 30s instead of hanging forever
     )
 
 engine = create_async_engine(settings.DATABASE_URL, **_engine_kwargs)

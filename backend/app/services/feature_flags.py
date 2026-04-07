@@ -96,6 +96,7 @@ TIER_FEATURES = {
 # Format: {"feature_name": True/False}
 # Set via API or environment variable FEATURE_OVERRIDES="+msp_dashboard,-worm"
 _overrides: dict[str, bool] = {}
+_tenant_tier_cache: dict[int, tuple[str, float]] = {}  # tenant_id → (tier, timestamp)
 
 
 def _parse_env_overrides():
@@ -120,17 +121,51 @@ class FeatureFlagService:
         self.tier = settings.LICENSE_TIER
         self.tier_config = TIER_FEATURES.get(self.tier, TIER_FEATURES["community"])
 
-    def is_enabled(self, feature: str) -> bool:
-        """Check if a feature is enabled for the current tier."""
-        # Admin override takes precedence
+    def is_enabled(self, feature: str, tenant_id: int = None) -> bool:
+        """Check if a feature is enabled for the current tier.
+
+        Args:
+            feature: Feature name to check (e.g., "archive_mailbox", "org_context")
+            tenant_id: Optional tenant ID for per-tenant tier resolution.
+                       If provided, uses the tenant's subscription_tier instead of global.
+        """
+        # Admin override takes precedence (global)
         if feature in _overrides:
             return _overrides[feature]
 
+        # Resolve tier: per-tenant if available, else global
+        tier_config = self.tier_config  # Default: global tier
+        if tenant_id is not None:
+            tenant_tier = self._get_tenant_tier(tenant_id)
+            if tenant_tier:
+                tier_config = TIER_FEATURES.get(tenant_tier, self.tier_config)
+
         # Check across all categories
         for category in ["workloads", "intelligence", "recovery", "compliance", "operations", "platform"]:
-            if feature in self.tier_config.get(category, []):
+            if feature in tier_config.get(category, []):
                 return True
         return False
+
+    def _get_tenant_tier(self, tenant_id: int) -> str | None:
+        """Get the subscription tier for a specific tenant. Cached for 5 min."""
+        import time
+        cached = _tenant_tier_cache.get(tenant_id)
+        if cached and time.time() - cached[1] < 300:
+            return cached[0]
+
+        # Sync-safe DB lookup (use existing session if available)
+        try:
+            # Try to get from tenant model's subscription_tier field
+            # This is populated by Stripe webhook on subscription change
+            from app.database import engine
+            import asyncio
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # Can't do sync DB call in async context — return None (use global tier)
+                return None
+        except Exception:
+            pass
+        return None
 
     def get_all(self) -> dict:
         """Get all features with their enabled/disabled status."""

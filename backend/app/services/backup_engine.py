@@ -79,8 +79,17 @@ class BackupEngine:
         """Run a backup for a single protected object. Returns the created snapshot.
         If a BackupJob is provided, updates its progress_details in real-time.
         """
+        # Set structured logging context for this backup operation
+        from app.utils.log_context import set_context, clear_context
+        ctx_tokens = set_context(
+            tenant_id=protected_object.tenant_id,
+            workload=protected_object.workload_type.value,
+            job_id=job.id if job else None,
+        )
+
         tenant = await self.db.get(Tenant, protected_object.tenant_id)
         if not tenant:
+            clear_context(ctx_tokens)
             raise ValueError(f"Tenant {protected_object.tenant_id} not found")
 
         graph = await self._get_graph_client(tenant, protected_object.workload_type.value)

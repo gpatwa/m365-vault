@@ -632,6 +632,29 @@ async def deep_health_check():
             if user_count == 0:
                 checks["database"]["status"] = "degraded"
                 checks["database"]["issue"] = "No users — fresh DB needs seeding"
+
+            # Pool health metrics (PostgreSQL only)
+            try:
+                pool = _engine.pool
+                pool_size = pool.size()
+                checked_out = pool.checkedout()
+                overflow = pool.overflow()
+                max_capacity = pool_size + (pool._max_overflow if hasattr(pool, '_max_overflow') else 50)
+                utilization = checked_out / max(max_capacity, 1)
+                checks["database"]["pool"] = {
+                    "size": pool_size,
+                    "checked_out": checked_out,
+                    "overflow": overflow,
+                    "max_capacity": max_capacity,
+                    "utilization_pct": round(utilization * 100),
+                }
+                if utilization > 0.8:
+                    checks["database"]["status"] = "degraded"
+                    checks["database"]["pool"]["warning"] = f"Pool {utilization:.0%} utilized — approaching saturation"
+                    warnings.append(f"DB pool at {utilization:.0%}")
+            except Exception:
+                pass  # NullPool (SQLite) doesn't have these attributes
+
     except Exception as e:
         checks["database"] = {"status": "unhealthy", "error": str(e)[:100]}
 
@@ -738,6 +761,48 @@ async def deep_health_check():
         "status": "healthy" if not config_issues else "degraded",
         "issues": config_issues if config_issues else None,
     }
+
+    # 9. Stale jobs (stuck IN_PROGRESS beyond timeout)
+    try:
+        from app.database import async_session
+        from sqlalchemy import text
+        async with async_session() as db:
+            stale_result = await db.execute(text(
+                "SELECT COUNT(*) FROM backup_jobs "
+                "WHERE status = 'in_progress' "
+                f"AND started_at < NOW() - INTERVAL '{settings.JOB_TIMEOUT_MINUTES} minutes'"
+            ))
+            stale_count = stale_result.scalar() or 0
+            checks["stale_jobs"] = {
+                "status": "healthy" if stale_count == 0 else "degraded",
+                "stuck_jobs": stale_count,
+            }
+            if stale_count > 0:
+                checks["stale_jobs"]["issue"] = f"{stale_count} backup jobs stuck IN_PROGRESS beyond {settings.JOB_TIMEOUT_MINUTES}min timeout"
+                warnings.append(f"{stale_count} stale backup jobs")
+    except Exception as e:
+        checks["stale_jobs"] = {"status": "unknown", "error": str(e)[:100]}
+
+    # 10. Storage capacity (local filesystem)
+    try:
+        import shutil
+        if settings.STORAGE_BACKEND == "local" or settings.STORAGE_BACKEND == "minio":
+            storage_path = settings.BACKUP_STORAGE_PATH
+            usage = shutil.disk_usage(storage_path)
+            pct = usage.used / usage.total if usage.total > 0 else 0
+            checks["storage_capacity"] = {
+                "status": "healthy" if pct < 0.85 else ("degraded" if pct < 0.95 else "unhealthy"),
+                "disk_used_pct": round(pct * 100),
+                "free_gb": round(usage.free / (1024**3), 1),
+                "total_gb": round(usage.total / (1024**3), 1),
+            }
+            if pct >= 0.85:
+                checks["storage_capacity"]["warning"] = f"Disk {pct:.0%} full"
+                warnings.append(f"Storage disk {pct:.0%} used")
+        else:
+            checks["storage_capacity"] = {"status": "healthy", "backend": settings.STORAGE_BACKEND}
+    except Exception as e:
+        checks["storage_capacity"] = {"status": "unknown", "error": str(e)[:100]}
 
     # Summary
     statuses = [c.get("status", "unknown") for c in checks.values()]

@@ -9,10 +9,10 @@ from app.database import get_db
 from app.models.backup_job import BackupJob, JobStatus
 from app.models.restore_job import RestoreJob, RestoreStatus
 from app.models.user import User
-from app.services.auth import get_current_user, require_backup_permission, require_restore_permission
+from app.services.auth import get_current_user, require_backup_permission, require_restore_permission, require_tenant_access_dep
 from app.utils.query import ListParams, apply_sorting, apply_pagination
 
-router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
+router = APIRouter(prefix="/api/jobs", tags=["Jobs"], dependencies=[Depends(require_tenant_access_dep())])
 
 
 @router.get("/backup")

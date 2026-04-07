@@ -12,7 +12,7 @@ from app.models.protected_object import ProtectedObject, WorkloadType, Protectio
 from app.models.snapshot import Snapshot, SnapshotItem, SnapshotStatus, ItemType
 from app.models.restore_job import RestoreJob, RestoreType, RestoreStatus
 from app.models.user import User
-from app.services.auth import get_current_user, require_backup_permission, require_restore_permission
+from app.services.auth import get_current_user, require_backup_permission, require_restore_permission, require_tenant_access_dep
 from app.services.catalog import CatalogService
 from app.services.resilience import idempotency_store
 from app.api.dependencies import run_backup_preflight, get_idempotency_key
@@ -20,7 +20,7 @@ from app.interfaces.dispatcher_factory import get_dispatcher
 from app.interfaces.job_message import BackupObjectMessage, RestoreJobMessage
 from app.utils.query import ListParams, apply_sorting, apply_pagination
 
-router = APIRouter(prefix="/api/exchange", tags=["Exchange"])
+router = APIRouter(prefix="/api/exchange", tags=["Exchange"], dependencies=[Depends(require_tenant_access_dep())])
 
 
 @router.get("/mailboxes")

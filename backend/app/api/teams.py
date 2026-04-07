@@ -9,17 +9,17 @@ from app.errors import KavachIQError, BACKUP_NO_OBJECTS
 from app.models.protected_object import ProtectedObject, WorkloadType
 from app.models.snapshot import Snapshot, SnapshotItem, SnapshotStatus, ItemType
 from app.models.user import User
-from app.services.auth import get_current_user
+from app.services.auth import get_current_user, require_tenant_access_dep
 from app.services.resilience import idempotency_store
 from app.api.dependencies import get_idempotency_key
 from app.interfaces.dispatcher_factory import get_dispatcher
 from app.interfaces.job_message import BackupObjectMessage, RestoreJobMessage
 from app.models.restore_job import RestoreJob, RestoreType, RestoreStatus
-from app.services.auth import require_restore_permission
+from app.services.auth import require_restore_permission, require_tenant_access_dep
 from app.utils.query import ListParams, apply_sorting, apply_pagination
 from pydantic import BaseModel
 
-router = APIRouter(prefix="/api/teams", tags=["Teams"])
+router = APIRouter(prefix="/api/teams", tags=["Teams"], dependencies=[Depends(require_tenant_access_dep())])
 
 TEAMS_ITEM_TYPES = [
     ItemType.CHAT_MESSAGE, ItemType.CHANNEL_MESSAGE,

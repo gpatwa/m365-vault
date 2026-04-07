@@ -13,9 +13,9 @@ from app.models.restore_job import RestoreJob
 from app.models.snapshot import Snapshot, SnapshotStatus
 from app.models.sla_policy import SLAPolicy
 from app.models.user import User
-from app.services.auth import get_current_user
+from app.services.auth import get_current_user, require_tenant_access_dep
 
-router = APIRouter(prefix="/api/usage", tags=["Usage & License"])
+router = APIRouter(prefix="/api/usage", tags=["Usage & License"], dependencies=[Depends(require_tenant_access_dep())])
 
 # License tier limits — Option B pricing (2026-03-29)
 # Optimized for competitive positioning against Veeam ($2/user) and Microsoft native ($0.15/GB)

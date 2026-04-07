@@ -13,12 +13,12 @@ from app.models.user import User
 from app.models.tenant import Tenant
 from app.models.protected_object import ProtectedObject
 from app.models.org_context import UserContext, SiteContext, VIPGroup, VIPGroupMember
-from app.services.auth import get_current_user, require_backup_permission
+from app.services.auth import get_current_user, require_backup_permission, require_tenant_access_dep
 from app.services.context_collector import ContextCollectorService
 from app.services.criticality_scorer import CriticalityScorer
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/api/org-context", tags=["Org Context"])
+router = APIRouter(prefix="/api/org-context", tags=["Org Context"], dependencies=[Depends(require_tenant_access_dep())])
 
 
 # ── Pydantic schemas ──

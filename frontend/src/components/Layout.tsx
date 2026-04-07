@@ -9,6 +9,7 @@ import CommandPalette from './CommandPalette';
 import ProductTour from './ProductTour';
 import FeedbackWidget from './FeedbackWidget';
 import ThemeToggle from './ThemeToggle';
+import { useTenantSwitcher } from '../hooks/useTenant';
 
 interface NavItem {
   path: string;
@@ -75,7 +76,7 @@ const navGroups: NavGroup[] = [
   {
     label: 'MSP',
     defaultOpen: false,
-    roles: ['admin', 'msp_admin'],
+    roles: ['platform_admin', 'msp_admin'],
     items: [
       { path: '/msp', label: 'MSP Dashboard', icon: Building2 },
       { path: '/msp/billing', label: 'Billing', icon: BarChart3 },
@@ -88,14 +89,15 @@ const navGroups: NavGroup[] = [
     label: 'Administration',
     defaultOpen: false,
     items: [
-      { path: '/tenants', label: 'Tenants', icon: Building2 },
+      { path: '/settings', label: 'Organization', icon: Building2 },
+      { path: '/tenants', label: 'Tenants (Admin)', icon: Building2, roles: ['platform_admin'] },
       { path: '/sla-policies', label: 'SLA Policies', icon: Shield },
       { path: '/usage', label: 'Usage & License', icon: Gauge },
       { path: '/billing', label: 'Billing', icon: CreditCard },
       { path: '/security-posture', label: 'Security', icon: Shield },
       { path: '/audit', label: 'Audit Log', icon: FileText },
       { path: '/performance', label: 'Performance', icon: Activity },
-      { path: '/features', label: 'Feature Config', icon: Shield, roles: ['admin'] },
+      { path: '/features', label: 'Feature Config', icon: Shield, roles: ['platform_admin'] },
     ],
   },
 ];
@@ -115,6 +117,8 @@ export default function Layout() {
   // Get user role for role-based nav filtering
   const { user } = useAuth();
   const userRole = user?.role || 'viewer';
+  // Platform superadmin (username=admin) vs tenant admin (any other ADMIN user)
+  const isPlatformAdmin = user?.username === 'admin';
   const branding = useBranding();
 
   // Progressive sidebar based on onboarding state
@@ -128,13 +132,13 @@ export default function Layout() {
 
   const visibleGroups = navGroups
     // Filter groups by role
-    .filter(group => !group.roles || group.roles.includes(userRole))
+    .filter(group => !group.roles || group.roles.includes(userRole) || (group.roles.includes('platform_admin') && isPlatformAdmin))
     // Filter groups by feature flag
     .filter(group => !group.featureFlag || isFeatureEnabled(group.featureFlag))
     // Filter items within groups by role
     .map(group => ({
       ...group,
-      items: group.items.filter(item => !item.roles || item.roles.includes(userRole)),
+      items: group.items.filter(item => !item.roles || item.roles.includes(userRole) || (item.roles.includes('platform_admin') && isPlatformAdmin)),
     }))
     .map(group => {
     if (!onboarding || onboarding.isComplete) return group; // Show all when complete
@@ -187,6 +191,10 @@ export default function Layout() {
     navigate('/login');
   };
 
+  // Tenant switcher
+  const { tenants: userTenants, selectedTenant, switchTenant, isMultiTenant } = useTenantSwitcher();
+  const [tenantDropdownOpen, setTenantDropdownOpen] = useState(false);
+
   const toggleGroup = (label: string) => {
     setCollapsed(prev => ({ ...prev, [label]: !prev[label] }));
   };
@@ -225,6 +233,50 @@ export default function Layout() {
             <kbd className="px-1 py-0.5 bg-secondary rounded text-[9px] text-muted-foreground font-mono">⌘K</kbd>
           </button>
         </div>
+
+        {/* Tenant Switcher — shown when user has tenants */}
+        {selectedTenant && (
+          <div className="px-3 mt-2 relative">
+            <button
+              onClick={() => isMultiTenant && setTenantDropdownOpen(!tenantDropdownOpen)}
+              className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-sm border transition-colors ${
+                isMultiTenant
+                  ? 'border-border hover:border-blue-500/30 hover:bg-accent cursor-pointer'
+                  : 'border-transparent cursor-default'
+              }`}
+            >
+              <Building2 className="w-4 h-4 text-blue-400 shrink-0" />
+              <span className="flex-1 text-left font-medium text-foreground truncate">{selectedTenant.name}</span>
+              {isMultiTenant && <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${tenantDropdownOpen ? 'rotate-180' : ''}`} />}
+            </button>
+            {tenantDropdownOpen && isMultiTenant && (
+              <div className="absolute left-3 right-3 top-full mt-1 bg-card border border-border rounded-lg shadow-xl z-50 py-1">
+                {userTenants.map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => { setTenantDropdownOpen(false); if (t.id !== selectedTenant.id) switchTenant(t.id); }}
+                    className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-accent transition-colors ${
+                      t.id === selectedTenant.id ? 'text-blue-400 font-medium' : 'text-foreground'
+                    }`}
+                  >
+                    <Building2 className="w-3.5 h-3.5 shrink-0" />
+                    <span className="flex-1 truncate">{t.name}</span>
+                    {t.id === selectedTenant.id && <span className="text-xs text-blue-400">●</span>}
+                  </button>
+                ))}
+                <div className="border-t border-border mt-1 pt-1">
+                  <button
+                    onClick={() => { setTenantDropdownOpen(false); navigate('/onboard'); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                  >
+                    <span className="text-xs">＋</span>
+                    <span>Connect New Tenant</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         <nav className="flex-1 px-2 mt-2 overflow-y-auto">
           {visibleGroups.map((group, gi) => (

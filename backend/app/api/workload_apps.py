@@ -42,12 +42,15 @@ async def enable_workloads(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_admin),
 ):
-    """Enable workloads for a tenant — creates per-workload Entra app registrations.
+    """Enable workloads for a tenant — links to per-workload SaaS app registrations.
 
-    For each requested workload, creates a TenantWorkloadApp record.
-    In production, this would also create the actual Entra app registration
-    via app_provisioning.create_workload_app(). For now, it stores the
-    tenant's existing credentials as a placeholder until re-onboarding.
+    For each requested workload:
+    1. Looks up the SaaS-level per-workload app (auto-created at startup)
+    2. Creates a TenantWorkloadApp record linking this tenant to that app
+    3. Returns per-workload admin consent URLs for the customer to approve
+
+    The customer only consents to the workloads they need. Each consent URL
+    grants permissions for exactly ONE workload.
     """
     tenant = await db.get(Tenant, tenant_id)
     if not tenant:
@@ -59,6 +62,9 @@ async def enable_workloads(
         raise HTTPException(400, detail=f"Invalid workloads: {invalid}. Valid: {VALID_WORKLOADS}")
 
     from app.services.app_provisioning import WORKLOAD_PERMISSIONS, get_workload_permissions
+    from app.services.workload_bootstrap import get_all_saas_workload_apps
+
+    saas_apps = await get_all_saas_workload_apps(db)
 
     created = []
     consent_urls = {}
@@ -76,31 +82,55 @@ async def enable_workloads(
 
         # Get required permissions for this workload
         perms = get_workload_permissions(workload, include_restore=True)
-        display_name = WORKLOAD_PERMISSIONS[workload]["display_name"]
+
+        # Resolve credentials: SaaS per-workload app → legacy fallback
+        saas_app = saas_apps.get(workload)
+        if saas_app:
+            # Use per-workload SaaS app credentials
+            client_id = saas_app.app_id
+            client_secret_encrypted = saas_app.client_secret_encrypted
+            consent_status = "pending"  # Customer must consent
+            backup_ready = 0
+            restore_ready = 0
+        elif tenant.client_id and tenant.client_secret_encrypted:
+            # Fallback: legacy single-app (backward compat during migration)
+            logger.warning(
+                f"No SaaS app for {workload} — falling back to legacy tenant credentials. "
+                f"Run bootstrap to create per-workload apps."
+            )
+            client_id = tenant.client_id
+            client_secret_encrypted = tenant.client_secret_encrypted
+            consent_status = "consented"
+            backup_ready = 1
+            restore_ready = 1
+        else:
+            logger.error(f"Cannot enable {workload}: no SaaS app and no legacy credentials")
+            continue
 
         # Create workload app record
-        # In production: call app_provisioning.create_workload_app() to create
-        # a real Entra app. For now, use tenant's existing credentials.
         wl_app = TenantWorkloadApp(
             tenant_id=tenant_id,
             workload=workload,
-            client_id=tenant.client_id,
-            client_secret_encrypted=tenant.client_secret_encrypted,
-            consent_status="consented" if tenant.client_id else "pending",
+            client_id=client_id,
+            client_secret_encrypted=client_secret_encrypted,
+            consent_status=consent_status,
             permissions_requested=json.dumps(sorted(perms)),
-            backup_ready=1 if tenant.client_id else 0,
-            restore_ready=1 if tenant.client_id else 0,
+            backup_ready=backup_ready,
+            restore_ready=restore_ready,
             enabled=1,
         )
         db.add(wl_app)
         created.append(workload)
 
-        # Generate consent URL
-        from app.services.app_provisioning import app_provisioning
-        consent_urls[workload] = app_provisioning.get_admin_consent_url(
-            tenant_id=tenant.ms_tenant_id,
-            client_id=tenant.client_id,
-        )
+        # Generate per-workload consent URL
+        if saas_app and tenant.ms_tenant_id:
+            from app.config import settings as _settings
+            consent_urls[workload] = (
+                f"https://login.microsoftonline.com/{tenant.ms_tenant_id}/adminconsent"
+                f"?client_id={saas_app.app_id}"
+                f"&redirect_uri={_settings.CONNECTOR_REDIRECT_URI}"
+                f"&state=workload:{workload}"
+            )
 
     await db.flush()
 
@@ -117,6 +147,7 @@ async def enable_workloads(
         "workloads_created": created,
         "consent_urls": consent_urls,
         "total_workload_apps": len(created),
+        "per_workload_apps": bool(saas_apps),
     }
 
 

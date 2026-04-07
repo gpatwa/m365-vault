@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.user import User
-from app.services.auth import get_current_user
+from app.services.auth import get_current_user, require_tenant_access_dep
 from app.services.agent_monitor import (
     get_agent_dashboard,
     get_agent_profiles,
@@ -20,7 +20,7 @@ from app.services.agent_monitor import (
     get_shadow_agents,
     scan_tenant_agents,
 )
-router = APIRouter(prefix="/api/agents", tags=["Agent Shield"])
+router = APIRouter(prefix="/api/agents", tags=["Agent Shield"], dependencies=[Depends(require_tenant_access_dep())])
 
 
 @router.get("/dashboard")

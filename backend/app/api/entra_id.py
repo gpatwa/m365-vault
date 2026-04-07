@@ -8,15 +8,15 @@ from app.database import get_db
 from app.models.protected_object import ProtectedObject, WorkloadType
 from app.models.snapshot import Snapshot, SnapshotItem, SnapshotStatus, ItemType
 from app.models.user import User
-from app.services.auth import get_current_user
+from app.services.auth import get_current_user, require_tenant_access_dep
 from app.interfaces.dispatcher_factory import get_dispatcher
 from app.interfaces.job_message import BackupObjectMessage, RestoreJobMessage
 from app.models.restore_job import RestoreJob, RestoreType, RestoreStatus
-from app.services.auth import require_restore_permission
+from app.services.auth import require_restore_permission, require_tenant_access_dep
 from app.utils.query import ListParams, apply_sorting, apply_pagination
 from pydantic import BaseModel
 
-router = APIRouter(prefix="/api/entra-id", tags=["Entra ID"])
+router = APIRouter(prefix="/api/entra-id", tags=["Entra ID"], dependencies=[Depends(require_tenant_access_dep())])
 
 # Entra ID item types for filtering
 ENTRA_ITEM_TYPES = [

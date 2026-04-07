@@ -13,10 +13,10 @@ from app.models.snapshot import (
 )
 from app.models.protected_object import ProtectedObject
 from app.models.user import User
-from app.services.auth import get_current_user
+from app.services.auth import get_current_user, require_tenant_access_dep
 from app.utils.query import ListParams, apply_sorting, apply_pagination
 
-router = APIRouter(prefix="/api/failed-items", tags=["Failed Items"])
+router = APIRouter(prefix="/api/failed-items", tags=["Failed Items"], dependencies=[Depends(require_tenant_access_dep())])
 
 
 @router.get("")

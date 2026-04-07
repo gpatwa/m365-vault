@@ -229,12 +229,15 @@ async def list_platforms():
 @router.get("/connect/{platform}")
 async def start_connection(
     platform: str,
+    mode: str = Query("fast", description="Onboarding mode: 'fast' (real customer) or 'demo' (prospect showcase)"),
     current_user: User = Depends(get_current_user),
 ):
     """Start OAuth connection flow for a platform.
 
     Returns the authorization URL to redirect the customer to.
-    For demo/prospect users, simulates the connection and returns a frontend callback URL.
+    Mode determines the post-OAuth onboarding experience:
+    - 'fast': 4-step flow (connect → discover → protect → done)
+    - 'demo': 7-step flow with intelligence, backup story, cyber sim
     """
     # All users (including demo) go through real OAuth when connector is configured
     try:
@@ -268,6 +271,7 @@ async def start_connection(
     _onboard_states[state] = {
         "platform": platform,
         "user_id": current_user.id,
+        "mode": mode,
     }
 
     redirect_uri = settings.CONNECTOR_REDIRECT_URI
@@ -304,9 +308,13 @@ async def oauth_callback(
 
     # Skip state validation for admin consent (Microsoft doesn't always return state)
     platform = "microsoft365"  # Default for admin consent flow
+    onboard_mode = "fast"  # Default mode
+    connecting_user_id = None
     if state and state in _onboard_states:
         state_data = _onboard_states.pop(state)
         platform = state_data["platform"]
+        onboard_mode = state_data.get("mode", "fast")
+        connecting_user_id = state_data.get("user_id")
 
     try:
         connector = get_connector(platform)
@@ -326,7 +334,18 @@ async def oauth_callback(
         )
         existing_tenant = existing.scalar_one_or_none()
         if existing_tenant:
-            # Return existing tenant with real name + object counts
+            # Re-run discovery on reconnect to refresh counts
+            # This ensures per-workload permissions are validated
+            try:
+                from app.services.discovery import DiscoveryService
+                discovery = DiscoveryService(db)
+                disc_result = await discovery.discover_all(existing_tenant)
+                await db.commit()
+                logger.info(f"Re-discovery for {existing_tenant.name}: {disc_result}")
+            except Exception as e:
+                logger.warning(f"Re-discovery failed for {existing_tenant.name}: {e}")
+                disc_result = None
+
             from sqlalchemy import func as _func
             from app.models.protected_object import ProtectedObject
             obj_count = (await db.execute(
@@ -336,6 +355,7 @@ async def oauth_callback(
             return {
                 "success": True,
                 "existing": True,
+                "mode": onboard_mode,
                 "tenant_id": result.tenant_id,
                 "tenant_name": existing_tenant.name,
                 "db_tenant_id": existing_tenant.id,
@@ -362,6 +382,12 @@ async def oauth_callback(
         db.add(tenant_record)
         await db.flush()
 
+        # Auto-assign connecting user to this tenant
+        if connecting_user_id:
+            from app.services.auth import assign_user_to_tenant
+            await assign_user_to_tenant(db, connecting_user_id, tenant_record.id, role="owner", is_default=True)
+            logger.info(f"Assigned user {connecting_user_id} to tenant {tenant_record.id} as owner")
+
         # Run discovery
         from app.services.discovery import DiscoveryService
         discovery = DiscoveryService(db)
@@ -372,6 +398,7 @@ async def oauth_callback(
         return {
             "success": True,
             "new": True,
+            "mode": onboard_mode,
             "tenant_id": result.tenant_id,
             "tenant_name": result.tenant_name,
             "db_tenant_id": tenant_record.id,
@@ -484,56 +511,125 @@ async def selective_discovery(
 
 
 @router.get("/workloads")
-async def list_available_workloads():
-    """List available workloads with metadata for the discovery toggle UI."""
+async def list_available_workloads(
+    db: AsyncSession = Depends(get_db),
+):
+    """List available workloads with metadata for the discovery toggle UI.
+
+    Includes per-workload app status (whether the SaaS app is provisioned).
+    """
+    from app.services.workload_bootstrap import get_all_saas_workload_apps
+
+    saas_apps = await get_all_saas_workload_apps(db)
+
+    workloads = [
+        {
+            "key": "entra_id",
+            "label": "Entra ID",
+            "description": "Users, groups, roles, policies, apps",
+            "icon": "key",
+            "speed": "fast",
+            "est_seconds": 2,
+            "recommended": True,
+        },
+        {
+            "key": "exchange",
+            "label": "Exchange",
+            "description": "Emails, calendar events, contacts",
+            "icon": "mail",
+            "speed": "fast",
+            "est_seconds": 2,
+            "recommended": True,
+        },
+        {
+            "key": "sharepoint",
+            "label": "SharePoint",
+            "description": "Sites, document libraries, lists",
+            "icon": "globe",
+            "speed": "medium",
+            "est_seconds": 5,
+            "recommended": False,
+        },
+        {
+            "key": "onedrive",
+            "label": "OneDrive",
+            "description": "Personal files and folders",
+            "icon": "hard-drive",
+            "speed": "medium",
+            "est_seconds": 5,
+            "recommended": False,
+        },
+        {
+            "key": "teams",
+            "label": "Teams",
+            "description": "Channels, messages, chats, files",
+            "icon": "message-square",
+            "speed": "slow",
+            "est_seconds": 10,
+            "recommended": False,
+        },
+    ]
+
+    # Enrich with per-workload app availability
+    for wl in workloads:
+        saas_app = saas_apps.get(wl["key"])
+        wl["app_provisioned"] = saas_app is not None
+        wl["app_id"] = saas_app.app_id[:8] + "..." if saas_app else None
+
+    return {"workloads": workloads}
+
+
+@router.get("/workload-consent-urls/{tenant_ms_id}")
+async def get_workload_consent_urls(
+    tenant_ms_id: str,
+    workloads: str = Query(None, description="Comma-separated workload keys. None = all provisioned."),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Generate per-workload admin consent URLs for a customer tenant.
+
+    Each URL redirects the customer admin to consent to ONE workload's
+    Entra app with only that workload's permissions. Customer picks which
+    workloads to protect.
+
+    Example: customer only needs Exchange + Entra ID → consent 2 apps.
+    """
+    from app.services.workload_bootstrap import get_all_saas_workload_apps
+
+    saas_apps = await get_all_saas_workload_apps(db)
+    if not saas_apps:
+        raise HTTPException(
+            503,
+            detail="Per-workload apps not yet provisioned. Check startup logs.",
+        )
+
+    # Filter to requested workloads
+    requested = set(workloads.split(",")) if workloads else set(saas_apps.keys())
+    redirect_uri = settings.CONNECTOR_REDIRECT_URI
+
+    consent_urls = {}
+    for wl_key in sorted(requested):
+        saas_app = saas_apps.get(wl_key)
+        if not saas_app:
+            continue
+
+        url = (
+            f"https://login.microsoftonline.com/{tenant_ms_id}/adminconsent"
+            f"?client_id={saas_app.app_id}"
+            f"&redirect_uri={redirect_uri}"
+            f"&state=workload:{wl_key}"
+        )
+        consent_urls[wl_key] = {
+            "url": url,
+            "app_name": saas_app.display_name,
+            "app_id": saas_app.app_id,
+            "permissions": json.loads(saas_app.permissions_configured) if saas_app.permissions_configured else [],
+        }
+
     return {
-        "workloads": [
-            {
-                "key": "entra_id",
-                "label": "Entra ID",
-                "description": "Users, groups, roles, policies, apps",
-                "icon": "key",
-                "speed": "fast",
-                "est_seconds": 2,
-                "recommended": True,
-            },
-            {
-                "key": "exchange",
-                "label": "Exchange",
-                "description": "Emails, calendar events, contacts",
-                "icon": "mail",
-                "speed": "fast",
-                "est_seconds": 2,
-                "recommended": True,
-            },
-            {
-                "key": "sharepoint",
-                "label": "SharePoint",
-                "description": "Sites, document libraries, lists",
-                "icon": "globe",
-                "speed": "medium",
-                "est_seconds": 5,
-                "recommended": False,
-            },
-            {
-                "key": "onedrive",
-                "label": "OneDrive",
-                "description": "Personal files and folders",
-                "icon": "hard-drive",
-                "speed": "medium",
-                "est_seconds": 5,
-                "recommended": False,
-            },
-            {
-                "key": "teams",
-                "label": "Teams",
-                "description": "Channels, messages, chats, files",
-                "icon": "message-square",
-                "speed": "slow",
-                "est_seconds": 10,
-                "recommended": False,
-            },
-        ]
+        "tenant_id": tenant_ms_id,
+        "consent_urls": consent_urls,
+        "total": len(consent_urls),
     }
 
 

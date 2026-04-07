@@ -106,11 +106,9 @@ export default function Settings() {
           <h1 className="text-2xl font-bold text-foreground">Tenants</h1>
           <p className="text-muted-foreground">Manage SaaS platform connections and lifecycle</p>
         </div>
-        {!showWizard && (
-          <button onClick={() => setShowWizard(true)} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
-            <Plus className="w-4 h-4" /> Add Tenant
-          </button>
-        )}
+        <button onClick={() => navigate('/onboard')} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
+          <Plus className="w-4 h-4" /> Connect Tenant
+        </button>
       </div>
 
       {/* Demo onboarding: tenant just connected banner */}

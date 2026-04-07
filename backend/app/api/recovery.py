@@ -25,13 +25,13 @@ from app.models.snapshot import Snapshot, SnapshotStatus, SnapshotItem
 from app.models.sla_policy import SLAPolicy
 from app.models.tenant import Tenant
 from app.models.user import User
-from app.services.auth import get_current_user, require_restore_permission
+from app.services.auth import get_current_user, require_restore_permission, require_tenant_access_dep
 from app.interfaces.dispatcher_factory import get_dispatcher
 from app.interfaces.job_message import RestoreJobMessage
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/recovery", tags=["Recovery"])
+router = APIRouter(prefix="/api/recovery", tags=["Recovery"], dependencies=[Depends(require_tenant_access_dep())])
 
 
 # ═══════════════════════════════════════════════════════

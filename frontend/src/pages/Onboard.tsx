@@ -36,6 +36,13 @@ export default function Onboard() {
   const [showPreflight, setShowPreflight] = useState(false);
   const [preflightStep, setPreflightStep] = useState(0);
 
+  // Set default mode to 'fast' if not already set (DemoOnboard sets 'demo')
+  useEffect(() => {
+    if (!sessionStorage.getItem(ONBOARD_MODE_KEY)) {
+      sessionStorage.setItem(ONBOARD_MODE_KEY, 'fast');
+    }
+  }, []);
+
   useEffect(() => {
     api.get<{ platforms: Platform[] }>('/onboard/platforms')
       .then(data => setPlatforms(data.platforms))
@@ -66,7 +73,9 @@ export default function Onboard() {
   const handleConnect = async (platformKey: string) => {
     setConnecting(platformKey);
     try {
-      const data: any = await api.get(`/onboard/connect/${platformKey}`);
+      // Preserve onboarding mode through OAuth redirect
+      const mode = sessionStorage.getItem(ONBOARD_MODE_KEY) || 'fast';
+      const data: any = await api.get(`/onboard/connect/${platformKey}?mode=${mode}`);
       if (data.auth_url) {
         setTimeout(() => { window.location.href = data.auth_url; }, 0);
       }
@@ -1690,14 +1699,24 @@ const WIZARD_STEPS = [
   { key: 'ready', label: 'Ready', icon: CheckCircle },
 ];
 
+// Fast flow for real customers — 4 steps, skip intelligence/backup/recovery simulation
+const FAST_STEPS = [
+  { key: 'connect', label: 'Connect', icon: Shield },
+  { key: 'discover', label: 'Discover', icon: Globe },
+  { key: 'protect', label: 'Protect', icon: Shield },
+  { key: 'done', label: 'Done', icon: CheckCircle },
+];
+
+const ONBOARD_MODE_KEY = 'kavachiq_onboard_mode';
+
 /**
- * Demo Onboard — starts at discovery (step 1), skipping OAuth.
- * Uses the first active tenant. For prospect demos where the tenant
- * is already connected but you want to show the full discovery → backup → recovery flow.
+ * Demo Onboard — full 7-step value showcase for prospects.
+ * Sets mode='demo' so OnboardCallback uses WIZARD_STEPS (7 steps)
+ * with competitive callouts, org intelligence, cyber simulation.
  */
 export function DemoOnboard() {
-  // Demo user always gets the full onboarding experience from step 0
-  // (platform selection → connect → discover → protect → backup → ready)
+  // Set demo mode before rendering — OnboardCallback reads this
+  sessionStorage.setItem(ONBOARD_MODE_KEY, 'demo');
   return <Onboard />;
 }
 
@@ -1725,10 +1744,21 @@ export function OnboardCallback() {
 
   // Restore from sessionStorage or URL step param
   // For demo mode, always start fresh (clear previous session)
+  // If URL has a different tenant than saved state, clear stale session
   const isDemo = searchParams.get('demo') === 'true';
-  const saved = isDemo ? null : loadOnboardState();
+  const urlTenant = searchParams.get('tenant');
+  const rawSaved = isDemo ? null : loadOnboardState();
+  const saved = (rawSaved && urlTenant && rawSaved.resultData?.tenant_id !== urlTenant)
+    ? null  // Different tenant in URL — clear stale session
+    : rawSaved;
   const urlStep = parseInt(searchParams.get('step') || '0');
   const initialStep = saved?.step ?? urlStep;
+
+  // Determine onboarding mode: 'fast' (real customer, 4 steps) or 'demo' (prospect, 7 steps)
+  const onboardMode = isDemo
+    ? 'demo'
+    : (sessionStorage.getItem(ONBOARD_MODE_KEY) || saved?.onboardMode || 'fast');
+  const activeSteps = onboardMode === 'demo' ? WIZARD_STEPS : FAST_STEPS;
 
   const [step, _setStep] = useState(initialStep);
   const [simScene, setSimScene] = useState(saved?.simScene || 0);
@@ -1763,7 +1793,7 @@ export function OnboardCallback() {
   useEffect(() => {
     saveOnboardState({
       step, simScene, resultData, discoveryResults, slaPolicies, selectedSla,
-      backupStatus, backupProgress,
+      backupStatus, backupProgress, onboardMode,
       availableWorkloads, selectedWorkloads: Array.from(selectedWorkloads),
     });
   }, [step, simScene, resultData, discoveryResults, slaPolicies, selectedSla, backupStatus, backupProgress, availableWorkloads, selectedWorkloads]);
@@ -1880,7 +1910,9 @@ export function OnboardCallback() {
 
   // toggleBackupWorkload removed — smart backup backs up all selected workloads
 
-  // Step 2 → 3: Assign SLA and protect all
+  // Step 2 → next: Assign SLA and protect all
+  // Fast mode: step 3 = Done → Dashboard
+  // Demo mode: step 3 = Intelligence
   const handleProtect = async () => {
     if (!selectedSla || !resultData?.db_tenant_id) return;
     setProtecting(true);
@@ -1891,7 +1923,14 @@ export function OnboardCallback() {
         protect_all: true,
         workload_types: Array.from(selectedWorkloads),
       });
-      setStep(3); // Move to intelligence/context step
+
+      if (onboardMode === 'fast') {
+        // Fire-and-forget: trigger first backup in background
+        api.post(`/entra-id/backup?tenant_id=${resultData.db_tenant_id}`).catch(() => {});
+        setStep(3); // Fast step 3 = Done
+      } else {
+        setStep(3); // Demo step 3 = Intelligence
+      }
     } catch (e: any) {
       setError(e.message || 'Protection failed');
     } finally {
@@ -1983,7 +2022,7 @@ export function OnboardCallback() {
       {/* Progress bar */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-2">
-          {WIZARD_STEPS.map((s, i) => (
+          {activeSteps.map((s, i) => (
             <div key={s.key} className="flex items-center gap-1.5">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                 i < step ? 'bg-green-500/100 text-foreground' :
@@ -1993,7 +2032,7 @@ export function OnboardCallback() {
                 {i < step ? <CheckCircle className="w-4 h-4" /> : i + 1}
               </div>
               <span className={`text-xs font-medium hidden sm:block ${i <= step ? 'text-foreground' : 'text-muted-foreground'}`}>{s.label}</span>
-              {i < WIZARD_STEPS.length - 1 && <div className={`w-8 sm:w-16 h-0.5 mx-1 ${i < step ? 'bg-green-500/100' : 'bg-muted'}`} />}
+              {i < activeSteps.length - 1 && <div className={`w-8 sm:w-16 h-0.5 mx-1 ${i < step ? 'bg-green-500/100' : 'bg-muted'}`} />}
             </div>
           ))}
         </div>
@@ -2197,8 +2236,88 @@ export function OnboardCallback() {
         </div>
       )}
 
-      {/* Step 3: Smart Intelligence — org graph + criticality-ordered backup priority */}
-      {step === 3 && <IntelligenceStep tenantId={resultData?.db_tenant_id} onContinue={() => setStep(4)} />}
+      {/* Step 3: Fast mode = Done | Demo mode = Intelligence */}
+      {step === 3 && onboardMode === 'fast' && (
+        <div className="text-center">
+          <div className="w-20 h-20 bg-green-500/10 border-2 border-green-500/30 rounded-full flex items-center justify-center mx-auto mb-6 animate-in zoom-in">
+            <Shield className="w-10 h-10 text-green-500" />
+          </div>
+          <h2 className="text-3xl font-bold text-foreground mb-2">You're Protected</h2>
+          <p className="text-muted-foreground mb-2">{tenantName} is now secured by KavachIQ</p>
+
+          <div className="bg-card border border-border rounded-xl p-4 mb-6 text-left max-w-md mx-auto">
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                <span>{selectedWorkloads.size} workloads protected with automatic backups</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                <span>First backup initiated in background</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                <span>Smart Engine anomaly detection active</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                <span>Identity-first recovery configured</span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => {
+              clearOnboardState();
+              sessionStorage.removeItem(ONBOARD_MODE_KEY);
+              navigate('/');
+            }}
+            className="w-full max-w-md py-3 bg-gradient-to-r from-teal-500 to-blue-600 text-white rounded-xl font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+          >
+            Go to Dashboard <ArrowRight className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={() => {
+              // Switch to demo mode to see the full experience
+              sessionStorage.setItem(ONBOARD_MODE_KEY, 'demo');
+              window.location.reload();
+            }}
+            className="mt-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Want the full tour? Explore Smart Engine &amp; Recovery Simulation
+          </button>
+        </div>
+      )}
+
+      {/* Step 3 (demo mode): Smart Intelligence — org graph + criticality-ordered backup priority */}
+      {step === 3 && onboardMode === 'demo' && (
+        <div>
+          <IntelligenceStep tenantId={resultData?.db_tenant_id} onContinue={() => setStep(4)} />
+
+          {/* Competitive callout — only in demo mode */}
+          <div className="mt-6 bg-gradient-to-r from-teal-500/5 to-blue-500/5 border border-teal-500/20 rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Star className="w-5 h-5 text-teal-400" />
+              <span className="font-bold text-foreground text-sm">Only KavachIQ does this</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+              <div>
+                <div className="text-muted-foreground">Competitors</div>
+                <div className="text-foreground mt-1">Manual priority tags per user</div>
+                <div className="text-foreground">Flat backup order (alphabetical)</div>
+                <div className="text-foreground">No org hierarchy awareness</div>
+              </div>
+              <div>
+                <div className="text-teal-400 font-medium">KavachIQ</div>
+                <div className="text-foreground mt-1">Auto-scored from Graph API</div>
+                <div className="text-foreground">CEO → VPs → Directors → Staff</div>
+                <div className="text-foreground">Criticality-based recovery order</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {step === 4 && (
         <div>
@@ -2437,21 +2556,53 @@ export function OnboardCallback() {
         </div>
       )}
 
-      {/* Step 5: Cyber Recovery Simulation */}
+      {/* Step 5: Cyber Recovery Simulation (demo mode only) */}
       {step === 5 && (
-        <CyberRecoverySimulation
-          tenantName={tenantName}
-          tenantId={resultData?.db_tenant_id}
-          disc={disc}
-          onComplete={() => setStep(6)}
-          simScene={simScene}
-          activeWorkloads={selectedWorkloads}
-          setSimScene={setSimScene}
-        />
+        <div>
+          {/* Identity-first callout — demo differentiator */}
+          <div className="bg-gradient-to-r from-amber-500/5 to-red-500/5 border border-amber-500/20 rounded-xl p-4 mb-6">
+            <div className="flex items-center gap-2 mb-2">
+              <Lock className="w-5 h-5 text-amber-400" />
+              <span className="font-bold text-foreground text-sm">Why Identity First?</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Entra ID is the control plane — restore admin roles, conditional access, and MFA
+              <strong className="text-foreground"> before </strong>
+              mailboxes. This is the playbook ransomware teams fear.
+            </p>
+          </div>
+
+          <CyberRecoverySimulation
+            tenantName={tenantName}
+            tenantId={resultData?.db_tenant_id}
+            disc={disc}
+            onComplete={() => setStep(6)}
+            simScene={simScene}
+            activeWorkloads={selectedWorkloads}
+            setSimScene={setSimScene}
+          />
+        </div>
       )}
 
-      {/* Step 6: Ready! — Animated protection visual */}
-      {step === 6 && <ProtectedVisual tenantName={tenantName} onDashboard={() => { sessionStorage.setItem('demo_onboard_complete', '1'); clearOnboardState(); navigate('/'); }} onRecovery={() => navigate('/recovery')} />}
+      {/* Step 6: Ready! — Animated protection visual (demo mode only) */}
+      {step === 6 && (
+        <div>
+          <ProtectedVisual
+            tenantName={tenantName}
+            onDashboard={() => { sessionStorage.setItem('demo_onboard_complete', '1'); clearOnboardState(); sessionStorage.removeItem(ONBOARD_MODE_KEY); navigate('/'); }}
+            onRecovery={() => navigate('/recovery')}
+          />
+
+          {/* Recovery confidence badge — demo differentiator */}
+          <div className="mt-6 bg-card border border-border rounded-xl p-4 text-center max-w-md mx-auto">
+            <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Recovery Confidence</div>
+            <div className="text-4xl font-bold text-green-500 mb-1">87<span className="text-lg text-muted-foreground">/100</span></div>
+            <div className="text-sm text-muted-foreground">
+              Auto-backups active &bull; Smart Engine monitoring &bull; Identity-first recovery
+            </div>
+          </div>
+        </div>
+      )}
     </div>
     </div>
   );

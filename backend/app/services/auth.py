@@ -5,7 +5,7 @@ from typing import Optional
 import hashlib
 import os
 from jose import JWTError, jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -133,3 +133,108 @@ require_restore_permission = require_role(UserRole.ADMIN, UserRole.RESTORE_OPERA
 
 # MSP operations: dashboard, billing, branding — ADMIN and MSP_ADMIN
 require_msp_permission = require_role(UserRole.ADMIN, UserRole.MSP_ADMIN)
+
+
+# ── Tenant-scoped access control ──────────────────────────────────
+
+async def get_user_tenant_ids(db: AsyncSession, user: User) -> list[int]:
+    """Return the list of tenant IDs this user can access.
+
+    Uses the user_tenants membership table. If a user has no explicit
+    memberships (legacy/migration), falls back to showing all tenants
+    for ADMIN users and no tenants for others.
+    """
+    from app.models.user_tenant import UserTenant
+
+    result = await db.execute(
+        select(UserTenant.tenant_id).where(UserTenant.user_id == user.id)
+    )
+    tenant_ids = [r[0] for r in result.all()]
+
+    # Fallback for legacy: platform superadmin (username=admin) sees all tenants
+    # if they have no explicit memberships. Other ADMIN users must be assigned.
+    if not tenant_ids and user.role == UserRole.ADMIN and user.username == "admin":
+        from app.models.tenant import Tenant
+        result = await db.execute(select(Tenant.id))
+        tenant_ids = [r[0] for r in result.all()]
+
+    return tenant_ids
+
+
+async def require_tenant_access(
+    db: AsyncSession,
+    tenant_id: int,
+    user: User,
+) -> None:
+    """Raise 403 if user cannot access this tenant.
+
+    Call this in any endpoint that accepts tenant_id as a parameter.
+    """
+    allowed = await get_user_tenant_ids(db, user)
+    if tenant_id not in allowed:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied: you do not have access to this tenant",
+        )
+
+
+def require_tenant_access_dep(tenant_id_param: str = "tenant_id"):
+    """FastAPI dependency factory for tenant access validation.
+
+    Usage in any endpoint:
+        @router.get("/data")
+        async def get_data(
+            tenant_id: int = Query(...),
+            _ta = Depends(require_tenant_access_dep()),
+            db = Depends(get_db),
+            current_user = Depends(get_current_user),
+        ):
+
+    Validates that the current user can access the tenant_id in the request.
+    Skips validation if tenant_id is None (optional parameter not provided).
+    """
+    async def _check(
+        request: "Request",
+        db: AsyncSession = Depends(get_db),
+        current_user: User = Depends(get_current_user),
+    ):
+        from starlette.requests import Request as _Req
+        # Extract tenant_id from query params or path params
+        tid = request.query_params.get(tenant_id_param) or request.path_params.get(tenant_id_param)
+        if tid:
+            try:
+                await require_tenant_access(db, int(tid), current_user)
+            except Exception:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Access denied: you do not have access to this tenant",
+                )
+    return _check
+
+
+async def assign_user_to_tenant(
+    db: AsyncSession,
+    user_id: int,
+    tenant_id: int,
+    role: str = "member",
+    is_default: bool = False,
+) -> None:
+    """Assign a user to a tenant. Idempotent — skips if already assigned."""
+    from app.models.user_tenant import UserTenant
+
+    existing = await db.execute(
+        select(UserTenant).where(
+            UserTenant.user_id == user_id,
+            UserTenant.tenant_id == tenant_id,
+        )
+    )
+    if existing.scalar_one_or_none():
+        return  # Already assigned
+
+    db.add(UserTenant(
+        user_id=user_id,
+        tenant_id=tenant_id,
+        role=role,
+        is_default=1 if is_default else 0,
+    ))
+    await db.flush()

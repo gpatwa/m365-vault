@@ -16,9 +16,9 @@ from app.models.snapshot import Snapshot, SnapshotStatus, SnapshotItem, FailedIt
 from app.models.sla_policy import SLAPolicy
 from app.models.health_baseline import AnomalyEvent
 from app.models.user import User
-from app.services.auth import get_current_user
+from app.services.auth import get_current_user, require_tenant_access_dep
 
-router = APIRouter(prefix="/api/reports", tags=["Reports"])
+router = APIRouter(prefix="/api/reports", tags=["Reports"], dependencies=[Depends(require_tenant_access_dep())])
 
 
 def _parse_period(period: str) -> timedelta:

@@ -59,8 +59,14 @@ async def list_tenants(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """List all configured M365 tenants."""
-    result = await db.execute(select(Tenant).order_by(Tenant.created_at.desc()))
+    """List M365 tenants the current user can access."""
+    from app.services.auth import get_user_tenant_ids
+    allowed_ids = await get_user_tenant_ids(db, current_user)
+    if not allowed_ids:
+        return []
+    result = await db.execute(
+        select(Tenant).where(Tenant.id.in_(allowed_ids)).order_by(Tenant.created_at.desc())
+    )
     tenants = result.scalars().all()
     return [
         TenantResponse(

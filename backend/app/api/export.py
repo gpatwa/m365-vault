@@ -12,9 +12,9 @@ from app.models.protected_object import ProtectedObject, WorkloadType
 from app.models.snapshot import FailedItem, ErrorCategory, ERROR_RESOLUTION_GUIDE
 from app.models.audit_log import AuditLog
 from app.models.user import User
-from app.services.auth import get_current_user
+from app.services.auth import get_current_user, require_tenant_access_dep
 
-router = APIRouter(prefix="/api/export", tags=["Export"])
+router = APIRouter(prefix="/api/export", tags=["Export"], dependencies=[Depends(require_tenant_access_dep())])
 
 
 # Source definitions: maps source name -> (query builder, columns, filename)

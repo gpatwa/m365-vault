@@ -123,9 +123,13 @@ class DiscoveryService:
         return results
 
     async def _discover_all_workloads(self, tenant: Tenant) -> dict:
-        """Run full discovery for a tenant. Returns counts."""
-        # Use entra_id app for user enumeration (all workloads need User.Read.All)
-        graph = await self._get_graph_client(tenant, "entra_id")
+        """Run full discovery for a tenant. Returns counts.
+
+        Uses per-workload graph clients: each workload type gets its own
+        Entra app with only the permissions it needs. The entra_id app has
+        User.Read.All for user enumeration, while exchange app has Mail.Read
+        for mailbox validation, etc.
+        """
         results = {
             "mailboxes": 0,
             "onedrives": 0,
@@ -138,9 +142,19 @@ class DiscoveryService:
         # Track discovered object IDs to clean up stale entries
         discovered_ids = {"exchange": set(), "onedrive": set(), "sharepoint": set(), "teams": set(), "entra_id": set()}
 
-        # Discover Exchange mailboxes and OneDrive accounts (from users)
+        # Get per-workload graph clients (fall back to entra_id if specific app not configured)
+        graph_entra = await self._get_graph_client(tenant, "entra_id")
+
+        # Exchange needs Mail.Read — use exchange app
         try:
-            users = await graph.get_all_pages("/users", params={
+            graph_exchange = await self._get_graph_client(tenant, "exchange")
+        except Exception:
+            graph_exchange = graph_entra  # Fallback (legacy single-app)
+            logger.info("Exchange workload app not configured, falling back to entra_id app")
+
+        # Get user list using entra_id app (has User.Read.All)
+        try:
+            users = await graph_entra.get_all_pages("/users", params={
                 "$select": "id,displayName,mail,userPrincipalName,assignedLicenses",
                 "$filter": "assignedLicenses/$count ne 0&$count=true",
                 "$top": "999",
@@ -149,7 +163,7 @@ class DiscoveryService:
             # Fallback without filter if $count fails
             logger.warning(f"User discovery with filter failed, retrying without filter: {e}")
             try:
-                users = await graph.get_all_pages("/users", params={
+                users = await graph_entra.get_all_pages("/users", params={
                     "$select": "id,displayName,mail,userPrincipalName",
                     "$top": "999",
                 })
@@ -166,9 +180,9 @@ class DiscoveryService:
             if not email:
                 continue
 
-            # Validate Exchange mailbox exists (mailFolders fails if no mailbox)
+            # Validate Exchange mailbox exists using exchange app (needs Mail.Read)
             try:
-                await graph.get(f"/users/{user_id}/mailFolders", params={
+                await graph_exchange.get(f"/users/{user_id}/mailFolders", params={
                     "$select": "id",
                     "$top": "1",
                 })
@@ -192,7 +206,7 @@ class DiscoveryService:
             try:
                 # Shared mailboxes are users with recipientType = SharedMailbox
                 # They often don't have licenses but do have mailboxes
-                shared_users = await graph.get_all_pages("/users", params={
+                shared_users = await graph_entra.get_all_pages("/users", params={
                     "$select": "id,displayName,mail,userPrincipalName,userType",
                     "$filter": "mail ne null",
                     "$top": "999",
@@ -205,9 +219,9 @@ class DiscoveryService:
                     su_email = su.get("mail")
                     if not su_email:
                         continue
-                    # Check if it has a mailbox (shared mailboxes do)
+                    # Check if it has a mailbox using exchange app (needs Mail.Read)
                     try:
-                        await graph.get(f"/users/{su_id}/mailFolders", params={"$select": "id", "$top": "1"})
+                        await graph_exchange.get(f"/users/{su_id}/mailFolders", params={"$select": "id", "$top": "1"})
                         await self._upsert_protected_object(
                             tenant_id=tenant.id,
                             workload_type=WorkloadType.EXCHANGE,
@@ -226,9 +240,25 @@ class DiscoveryService:
             except Exception as e:
                 logger.warning(f"Shared mailbox discovery failed: {e}")
 
+        # OneDrive needs Files.Read.All — use onedrive app
+        try:
+            graph_onedrive = await self._get_graph_client(tenant, "onedrive")
+        except Exception:
+            graph_onedrive = graph_entra  # Fallback (legacy single-app)
+            logger.info("OneDrive workload app not configured, falling back to entra_id app")
+
+        # Validate OneDrive for each user
+        for user in users:
+            user_id = user.get("id")
+            display_name = user.get("displayName", "Unknown")
+            email = user.get("mail") or user.get("userPrincipalName")
+            upn = user.get("userPrincipalName")
+            if not email:
+                continue
+
             # Validate OneDrive is provisioned (drive/root fails if no mysite)
             try:
-                await graph.get(f"/users/{user_id}/drive/root", params={
+                await graph_onedrive.get(f"/users/{user_id}/drive/root", params={
                     "$select": "id,name",
                 })
                 await self._upsert_protected_object(
@@ -245,12 +275,19 @@ class DiscoveryService:
             except Exception as e:
                 logger.info(f"Skipping OneDrive for {display_name}: {e}")
 
+        # SharePoint needs Sites.Read.All — use sharepoint app
+        try:
+            graph_sharepoint = await self._get_graph_client(tenant, "sharepoint")
+        except Exception:
+            graph_sharepoint = graph_entra  # Fallback
+            logger.info("SharePoint workload app not configured, falling back to entra_id app")
+
         # Discover SharePoint sites via multiple methods
         discovered_site_ids = set()
 
         # Method 1: Try /sites/getAllSites (requires Sites.Read.All)
         try:
-            sites = await graph.get_all_pages("/sites/getAllSites", params={
+            sites = await graph_sharepoint.get_all_pages("/sites/getAllSites", params={
                 "$select": "id,displayName,webUrl,name",
                 "$top": "999",
             })
@@ -278,7 +315,7 @@ class DiscoveryService:
         # Method 2: Try search-based discovery
         if not discovered_site_ids:
             try:
-                sites = await graph.get_all_pages("/sites", params={
+                sites = await graph_sharepoint.get_all_pages("/sites", params={
                     "search": "*",
                     "$select": "id,displayName,webUrl,name",
                     "$top": "999",
@@ -306,14 +343,14 @@ class DiscoveryService:
         # Method 3: Discover sites via M365 groups
         if not discovered_site_ids:
             try:
-                groups = await graph.get_all_pages("/groups", params={
+                groups = await graph_sharepoint.get_all_pages("/groups", params={
                     "$filter": "groupTypes/any(g:g eq 'Unified')",
                     "$select": "id,displayName",
                     "$top": "999",
                 })
                 for group in groups:
                     try:
-                        site_data = await graph.get(f"/groups/{group['id']}/sites/root", params={
+                        site_data = await graph_sharepoint.get(f"/groups/{group['id']}/sites/root", params={
                             "$select": "id,displayName,webUrl,name",
                         })
                         site_id = site_data.get("id")
@@ -335,17 +372,24 @@ class DiscoveryService:
             except Exception as e:
                 results["errors"].append(f"SharePoint discovery failed: {str(e)}")
 
+        # Teams needs Chat.Read.All etc — use teams app
+        try:
+            graph_teams = await self._get_graph_client(tenant, "teams")
+        except Exception:
+            graph_teams = graph_entra  # Fallback
+            logger.info("Teams workload app not configured, falling back to entra_id app")
+
         # Discover Microsoft Teams
         try:
-            teams_count, teams_ids = await self._discover_teams(tenant, graph)
+            teams_count, teams_ids = await self._discover_teams(tenant, graph_teams)
             discovered_ids["teams"] = teams_ids
             results["teams"] = teams_count
         except Exception as e:
             results["errors"].append(f"Teams discovery failed: {str(e)}")
 
-        # Discover Entra ID directory objects
+        # Discover Entra ID directory objects (uses entra_id app)
         try:
-            entra_count = await self._discover_entra_id(tenant, graph)
+            entra_count = await self._discover_entra_id(tenant, graph_entra)
             discovered_ids["entra_id"].add(tenant.ms_tenant_id)
             results["entra_objects"] = entra_count
         except Exception as e:
@@ -516,9 +560,9 @@ class DiscoveryService:
         return total_objects
 
     async def _discover_filtered(self, tenant: Tenant, workloads: set[str]) -> dict:
-        """Discover only specific workloads. Calls individual discovery methods."""
-        # Use entra_id app for user enumeration (shared across workloads)
-        graph = await self._get_graph_client(tenant, "entra_id")
+        """Discover only specific workloads using per-workload graph clients."""
+        # Use entra_id app for user enumeration (has User.Read.All)
+        graph_entra = await self._get_graph_client(tenant, "entra_id")
         results = {
             "mailboxes": 0, "onedrives": 0, "sites": 0,
             "teams": 0, "entra_objects": 0, "removed": 0, "errors": [],
@@ -528,15 +572,19 @@ class DiscoveryService:
         users = []
         if "exchange" in workloads or "onedrive" in workloads:
             try:
-                users = await graph.get_all_pages("/users", params={
+                users = await graph_entra.get_all_pages("/users", params={
                     "$select": "id,displayName,mail,userPrincipalName",
                     "$top": "999",
                 })
             except Exception as e:
                 results["errors"].append(f"User discovery failed: {str(e)}")
 
-        # Exchange
+        # Exchange — use exchange app (needs Mail.Read)
         if "exchange" in workloads:
+            try:
+                graph_exchange = await self._get_graph_client(tenant, "exchange")
+            except Exception:
+                graph_exchange = graph_entra
             for user in users:
                 user_id = user.get("id")
                 display_name = user.get("displayName", "Unknown")
@@ -544,7 +592,7 @@ class DiscoveryService:
                 if not email:
                     continue
                 try:
-                    await graph.get(f"/users/{user_id}/mailFolders", params={"$select": "id", "$top": "1"})
+                    await graph_exchange.get(f"/users/{user_id}/mailFolders", params={"$select": "id", "$top": "1"})
                     await self._upsert_protected_object(
                         tenant_id=tenant.id, workload_type=WorkloadType.EXCHANGE,
                         ms_object_id=user_id, display_name=f"{display_name} (Mailbox)",
@@ -556,8 +604,12 @@ class DiscoveryService:
                     pass
             logger.info(f"Filtered discovery: {results['mailboxes']} Exchange mailboxes")
 
-        # OneDrive
+        # OneDrive — use onedrive app (needs Files.Read.All)
         if "onedrive" in workloads:
+            try:
+                graph_onedrive = await self._get_graph_client(tenant, "onedrive")
+            except Exception:
+                graph_onedrive = graph_entra
             for user in users:
                 user_id = user.get("id")
                 display_name = user.get("displayName", "Unknown")
@@ -565,7 +617,7 @@ class DiscoveryService:
                 if not email:
                     continue
                 try:
-                    await graph.get(f"/users/{user_id}/drive/root", params={"$select": "id,name"})
+                    await graph_onedrive.get(f"/users/{user_id}/drive/root", params={"$select": "id,name"})
                     await self._upsert_protected_object(
                         tenant_id=tenant.id, workload_type=WorkloadType.ONEDRIVE,
                         ms_object_id=user_id, display_name=f"{display_name} (OneDrive)",
@@ -577,10 +629,14 @@ class DiscoveryService:
                     pass
             logger.info(f"Filtered discovery: {results['onedrives']} OneDrive accounts")
 
-        # SharePoint
+        # SharePoint — use sharepoint app (needs Sites.Read.All)
         if "sharepoint" in workloads:
             try:
-                sites = await graph.get_all_pages("/sites/getAllSites", params={
+                graph_sharepoint = await self._get_graph_client(tenant, "sharepoint")
+            except Exception:
+                graph_sharepoint = graph_entra
+            try:
+                sites = await graph_sharepoint.get_all_pages("/sites/getAllSites", params={
                     "$select": "id,displayName,webUrl,name", "$top": "999",
                 })
                 for site in sites:
@@ -598,10 +654,14 @@ class DiscoveryService:
                 results["errors"].append(f"SharePoint discovery failed: {str(e)}")
             logger.info(f"Filtered discovery: {results['sites']} SharePoint sites")
 
-        # Teams
+        # Teams — use teams app (needs Chat.Read.All etc)
         if "teams" in workloads:
             try:
-                teams_count, _ = await self._discover_teams(tenant, graph)
+                graph_teams = await self._get_graph_client(tenant, "teams")
+            except Exception:
+                graph_teams = graph_entra
+            try:
+                teams_count, _ = await self._discover_teams(tenant, graph_teams)
                 results["teams"] = teams_count
             except Exception as e:
                 results["errors"].append(f"Teams discovery failed: {str(e)}")
@@ -609,7 +669,7 @@ class DiscoveryService:
         # Entra ID
         if "entra_id" in workloads:
             try:
-                entra_count = await self._discover_entra_id(tenant, graph)
+                entra_count = await self._discover_entra_id(tenant, graph_entra)
                 results["entra_objects"] = entra_count
             except Exception as e:
                 results["errors"].append(f"Entra ID discovery failed: {str(e)}")

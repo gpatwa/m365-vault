@@ -72,7 +72,20 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${this.token}`;
     }
 
-    const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+    // Auto-inject tenant_id from tenant switcher selection
+    // Skip for auth, onboard, health, and tenant-list endpoints
+    let finalPath = path;
+    const skipTenantPaths = ['/auth/', '/onboard/', '/health', '/tenants/', '/sla-policies', '/billing', '/features'];
+    const shouldInject = !skipTenantPaths.some(p => path.startsWith(p)) && !path.includes('tenant_id=');
+    if (shouldInject) {
+      const selectedTenant = localStorage.getItem('kavachiq_selected_tenant');
+      if (selectedTenant) {
+        const separator = path.includes('?') ? '&' : '?';
+        finalPath = `${path}${separator}tenant_id=${selectedTenant}`;
+      }
+    }
+
+    const res = await fetch(`${API_BASE}${finalPath}`, { ...options, headers });
 
     if (res.status === 401) {
       this.clearToken();

@@ -22,6 +22,7 @@ import Teams from './pages/Teams';
 import SLAPolicies from './pages/SLAPolicies';
 import Jobs from './pages/Jobs';
 import Tenants from './pages/Settings';
+import Organization from './pages/Organization';
 import AuditLog from './pages/AuditLog';
 import FailedItems from './pages/FailedItems';
 import SSOCallback from './pages/SSOCallback';
@@ -80,9 +81,18 @@ function SmartHome() {
     // Route users based on their role and purpose
     api.get<any>('/auth/me')
       .then(user => {
-        if ((user?.username === 'demo' || user?.username === 'prospect') && !sessionStorage.getItem('demo_onboard_complete')) {
-          console.log('[KavachIQ:SmartHome] → demo/prospect user, redirect /onboard/demo');
+        // Demo user → 7-step showcase with pre-loaded MSFT Dev Tenant
+        if (user?.username === 'demo' && !sessionStorage.getItem('demo_onboard_complete')) {
+          console.log('[KavachIQ:SmartHome] → demo user, redirect /onboard/demo');
+          sessionStorage.setItem('kavachiq_onboard_mode', 'demo');
           setRedirect('/onboard/demo');
+          return;
+        }
+        // Prospect user → 4-step fast flow, connects their own tenant
+        if (user?.username === 'prospect' && !sessionStorage.getItem('demo_onboard_complete')) {
+          console.log('[KavachIQ:SmartHome] → prospect user, redirect /onboard (fast)');
+          sessionStorage.setItem('kavachiq_onboard_mode', 'fast');
+          setRedirect('/onboard');
           return;
         }
         if (user?.username === 'msp' || user?.role === 'msp_admin') {
@@ -144,7 +154,7 @@ function AppRoutes() {
         <Route path="sla-policies" element={<SLAPolicies />} />
         <Route path="jobs" element={<Jobs />} />
         <Route path="tenants" element={<Tenants />} />
-        <Route path="settings" element={<Tenants />} />
+        <Route path="settings" element={<Organization />} />
         <Route path="msp" element={<MSPDashboard />} />
         <Route path="msp/branding" element={<MSPBrandingPage />} />
         <Route path="msp/billing" element={<BillingPortal />} />

@@ -18,6 +18,8 @@ from app.models.dedup import DedupEntry          # noqa: F401 — ensure table i
 from app.models.worker_queue import WorkerQueueEntry  # noqa: F401 — ensure table is created
 from app.models.msp_branding import MSPBranding  # noqa: F401 — ensure table is created
 from app.models.billing import BillingRecord     # noqa: F401 — ensure table is created
+from app.models.saas_workload_app import SaaSWorkloadApp  # noqa: F401 — ensure table is created
+from app.models.user_tenant import UserTenant             # noqa: F401 — ensure table is created
 
 # Configure structured JSON logging for production
 if settings.LOG_FORMAT == "json":
@@ -141,6 +143,34 @@ async def lifespan(app: FastAPI):
                 except Exception:
                     pass
 
+            # 4. Auto-assign user-tenant memberships (migration for existing data)
+            if not _is_sqlite:
+                try:
+                    # Assign admin to ALL existing tenants (platform admin)
+                    await _conn.execute(_text("""
+                        INSERT INTO user_tenants (user_id, tenant_id, role, is_default, created_at)
+                        SELECT u.id, t.id, 'owner', 1, NOW()
+                        FROM users u, tenants t
+                        WHERE u.username = 'admin'
+                          AND NOT EXISTS (
+                            SELECT 1 FROM user_tenants ut WHERE ut.user_id = u.id AND ut.tenant_id = t.id
+                          )
+                    """))
+                    # Assign demo user to demo tenants (ms_tenant_id like 'demo-%')
+                    await _conn.execute(_text("""
+                        INSERT INTO user_tenants (user_id, tenant_id, role, is_default, created_at)
+                        SELECT u.id, t.id, 'member', 1, NOW()
+                        FROM users u, tenants t
+                        WHERE u.username = 'demo'
+                          AND t.ms_tenant_id LIKE 'demo-%'
+                          AND NOT EXISTS (
+                            SELECT 1 FROM user_tenants ut WHERE ut.user_id = u.id AND ut.tenant_id = t.id
+                          )
+                    """))
+                    logger.info("Auto-fix: user-tenant memberships synced")
+                except Exception as e:
+                    logger.debug(f"User-tenant sync skipped: {e}")
+
     except Exception as e:
         logger.warning(f"Auto-migration skipped: {e}")
 
@@ -150,6 +180,15 @@ async def lifespan(app: FastAPI):
     # Startup health validation — log warnings for broken dependencies
     from app.services.system_health import validate_startup_health
     await validate_startup_health()
+
+    # Auto-bootstrap per-workload Entra app registrations
+    # Creates 5 multi-tenant apps in KavachIQ's Entra tenant if they don't exist.
+    # Idempotent — skips if already in DB or env vars not configured.
+    try:
+        from app.services.workload_bootstrap import bootstrap_workload_apps
+        await bootstrap_workload_apps()
+    except Exception as e:
+        logger.warning(f"Workload bootstrap skipped: {e}")
 
     # Demo mode: auto-seed data if DB is empty
     if settings.DEMO_MODE:
@@ -509,6 +548,10 @@ async def run_migration():
             "CREATE TABLE IF NOT EXISTS restore_approvals (id SERIAL PRIMARY KEY, restore_job_id INTEGER NOT NULL REFERENCES restore_jobs(id), requested_by_user_id INTEGER NOT NULL REFERENCES users(id), approved_by_user_id INTEGER REFERENCES users(id), status VARCHAR(20) DEFAULT 'pending', reason TEXT, requested_at TIMESTAMP DEFAULT NOW(), resolved_at TIMESTAMP, expires_at TIMESTAMP NOT NULL)",
             "CREATE TABLE IF NOT EXISTS admin_invites (id SERIAL PRIMARY KEY, tenant_name VARCHAR(255) NOT NULL, invited_by_user_id INTEGER NOT NULL REFERENCES users(id), admin_email VARCHAR(255) NOT NULL, token VARCHAR(255) UNIQUE NOT NULL, status VARCHAR(20) DEFAULT 'pending', ms_tenant_id VARCHAR(255), completed_at TIMESTAMP, expires_at TIMESTAMP NOT NULL, created_at TIMESTAMP DEFAULT NOW())",
             "CREATE TABLE IF NOT EXISTS tenant_workload_apps (id SERIAL PRIMARY KEY, tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE, workload VARCHAR(30) NOT NULL, client_id VARCHAR(255) NOT NULL, client_secret_encrypted TEXT NOT NULL, app_object_id VARCHAR(255), sp_object_id VARCHAR(255), consent_status VARCHAR(20) NOT NULL DEFAULT 'pending', permissions_requested TEXT, permissions_granted TEXT, backup_ready INTEGER DEFAULT 0, restore_ready INTEGER DEFAULT 0, config_json TEXT, secret_expires_at TIMESTAMP, secret_rotation_warned INTEGER DEFAULT 0, enabled INTEGER DEFAULT 1, last_used_at TIMESTAMP, error_message TEXT, created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW(), UNIQUE(tenant_id, workload))",
+            # Phase 4: SaaS workload apps (platform-owned per-workload Entra apps)
+            "CREATE TABLE IF NOT EXISTS saas_workload_apps (id SERIAL PRIMARY KEY, workload VARCHAR(30) NOT NULL UNIQUE, display_name VARCHAR(255) NOT NULL, app_id VARCHAR(255) NOT NULL, app_object_id VARCHAR(255), client_secret_encrypted TEXT NOT NULL, permissions_configured TEXT, sign_in_audience VARCHAR(50) DEFAULT 'AzureADMultipleOrgs', redirect_uris TEXT, secret_expires_at TIMESTAMP, secret_key_id VARCHAR(255), status VARCHAR(20) DEFAULT 'active', error_message TEXT, last_validated_at TIMESTAMP, created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())",
+            # Phase 5: User-tenant membership (multi-tenant isolation)
+            "CREATE TABLE IF NOT EXISTS user_tenants (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE, role VARCHAR(20) DEFAULT 'member', is_default INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT NOW(), UNIQUE(user_id, tenant_id))",
         ]
         for sql in migrations:
             try:

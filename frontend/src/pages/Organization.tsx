@@ -11,7 +11,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Shield, CheckCircle, XCircle, AlertTriangle, Loader2,
+  Shield, CheckCircle, AlertTriangle, Loader2,
   RefreshCw, Users, Settings, ArrowUpRight,
   Power, PowerOff,
 } from 'lucide-react';
@@ -232,7 +232,7 @@ export default function Organization() {
   const {
     data: workloadData,
     isLoading: workloadsLoading,
-    isError: workloadsError,
+    isError: _workloadsError,
   } = useQuery({
     queryKey: ['workload-statuses', selectedTenant?.id],
     queryFn: () => api.get<WorkloadStatusResponse>(`/tenants/${selectedTenant?.id}/workloads`),
@@ -322,38 +322,29 @@ export default function Organization() {
   const t = tenant || selectedTenant;
   const isActive = t.status === 'active';
 
-  // Build workload status map — fall back to tenant counts if API fails/empty
+  // Build workload status map from the lifecycle API (source of truth).
+  // IMPORTANT: Do NOT fall back to tenant counts — that creates phantom
+  // "Discovered" workloads when the user hasn't actually enabled anything.
+  // If the API returns empty, all workloads are disabled (correct state).
   let statusMap: Record<string, WorkloadStatus> = {};
 
   if (workloadData?.workloads && workloadData.workloads.length > 0) {
     for (const ws of workloadData.workloads) {
       statusMap[ws.workload] = ws;
     }
-  } else if (workloadsError || !workloadData) {
-    // Fallback: derive from tenant counts
-    const countMap: Record<string, number> = {
-      exchange: t.total_mailboxes || 0,
-      entra_id: t.total_entra_objects || 0,
-      sharepoint: t.total_sites || 0,
-      onedrive: t.total_onedrives || 0,
-      teams: t.total_teams || 0,
-    };
-    for (const [key, count] of Object.entries(countMap)) {
-      if (count > 0) {
-        statusMap[key] = {
-          workload: key,
-          lifecycle_status: 'discovered',
-          consent_status: 'granted',
-          backup_ready: true,
-          restore_ready: false,
-          enabled: true,
-          client_id: null,
-          error_message: null,
-          created_at: '',
-        };
-      }
-    }
   }
+  // No fallback — if no workload apps exist, statusMap stays empty.
+  // All workloads render as "disabled" with Enable buttons. This is honest.
+
+  // Determine real connection state:
+  // - hasWorkloads: at least one workload enabled (user completed onboarding step 2)
+  // - hasConsent: at least one workload has consent granted (Microsoft OAuth completed)
+  const hasWorkloads = Object.keys(statusMap).length > 0;
+  const hasConsent = Object.values(statusMap).some(ws => ws.consent_status === 'consented' || ws.consent_status === 'granted');
+
+  // Real connection status: "active" in DB is not enough — user must have
+  // actually completed OAuth and enabled workloads for a real connection.
+  const isReallyConnected = isActive && hasConsent;
 
   const enabledCount = Object.values(statusMap).filter(
     ws => ws.lifecycle_status !== 'disabled'
@@ -374,35 +365,67 @@ export default function Organization() {
         </div>
       </div>
 
-      {/* Connection Status Card */}
+      {/* Connection Status Card — shows REAL connection state, not just DB flag */}
       <div className="bg-card border border-border rounded-xl p-5 mb-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isActive ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
-              {isActive ? <CheckCircle className="w-5 h-5 text-green-500" /> : <XCircle className="w-5 h-5 text-red-500" />}
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+              isReallyConnected ? 'bg-green-500/10'
+                : hasWorkloads ? 'bg-amber-500/10'
+                : 'bg-muted'
+            }`}>
+              {isReallyConnected ? <CheckCircle className="w-5 h-5 text-green-500" />
+                : hasWorkloads ? <AlertTriangle className="w-5 h-5 text-amber-400" />
+                : <Shield className="w-5 h-5 text-muted-foreground" />}
             </div>
             <div>
               <h2 className="text-lg font-bold text-foreground">{t.name}</h2>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${isActive ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
-                  {isActive ? 'Connected' : 'Disconnected'}
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                  isReallyConnected ? 'bg-green-500/10 text-green-400'
+                    : hasWorkloads ? 'bg-amber-500/10 text-amber-400'
+                    : 'bg-muted text-muted-foreground'
+                }`}>
+                  {isReallyConnected ? 'Connected'
+                    : hasWorkloads ? 'Pending Consent'
+                    : 'Not Connected'}
                 </span>
                 <span>Microsoft 365</span>
               </div>
             </div>
           </div>
-          <button
-            onClick={handleCheckPermissions}
-            disabled={checkingPerms}
-            className="px-3 py-1.5 text-sm border border-border rounded-lg hover:bg-accent transition-colors flex items-center gap-1.5"
-          >
-            {checkingPerms ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-            Verify Connection
-          </button>
+          {isReallyConnected ? (
+            <button
+              onClick={handleCheckPermissions}
+              disabled={checkingPerms}
+              className="px-3 py-1.5 text-sm border border-border rounded-lg hover:bg-accent transition-colors flex items-center gap-1.5"
+            >
+              {checkingPerms ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+              Verify Connection
+            </button>
+          ) : (
+            <button
+              onClick={() => navigate('/onboard')}
+              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1.5"
+            >
+              Connect Microsoft 365
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
-        {/* Permission Status (if checked) */}
-        {permStatus && !permStatus.error && (
+        {/* Not connected hint */}
+        {!isReallyConnected && !hasWorkloads && (
+          <div className="rounded-lg p-3 text-sm bg-blue-500/5 border border-blue-500/20">
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-blue-400" />
+              <span className="text-blue-400">Connect your Microsoft 365 tenant to start protecting workloads</span>
+            </div>
+          </div>
+        )}
+
+        {/* Permission Status (if checked, only for connected tenants) */}
+        {isReallyConnected && permStatus && !permStatus.error && (
           <div className={`rounded-lg p-3 text-sm ${permStatus.all_backup_ready ? 'bg-green-500/5 border border-green-500/20' : 'bg-amber-500/5 border border-amber-500/20'}`}>
             <div className="flex items-center gap-2">
               {permStatus.all_backup_ready
@@ -414,7 +437,7 @@ export default function Organization() {
         )}
       </div>
 
-      {/* Workload Cards */}
+      {/* Workload Cards — only show when connected or at least tenant exists with workload apps */}
       <div className="mb-4">
         <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3">
           Workloads
@@ -423,6 +446,22 @@ export default function Organization() {
         {workloadsLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+          </div>
+        ) : !isReallyConnected && !hasWorkloads ? (
+          /* Empty state — user hasn't connected Microsoft yet */
+          <div className="bg-card border border-border rounded-xl p-8 text-center">
+            <Shield className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <h3 className="text-sm font-semibold text-foreground mb-1">No workloads configured</h3>
+            <p className="text-xs text-muted-foreground mb-4 max-w-sm mx-auto">
+              Connect your Microsoft 365 tenant first, then choose which workloads to protect.
+              You only pay for what you enable.
+            </p>
+            <button
+              onClick={() => navigate('/onboard')}
+              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Get Started
+            </button>
           </div>
         ) : (
           <div className="space-y-2">

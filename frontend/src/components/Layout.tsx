@@ -399,7 +399,7 @@ export default function Layout() {
       </main>
 
       {/* Command Palette (⌘K) */}
-      <CommandPalette isOpen={commandOpen} onClose={() => setCommandOpen(false)} onOpen={() => setCommandOpen(true)} />
+      <CommandPalette isOpen={commandOpen} onClose={() => setCommandOpen(false)} onOpen={() => setCommandOpen(true)} visiblePaths={visibleGroups.flatMap(g => g.items.map(i => i.path))} />
 
       {/* Product Tour (first-time users) */}
       {showTour && <ProductTour onComplete={() => setShowTour(false)} />}

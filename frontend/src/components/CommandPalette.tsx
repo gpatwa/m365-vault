@@ -98,8 +98,11 @@ const QUICK_LINKS = [
 
 // ── Component ──
 
-export default function CommandPalette({ isOpen, onClose, onOpen }: {
+export default function CommandPalette({ isOpen, onClose, onOpen, visiblePaths }: {
   isOpen: boolean; onClose: () => void; onOpen?: () => void;
+  /** Paths visible in the sidebar — used to filter quick links to match progressive disclosure.
+   * If not provided, all QUICK_LINKS are shown (backward compat). */
+  visiblePaths?: string[];
 }) {
   const [query, setQuery] = useState('');
   const [searchData, setSearchData] = useState<IntentSearchResponse | null>(null);
@@ -200,9 +203,16 @@ export default function CommandPalette({ isOpen, onClose, onOpen }: {
     }
   };
 
-  const filteredLinks = query
-    ? QUICK_LINKS.filter(l => l.label.toLowerCase().includes(query.toLowerCase()))
+  // Filter quick links to match sidebar progressive disclosure.
+  // Only show navigation items that are visible in the sidebar.
+  // This ensures ⌘K and sidebar are always in sync — same source of truth.
+  const accessibleLinks = visiblePaths
+    ? QUICK_LINKS.filter(l => visiblePaths.includes(l.path))
     : QUICK_LINKS;
+
+  const filteredLinks = query
+    ? accessibleLinks.filter(l => l.label.toLowerCase().includes(query.toLowerCase()))
+    : accessibleLinks;
 
   const allCategories = searchData?.categories ? Object.entries(searchData.categories) : [];
   const hasResults = (searchData?.total || 0) > 0 || (searchData?.navigation?.length || 0) > 0;

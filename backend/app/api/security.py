@@ -8,7 +8,7 @@ from app.models.user import User
 from app.models.snapshot import Snapshot, SnapshotStatus
 from app.models.sla_policy import SLAPolicy
 from app.models.protected_object import ProtectedObject, ProtectionStatus
-from app.services.auth import get_current_user
+from app.services.auth import get_current_user, resolve_tenant_filter
 from app.config import settings
 
 router = APIRouter(prefix="/api/security", tags=["Security"])

@@ -12,7 +12,7 @@ from app.models.protected_object import ProtectedObject, WorkloadType
 from app.models.snapshot import FailedItem, ErrorCategory, ERROR_RESOLUTION_GUIDE
 from app.models.audit_log import AuditLog
 from app.models.user import User
-from app.services.auth import get_current_user, require_tenant_access_dep
+from app.services.auth import get_current_user, require_tenant_access_dep, resolve_tenant_filter
 
 router = APIRouter(prefix="/api/export", tags=["Export"], dependencies=[Depends(require_tenant_access_dep())])
 
@@ -212,6 +212,11 @@ async def export_csv(
     """Export any list data source as a streaming CSV download."""
     if source not in _SOURCE_MAP:
         raise HTTPException(400, f"Unknown source: {source}. Available: {', '.join(_SOURCE_MAP.keys())}")
+
+    # Validate tenant access (prevent cross-tenant data export)
+    if tenant_id:
+        from app.services.auth import require_tenant_access
+        await require_tenant_access(db, tenant_id, current_user)
 
     export_fn = _SOURCE_MAP[source]
     params = {

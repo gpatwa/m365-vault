@@ -129,7 +129,7 @@ class Settings(BaseSettings):
     CONNECTOR_REDIRECT_URI: str = "http://localhost:8000/api/onboard/callback"  # Backend URL (BFF pattern)
 
     # Dispatcher (Control Plane / Data Plane separation)
-    DISPATCH_MODE: str = "in_process"  # "in_process" | "redis"
+    DISPATCH_MODE: str = "redis"  # "redis" (production) | "in_process" (dev without Redis)
     REDIS_URL: str = "redis://localhost:6379/0"
     WORKER_CONCURRENCY: int = 3        # Async tasks per worker process
     ITEM_CONCURRENCY: int = 10         # Items processed in parallel per object

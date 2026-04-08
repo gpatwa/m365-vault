@@ -75,6 +75,54 @@ async def billing_config():
     }
 
 
+@router.get("/validate")
+async def validate_stripe():
+    """Validate Stripe configuration — verify API key and price IDs are valid.
+
+    Used by E2E tests and health checks to ensure billing is working.
+    """
+    result = {"stripe_configured": False, "errors": [], "prices_valid": {}}
+
+    if not settings.STRIPE_SECRET_KEY or "not-configured" in settings.STRIPE_SECRET_KEY:
+        result["errors"].append("STRIPE_SECRET_KEY not set")
+        return result
+
+    try:
+        import stripe
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+
+        # Verify API key by listing 1 product
+        products = stripe.Product.list(limit=1)
+        result["stripe_configured"] = True
+        result["account_type"] = "test" if "sk_test" in settings.STRIPE_SECRET_KEY else "live"
+
+        # Verify each price ID exists
+        for tier, price_id in [
+            ("professional", settings.STRIPE_PRICE_PROFESSIONAL),
+            ("business", settings.STRIPE_PRICE_BUSINESS),
+            ("enterprise", settings.STRIPE_PRICE_ENTERPRISE),
+        ]:
+            if not price_id:
+                result["prices_valid"][tier] = "not_configured"
+                continue
+            try:
+                price = stripe.Price.retrieve(price_id)
+                result["prices_valid"][tier] = {
+                    "valid": True,
+                    "amount": price.unit_amount,
+                    "currency": price.currency,
+                    "interval": price.recurring.interval if price.recurring else "one_time",
+                }
+            except Exception as e:
+                result["prices_valid"][tier] = {"valid": False, "error": str(e)[:100]}
+                result["errors"].append(f"{tier}: {str(e)[:100]}")
+
+    except Exception as e:
+        result["errors"].append(f"Stripe API error: {str(e)[:200]}")
+
+    return result
+
+
 @router.post("/checkout")
 async def create_checkout(
     req: CheckoutRequest,

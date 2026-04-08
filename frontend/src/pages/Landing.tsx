@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   Shield, Mail, HardDrive, Globe, MessageSquare, KeyRound,
   AlertTriangle, ArrowRight, Check, X,
-  Eye, Brain, ShieldCheck, ChevronRight,
+  Eye, Brain, ShieldCheck, ChevronRight, Scale, RotateCcw,
 } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
 
@@ -233,17 +233,20 @@ const COMPARE_FEATURES = [
   { feature: 'Criticality-based restore order', us: true, them: false },
   { feature: 'Recovery confidence score', us: true, them: false },
   { feature: 'Anomaly detection (built-in)', us: true, them: false },
+  { feature: 'Self-service restore portal', us: true, them: false },
+  { feature: 'eDiscovery + legal hold', us: true, them: false },
+  { feature: 'Per-tenant alert configuration', us: true, them: false },
   { feature: 'WORM immutable storage', us: true, them: true },
   { feature: 'Intelligence surcharge', usVal: '$0', themVal: '$$$' },
   { feature: 'Starting price', usVal: '$1.50/user', themVal: '$2-10/user' },
 ];
 
-// ── Pricing tiers ──
+// ── Pricing tiers (workload limits match TIER_WORKLOAD_LIMITS in backend) ──
 const PRICING = [
-  { name: 'Community', price: 'Free', period: 'forever', desc: 'Up to 25 objects', features: ['Entra ID + Exchange backup', 'Basic anomaly detection', '30-day retention', 'Community support'], cta: 'Start Free', primary: false },
-  { name: 'Professional', price: '$1.50', period: '/user/mo', desc: 'Unlimited users', features: ['All 5 workloads + shared mailbox', 'Archive mailbox + mail rules', '90-day retention + SSO', 'Agent Shield + full Smart Engine'], cta: 'Start Trial', primary: true },
-  { name: 'Business', price: '$3.00', period: '/user/mo', desc: 'Unlimited tenants', features: ['PST export + snapshot diff', 'Group membership restore', 'Org Context + MVB Plans', '1-year retention + priority support'], cta: 'Start Trial', primary: false },
-  { name: 'Enterprise', price: '$5.00', period: '/user/mo', desc: 'Unlimited everything', features: ['PIM assignment backup', 'Agent Governance + WORM', 'Cleanroom + eDiscovery', 'Dedicated support'], cta: 'Contact Sales', primary: false },
+  { name: 'Community', price: 'Free', period: 'forever', desc: '2 workloads, up to 25 objects', features: ['Choose any 2 workloads', 'Basic anomaly detection', '30-day retention', 'Self-service restore portal', 'Community support'], cta: 'Start Free', primary: false },
+  { name: 'Professional', price: '$1.50', period: '/user/mo', desc: 'All 5 workloads, unlimited users', features: ['All 5 workloads + shared mailbox', 'Custom alert preferences', '90-day retention + SSO', 'Agent Shield + full Smart Engine', 'Self-service restore portal'], cta: 'Start Trial', primary: true },
+  { name: 'Business', price: '$3.00', period: '/user/mo', desc: 'All 5 workloads, unlimited tenants', features: ['PST export + snapshot diff', 'Group membership restore', 'Org Context + MVB Plans', '1-year retention + priority support', 'MSP multi-tenant dashboard'], cta: 'Start Trial', primary: false },
+  { name: 'Enterprise', price: '$5.00', period: '/user/mo', desc: '6 workloads, unlimited everything', features: ['6 workloads (+ Power Platform)', 'eDiscovery + legal hold', 'Agent Governance + WORM', 'Cleanroom recovery', 'Dedicated support + SLA'], cta: 'Contact Sales', primary: false },
 ];
 
 // ═══════════════════════════════════════════════════════
@@ -266,6 +269,7 @@ export default function Landing() {
           <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
             <a href="#how-it-works" className="hover:text-foreground">How It Works</a>
             <a href="#pricing" className="hover:text-foreground">Pricing</a>
+            <Link to="/docs" className="hover:text-foreground">Docs</Link>
             <Link to="/about" className="hover:text-foreground">About</Link>
             <Link to="/contact" className="hover:text-foreground">Contact</Link>
           </div>
@@ -430,12 +434,14 @@ export default function Landing() {
               </p>
             </div>
           </FadeUp>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon: Eye, title: 'Org Context', desc: 'Auto-discovers your reporting hierarchy, VIP groups, and privileged roles from Microsoft Graph. No manual user mapping. No professional services.', color: 'from-teal-500 to-cyan-500' },
-              { icon: Brain, title: 'Criticality Scoring', desc: '4-factor scoring: role weight, data sensitivity, activity level, business dependency. Your CEO scores 95. The summer intern scores 30. Automatically.', color: 'from-amber-500 to-orange-500' },
-              { icon: ShieldCheck, title: 'Recovery Plans', desc: 'Pre-computed 4-phase NIST-ordered plans: identity controls first, then critical users, then high priority, then full recovery. Refreshed every 6 hours.', color: 'from-green-500 to-emerald-500' },
-              { icon: AlertTriangle, title: 'Anomaly Detection', desc: 'Z-score baselines detect mass encryption, data exfiltration, and unusual deletions while backups are running. Not after the incident.', color: 'from-rose-500 to-red-500' },
+              { icon: Eye, title: 'Org Context', desc: 'Auto-discovers your reporting hierarchy, VIP groups, and privileged roles from Microsoft Graph. No manual user mapping.', color: 'from-teal-500 to-cyan-500' },
+              { icon: Brain, title: 'Criticality Scoring', desc: '4-factor scoring: role weight, data sensitivity, activity level, business dependency. Your CEO scores 95. The intern scores 30.', color: 'from-amber-500 to-orange-500' },
+              { icon: ShieldCheck, title: 'Recovery Plans', desc: 'Pre-computed 4-phase NIST-ordered plans: identity first, critical users next, then full recovery. Refreshed every 6 hours.', color: 'from-green-500 to-emerald-500' },
+              { icon: AlertTriangle, title: 'Anomaly Detection', desc: 'Z-score baselines detect mass encryption, data exfiltration, and unusual deletions while backups are running.', color: 'from-rose-500 to-red-500' },
+              { icon: RotateCcw, title: 'Self-Service Restore', desc: 'End users restore their own emails, files, and contacts without opening a support ticket. Role-based access, full audit trail.', color: 'from-blue-500 to-indigo-500' },
+              { icon: Scale, title: 'eDiscovery + Legal Hold', desc: 'Cross-workload content search for litigation. Place custodian data under immutable legal hold to prevent deletion. Enterprise tier.', color: 'from-purple-500 to-violet-500' },
             ].map((f, i) => (
               <FadeUp key={f.title} delay={i * 150}>
                 <div className="bg-card rounded-xl p-6 border border-border hover:border-teal-500/30 transition-all hover:shadow-lg hover:shadow-teal-500/5">
@@ -465,9 +471,9 @@ export default function Landing() {
               { icon: '🔒', label: 'AES-256-GCM', desc: 'Encryption at Rest' },
               { icon: '🔑', label: 'Per-Tenant Keys', desc: 'Key Isolation' },
               { icon: '🛡️', label: 'WORM Storage', desc: 'Immutable Backups' },
-              { icon: '✅', label: 'SOC 2 Ready', desc: '16 Controls' },
-              { icon: '🇪🇺', label: 'GDPR Ready', desc: '8 Articles' },
-              { icon: '🏥', label: 'HIPAA Ready', desc: '14 Safeguards' },
+              { icon: '✅', label: 'SOC 2', desc: '16 Controls Mapped' },
+              { icon: '🇪🇺', label: 'GDPR', desc: '8 Articles Mapped' },
+              { icon: '🏥', label: 'HIPAA', desc: '14 Safeguards Mapped' },
               { icon: '🔐', label: 'SSO + MFA', desc: 'Entra ID OIDC' },
               { icon: '📋', label: 'Audit Trail', desc: 'Full Logging' },
             ].map(b => (
@@ -584,7 +590,7 @@ export default function Landing() {
               <Link to="/login" className="px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-semibold rounded-xl hover:from-teal-400 hover:to-cyan-400 transition-all shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40 flex items-center gap-2">
                 Start Free <ArrowRight className="w-4 h-4" />
               </Link>
-              <Link to="/login" className="px-6 py-3 bg-card text-foreground font-medium rounded-xl hover:bg-secondary transition-colors border border-border">
+              <Link to="/contact" className="px-6 py-3 bg-card text-foreground font-medium rounded-xl hover:bg-secondary transition-colors border border-border">
                 Book a Demo
               </Link>
             </div>
@@ -607,8 +613,10 @@ export default function Landing() {
               { q: 'Do you store my Microsoft credentials?', a: 'No. KavachIQ uses OAuth admin consent — your Global Admin approves read-only access via Microsoft\'s consent flow. We never see or store your password. Only a scoped API token is used.' },
               { q: 'What happens during a ransomware attack?', a: 'KavachIQ detects anomalies in real-time during backup (mass encryption, unusual deletions). It auto-pauses backups, isolates the clean snapshot, and provides a one-click recovery plan — identity first, then critical users, then everyone else.' },
               { q: 'How does criticality-ordered backup work?', a: 'KavachIQ reads your Microsoft Graph to discover org hierarchy, VIP groups, and privileged roles. Each user gets a 4-factor criticality score. Your CEO is backed up first, then VPs, then directors, then everyone else — automatically.' },
+              { q: 'Can I choose which workloads to protect?', a: 'Yes. KavachIQ uses an opt-in model. You enable only the workloads you need (e.g., Exchange + Entra ID). Each workload gets its own consent URL with only the permissions it needs. Community tier includes 2 workloads; Professional includes all 5.' },
+              { q: 'Can end users restore their own data?', a: 'Yes. The Self-Service Restore portal lets users search and recover their own emails, files, and contacts without opening a support ticket. Role-based access ensures they only see their own data.' },
               { q: 'Can I self-host KavachIQ?', a: 'Yes. KavachIQ is open source under Apache 2.0. Deploy to your own Azure subscription, AWS, or on-premises infrastructure. Your data never leaves your environment.' },
-              { q: 'What\'s included in the free tier?', a: 'Up to 25 objects across Exchange, OneDrive, and SharePoint. Basic Smart Engine, 30-day retention, and community support. No credit card required.' },
+              { q: 'What\'s included in the free tier?', a: 'Up to 25 objects across 2 workloads of your choice. Basic Smart Engine, self-service restore, 30-day retention, and community support. No credit card required.' },
             ].map((faq, i) => (
               <FadeUp key={i} delay={i * 50}>
                 <details className="group bg-card border border-border rounded-xl overflow-hidden hover:border-teal-500/20 transition-all">
@@ -659,6 +667,7 @@ export default function Landing() {
                 <a href="#workloads" className="block hover:text-foreground">Workloads</a>
                 <a href="#pricing" className="block hover:text-foreground">Pricing</a>
                 <a href="#security" className="block hover:text-foreground">Security</a>
+                <Link to="/docs" className="block hover:text-foreground">Documentation</Link>
               </div>
             </div>
             <div>

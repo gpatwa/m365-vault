@@ -523,6 +523,61 @@ async def root():
     }
 
 
+@app.get("/metrics")
+async def prometheus_metrics():
+    """Prometheus-compatible metrics endpoint for Grafana/PagerDuty/Datadog.
+
+    Returns key SaaS metrics in Prometheus text format.
+    """
+    from app.database import async_session, engine
+    from sqlalchemy import text, func
+
+    lines = []
+    lines.append(f'# HELP kavachiq_version Application version')
+    lines.append(f'kavachiq_version{{version="{settings.APP_VERSION}"}} 1')
+
+    try:
+        async with async_session() as db:
+            # Tenant count
+            tc = (await db.execute(text("SELECT COUNT(*) FROM tenants WHERE status = 'active'"))).scalar() or 0
+            lines.append(f'kavachiq_tenants_active {tc}')
+
+            # User count
+            uc = (await db.execute(text("SELECT COUNT(*) FROM users WHERE is_active = 1"))).scalar() or 0
+            lines.append(f'kavachiq_users_active {uc}')
+
+            # Protected objects
+            po = (await db.execute(text("SELECT COUNT(*) FROM protected_objects WHERE status = 'protected'"))).scalar() or 0
+            pt = (await db.execute(text("SELECT COUNT(*) FROM protected_objects"))).scalar() or 0
+            lines.append(f'kavachiq_objects_protected {po}')
+            lines.append(f'kavachiq_objects_total {pt}')
+
+            # Backup jobs (24h)
+            bj = (await db.execute(text("SELECT COUNT(*) FROM backup_jobs WHERE started_at > NOW() - INTERVAL '24 hours'"))).scalar() or 0
+            bf = (await db.execute(text("SELECT COUNT(*) FROM backup_jobs WHERE status = 'failed' AND started_at > NOW() - INTERVAL '24 hours'"))).scalar() or 0
+            lines.append(f'kavachiq_backup_jobs_24h {bj}')
+            lines.append(f'kavachiq_backup_failures_24h {bf}')
+
+            # Snapshots
+            sc = (await db.execute(text("SELECT COUNT(*) FROM snapshots WHERE status = 'completed'"))).scalar() or 0
+            lines.append(f'kavachiq_snapshots_total {sc}')
+
+    except Exception:
+        lines.append('kavachiq_metrics_error 1')
+
+    # DB pool stats
+    try:
+        pool = engine.pool
+        lines.append(f'kavachiq_db_pool_size {pool.size()}')
+        lines.append(f'kavachiq_db_pool_checked_out {pool.checkedout()}')
+        lines.append(f'kavachiq_db_pool_overflow {pool.overflow()}')
+    except Exception:
+        pass
+
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse("\n".join(lines) + "\n", media_type="text/plain")
+
+
 # DEBUG ENDPOINTS REMOVED — were leaking password hashes and stack traces.
 # Auto-migration handles schema changes in lifespan startup.
 # Use /health/deep for diagnostics instead.

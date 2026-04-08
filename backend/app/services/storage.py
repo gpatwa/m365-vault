@@ -427,12 +427,21 @@ class StorageService:
         object_id: str,
         snapshot_id: int,
         db: AsyncSession = None,
+        snapshot=None,
+        sla_policy=None,
+        force: bool = False,
     ):
         """Delete all storage for a snapshot (for retention cleanup).
 
-        IMPORTANT: Callers must check can_delete_snapshot() before calling this.
-        This method does NOT enforce WORM — it trusts the caller.
+        ENFORCES WORM and legal hold. Will REFUSE to delete locked snapshots
+        unless force=True (which should only be used for account deletion/GDPR).
         """
+        # WORM / Legal Hold enforcement — cannot bypass without force flag
+        if not force and (snapshot or sla_policy):
+            can_delete, reason = StorageService.can_delete_snapshot(snapshot, sla_policy)
+            if not can_delete:
+                logger.warning(f"WORM/LegalHold blocked deletion of snapshot {snapshot_id}: {reason}")
+                raise PermissionError(f"Cannot delete snapshot: {reason}")
         if settings.DEDUP_ENABLED and db is not None:
             await self._cleanup_dedup_refs(
                 db=db, tenant_id=tenant_id, snapshot_id=snapshot_id,

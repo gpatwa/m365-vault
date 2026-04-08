@@ -16,7 +16,7 @@ from app.models.snapshot import Snapshot, SnapshotStatus, SnapshotItem, FailedIt
 from app.models.sla_policy import SLAPolicy
 from app.models.health_baseline import AnomalyEvent
 from app.models.user import User
-from app.services.auth import get_current_user, require_tenant_access_dep
+from app.services.auth import get_current_user, require_tenant_access_dep, resolve_tenant_filter
 
 router = APIRouter(prefix="/api/reports", tags=["Reports"], dependencies=[Depends(require_tenant_access_dep())])
 
@@ -45,8 +45,8 @@ async def backup_performance(
     days = int(delta.total_seconds() / 86400)
 
     filters = [BackupJob.created_at >= since]
-    if tenant_id:
-        filters.append(BackupJob.tenant_id == tenant_id)
+    allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
+    stmt = stmt.where(BackupJob.tenant_id.in_(allowed_ids))
 
     # Overall stats
     total = (await db.execute(select(func.count(BackupJob.id)).where(*filters))).scalar() or 0
@@ -98,8 +98,8 @@ async def backup_performance(
         day_start = datetime.combine(date, datetime.min.time())
         day_end = datetime.combine(date, datetime.max.time())
         day_filters = [BackupJob.created_at >= day_start, BackupJob.created_at <= day_end]
-        if tenant_id:
-            day_filters.append(BackupJob.tenant_id == tenant_id)
+        allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
+        stmt = stmt.where(BackupJob.tenant_id.in_(allowed_ids))
 
         day_total = (await db.execute(select(func.count(BackupJob.id)).where(*day_filters))).scalar() or 0
         day_completed = (await db.execute(select(func.count(BackupJob.id)).where(*day_filters, BackupJob.status == JobStatus.COMPLETED))).scalar() or 0
@@ -142,8 +142,8 @@ async def storage_analytics(
     from app.models.dedup import DedupEntry
 
     filters = [Snapshot.status == SnapshotStatus.COMPLETED]
-    if tenant_id:
-        filters.append(ProtectedObject.tenant_id == tenant_id)
+    allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
+    stmt = stmt.where(ProtectedObject.tenant_id.in_(allowed_ids))
 
     # Total storage
     if tenant_id:
@@ -317,8 +317,8 @@ async def sla_compliance(
     stmt = select(ProtectedObject, SLAPolicy).join(
         SLAPolicy, ProtectedObject.sla_policy_id == SLAPolicy.id
     ).where(ProtectedObject.status == ProtectionStatus.PROTECTED)
-    if tenant_id:
-        stmt = stmt.where(ProtectedObject.tenant_id == tenant_id)
+    allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
+    stmt = stmt.where(ProtectedObject.tenant_id.in_(allowed_ids))
 
     result = await db.execute(stmt)
     rows = result.all()

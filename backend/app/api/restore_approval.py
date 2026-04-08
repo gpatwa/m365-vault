@@ -16,7 +16,7 @@ from app.database import get_db
 from app.models.user import User, UserRole
 from app.models.restore_job import RestoreJob, RestoreType, RestoreStatus
 from app.models.restore_approval import RestoreApproval
-from app.services.auth import get_current_user, require_role
+from app.services.auth import get_current_user, require_role, resolve_tenant_filter
 from app.services.audit import audit_log
 
 logger = logging.getLogger(__name__)
@@ -111,8 +111,8 @@ async def list_pending_approvals(
             RestoreApproval.requested_by_user_id != current_user.id,
         )
     )
-    if tenant_id:
-        stmt = stmt.where(RestoreJob.tenant_id == tenant_id)
+    allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
+    stmt = stmt.where(RestoreJob.tenant_id.in_(allowed_ids))
 
     stmt = stmt.order_by(RestoreApproval.requested_at.desc())
     result = await db.execute(stmt)

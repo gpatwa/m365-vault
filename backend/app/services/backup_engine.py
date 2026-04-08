@@ -56,18 +56,40 @@ class BackupEngine:
                 job.error_message = str(e)
                 job.completed_at = datetime.utcnow()
                 await self.db.commit()
-                # Send failure alert email
+                # Send failure alert to platform admin + tenant users
                 try:
                     from app.services.email_service import email_service
                     from app.config import settings
+                    from app.models.user_tenant import UserTenant
+                    from app.models.user import User
+
+                    tenant = await self.db.get(Tenant, job.tenant_id)
+                    tenant_name = tenant.name if tenant else f"Tenant {job.tenant_id}"
+                    workload = job.workload_type or "unknown"
+                    error_msg = str(e)[:200]
+
+                    recipients = set()
+                    # Platform admin recipients
                     if settings.ALERT_EMAIL_RECIPIENTS:
-                        for recipient in settings.ALERT_EMAIL_RECIPIENTS.split(","):
-                            await email_service.send_backup_failure(
-                                email=recipient.strip(),
-                                tenant_name=f"Tenant {job.tenant_id}",
-                                workload=job.workload_type or "unknown",
-                                error=str(e)[:200],
-                            )
+                        recipients.update(r.strip() for r in settings.ALERT_EMAIL_RECIPIENTS.split(",") if r.strip())
+                    # Tenant admin recipients (users assigned to this tenant)
+                    tenant_users = await self.db.execute(
+                        select(User.email).join(UserTenant, User.id == UserTenant.user_id).where(
+                            UserTenant.tenant_id == job.tenant_id,
+                            User.email.isnot(None),
+                        )
+                    )
+                    recipients.update(r[0] for r in tenant_users.all() if r[0])
+
+                    for recipient in recipients:
+                        await email_service.send_backup_failure(
+                            email=recipient,
+                            tenant_name=tenant_name,
+                            workload=workload,
+                            error=error_msg,
+                        )
+                    if recipients:
+                        logger.info(f"Backup failure alert sent to {len(recipients)} recipients for {tenant_name}")
                 except Exception as alert_err:
                     logger.warning(f"Failed to send backup failure alert: {alert_err}")
 

@@ -188,6 +188,100 @@ async def logout(request: Request):
     return response
 
 
+class InviteUserRequest(BaseModel):
+    email: str
+    role: str = "viewer"  # viewer, operator, restore_operator, admin
+    full_name: str = None
+    tenant_id: int = None  # Assign to specific tenant (defaults to inviter's tenants)
+
+
+@router.post("/invite")
+async def invite_user(
+    req: InviteUserRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Invite a user to the organization — creates account + assigns to tenant.
+
+    Self-service: tenant admins can invite team members without platform admin.
+    Invited user receives email with temporary password to set on first login.
+    """
+    import secrets as _secrets
+    from app.services.auth import get_user_tenant_ids, assign_user_to_tenant
+
+    # Validate role
+    valid_roles = {"viewer", "operator", "restore_operator", "admin"}
+    if req.role not in valid_roles:
+        raise HTTPException(400, detail=f"Invalid role. Must be one of: {valid_roles}")
+
+    # Check for duplicate
+    existing = await db.execute(select(User).where(User.email == req.email))
+    if existing.scalar_one_or_none():
+        raise HTTPException(409, detail="User with this email already exists")
+
+    # Generate temporary password
+    temp_password = _secrets.token_urlsafe(12)
+
+    # Create user
+    new_user = User(
+        username=req.email.split("@")[0] + "_" + _secrets.token_hex(3),
+        email=req.email,
+        password_hash=hash_password(temp_password),
+        full_name=req.full_name or req.email.split("@")[0],
+        role=UserRole(req.role),
+        is_active=1,
+        email_verified=0,
+    )
+    db.add(new_user)
+    await db.flush()
+
+    # Assign to tenant(s)
+    if req.tenant_id:
+        await assign_user_to_tenant(db, new_user.id, req.tenant_id, role="member")
+    else:
+        # Assign to all inviter's tenants
+        inviter_tenants = await get_user_tenant_ids(db, current_user)
+        for tid in inviter_tenants:
+            await assign_user_to_tenant(db, new_user.id, tid, role="member")
+
+    # Send invite email
+    try:
+        from app.services.email_service import email_service
+        await email_service.send_email(
+            to=req.email,
+            subject=f"{current_user.full_name or current_user.username} invited you to KavachIQ",
+            html=f"""
+            <div style="font-family: -apple-system, sans-serif; max-width: 520px; margin: 0 auto;">
+              <h2 style="color: #0d9488;">Welcome to KavachIQ</h2>
+              <p><strong>{current_user.full_name or current_user.username}</strong> has invited you to protect your Microsoft 365 data.</p>
+              <p>Your temporary login:</p>
+              <ul>
+                <li>Email: <strong>{req.email}</strong></li>
+                <li>Password: <strong>{temp_password}</strong></li>
+              </ul>
+              <p><a href="{settings.FRONTEND_URL}/login" style="background: #0d9488; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none;">Login to KavachIQ</a></p>
+              <p style="color: #6b7280; font-size: 13px;">Please change your password after first login.</p>
+            </div>
+            """,
+        )
+    except Exception as e:
+        logger.warning(f"Failed to send invite email: {e}")
+
+    from app.services.audit import audit_log
+    await audit_log(db, action="auth.user_invited", resource_type="user",
+                    resource_id=new_user.id, user_id=current_user.id,
+                    details=f"Invited {req.email} as {req.role}")
+
+    await db.commit()
+
+    return {
+        "user_id": new_user.id,
+        "email": req.email,
+        "role": req.role,
+        "status": "invited",
+    }
+
+
 class RefreshRequest(BaseModel):
     refresh_token: str
 
@@ -328,7 +422,37 @@ async def get_preferences(
     return {p.key: p.value for p in result.scalars().all()}
 
 
-# ── Password Reset + Email Verification ──
+# ── Password Change + Reset + Email Verification ──
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
+@router.post("/change-password")
+async def change_password(
+    req: ChangePasswordRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Change password for authenticated user. Self-service — no admin needed."""
+    if not verify_password(req.current_password, current_user.password_hash):
+        raise HTTPException(400, detail="Current password is incorrect")
+
+    is_valid, error_msg = validate_password(req.new_password)
+    if not is_valid:
+        raise HTTPException(400, detail=error_msg)
+
+    current_user.password_hash = hash_password(req.new_password)
+
+    from app.services.audit import audit_log
+    await audit_log(db, action="auth.password_changed", resource_type="user",
+                    resource_id=current_user.id, user_id=current_user.id,
+                    details="Password changed by user")
+
+    await db.commit()
+    return {"success": True, "message": "Password changed successfully"}
 
 
 class ForgotPasswordRequest(BaseModel):

@@ -1926,7 +1926,8 @@ export function OnboardCallback() {
         tenant_id: resultData.db_tenant_id,
         sla_policy_id: selectedSla,
         protect_all: true,
-        workload_types: Array.from(selectedWorkloads),
+        // workload_types removed — discovery already scoped to enabled workloads,
+        // so protect_all=true covers exactly the right set
       });
 
       if (onboardMode === 'fast') {

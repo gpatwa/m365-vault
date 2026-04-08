@@ -586,23 +586,52 @@ async def selective_discovery(
     if not tenant:
         raise KavachIQError(CONNECTOR_TENANT_NOT_FOUND, detail="Tenant not found in database")
 
-    # Lifecycle gate: only discover workloads that are enabled for this tenant
-    from app.services.workload_lifecycle import get_enabled_workloads
+    # Auto-enable requested workloads if not already enabled.
+    # During onboarding, the user selects workloads in the wizard and clicks "Discover".
+    # The lifecycle model requires workloads to be ENABLED before discovery.
+    # Instead of making the frontend call a separate enable endpoint, we auto-enable
+    # here — the onboarding wizard IS the enable step.
+    from app.services.workload_lifecycle import get_enabled_workloads, transition_workload
+    from app.models.tenant_workload_app import TenantWorkloadApp, WorkloadLifecycle
     enabled = await get_enabled_workloads(db, req.tenant_id)
 
+    workloads_to_discover = req.workloads or list(enabled)
     if req.workloads:
-        # Intersect requested workloads with enabled workloads
-        filtered = [w for w in req.workloads if w in enabled]
-        if not filtered:
-            return {
-                "status": "completed",
-                "results": {"mailboxes": 0, "onedrives": 0, "sites": 0, "teams": 0, "entra_objects": 0, "removed": 0, "errors": []},
-                "warning": f"None of the requested workloads are enabled. Enabled: {sorted(enabled)}",
-            }
-        req.workloads = filtered
-    else:
-        # No specific workloads requested — discover all enabled
-        req.workloads = list(enabled) if enabled else None
+        # Auto-enable workloads that aren't enabled yet (onboarding flow)
+        for wl in req.workloads:
+            if wl not in enabled:
+                # Check if workload app exists
+                existing = await db.execute(
+                    select(TenantWorkloadApp).where(
+                        TenantWorkloadApp.tenant_id == req.tenant_id,
+                        TenantWorkloadApp.workload == wl,
+                    )
+                )
+                wl_app = existing.scalar_one_or_none()
+                if wl_app:
+                    # Transition existing app to ENABLED
+                    await transition_workload(db, req.tenant_id, wl, WorkloadLifecycle.ENABLED)
+                else:
+                    # Create workload app in ENABLED state (using tenant's legacy credentials)
+                    wl_app = TenantWorkloadApp(
+                        tenant_id=req.tenant_id,
+                        workload=wl,
+                        client_id=tenant.client_id or "pending",
+                        client_secret_encrypted=tenant.client_secret_encrypted or "pending",
+                        consent_status="consented",
+                        lifecycle_status=WorkloadLifecycle.ENABLED.value,
+                        backup_ready=1,
+                        enabled=1,
+                    )
+                    db.add(wl_app)
+                enabled.add(wl)
+                logger.info(f"Auto-enabled workload {wl} for tenant {req.tenant_id} during onboarding discovery")
+        await db.flush()
+        workloads_to_discover = req.workloads
+    elif not enabled:
+        workloads_to_discover = None
+
+    req.workloads = workloads_to_discover
 
     if not req.workloads:
         return {

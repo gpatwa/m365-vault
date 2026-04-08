@@ -505,35 +505,39 @@ export default function Organization() {
         </div>
       )}
 
-      {/* Quick Links */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
-        <button
-          onClick={() => navigate('/usage')}
-          className="bg-card border border-border rounded-xl p-4 text-left hover:border-blue-500/30 transition-colors"
-        >
-          <Settings className="w-5 h-5 text-muted-foreground mb-2" />
-          <div className="text-sm font-medium text-foreground">Usage & Billing</div>
-          <div className="text-xs text-muted-foreground">License, storage, costs</div>
-        </button>
+      {/* Quick Links — contextual based on connection state.
+          Not connected: only Billing (so prospect can see pricing).
+          Connected: Billing + Backup Policies + Audit Log + Alerts. */}
+      {(() => {
+        const links = [
+          // Always show Billing — prospects need to see pricing
+          { path: '/billing', icon: Settings, label: 'Billing', desc: 'Plans, usage, invoices', always: true },
+          // Show Backup Policies once workloads are enabled
+          { path: '/sla-policies', icon: Shield, label: 'Backup Policies', desc: 'Schedule, retention, WORM', always: false },
+          // Show Audit Log once connected
+          { path: '/audit', icon: Users, label: 'Audit Log', desc: 'Who did what, when', always: false },
+          // Show Alerts once connected
+          { path: '/alerts', icon: AlertTriangle, label: 'Alert Preferences', desc: 'Events, recipients, frequency', always: false },
+        ].filter(l => l.always || isReallyConnected);
 
-        <button
-          onClick={() => navigate('/sla-policies')}
-          className="bg-card border border-border rounded-xl p-4 text-left hover:border-blue-500/30 transition-colors"
-        >
-          <Shield className="w-5 h-5 text-muted-foreground mb-2" />
-          <div className="text-sm font-medium text-foreground">Backup Policies</div>
-          <div className="text-xs text-muted-foreground">Schedule, retention, WORM</div>
-        </button>
+        if (links.length === 0) return null;
 
-        <button
-          onClick={() => navigate('/audit')}
-          className="bg-card border border-border rounded-xl p-4 text-left hover:border-blue-500/30 transition-colors"
-        >
-          <Users className="w-5 h-5 text-muted-foreground mb-2" />
-          <div className="text-sm font-medium text-foreground">Audit Log</div>
-          <div className="text-xs text-muted-foreground">Who did what, when</div>
-        </button>
-      </div>
+        return (
+          <div className={`grid grid-cols-1 ${links.length >= 3 ? 'sm:grid-cols-2 lg:grid-cols-4' : links.length === 2 ? 'sm:grid-cols-2' : ''} gap-3 mt-6`}>
+            {links.map(l => (
+              <button
+                key={l.path}
+                onClick={() => navigate(l.path)}
+                className="bg-card border border-border rounded-xl p-4 text-left hover:border-blue-500/30 transition-colors"
+              >
+                <l.icon className="w-5 h-5 text-muted-foreground mb-2" />
+                <div className="text-sm font-medium text-foreground">{l.label}</div>
+                <div className="text-xs text-muted-foreground">{l.desc}</div>
+              </button>
+            ))}
+          </div>
+        );
+      })()}
 
       {/* Disable Confirmation Dialog */}
       <Dialog open={disableTarget !== null} onOpenChange={(open) => { if (!open) setDisableTarget(null); }}>

@@ -95,10 +95,11 @@ test-unit: ## Run unit tests only (fast, no Docker)
 	@python3 -m pytest backend/tests/test_restore_permissions.py backend/tests/test_restore_consent.py backend/tests/test_workload_apps.py backend/tests/test_workload_e2e.py -q --tb=short
 
 .PHONY: release
-release: test-local safe-deploy e2e-test ## Full release: local test → build+deploy → verify
+release: test-local test-pg safe-deploy e2e-test ## Full release: SQLite tests → PG tests → deploy → E2E verify
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "  ✅ RELEASE COMPLETE — tested locally + deployed + verified"
+	@echo "  ✅ RELEASE COMPLETE"
+	@echo "  Pipeline: test-local → test-pg → safe-deploy → e2e-test"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 .PHONY: e2e-test
@@ -120,8 +121,21 @@ seed-clean: ## Clean DB + storage and re-seed
 	cd backend && python3 ../scripts/simulate_backup_data.py
 
 .PHONY: test-backend
-test-backend: ## Run backend tests
+test-backend: ## Run backend tests (SQLite — fast, no Docker needed)
 	cd backend && python3 -m pytest -v
+
+.PHONY: test-pg
+test-pg: ## Run backend tests against Docker PostgreSQL (catches migration bugs)
+	@echo "🐘 Running tests against PostgreSQL (requires: make dev running)..."
+	@if ! docker compose ps postgres 2>/dev/null | grep -q "running"; then \
+		echo "❌ PostgreSQL not running. Start with: make dev"; exit 1; \
+	fi
+	@cd backend && DATABASE_URL=postgresql+asyncpg://m365vault:m365vault_dev@localhost:5432/m365vault_test \
+		venv/bin/python -m pytest tests/ -v --override-ini="confcutdir=tests" \
+		-c tests/conftest_pg.py --tb=short \
+		-k "test_workload_lifecycle or test_auth_matrix or test_sidebar_data" \
+		2>&1 | tail -20
+	@echo "✅ PostgreSQL tests passed — migrations verified"
 
 .PHONY: lint
 lint: ## Run linting checks

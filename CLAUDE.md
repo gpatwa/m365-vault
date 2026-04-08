@@ -16,8 +16,13 @@ The `docker-compose.yml` also sets `platform: linux/amd64` on backend and fronte
 
 | Command | Purpose |
 |---|---|
-| `make dev` | Start local dev stack (Docker Compose) |
+| `make dev` | Start local dev stack (Docker Compose: PG + backend + frontend) |
+| `make test-backend` | Run backend tests against SQLite (fast, no Docker) |
+| `make test-pg` | Run backend tests against Docker PostgreSQL (catches migration bugs) |
 | `make build` | Build images (linux/amd64) |
+| `make safe-deploy ENV=dev` | Build → push → health check → E2E sanity (65 tests) |
+| `make release` | Full pipeline: test-local → test-pg → safe-deploy → e2e-test |
+| `make e2e-test` | Run E2E certification against live environment |
 | `make acr-push` | Build + push to Azure Container Registry |
 | `make tf-apply` | Deploy infrastructure |
 | `make az-status` | Check Azure resource status |

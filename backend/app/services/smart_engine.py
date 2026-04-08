@@ -143,7 +143,32 @@ class SmartEngine:
 
         Flags anomalies when values deviate by more than Z_SCORE_THRESHOLD
         standard deviations from the baseline.
+
+        Grace period: tenants with <3 completed snapshots are skipped entirely.
+        This prevents false positives for newly onboarded tenants that don't have
+        enough baseline data yet.
         """
+        # Grace period: skip anomaly detection for tenants with insufficient baseline
+        snapshot_count_result = await self.db.execute(
+            select(func.count(Snapshot.id))
+            .join(ProtectedObject, Snapshot.protected_object_id == ProtectedObject.id)
+            .where(
+                ProtectedObject.tenant_id == tenant_id,
+                Snapshot.status == SnapshotStatus.COMPLETED,
+            )
+        )
+        total_snapshots = snapshot_count_result.scalar() or 0
+        if total_snapshots < 3:
+            logger.info(
+                f"Anomaly detection skipped for tenant {tenant_id}: "
+                f"only {total_snapshots} snapshots (need ≥3 for baseline)"
+            )
+            return []
+
+        # Only check workloads that are in PROTECTED lifecycle state
+        from app.services.workload_lifecycle import get_protected_workloads
+        protected_workloads = await get_protected_workloads(self.db, tenant_id)
+
         threshold = settings.ANOMALY_Z_SCORE_THRESHOLD
         anomalies = []
 
@@ -166,6 +191,10 @@ class SmartEngine:
                 latest_by_workload[workload] = snapshot
 
         for workload, snapshot in latest_by_workload.items():
+            # Skip workloads not in PROTECTED lifecycle state
+            if protected_workloads and workload not in protected_workloads:
+                continue
+
             # Check item_count
             anomaly = await self._check_metric(
                 tenant_id, workload, "item_count",

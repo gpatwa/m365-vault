@@ -18,6 +18,21 @@ class ConsentStatus(str, enum.Enum):
     ERROR = "error"           # Consent flow failed
 
 
+class WorkloadLifecycle(str, enum.Enum):
+    """Workload lifecycle state machine: disabled → enabled → discovered → protected → paused.
+
+    Only enabled+ workloads get discovered.
+    Only discovered+ workloads get protected.
+    Only protected workloads get backed up and monitored.
+    Disabled workloads are invisible on the dashboard.
+    """
+    DISABLED = "disabled"       # Default — not activated
+    ENABLED = "enabled"         # Customer opted in, ready for discovery
+    DISCOVERED = "discovered"   # Objects found, not yet protected
+    PROTECTED = "protected"     # SLA assigned, backup running, monitored
+    PAUSED = "paused"           # Temporarily stopped, data retained
+
+
 class TenantWorkloadApp(Base):
     __tablename__ = "tenant_workload_apps"
 
@@ -33,6 +48,9 @@ class TenantWorkloadApp(Base):
 
     # Consent Status
     consent_status = Column(String(20), default="pending", nullable=False)
+
+    # Workload Lifecycle (opt-in per workload, gated by subscription)
+    lifecycle_status = Column(String(20), default="disabled", nullable=False)
 
     # Permission Tracking
     permissions_requested = Column(Text, nullable=True)   # JSON array

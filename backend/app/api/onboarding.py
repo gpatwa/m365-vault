@@ -357,17 +357,9 @@ async def oauth_callback(
                 await assign_user_to_tenant(db, connecting_user_id, existing_tenant.id, role="owner", is_default=True)
                 logger.info(f"Assigned user {connecting_user_id} to existing tenant {existing_tenant.id}")
 
-            # Re-run discovery on reconnect to refresh counts
-            try:
-                from app.services.discovery import DiscoveryService
-                discovery = DiscoveryService(db)
-                disc_result = await discovery.discover_all(existing_tenant)
-                await db.commit()
-                logger.info(f"Re-discovery for {existing_tenant.name}: {disc_result}")
-            except Exception as e:
-                logger.warning(f"Re-discovery failed for {existing_tenant.name}: {e}")
-                disc_result = None
-
+            # NO auto-discovery on reconnect — discovery only runs when customer
+            # explicitly selects workloads via /discover endpoint.
+            # This prevents creating objects for workloads the customer didn't opt into.
             from sqlalchemy import func as _func
             from app.models.protected_object import ProtectedObject
             obj_count = (await db.execute(
@@ -429,12 +421,11 @@ async def oauth_callback(
             await assign_user_to_tenant(db, connecting_user_id, tenant_record.id, role="owner", is_default=True)
             logger.info(f"Assigned user {connecting_user_id} to tenant {tenant_record.id} as owner")
 
-        # Run discovery
-        from app.services.discovery import DiscoveryService
-        discovery = DiscoveryService(db)
-        disc_result = await discovery.discover_all(tenant_record)
-
+        # NO auto-discovery on new tenant creation — discovery runs when customer
+        # explicitly selects workloads in Step 2 via /discover endpoint.
+        # This is the key change: opt-in per workload, not discover-everything.
         await db.commit()
+        disc_result = {"mailboxes": 0, "onedrives": 0, "sites": 0, "teams": 0, "entra_objects": 0}
 
         # Update session with new tenant
         session_id = request.cookies.get("kavachiq_session")
@@ -479,7 +470,8 @@ class CompleteOnboardRequest(BaseModel):
     tenant_id: int
     sla_policy_id: int = None
     protect_all: bool = True
-    workload_types: list[str] = None  # Filter to specific workloads e.g. ['entra_id', 'exchange']
+    # workload_types removed — no longer needed because discovery only creates
+    # objects for enabled workloads, so protect_all=True covers exactly the right set.
 
 
 @router.post("/complete")
@@ -488,7 +480,12 @@ async def complete_onboarding(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Finalize onboarding: assign SLA policy, activate tenant, start first backup."""
+    """Finalize onboarding: assign SLA to ALL discovered objects, activate tenant.
+
+    Key design: NO workload_types filter needed here because discovery (upstream)
+    already only created ProtectedObjects for enabled workloads. protect_all=True
+    assigns SLA to everything that was discovered — zero unprotected objects after.
+    """
     tenant = await db.get(Tenant, req.tenant_id)
     if not tenant:
         raise KavachIQError(CONNECTOR_TENANT_NOT_FOUND, detail="Tenant not found in database")
@@ -524,29 +521,40 @@ async def complete_onboarding(
                 sla_id = default_sla.id
                 logger.info(f"Created default SLA policy {sla_id} for tenant {req.tenant_id} (no existing SLAs)")
 
-    # Assign SLA policy to unprotected objects (optionally filtered by workload)
+    # Assign SLA policy to ALL unprotected objects — NO workload filter.
+    # Discovery already scoped objects to enabled workloads only, so this covers
+    # exactly the right set. After this, unprotected_count == 0 for this tenant.
+    protected_count = 0
     if req.protect_all and sla_id:
-        from app.models.protected_object import ProtectedObject, ProtectionStatus, WorkloadType
+        from app.models.protected_object import ProtectedObject, ProtectionStatus
         stmt = select(ProtectedObject).where(
             ProtectedObject.tenant_id == req.tenant_id,
             ProtectedObject.status == ProtectionStatus.UNPROTECTED,
         )
-        if req.workload_types:
-            wl_enums = [WorkloadType(wt) for wt in req.workload_types]
-            stmt = stmt.where(ProtectedObject.workload_type.in_(wl_enums))
         result = await db.execute(stmt)
         for obj in result.scalars().all():
             obj.sla_policy_id = sla_id
             obj.status = ProtectionStatus.PROTECTED
+            protected_count += 1
+
+    # Transition discovered workloads → PROTECTED
+    from app.services.workload_lifecycle import get_enabled_workloads, transition_workload
+    from app.models.tenant_workload_app import WorkloadLifecycle
+    enabled = await get_enabled_workloads(db, req.tenant_id)
+    for wl in enabled:
+        await transition_workload(db, req.tenant_id, wl, WorkloadLifecycle.PROTECTED)
 
     # Activate tenant
     tenant.status = TenantStatus.ACTIVE
     await db.commit()
 
+    logger.info(f"Onboarding complete: tenant={tenant.id} protected={protected_count} objects, workloads={sorted(enabled)}")
+
     return {
         "status": "active",
         "tenant_id": tenant.id,
         "tenant_name": tenant.name,
+        "protected_count": protected_count,
     }
 
 
@@ -561,10 +569,11 @@ async def selective_discovery(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Run workload-selective discovery.
+    """Run workload-selective discovery — only discovers ENABLED workloads.
 
-    If workloads is None, discovers all workloads.
-    If workloads is a list, only discovers the specified workloads.
+    Lifecycle enforcement: discovery only creates ProtectedObjects for workloads
+    whose lifecycle_status is enabled+ (enabled, discovered, protected).
+    Disabled workloads are skipped — no objects created, no false banners.
 
     Speed guide:
     - exchange: ~2s (validates mailbox per user)
@@ -577,9 +586,41 @@ async def selective_discovery(
     if not tenant:
         raise KavachIQError(CONNECTOR_TENANT_NOT_FOUND, detail="Tenant not found in database")
 
+    # Lifecycle gate: only discover workloads that are enabled for this tenant
+    from app.services.workload_lifecycle import get_enabled_workloads
+    enabled = await get_enabled_workloads(db, req.tenant_id)
+
+    if req.workloads:
+        # Intersect requested workloads with enabled workloads
+        filtered = [w for w in req.workloads if w in enabled]
+        if not filtered:
+            return {
+                "status": "completed",
+                "results": {"mailboxes": 0, "onedrives": 0, "sites": 0, "teams": 0, "entra_objects": 0, "removed": 0, "errors": []},
+                "warning": f"None of the requested workloads are enabled. Enabled: {sorted(enabled)}",
+            }
+        req.workloads = filtered
+    else:
+        # No specific workloads requested — discover all enabled
+        req.workloads = list(enabled) if enabled else None
+
+    if not req.workloads:
+        return {
+            "status": "completed",
+            "results": {"mailboxes": 0, "onedrives": 0, "sites": 0, "teams": 0, "entra_objects": 0, "removed": 0, "errors": []},
+            "warning": "No workloads enabled for this tenant. Enable workloads first via POST /api/tenants/{id}/workloads",
+        }
+
     from app.services.discovery import DiscoveryService
     discovery = DiscoveryService(db)
     result = await discovery.discover_all(tenant, workloads=req.workloads)
+
+    # Transition discovered workloads from ENABLED → DISCOVERED
+    from app.services.workload_lifecycle import transition_workload
+    from app.models.tenant_workload_app import WorkloadLifecycle
+    for wl in req.workloads:
+        await transition_workload(db, req.tenant_id, wl, WorkloadLifecycle.DISCOVERED)
+
     await db.commit()
 
     return {"status": "completed", "results": result}

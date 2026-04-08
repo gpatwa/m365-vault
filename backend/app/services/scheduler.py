@@ -25,10 +25,17 @@ scheduler = AsyncIOScheduler()
 
 async def check_and_schedule_backups():
     """Check all protected objects and create backup jobs as needed per SLA,
-    then execute any queued jobs."""
+    then execute any queued jobs.
+
+    Lifecycle enforcement: only schedules backups for objects whose workload
+    is in PROTECTED lifecycle state. Paused/disabled workloads are skipped.
+    """
     async with async_session() as db:
         try:
+            from app.models.tenant_workload_app import TenantWorkloadApp, WorkloadLifecycle
+
             # Get all active protected objects with SLA policies (skip inactive tenants)
+            # Also join TenantWorkloadApp to enforce lifecycle=PROTECTED
             result = await db.execute(
                 select(ProtectedObject, SLAPolicy)
                 .join(SLAPolicy, ProtectedObject.sla_policy_id == SLAPolicy.id)
@@ -41,8 +48,24 @@ async def check_and_schedule_backups():
             )
             rows = result.all()
 
+            # Build set of protected workloads per tenant for lifecycle filtering
+            _protected_cache = {}
+            async def _is_workload_protected(tid: int, wl_value: str) -> bool:
+                if tid not in _protected_cache:
+                    from app.services.workload_lifecycle import get_protected_workloads
+                    _protected_cache[tid] = await get_protected_workloads(db, tid)
+                # If no workload lifecycle configured (legacy), allow all
+                if not _protected_cache[tid]:
+                    return True
+                return wl_value in _protected_cache[tid]
+
             jobs_created = 0
             for obj, sla in rows:
+                # Lifecycle check: only backup objects whose workload is PROTECTED
+                wl_value = obj.workload_type.value if hasattr(obj.workload_type, 'value') else str(obj.workload_type)
+                if not await _is_workload_protected(obj.tenant_id, wl_value):
+                    continue
+
                 # Check if backup is due
                 if obj.last_backup_at:
                     next_backup_at = obj.last_backup_at + timedelta(hours=sla.backup_frequency_hours)
@@ -236,7 +259,11 @@ async def retry_failed_jobs():
 
 
 async def run_smart_engine():
-    """Run Smart Engine: update baselines, detect anomalies, send alerts."""
+    """Run Smart Engine: update baselines, detect anomalies, send alerts.
+
+    Lifecycle enforcement: only runs anomaly detection for tenants with
+    PROTECTED workloads. Tenants still in onboarding are skipped.
+    """
     from app.services.smart_engine import SmartEngine
     from app.services.alert_service import alert_service
 
@@ -252,10 +279,17 @@ async def run_smart_engine():
             total_anomalies = 0
 
             for tenant in tenants:
+                # Lifecycle check: skip tenants with no protected workloads
+                from app.services.workload_lifecycle import get_protected_workloads
+                protected = await get_protected_workloads(db, tenant.id)
+                if not protected:
+                    logger.debug(f"Smart Engine: skipping tenant {tenant.name} — no protected workloads")
+                    continue
+
                 # Update baselines
                 await engine.update_baselines(tenant.id)
 
-                # Detect anomalies
+                # Detect anomalies (has its own grace period for <3 snapshots)
                 anomalies = await engine.detect_anomalies(tenant.id)
                 total_anomalies += len(anomalies)
 

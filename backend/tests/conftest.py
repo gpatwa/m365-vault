@@ -59,8 +59,13 @@ async def auth_client(client: AsyncClient):
         "username": "testadmin",
         "password": "TestPass123",
     })
-    token = response.json()["access_token"]
-    client.headers["Authorization"] = f"Bearer {token}"
+    data = response.json()
+    token = data.get("access_token", "")
+    if token:
+        client.headers["Authorization"] = f"Bearer {token}"
+    # Also set cookie if present (BFF mode)
+    if "kavachiq_session" in response.cookies:
+        client.cookies.set("kavachiq_session", response.cookies["kavachiq_session"])
     yield client
 
 
@@ -78,8 +83,12 @@ async def msp_admin_client(client: AsyncClient):
         "username": "testmsp",
         "password": "TestPass123",
     })
-    token = response.json()["access_token"]
-    client.headers["Authorization"] = f"Bearer {token}"
+    data = response.json()
+    token = data.get("access_token", "")
+    if token:
+        client.headers["Authorization"] = f"Bearer {token}"
+    if "kavachiq_session" in response.cookies:
+        client.cookies.set("kavachiq_session", response.cookies["kavachiq_session"])
     yield client
 
 
@@ -97,8 +106,12 @@ async def viewer_client(client: AsyncClient):
         "username": "testviewer",
         "password": "TestPass123",
     })
-    token = response.json()["access_token"]
-    client.headers["Authorization"] = f"Bearer {token}"
+    data = response.json()
+    token = data.get("access_token", "")
+    if token:
+        client.headers["Authorization"] = f"Bearer {token}"
+    if "kavachiq_session" in response.cookies:
+        client.cookies.set("kavachiq_session", response.cookies["kavachiq_session"])
     yield client
 
 

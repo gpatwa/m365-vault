@@ -12,6 +12,7 @@ os.environ["STORAGE_BACKEND"] = "local"
 os.environ["STORAGE_LOCAL_PATH"] = "/tmp/kavachiq-test-storage"
 os.environ["DISPATCH_MODE"] = "in_process"
 os.environ["ENCRYPTION_MASTER_KEY"] = "dGVzdC1tYXN0ZXIta2V5LWZvci10ZXN0aW5nLW9ubHk="
+os.environ["RATE_LIMIT_REQUESTS_PER_MINUTE"] = "0"  # Disable rate limiting in tests
 
 from app.database import Base, engine, async_session
 from app.main import app
@@ -59,8 +60,13 @@ async def auth_client(client: AsyncClient):
         "username": "testadmin",
         "password": "TestPass123",
     })
-    token = response.json()["access_token"]
-    client.headers["Authorization"] = f"Bearer {token}"
+    data = response.json()
+    token = data.get("access_token", "")
+    if token:
+        client.headers["Authorization"] = f"Bearer {token}"
+    # Also set cookie if present (BFF mode)
+    if "kavachiq_session" in response.cookies:
+        client.cookies.set("kavachiq_session", response.cookies["kavachiq_session"])
     yield client
 
 
@@ -78,8 +84,12 @@ async def msp_admin_client(client: AsyncClient):
         "username": "testmsp",
         "password": "TestPass123",
     })
-    token = response.json()["access_token"]
-    client.headers["Authorization"] = f"Bearer {token}"
+    data = response.json()
+    token = data.get("access_token", "")
+    if token:
+        client.headers["Authorization"] = f"Bearer {token}"
+    if "kavachiq_session" in response.cookies:
+        client.cookies.set("kavachiq_session", response.cookies["kavachiq_session"])
     yield client
 
 
@@ -97,8 +107,12 @@ async def viewer_client(client: AsyncClient):
         "username": "testviewer",
         "password": "TestPass123",
     })
-    token = response.json()["access_token"]
-    client.headers["Authorization"] = f"Bearer {token}"
+    data = response.json()
+    token = data.get("access_token", "")
+    if token:
+        client.headers["Authorization"] = f"Bearer {token}"
+    if "kavachiq_session" in response.cookies:
+        client.cookies.set("kavachiq_session", response.cookies["kavachiq_session"])
     yield client
 
 

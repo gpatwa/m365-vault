@@ -1,3 +1,14 @@
+/**
+ * KavachIQ API Client — Enterprise BFF Pattern
+ *
+ * Auth: httpOnly cookie (set by backend on login, sent automatically by browser).
+ * Browser stores NOTHING — no tokens, no sessionStorage, no localStorage for auth.
+ * Tenant scoping: in-memory cache from /auth/session (set by useTenantSwitcher).
+ *
+ * The browser sends the session cookie automatically with `credentials: 'include'`.
+ * The backend reads the cookie, looks up the Redis session, and authenticates.
+ */
+
 // API base URL resolution order:
 // 1. Runtime config (injected by nginx config.js in Docker/Azure)
 // 2. Vite build-time env (VITE_API_BASE)
@@ -5,6 +16,7 @@
 declare global {
   interface Window {
     __RUNTIME_CONFIG__?: { API_BASE: string };
+    __kavachiq_selected_tenant?: string;
   }
 }
 const API_BASE =
@@ -13,8 +25,7 @@ const API_BASE =
   : import.meta.env.VITE_API_BASE || 'http://localhost:8000/api';
 
 /**
- * Structured API error with error code, message, fix suggestion, and correlation ID.
- * Matches the backend KavachIQ error response format.
+ * Structured API error matching backend KavachIQ error format.
  */
 export class ApiError extends Error {
   code: string;
@@ -35,70 +46,41 @@ export class ApiError extends Error {
 }
 
 class ApiClient {
-  private token: string | null = null;
-
-  constructor() {
-    // Try sessionStorage first, fall back to localStorage for migration
-    this.token = sessionStorage.getItem('token') || localStorage.getItem('token');
-    // Migrate from localStorage to sessionStorage
-    if (!sessionStorage.getItem('token') && localStorage.getItem('token')) {
-      sessionStorage.setItem('token', localStorage.getItem('token')!);
-      localStorage.removeItem('token');
-    }
-  }
-
-  setToken(token: string) {
-    this.token = token;
-    sessionStorage.setItem('token', token);
-    localStorage.removeItem('token'); // Clean up legacy
-  }
-
-  clearToken() {
-    this.token = null;
-    sessionStorage.removeItem('token');
-    localStorage.removeItem('token');
-  }
-
-  getToken() {
-    return this.token;
-  }
-
+  /**
+   * Core request method — sends httpOnly cookie automatically.
+   * No token management. No Authorization header. Browser handles cookies.
+   */
   private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...(options.headers as Record<string, string> || {}),
     };
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
-    }
 
-    // Auto-inject tenant_id from server session (cached in memory after first /auth/session call).
-    // Falls back to reading from the session cache stored by useTenantSwitcher.
-    // No localStorage dependency.
+    // Auto-inject tenant_id from in-memory cache (set by useTenantSwitcher)
     let finalPath = path;
     const skipTenantPaths = ['/auth/', '/onboard/', '/health', '/tenants/', '/sla-policies', '/billing', '/features'];
     const shouldInject = !skipTenantPaths.some(p => path.startsWith(p)) && !path.includes('tenant_id=');
     if (shouldInject) {
-      // Read from in-memory cache (set by useTenantSwitcher on session load)
-      const selectedTenant = (window as any).__kavachiq_selected_tenant;
+      const selectedTenant = window.__kavachiq_selected_tenant;
       if (selectedTenant) {
         const separator = path.includes('?') ? '&' : '?';
         finalPath = `${path}${separator}tenant_id=${selectedTenant}`;
       }
     }
 
-    const res = await fetch(`${API_BASE}${finalPath}`, { ...options, headers });
+    const res = await fetch(`${API_BASE}${finalPath}`, {
+      ...options,
+      headers,
+      credentials: 'include', // Send httpOnly cookie automatically
+    });
 
     if (res.status === 401) {
-      this.clearToken();
-      // Don't hard-redirect — let React Router handle via AuthContext re-render.
-      // ProtectedRoute checks token → no token → <Navigate to="/login" />
-      throw new ApiError({ message: 'Unauthorized', status: 401 });
+      // Session expired or not authenticated — React Router handles redirect
+      throw new ApiError({ message: 'Session expired', status: 401 });
     }
 
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      // Parse structured error (new format) or legacy format
       const err = body.error || {};
       throw new ApiError({
         code: err.code || '',
@@ -113,12 +95,22 @@ class ApiClient {
     return res.json();
   }
 
+  // Backward compatibility stubs — no-ops in BFF mode (cookie handles auth)
+  // These exist so components that haven't been fully migrated don't crash.
+  // TODO: Remove after all callers are updated.
+  getToken(): string | null { return null; }  // Cookie is httpOnly — JS can't read it
+  setToken(_token: string) {}  // Cookie set by backend, not JS
+  clearToken() {}              // Cookie cleared by backend /auth/logout
+
   get<T>(path: string) { return this.request<T>(path); }
   post<T>(path: string, body?: unknown) { return this.request<T>(path, { method: 'POST', body: body ? JSON.stringify(body) : undefined }); }
   put<T>(path: string, body?: unknown) { return this.request<T>(path, { method: 'PUT', body: body ? JSON.stringify(body) : undefined }); }
   del<T>(path: string) { return this.request<T>(path, { method: 'DELETE' }); }
 
-  // Auth
+  /**
+   * Login — backend sets httpOnly cookie. Frontend stores nothing.
+   * Returns user info for AuthContext state.
+   */
   async login(username: string, password: string) {
     const formData = new URLSearchParams();
     formData.append('username', username);
@@ -127,6 +119,7 @@ class ApiClient {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: formData,
+      credentials: 'include', // Receive + store httpOnly cookie
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
@@ -139,9 +132,34 @@ class ApiClient {
         status: res.status,
       });
     }
-    const data = await res.json();
-    this.setToken(data.access_token);
-    return data;
+    return res.json();
+  }
+
+  /**
+   * Logout — backend destroys Redis session + clears cookie.
+   */
+  async logout() {
+    try {
+      await fetch(`${API_BASE}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch {
+      // Logout best-effort
+    }
+  }
+
+  /**
+   * Check if user has an active session (for AuthContext).
+   * Calls /auth/session — if 200, user is authenticated.
+   */
+  async checkSession() {
+    try {
+      const data = await this.get<any>('/auth/session');
+      return data;
+    } catch {
+      return null;
+    }
   }
 
   register(data: { username: string; email: string; password: string; full_name?: string; role?: string }) {

@@ -24,24 +24,17 @@ async def get_summary(
     current_user: User = Depends(get_current_user),
 ):
     """Get dashboard summary statistics for the user's accessible tenants."""
-    from app.services.auth import get_user_tenant_ids, require_tenant_access
+    from app.services.auth import resolve_tenant_filter
 
-    # Enforce tenant access
-    if tenant_id:
-        await require_tenant_access(db, tenant_id, current_user)
-
-    # Scope to user's tenants
-    allowed_ids = await get_user_tenant_ids(db, current_user)
-    tenant_count = len(allowed_ids)
+    # Resolve tenant scope: provided tenant_id OR user's assigned tenants OR [-1] (nothing)
+    allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
+    tenant_count = len([t for t in allowed_ids if t > 0])
 
     # Protection stats by workload — scoped to user's tenants
     workload_stats = {}
     for wt in WorkloadType:
         stmt = select(ProtectedObject).where(ProtectedObject.workload_type == wt)
-        if tenant_id:
-            stmt = stmt.where(ProtectedObject.tenant_id == tenant_id)
-        elif allowed_ids:
-            stmt = stmt.where(ProtectedObject.tenant_id.in_(allowed_ids))
+        stmt = stmt.where(ProtectedObject.tenant_id.in_(allowed_ids))
 
         total = (await db.execute(
             select(func.count()).select_from(stmt.subquery())

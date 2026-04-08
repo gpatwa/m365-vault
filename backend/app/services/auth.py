@@ -212,6 +212,28 @@ def require_tenant_access_dep(tenant_id_param: str = "tenant_id"):
     return _check
 
 
+async def resolve_tenant_filter(
+    db: AsyncSession,
+    user: User,
+    tenant_id: int = None,
+) -> list[int]:
+    """Resolve which tenant IDs to filter by.
+
+    Use this in EVERY endpoint with optional tenant_id to prevent data leakage.
+    Returns list of allowed tenant IDs for the query WHERE clause.
+
+    - If tenant_id provided: validates access, returns [tenant_id]
+    - If not provided: returns user's assigned tenant IDs
+    - If user has no tenants: returns [-1] (matches nothing)
+    """
+    if tenant_id:
+        await require_tenant_access(db, tenant_id, user)
+        return [tenant_id]
+
+    allowed = await get_user_tenant_ids(db, user)
+    return allowed if allowed else [-1]
+
+
 async def assign_user_to_tenant(
     db: AsyncSession,
     user_id: int,

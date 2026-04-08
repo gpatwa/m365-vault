@@ -25,9 +25,10 @@ async def list_backup_jobs(
     current_user: User = Depends(get_current_user),
 ):
     """List backup jobs with filtering, sorting, search, and pagination."""
-    stmt = select(BackupJob)
-    if tenant_id:
-        stmt = stmt.where(BackupJob.tenant_id == tenant_id)
+    from app.services.auth import resolve_tenant_filter
+    allowed = await resolve_tenant_filter(db, current_user, tenant_id)
+
+    stmt = select(BackupJob).where(BackupJob.tenant_id.in_(allowed))
     if status:
         stmt = stmt.where(BackupJob.status == status)
     if workload_type:

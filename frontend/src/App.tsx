@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { OnboardingProvider } from './contexts/OnboardingContext';
 import { TenantProvider } from './contexts/TenantContext';
@@ -67,49 +66,50 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function RootRoute() {
   const { isAuthenticated } = useAuth();
   if (!isAuthenticated) return <Landing />;
-  return <ProtectedRoute><Layout /></ProtectedRoute>;
+  return <ProtectedRoute><TenantGate /></ProtectedRoute>;
 }
 
-/** Smart redirect: checks user state and routes to the right experience */
+/**
+ * TenantGate — Enterprise pattern: before first connection, the entire app IS the onboarding wizard.
+ * No sidebar, no dashboard, no pages. Just "Connect Microsoft 365".
+ *
+ * After connecting: full Layout with sidebar + all pages.
+ * Server-driven: reads from /auth/session, not localStorage.
+ */
+function TenantGate() {
+  const { data: session, isLoading } = useQuery({
+    queryKey: ['session-gate'],
+    queryFn: () => api.get<any>('/auth/session'),
+    staleTime: 60000,
+    retry: false,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  // Server says user has no tenants → show onboard wizard (no Layout, no sidebar)
+  if (session?.redirect) {
+    // Demo user → demo onboard, others → fast onboard
+    if (session.onboarding_status === 'demo') {
+      sessionStorage.setItem('kavachiq_onboard_mode', 'demo');
+      return <Navigate to="/onboard/demo" replace />;
+    }
+    sessionStorage.setItem('kavachiq_onboard_mode', 'fast');
+    return <Navigate to="/onboard" replace />;
+  }
+
+  // User has tenants → full app
+  return <Layout />;
+}
+
+/** SmartHome — simplified. TenantGate handles routing.
+ * By the time SmartHome renders, user is authenticated AND has tenants. */
 function SmartHome() {
-  const [checked, setChecked] = useState(false);
-  const [redirect, setRedirect] = useState<string | null>(null);
-
-  useEffect(() => {
-    console.log('[KavachIQ:SmartHome] mounted, token:', !!api.getToken());
-
-    // Server-driven routing via /auth/session.
-    // ONE call. Server returns everything. Zero client-side state decisions.
-    api.get<any>('/auth/session')
-      .then((session) => {
-        console.log(`[KavachIQ:SmartHome] user=${session?.user?.username} status=${session?.routing?.onboarding_status} redirect=${session?.routing?.redirect}`);
-
-        // Server tells us exactly where to go
-        if (session?.routing?.redirect) {
-          // Set onboard mode for wizard UI (only state we keep in sessionStorage)
-          sessionStorage.setItem('kavachiq_onboard_mode',
-            session.routing.onboarding_status === 'demo' ? 'demo' : 'fast');
-          setRedirect(session.routing.redirect);
-          return;
-        }
-
-        // MSP user → MSP dashboard
-        if (session?.user?.role === 'msp_admin') {
-          setRedirect('/msp');
-          return;
-        }
-
-        // User has tenants, onboarding complete → show dashboard
-        setChecked(true);
-      })
-      .catch((err) => {
-        console.error('[KavachIQ:SmartHome] session failed:', err?.message);
-        setRedirect('/login');
-      });
-  }, []);
-
-  if (redirect) return <Navigate to={redirect} replace />;
-  if (!checked) return null;
   return <Dashboard />;
 }
 

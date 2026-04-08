@@ -52,14 +52,12 @@ export function useTenantSwitcher() {
     staleTime: 60000,
   });
 
-  // Read saved selection from server (via session query or local cache)
-  // Only fetch session if user has a token (prevents 401 loop on login page)
-  const hasToken = !!api.getToken();
+  // Read saved selection from the SHARED session query (same ['session'] queryKey
+  // as AuthContext). React Query deduplicates — zero extra API calls.
   const { data: sessionData } = useQuery({
     queryKey: ['session'],
     queryFn: () => api.get<any>('/auth/session'),
-    staleTime: 300000, // 5 min cache
-    enabled: hasToken, // Don't fire when not authenticated
+    staleTime: 60_000, // Match AuthContext staleTime (single source of truth)
   });
 
   const serverSelectedId = sessionData?.preferences?.selected_tenant

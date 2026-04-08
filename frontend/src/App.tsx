@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { OnboardingProvider } from './contexts/OnboardingContext';
 import { TenantProvider } from './contexts/TenantContext';
@@ -7,7 +7,6 @@ import { BrandingProvider } from './contexts/BrandingContext';
 import { FeatureFlagProvider } from './contexts/FeatureFlagContext';
 import { ToastProvider } from './components/Toast';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { api } from './api/client';
 import Layout from './components/Layout';
 import Landing from './pages/Landing';
 import Tour from './pages/Tour';
@@ -87,18 +86,12 @@ function RootRoute() {
 
 /**
  * TenantGate — Enterprise pattern: before first connection, the entire app IS the onboarding wizard.
- * No sidebar, no dashboard, no pages. Just "Connect Microsoft 365".
  *
- * After connecting: full Layout with sidebar + all pages.
- * Server-driven: reads from /auth/session, not localStorage.
+ * PERFORMANCE: Reads from the SHARED session in AuthContext (queryKey: ['session']).
+ * No duplicate API call — AuthContext already fetched it. Zero additional latency.
  */
 function TenantGate() {
-  const { data: session, isLoading } = useQuery({
-    queryKey: ['session-gate'],
-    queryFn: () => api.get<any>('/auth/session'),
-    staleTime: 60000,
-    retry: false,
-  });
+  const { session, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -110,7 +103,6 @@ function TenantGate() {
 
   // Server says user has no tenants → show onboard wizard (no Layout, no sidebar)
   if (session?.redirect) {
-    // Demo user → demo onboard, others → fast onboard
     if (session.onboarding_status === 'demo') {
       sessionStorage.setItem('kavachiq_onboard_mode', 'demo');
       return <Navigate to="/onboard/demo" replace />;

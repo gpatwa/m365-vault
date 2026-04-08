@@ -42,12 +42,16 @@ async def enable_workloads(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_admin),
 ):
-    """Enable workloads for a tenant — links to per-workload SaaS app registrations.
+    """Enable workloads for a tenant — opt-in per workload, gated by subscription.
+
+    Lifecycle: disabled → ENABLED → discovered → protected.
+    This endpoint transitions workloads to ENABLED state.
 
     For each requested workload:
-    1. Looks up the SaaS-level per-workload app (auto-created at startup)
-    2. Creates a TenantWorkloadApp record linking this tenant to that app
-    3. Returns per-workload admin consent URLs for the customer to approve
+    1. Checks subscription tier allows enabling more workloads
+    2. Looks up the SaaS-level per-workload app (auto-created at startup)
+    3. Creates a TenantWorkloadApp record with lifecycle_status='enabled'
+    4. Returns per-workload admin consent URLs for the customer to approve
 
     The customer only consents to the workloads they need. Each consent URL
     grants permissions for exactly ONE workload.
@@ -60,6 +64,14 @@ async def enable_workloads(
     invalid = set(req.workloads) - VALID_WORKLOADS
     if invalid:
         raise HTTPException(400, detail=f"Invalid workloads: {invalid}. Valid: {VALID_WORKLOADS}")
+
+    # Subscription gate: check if tenant can enable more workloads
+    from app.services.workload_lifecycle import check_subscription_limit
+    from app.config import settings as _cfg
+    tier = getattr(_cfg, "LICENSE_TIER", "professional")
+    allowed, reason = await check_subscription_limit(db, tenant_id, tier)
+    if not allowed:
+        raise HTTPException(403, detail=reason)
 
     from app.services.app_provisioning import WORKLOAD_PERMISSIONS, get_workload_permissions
     from app.services.workload_bootstrap import get_all_saas_workload_apps
@@ -107,13 +119,15 @@ async def enable_workloads(
             logger.error(f"Cannot enable {workload}: no SaaS app and no legacy credentials")
             continue
 
-        # Create workload app record
+        # Create workload app record with lifecycle_status=enabled
+        from app.models.tenant_workload_app import WorkloadLifecycle
         wl_app = TenantWorkloadApp(
             tenant_id=tenant_id,
             workload=workload,
             client_id=client_id,
             client_secret_encrypted=client_secret_encrypted,
             consent_status=consent_status,
+            lifecycle_status=WorkloadLifecycle.ENABLED.value,
             permissions_requested=json.dumps(sorted(perms)),
             backup_ready=backup_ready,
             restore_ready=restore_ready,
@@ -172,6 +186,7 @@ async def list_workloads(
                 "id": app.id,
                 "workload": app.workload,
                 "consent_status": app.consent_status,
+                "lifecycle_status": app.lifecycle_status or "disabled",
                 "backup_ready": bool(app.backup_ready),
                 "restore_ready": bool(app.restore_ready),
                 "enabled": bool(app.enabled),
@@ -256,20 +271,25 @@ async def disable_workload(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_admin),
 ):
-    """Disable a workload — stops backups but keeps the app."""
+    """Disable a workload — transitions to DISABLED, stops backups, keeps data."""
     from app.services.credential_resolver import get_workload_app
     wl_app = await get_workload_app(db, tenant_id, workload)
     if not wl_app:
         raise HTTPException(404, detail=f"Workload '{workload}' not configured")
 
+    # Lifecycle transition: any state → DISABLED
+    from app.services.workload_lifecycle import transition_workload
+    from app.models.tenant_workload_app import WorkloadLifecycle
+    transitioned = await transition_workload(db, tenant_id, workload, WorkloadLifecycle.DISABLED)
+
     wl_app.enabled = 0
     await audit_log(
         db, action="workload.disabled", resource_type="tenant",
         resource_id=tenant_id, user_id=current_user.id,
-        details=f"Disabled workload: {workload}",
+        details=f"Disabled workload: {workload} (lifecycle transitioned: {transitioned})",
     )
     await db.commit()
-    return {"workload": workload, "enabled": False}
+    return {"workload": workload, "enabled": False, "lifecycle_status": "disabled"}
 
 
 @router.delete("/{tenant_id}/workloads/{workload}")

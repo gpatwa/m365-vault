@@ -30,9 +30,32 @@ async def get_summary(
     allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
     tenant_count = len([t for t in allowed_ids if t > 0])
 
-    # Protection stats by workload — scoped to user's tenants
+    # Get enabled workloads across user's tenants — only show workloads that are opted-in
+    from app.services.workload_lifecycle import get_enabled_workloads
+    all_enabled_workloads = set()
+    for tid in [t for t in allowed_ids if t > 0]:
+        enabled = await get_enabled_workloads(db, tid)
+        all_enabled_workloads.update(enabled)
+
+    # Map workload keys to WorkloadType enum values for filtering
+    _workload_key_to_enum = {
+        "exchange": WorkloadType.EXCHANGE,
+        "onedrive": WorkloadType.ONEDRIVE,
+        "sharepoint": WorkloadType.SHAREPOINT,
+        "teams": WorkloadType.TEAMS,
+        "entra_id": WorkloadType.ENTRA_ID,
+    }
+
+    # Protection stats by workload — only count ENABLED+ workloads
+    # If no workloads enabled (new install), fall back to showing all (backward compat)
+    workload_types_to_show = (
+        [_workload_key_to_enum[k] for k in all_enabled_workloads if k in _workload_key_to_enum]
+        if all_enabled_workloads
+        else list(WorkloadType)
+    )
+
     workload_stats = {}
-    for wt in WorkloadType:
+    for wt in workload_types_to_show:
         stmt = select(ProtectedObject).where(ProtectedObject.workload_type == wt)
         stmt = stmt.where(ProtectedObject.tenant_id.in_(allowed_ids))
 

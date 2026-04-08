@@ -54,6 +54,7 @@ import BillingPortal from './pages/BillingPortal';
 import BulkOnboard from './pages/BulkOnboard';
 import MSPDemo from './pages/MSPDemo';
 import FeatureFlagsPage from './pages/FeatureFlags';
+import RoleGate from './components/RoleGate';
 
 const queryClient = new QueryClient();
 
@@ -157,14 +158,14 @@ function AppRoutes() {
         <Route path="entra-id" element={<EntraID />} />
         <Route path="sla-policies" element={<SLAPolicies />} />
         <Route path="jobs" element={<Jobs />} />
-        <Route path="tenants" element={<Tenants />} />
+        <Route path="tenants" element={<RoleGate roles={['platform_admin', 'admin']}><Tenants /></RoleGate>} />
         <Route path="settings" element={<Organization />} />
-        <Route path="msp" element={<MSPDashboard />} />
-        <Route path="msp/branding" element={<MSPBrandingPage />} />
-        <Route path="msp/billing" element={<BillingPortal />} />
-        <Route path="msp/onboard" element={<BulkOnboard />} />
-        <Route path="msp/demo" element={<MSPDemo />} />
-        <Route path="features" element={<FeatureFlagsPage />} />
+        <Route path="msp" element={<RoleGate roles={['platform_admin', 'msp_admin', 'admin']}><MSPDashboard /></RoleGate>} />
+        <Route path="msp/branding" element={<RoleGate roles={['platform_admin', 'msp_admin', 'admin']}><MSPBrandingPage /></RoleGate>} />
+        <Route path="msp/billing" element={<RoleGate roles={['platform_admin', 'msp_admin', 'admin']}><BillingPortal /></RoleGate>} />
+        <Route path="msp/onboard" element={<RoleGate roles={['platform_admin', 'msp_admin', 'admin']}><BulkOnboard /></RoleGate>} />
+        <Route path="msp/demo" element={<RoleGate roles={['platform_admin', 'msp_admin', 'admin']}><MSPDemo /></RoleGate>} />
+        <Route path="features" element={<RoleGate roles={['platform_admin', 'admin']}><FeatureFlagsPage /></RoleGate>} />
         <Route path="audit" element={<AuditLog />} />
         <Route path="failed-items" element={<FailedItems />} />
         <Route path="alerts" element={<AlertSettings />} />

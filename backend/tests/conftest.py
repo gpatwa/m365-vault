@@ -12,6 +12,7 @@ os.environ["STORAGE_BACKEND"] = "local"
 os.environ["STORAGE_LOCAL_PATH"] = "/tmp/kavachiq-test-storage"
 os.environ["DISPATCH_MODE"] = "in_process"
 os.environ["ENCRYPTION_MASTER_KEY"] = "dGVzdC1tYXN0ZXIta2V5LWZvci10ZXN0aW5nLW9ubHk="
+os.environ["RATE_LIMIT_REQUESTS_PER_MINUTE"] = "0"  # Disable rate limiting in tests
 
 from app.database import Base, engine, async_session
 from app.main import app

@@ -493,26 +493,36 @@ async def complete_onboarding(
     if not tenant:
         raise KavachIQError(CONNECTOR_TENANT_NOT_FOUND, detail="Tenant not found in database")
 
-    # Auto-create default SLA policy if none provided or doesn't exist
+    # SLA policy selection — use provided SLA or find first existing one.
+    # Do NOT auto-create a 24h default. Customer must explicitly choose their schedule.
     sla_id = req.sla_policy_id
     if req.protect_all:
         from app.models.sla_policy import SLAPolicy
         if sla_id:
             existing_sla = await db.get(SLAPolicy, sla_id)
             if not existing_sla:
-                sla_id = None  # Will create default below
+                sla_id = None
         if not sla_id:
-            # Create a default daily SLA policy for this tenant
-            default_sla = SLAPolicy(
-                name=f"Daily Backup - {tenant.name}",
-                backup_frequency_hours=24,
-                retention_days=30,
-                is_active=1,
-            )
-            db.add(default_sla)
-            await db.flush()  # Get the ID
-            sla_id = default_sla.id
-            logger.info(f"Created default SLA policy {sla_id} for tenant {req.tenant_id}")
+            # Use first existing active SLA policy (don't create a new default)
+            from sqlalchemy import select as _sel
+            first_sla = (await db.execute(
+                _sel(SLAPolicy).where(SLAPolicy.is_active == 1).order_by(SLAPolicy.id).limit(1)
+            )).scalar_one_or_none()
+            if first_sla:
+                sla_id = first_sla.id
+                logger.info(f"Using existing SLA policy {sla_id} ({first_sla.name}) for tenant {req.tenant_id}")
+            else:
+                # Only create default as last resort (fresh install, no SLAs exist)
+                default_sla = SLAPolicy(
+                    name=f"Daily Backup - {tenant.name}",
+                    backup_frequency_hours=24,
+                    retention_days=30,
+                    is_active=1,
+                )
+                db.add(default_sla)
+                await db.flush()
+                sla_id = default_sla.id
+                logger.info(f"Created default SLA policy {sla_id} for tenant {req.tenant_id} (no existing SLAs)")
 
     # Assign SLA policy to unprotected objects (optionally filtered by workload)
     if req.protect_all and sla_id:

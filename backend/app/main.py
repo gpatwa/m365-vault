@@ -512,6 +512,9 @@ app.include_router(restore_consent_router)
 from app.api.workload_apps import router as workload_apps_router
 app.include_router(workload_apps_router)
 
+from app.api.ediscovery import router as ediscovery_router
+app.include_router(ediscovery_router)
+
 
 @app.get("/")
 async def root():

@@ -165,10 +165,45 @@ async def refresh_token(req: RefreshRequest, db: AsyncSession = Depends(get_db))
     )
 
 
-@router.get("/me", response_model=UserResponse)
-async def get_me(current_user: User = Depends(get_current_user)):
-    """Get current authenticated user info."""
-    return current_user
+@router.get("/me")
+async def get_me(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get current user info + tenant context + onboarding status.
+
+    Enterprise pattern: server is the source of truth for routing.
+    Frontend uses this response to decide: dashboard vs onboard vs demo.
+    No sessionStorage hacks needed.
+    """
+    from app.services.auth import get_user_tenant_ids
+
+    tenant_ids = await get_user_tenant_ids(db, current_user)
+    has_tenants = len(tenant_ids) > 0
+
+    # Server decides the routing — client just follows
+    if has_tenants:
+        onboarding_status = "complete"
+        redirect = None
+    elif current_user.username == "demo":
+        onboarding_status = "demo"
+        redirect = "/onboard/demo"
+    else:
+        onboarding_status = "pending"
+        redirect = "/onboard"
+
+    return {
+        "id": current_user.id,
+        "username": current_user.username,
+        "email": current_user.email,
+        "full_name": current_user.full_name,
+        "role": current_user.role.value,
+        "is_platform_admin": current_user.username == "admin",
+        "has_tenants": has_tenants,
+        "tenant_count": len(tenant_ids),
+        "onboarding_status": onboarding_status,
+        "redirect": redirect,
+    }
 
 
 # ── Password Reset + Email Verification ──

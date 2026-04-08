@@ -43,12 +43,16 @@ echo -e "${CYAN}═══ KAVACHIQ LOCAL INTEGRATION TEST ═══${NC}"
 echo ""
 
 # ─────────────────────────────────────────────────────
-# Phase 1: Unit Tests (fast, no Docker needed)
+# Phase 1: Unit Tests (runs inside Docker for consistent environment)
 # ─────────────────────────────────────────────────────
 echo -e "${CYAN}── Phase 1: Unit Tests ──${NC}"
 cd "$(dirname "$0")/.."
 
-UNIT_RESULT=$(python3 -m pytest backend/tests/test_restore_permissions.py backend/tests/test_restore_consent.py backend/tests/test_workload_apps.py backend/tests/test_workload_e2e.py -q --tb=line 2>&1 | tail -1)
+# Run tests inside Docker container (consistent Python + deps)
+UNIT_RESULT=$(docker compose run --rm --workdir /app \
+  -v "$(pwd)/backend/tests:/app/tests" \
+  -v "$(pwd)/backend/app:/app/app" \
+  backend bash -c "pip install pytest pytest-asyncio httpx -q 2>/dev/null && python -m pytest tests/test_self_healing.py tests/test_worker_registry.py tests/test_exchange_gaps.py tests/test_entra_restore.py tests/test_workload_apps.py tests/test_tenant_isolation.py -q --tb=line 2>&1" | tail -1)
 if echo "$UNIT_RESULT" | grep -q "passed"; then
   PASSED_COUNT=$(echo "$UNIT_RESULT" | grep -oE "[0-9]+ passed" | grep -oE "[0-9]+")
   check "Unit tests" "$UNIT_RESULT" "passed"

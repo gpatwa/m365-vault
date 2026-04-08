@@ -95,7 +95,7 @@ test-unit: ## Run unit tests only (fast, no Docker)
 	@python3 -m pytest backend/tests/test_restore_permissions.py backend/tests/test_restore_consent.py backend/tests/test_workload_apps.py backend/tests/test_workload_e2e.py -q --tb=short
 
 .PHONY: release
-release: test-local acr-push safe-deploy e2e-test ## Full release: local test → build → deploy → verify
+release: test-local safe-deploy e2e-test ## Full release: local test → build+deploy → verify
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "  ✅ RELEASE COMPLETE — tested locally + deployed + verified"

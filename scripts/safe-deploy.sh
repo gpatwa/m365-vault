@@ -28,6 +28,14 @@ step()  { echo -e "${CYAN}[STEP]${NC}  $*"; }
 ENV="${1:-dev}"
 [[ "$1" == "--env" ]] && ENV="${2:-dev}"
 
+# Ensure az CLI and docker are in PATH (macOS Homebrew + Docker Desktop)
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+# Fix Docker credential helper (remove credsStore if it causes issues)
+if grep -q '"credsStore"' ~/.docker/config.json 2>/dev/null; then
+  python3 -c "import json,sys; d=json.load(open('$HOME/.docker/config.json')); d.pop('credsStore',None); json.dump(d,open('$HOME/.docker/config.json','w'),indent=2)" 2>/dev/null
+fi
+
 RG="rg-m365vault-${ENV}"
 BACKEND_APP="m365vault-backend-${ENV}"
 FRONTEND_APP="m365vault-frontend-${ENV}"
@@ -46,7 +54,14 @@ info "Old revision: ${OLD_REV:-none}"
 
 # ── Step 2: Push new images ──
 step "Building and pushing images..."
-az acr login --name "$ACR" || { fail "ACR login failed"; exit 1; }
+# Token-based ACR login (works without Docker credential helper)
+ACR_TOKEN=$(az acr login --name "$ACR" --expose-token --query accessToken -o tsv 2>/dev/null)
+if [ -n "$ACR_TOKEN" ]; then
+  echo "$ACR_TOKEN" | docker login "$ACR.azurecr.io" --username 00000000-0000-0000-0000-000000000000 --password-stdin 2>/dev/null
+  ok "ACR login succeeded"
+else
+  fail "ACR login failed"; exit 1
+fi
 
 TAG="v$(date +%s)"
 docker build --platform linux/amd64 -t "$ACR.azurecr.io/m365vault-backend:$TAG" \

@@ -318,7 +318,7 @@ async def oauth_callback(
             await _delete_state(f"onboard:{state}")  # One-time use
             platform = state_data.get("platform", "microsoft365")
             onboard_mode = state_data.get("mode", "fast")
-        connecting_user_id = state_data.get("user_id")
+            connecting_user_id = state_data.get("user_id")
 
     try:
         connector = get_connector(platform)
@@ -338,8 +338,13 @@ async def oauth_callback(
         )
         existing_tenant = existing.scalar_one_or_none()
         if existing_tenant:
+            # Auto-assign connecting user to this tenant (idempotent)
+            if connecting_user_id:
+                from app.services.auth import assign_user_to_tenant
+                await assign_user_to_tenant(db, connecting_user_id, existing_tenant.id, role="owner", is_default=True)
+                logger.info(f"Assigned user {connecting_user_id} to existing tenant {existing_tenant.id}")
+
             # Re-run discovery on reconnect to refresh counts
-            # This ensures per-workload permissions are validated
             try:
                 from app.services.discovery import DiscoveryService
                 discovery = DiscoveryService(db)

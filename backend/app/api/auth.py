@@ -192,6 +192,13 @@ async def get_me(
         onboarding_status = "pending"
         redirect = "/onboard"
 
+    # Load user preferences from DB
+    from app.models.user_preference import UserPreference
+    prefs_result = await db.execute(
+        select(UserPreference).where(UserPreference.user_id == current_user.id)
+    )
+    preferences = {p.key: p.value for p in prefs_result.scalars().all()}
+
     return {
         "id": current_user.id,
         "username": current_user.username,
@@ -203,7 +210,67 @@ async def get_me(
         "tenant_count": len(tenant_ids),
         "onboarding_status": onboarding_status,
         "redirect": redirect,
+        "preferences": preferences,
     }
+
+
+@router.get("/session")
+async def get_session(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Full user session — returns everything the frontend needs.
+
+    Single call on app load. Server is the source of truth for:
+    routing, tenant context, preferences, feature flags.
+    Frontend makes zero localStorage/sessionStorage decisions.
+    """
+    # Reuse /me logic
+    me_response = await get_me(current_user=current_user, db=db)
+    return me_response
+
+
+class PreferenceUpdate(BaseModel):
+    value: str
+
+
+@router.put("/preferences/{key}")
+async def set_preference(
+    key: str,
+    req: PreferenceUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Set a user preference. Persists across devices and sessions."""
+    from app.models.user_preference import UserPreference
+
+    # Upsert preference
+    result = await db.execute(
+        select(UserPreference).where(
+            UserPreference.user_id == current_user.id,
+            UserPreference.key == key,
+        )
+    )
+    pref = result.scalar_one_or_none()
+    if pref:
+        pref.value = req.value
+    else:
+        db.add(UserPreference(user_id=current_user.id, key=key, value=req.value))
+    await db.commit()
+    return {"key": key, "value": req.value}
+
+
+@router.get("/preferences")
+async def get_preferences(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get all user preferences."""
+    from app.models.user_preference import UserPreference
+    result = await db.execute(
+        select(UserPreference).where(UserPreference.user_id == current_user.id)
+    )
+    return {p.key: p.value for p in result.scalars().all()}
 
 
 @router.get("/session")

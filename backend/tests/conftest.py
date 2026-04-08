@@ -27,9 +27,8 @@ def event_loop():
 @pytest_asyncio.fixture(autouse=True)
 async def setup_database():
     """Create tables before each test, drop after. Clear rate limiter."""
-    # Clear rate limiter between tests to prevent 429 errors
-    from app.main import _rate_limit_store
-    _rate_limit_store.clear()
+    # Rate limiter moved to Redis — no in-memory store to clear
+    # Redis state is isolated per test via TTL (tests use fresh keys)
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

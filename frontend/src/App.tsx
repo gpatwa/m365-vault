@@ -78,39 +78,40 @@ function SmartHome() {
   useEffect(() => {
     console.log('[KavachIQ:SmartHome] mounted, token:', !!api.getToken());
 
-    // Route users based on their role and purpose
+    // Route users based on their role, tenant ownership, and purpose.
+    // Data-driven: check if user HAS tenants, not username-based hacks.
     api.get<any>('/auth/me')
-      .then(user => {
-        // Demo user → 7-step showcase with pre-loaded MSFT Dev Tenant
-        if (user?.username === 'demo' && !sessionStorage.getItem('demo_onboard_complete')) {
-          console.log('[KavachIQ:SmartHome] → demo user, redirect /onboard/demo');
+      .then(async (user) => {
+        // Check if user has any connected tenants
+        let hasTenants = false;
+        try {
+          const tenants = await api.get<any[]>('/tenants/');
+          hasTenants = Array.isArray(tenants) && tenants.length > 0;
+        } catch { /* no tenants = needs onboarding */ }
+
+        // Demo user WITHOUT tenants → 7-step showcase
+        if (user?.username === 'demo' && !hasTenants) {
+          console.log('[KavachIQ:SmartHome] → demo user (no tenants), redirect /onboard/demo');
           sessionStorage.setItem('kavachiq_onboard_mode', 'demo');
           setRedirect('/onboard/demo');
           return;
         }
-        // Prospect user → 4-step fast flow, connects their own tenant
-        if (user?.username === 'prospect' && !sessionStorage.getItem('demo_onboard_complete')) {
-          console.log('[KavachIQ:SmartHome] → prospect user, redirect /onboard (fast)');
+        // Any user WITHOUT tenants → onboard (fast flow)
+        if (!hasTenants && user?.username !== 'admin') {
+          console.log('[KavachIQ:SmartHome] → user has no tenants, redirect /onboard');
           sessionStorage.setItem('kavachiq_onboard_mode', 'fast');
           setRedirect('/onboard');
           return;
         }
+        // User HAS tenants → go to dashboard (no redirect loop)
         if (user?.username === 'msp' || user?.role === 'msp_admin') {
           console.log('[KavachIQ:SmartHome] → MSP user, redirect /msp');
           setRedirect('/msp');
           return;
         }
-        // Normal user (admin/operator/viewer) — check tenants
-        return api.get<any[]>('/tenants/');
-      })
-      .then(tenants => {
-        if (!tenants) return; // demo user already redirected
-        console.log('[KavachIQ:SmartHome] tenants:', tenants?.length);
-        if (!tenants || tenants.length === 0) {
-          setRedirect('/onboard');
-        } else {
-          setChecked(true);
-        }
+        // User has tenants → show dashboard
+        console.log('[KavachIQ:SmartHome] → user has tenants, showing dashboard');
+        setChecked(true);
       })
       .catch((err) => {
         console.error('[KavachIQ:SmartHome] catch:', err?.message);

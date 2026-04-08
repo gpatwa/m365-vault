@@ -208,7 +208,7 @@ export default function Organization() {
   const { user } = useAuth();
   const toast = useToast();
 
-  const [checkingPerms, setCheckingPerms] = useState(false);
+  // permFetching derived from React Query's isFetching — no separate state needed
   const [disableTarget, setDisableTarget] = useState<string | null>(null);
   const [enablingWorkload, setEnablingWorkload] = useState<string | null>(null);
 
@@ -216,28 +216,38 @@ export default function Organization() {
 
   /* ---- Queries ---- */
 
+  /* ---- Queries (performance-optimized) ----
+   *
+   * The /permissions endpoint calls Microsoft Graph API per workload (5-15s).
+   * It MUST NOT fire on page load — only on manual "Verify Connection" click.
+   * All other queries use staleTime to avoid refetching on every navigation.
+   */
+
   const { data: tenant, isLoading: tenantLoading } = useQuery({
     queryKey: ['org-tenant', selectedTenant?.id],
     queryFn: () => api.get<any>(`/tenants/${selectedTenant?.id}`),
     enabled: !!selectedTenant?.id,
+    staleTime: 60_000, // 1 min — tenant data rarely changes
   });
 
-  const { data: permStatus, refetch: recheckPerms } = useQuery({
+  // LAZY: permissions check calls Microsoft Graph (slow!) — only on button click
+  const { data: permStatus, refetch: recheckPerms, isFetching: permFetching } = useQuery({
     queryKey: ['org-perms', selectedTenant?.id],
     queryFn: () => api.get<any>(`/tenants/${selectedTenant?.id}/permissions`),
-    enabled: !!selectedTenant?.id,
+    enabled: false, // NEVER auto-fetch — only via refetch() on button click
     retry: false,
+    staleTime: 300_000, // 5 min — permissions don't change without user action
   });
 
   const {
     data: workloadData,
     isLoading: workloadsLoading,
-    isError: _workloadsError,
   } = useQuery({
     queryKey: ['workload-statuses', selectedTenant?.id],
     queryFn: () => api.get<WorkloadStatusResponse>(`/tenants/${selectedTenant?.id}/workloads`),
     enabled: !!selectedTenant?.id,
     retry: false,
+    staleTime: 60_000, // 1 min — lifecycle changes only on user action
   });
 
   const { data: subscription } = useQuery({
@@ -245,6 +255,7 @@ export default function Organization() {
     queryFn: () => api.get<SubscriptionInfo>(`/billing/subscription?tenant_id=${selectedTenant?.id}`),
     enabled: !!selectedTenant?.id,
     retry: false,
+    staleTime: 300_000, // 5 min — subscription doesn't change often
   });
 
   /* ---- Mutations ---- */
@@ -287,13 +298,8 @@ export default function Organization() {
 
   /* ---- Handlers ---- */
 
-  const handleCheckPermissions = async () => {
-    setCheckingPerms(true);
-    try {
-      await recheckPerms();
-    } finally {
-      setCheckingPerms(false);
-    }
+  const handleCheckPermissions = () => {
+    recheckPerms(); // Fires the lazy query — permFetching tracks loading state
   };
 
   const handleEnable = (workload: string) => {
@@ -397,10 +403,10 @@ export default function Organization() {
           {isReallyConnected ? (
             <button
               onClick={handleCheckPermissions}
-              disabled={checkingPerms}
+              disabled={permFetching}
               className="px-3 py-1.5 text-sm border border-border rounded-lg hover:bg-accent transition-colors flex items-center gap-1.5"
             >
-              {checkingPerms ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+              {permFetching ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
               Verify Connection
             </button>
           ) : (

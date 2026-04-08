@@ -142,8 +142,36 @@ if [ -n "$OLD_REV" ]; then
   fi
 fi
 
+# ── Step 7: Purge Cloudflare CDN cache ──
+# Vite hashes JS/CSS filenames (cache-safe), but index.html must be fresh
+# so browsers fetch the new HTML which references new hashed bundles.
+# Without this, Cloudflare serves stale index.html → old JS → old code.
+CF_ZONE_ID="${CLOUDFLARE_ZONE_ID:-}"
+CF_API_TOKEN="${CLOUDFLARE_API_TOKEN:-}"
+
+if [ -n "$CF_ZONE_ID" ] && [ -n "$CF_API_TOKEN" ]; then
+  step "Purging Cloudflare CDN cache (index.html + config.js)..."
+  CF_RESP=$(curl -sf -X POST \
+    "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/purge_cache" \
+    -H "Authorization: Bearer ${CF_API_TOKEN}" \
+    -H "Content-Type: application/json" \
+    --data '{"files":["https://kavachiq.com/","https://kavachiq.com/index.html","https://kavachiq.com/config.js","https://kavachiq.com/settings","https://kavachiq.com/login"]}' \
+    2>/dev/null)
+  if echo "$CF_RESP" | grep -q '"success":true'; then
+    ok "Cloudflare cache purged (HTML files only — hashed assets stay cached)"
+  else
+    warn "Cloudflare cache purge failed (deploy succeeded, but users may see stale UI for a few minutes)"
+    warn "Response: $(echo "$CF_RESP" | head -c 200)"
+    warn "Set CLOUDFLARE_ZONE_ID and CLOUDFLARE_API_TOKEN to enable automatic cache purge"
+  fi
+else
+  warn "Cloudflare cache purge skipped — set CLOUDFLARE_ZONE_ID + CLOUDFLARE_API_TOKEN env vars"
+  info "Without this, users may see stale frontend for up to 4 hours after deploy"
+fi
+
 echo ""
 echo -e "${GREEN}═══ Deploy Complete ═══${NC}"
 echo -e "  Backend:  https://$BACKEND_URL"
+echo -e "  Frontend: https://kavachiq.com"
 echo -e "  Image:    $TAG"
 echo ""

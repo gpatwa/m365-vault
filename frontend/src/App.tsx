@@ -28,6 +28,7 @@ import SSOCallback from './pages/SSOCallback';
 import AlertSettings from './pages/AlertSettings';
 import SmartEngine from './pages/SmartEngine';
 import Search from './pages/Search';
+import EDiscovery from './pages/eDiscovery';
 import SelfRestore from './pages/SelfRestore';
 import Recovery from './pages/Recovery';
 import Reports from './pages/Reports';
@@ -170,6 +171,7 @@ function AppRoutes() {
         <Route path="failed-items" element={<FailedItems />} />
         <Route path="alerts" element={<AlertSettings />} />
         <Route path="search" element={<Search />} />
+        <Route path="ediscovery" element={<EDiscovery />} />
         <Route path="smart-engine" element={<SmartEngine />} />
         <Route path="agent-shield" element={<AgentShield />} />
         <Route path="restore" element={<SelfRestore />} />

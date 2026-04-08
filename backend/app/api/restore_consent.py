@@ -1,14 +1,16 @@
-"""Delegated Restore Consent — admin authenticates to grant write permissions for restore.
+"""Delegated Restore Consent — admin authenticates to grant write permissions.
+
+Enterprise pattern: all state in Redis (survives pod restart, works cross-pod).
+Tokens stored with TTL — auto-expire, no cleanup needed.
+Zero standing write access — tokens discarded after restore completes.
 
 Flow:
-1. Admin clicks "Restore" → frontend calls GET /api/restore-consent/authorize?tenant_id=X
-2. Backend returns OAuth URL → frontend opens popup
-3. Admin signs in + consents to write scopes (Mail.ReadWrite, etc.)
-4. Microsoft redirects to /api/restore-consent/callback with auth code
-5. Backend exchanges code for access_token + refresh_token
-6. Tokens stored in-memory (tied to restore job) — NOT persisted
-7. Restore engine uses delegated token for write operations
-8. After restore completes, tokens discarded — zero standing write access
+1. Admin clicks "Restore" → GET /restore-consent/authorize?tenant_id=X
+2. Backend stores state in Redis, returns OAuth URL
+3. Admin consents in popup → Microsoft redirects to callback
+4. Backend exchanges code for tokens → stores in Redis (NOT DB)
+5. Restore engine retrieves token from Redis → executes restore
+6. After restore → token discarded from Redis
 """
 import logging
 import secrets
@@ -24,19 +26,18 @@ from app.models.user import User
 from app.models.tenant import Tenant
 from app.services.auth import get_current_user
 from app.services.audit import audit_log
+from app.services.redis_state import set_state, get_state, delete_state
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/restore-consent", tags=["Restore Consent"])
 
-# In-memory token store — keyed by state token, auto-expires
-# Format: { state: { tenant_id, user_id, access_token, refresh_token, expires_at, created_at } }
-_restore_tokens: dict[str, dict] = {}
+# Redis key prefix and TTL
+_PREFIX = "restore_consent:"
+_TTL = 7200  # 2 hours (covers long restores with auto-refresh)
 
 # Delegated scopes for restore (write permissions)
-# Delegated scopes for restore (write permissions)
-# Note: Do NOT include 'offline_access' here — MSAL adds it automatically
-# when the app requests it via the 'offline_access' scope in the Entra app config
+# Do NOT include 'offline_access' — MSAL adds it automatically
 RESTORE_DELEGATED_SCOPES = [
     "Mail.ReadWrite",
     "Calendars.ReadWrite",
@@ -61,17 +62,17 @@ async def start_restore_consent(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Start the OAuth delegated consent flow for restore.
+    """Start OAuth delegated consent flow for restore.
 
-    Returns an authorization URL that the frontend opens in a popup.
-    The admin signs in and consents to write permissions.
+    Returns authorization URL for frontend popup.
+    State stored in Redis with TTL (survives pod restart).
     """
     tenant = await db.get(Tenant, tenant_id)
     if not tenant:
         raise HTTPException(404, detail="Tenant not found")
 
     state = secrets.token_urlsafe(32)
-    redirect_uri = f"{settings.FRONTEND_URL}/restore/callback"
+    redirect_uri = f"{settings.BACKEND_URL}/api/restore-consent/callback"
 
     app = _get_msal_app(tenant.ms_tenant_id)
     auth_url = app.get_authorization_request_url(
@@ -80,14 +81,14 @@ async def start_restore_consent(
         redirect_uri=redirect_uri,
     )
 
-    # Store state for callback validation
-    _restore_tokens[state] = {
+    # Store state in Redis (not in-memory)
+    await set_state(f"{_PREFIX}{state}", {
         "tenant_id": tenant_id,
         "ms_tenant_id": tenant.ms_tenant_id,
         "user_id": current_user.id,
-        "created_at": datetime.utcnow(),
+        "created_at": datetime.utcnow().isoformat(),
         "status": "pending",
-    }
+    }, ttl_seconds=_TTL)
 
     await audit_log(
         db, action="restore.consent_started", resource_type="tenant",
@@ -97,44 +98,54 @@ async def start_restore_consent(
     )
     await db.commit()
 
-    return {
-        "auth_url": auth_url,
-        "state": state,
-    }
+    return {"auth_url": auth_url, "state": state}
 
 
 @router.get("/callback")
 async def restore_consent_callback(
+    request: Request,
     code: str = Query(None),
     state: str = Query(None),
     error: str = Query(None),
     error_description: str = Query(None),
     db: AsyncSession = Depends(get_db),
 ):
-    """Handle the OAuth callback after admin consents.
+    """Handle OAuth callback — exchange code for tokens, store in Redis.
 
-    Exchanges the auth code for access_token + refresh_token.
-    Tokens are stored in-memory only — never persisted to DB.
+    Supports both BFF (browser redirect) and API (JSON response).
     """
+    from fastapi.responses import RedirectResponse
+    from urllib.parse import urlencode
+
+    is_browser = "text/html" in request.headers.get("accept", "")
+
     if error:
         logger.warning(f"Restore consent denied: {error} — {error_description}")
-        if state and state in _restore_tokens:
-            _restore_tokens[state]["status"] = "denied"
+        if state:
+            entry = await get_state(f"{_PREFIX}{state}")
+            if entry:
+                entry["status"] = "denied"
+                await set_state(f"{_PREFIX}{state}", entry, ttl_seconds=_TTL)
+        if is_browser:
+            return RedirectResponse(f"{settings.FRONTEND_URL}/recovery?consent=denied")
         raise HTTPException(403, detail=f"Consent denied: {error_description or error}")
 
-    if not state or state not in _restore_tokens:
+    if not state:
+        raise HTTPException(400, detail="Missing state token")
+
+    entry = await get_state(f"{_PREFIX}{state}")
+    if not entry:
         raise HTTPException(400, detail="Invalid or expired state token")
 
-    token_entry = _restore_tokens[state]
-
-    # Check expiry (10 min max for consent flow)
-    if datetime.utcnow() - token_entry["created_at"] > timedelta(minutes=10):
-        del _restore_tokens[state]
+    # Check expiry (10 min for consent flow)
+    created = datetime.fromisoformat(entry["created_at"])
+    if datetime.utcnow() - created > timedelta(minutes=10):
+        await delete_state(f"{_PREFIX}{state}")
         raise HTTPException(410, detail="Consent flow expired. Please try again.")
 
     # Exchange code for tokens
-    redirect_uri = f"{settings.FRONTEND_URL}/restore/callback"
-    app = _get_msal_app(token_entry["ms_tenant_id"])
+    redirect_uri = f"{settings.BACKEND_URL}/api/restore-consent/callback"
+    app = _get_msal_app(entry["ms_tenant_id"])
 
     result = app.acquire_token_by_authorization_code(
         code=code,
@@ -145,23 +156,29 @@ async def restore_consent_callback(
     if "access_token" not in result:
         error_desc = result.get("error_description", "Token acquisition failed")
         logger.error(f"Restore token acquisition failed: {error_desc}")
-        token_entry["status"] = "failed"
+        entry["status"] = "failed"
+        await set_state(f"{_PREFIX}{state}", entry, ttl_seconds=_TTL)
         raise HTTPException(500, detail=f"Token acquisition failed: {error_desc[:100]}")
 
-    # Store tokens in-memory (NOT in DB)
-    token_entry["access_token"] = result["access_token"]
-    token_entry["refresh_token"] = result.get("refresh_token")
-    token_entry["expires_at"] = datetime.utcnow() + timedelta(seconds=result.get("expires_in", 3600))
-    token_entry["status"] = "ready"
+    # Store tokens in Redis (NOT in DB — zero persistence of write tokens)
+    entry["access_token"] = result["access_token"]
+    entry["refresh_token"] = result.get("refresh_token")
+    entry["expires_at"] = (datetime.utcnow() + timedelta(seconds=result.get("expires_in", 3600))).isoformat()
+    entry["status"] = "ready"
+    await set_state(f"{_PREFIX}{state}", entry, ttl_seconds=_TTL)
 
     logger.info(
-        f"Restore consent granted for tenant {token_entry['tenant_id']} "
-        f"by user {token_entry['user_id']} — token expires in {result.get('expires_in', 3600)}s"
+        f"Restore consent granted for tenant {entry['tenant_id']} "
+        f"by user {entry['user_id']} — token expires in {result.get('expires_in', 3600)}s"
     )
+
+    if is_browser:
+        params = urlencode({"consent": "success", "state": state})
+        return RedirectResponse(f"{settings.FRONTEND_URL}/recovery?{params}")
 
     return {
         "status": "ready",
-        "tenant_id": token_entry["tenant_id"],
+        "tenant_id": entry["tenant_id"],
         "expires_in": result.get("expires_in", 3600),
         "scopes": result.get("scope", ""),
     }
@@ -172,36 +189,37 @@ async def check_consent_status(
     state: str = Query(...),
     current_user: User = Depends(get_current_user),
 ):
-    """Check if the admin has completed the consent flow (polled by frontend)."""
-    if state not in _restore_tokens:
+    """Check if admin has completed consent (polled by frontend)."""
+    entry = await get_state(f"{_PREFIX}{state}")
+    if not entry:
         raise HTTPException(404, detail="State token not found or expired")
 
-    entry = _restore_tokens[state]
     return {
         "status": entry["status"],
         "tenant_id": entry["tenant_id"],
         "has_token": "access_token" in entry,
-        "expires_at": entry.get("expires_at", "").isoformat() if entry.get("expires_at") else None,
+        "expires_at": entry.get("expires_at"),
     }
 
 
 async def get_restore_token(state: str) -> str:
     """Get a valid delegated access token for restore operations.
 
-    Called by the restore engine. Automatically refreshes if expired.
-    Returns the access_token string or raises an error.
+    Called by restore engine. Auto-refreshes if near expiry.
+    Raises ValueError if token not found, expired, or refresh fails.
     """
-    if state not in _restore_tokens:
+    entry = await get_state(f"{_PREFIX}{state}")
+    if not entry:
         raise ValueError("No restore consent token found. Admin must authorize first.")
 
-    entry = _restore_tokens[state]
     if entry["status"] != "ready":
         raise ValueError(f"Restore consent not ready (status: {entry['status']})")
 
-    # Check if token needs refresh
-    if datetime.utcnow() >= entry["expires_at"] - timedelta(minutes=5):
+    # Check if token needs refresh (within 5 min of expiry)
+    expires_at = datetime.fromisoformat(entry["expires_at"])
+    if datetime.utcnow() >= expires_at - timedelta(minutes=5):
         if not entry.get("refresh_token"):
-            raise ValueError("Access token expired and no refresh token available. Admin must re-authorize.")
+            raise ValueError("Access token expired and no refresh token. Admin must re-authorize.")
 
         logger.info(f"Refreshing restore token for tenant {entry['tenant_id']}")
         app = _get_msal_app(entry["ms_tenant_id"])
@@ -212,35 +230,28 @@ async def get_restore_token(state: str) -> str:
 
         if "access_token" not in result:
             entry["status"] = "expired"
+            await set_state(f"{_PREFIX}{state}", entry, ttl_seconds=_TTL)
             raise ValueError(f"Token refresh failed: {result.get('error_description', 'unknown')}")
 
         entry["access_token"] = result["access_token"]
         entry["refresh_token"] = result.get("refresh_token", entry["refresh_token"])
-        entry["expires_at"] = datetime.utcnow() + timedelta(seconds=result.get("expires_in", 3600))
+        entry["expires_at"] = (datetime.utcnow() + timedelta(seconds=result.get("expires_in", 3600))).isoformat()
+        await set_state(f"{_PREFIX}{state}", entry, ttl_seconds=_TTL)
         logger.info(f"Restore token refreshed — new expiry in {result.get('expires_in', 3600)}s")
 
     return entry["access_token"]
 
 
-def discard_restore_token(state: str):
-    """Discard the restore token after job completes.
+async def discard_restore_token(state: str):
+    """Discard restore token after job completes.
 
-    Called by the restore engine when done. Ensures zero standing write access.
+    Ensures zero standing write access — tokens never persist beyond the restore job.
     """
-    if state in _restore_tokens:
-        tenant_id = _restore_tokens[state].get("tenant_id")
-        del _restore_tokens[state]
+    entry = await get_state(f"{_PREFIX}{state}")
+    if entry:
+        tenant_id = entry.get("tenant_id")
+        await delete_state(f"{_PREFIX}{state}")
         logger.info(f"Restore token discarded for tenant {tenant_id} — zero standing write access")
 
 
-def cleanup_expired_tokens():
-    """Remove expired token entries. Called periodically by scheduler."""
-    now = datetime.utcnow()
-    expired = [
-        state for state, entry in _restore_tokens.items()
-        if now - entry["created_at"] > timedelta(hours=2)
-    ]
-    for state in expired:
-        del _restore_tokens[state]
-    if expired:
-        logger.info(f"Cleaned up {len(expired)} expired restore consent tokens")
+# cleanup_expired_tokens() is no longer needed — Redis TTL handles auto-expiry

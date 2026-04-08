@@ -117,6 +117,52 @@ async def viewer_client(client: AsyncClient):
 
 
 @pytest_asyncio.fixture
+async def operator_client(client: AsyncClient):
+    """Authenticated client with operator role (backup operations, not admin)."""
+    await client.post("/api/auth/register", json={
+        "username": "testoperator",
+        "email": "operator@test.com",
+        "password": "TestPass123",
+        "full_name": "Test Operator",
+        "role": "operator",
+    })
+    response = await client.post("/api/auth/login", data={
+        "username": "testoperator",
+        "password": "TestPass123",
+    })
+    data = response.json()
+    token = data.get("access_token", "")
+    if token:
+        client.headers["Authorization"] = f"Bearer {token}"
+    if "kavachiq_session" in response.cookies:
+        client.cookies.set("kavachiq_session", response.cookies["kavachiq_session"])
+    yield client
+
+
+@pytest_asyncio.fixture
+async def restore_operator_client(client: AsyncClient):
+    """Authenticated client with restore_operator role (can restore, not admin)."""
+    await client.post("/api/auth/register", json={
+        "username": "testrestoreop",
+        "email": "restoreop@test.com",
+        "password": "TestPass123",
+        "full_name": "Test Restore Operator",
+        "role": "restore_operator",
+    })
+    response = await client.post("/api/auth/login", data={
+        "username": "testrestoreop",
+        "password": "TestPass123",
+    })
+    data = response.json()
+    token = data.get("access_token", "")
+    if token:
+        client.headers["Authorization"] = f"Bearer {token}"
+    if "kavachiq_session" in response.cookies:
+        client.cookies.set("kavachiq_session", response.cookies["kavachiq_session"])
+    yield client
+
+
+@pytest_asyncio.fixture
 async def db():
     """Database session for direct DB operations in tests."""
     async with async_session() as session:

@@ -88,28 +88,55 @@ def verify_refresh_token(token: str) -> Optional[str]:
 
 
 async def get_current_user(
-    token: str = Depends(oauth2_scheme),
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    """Get the current authenticated user from JWT token."""
+    """Get the current authenticated user — dual-mode (cookie + JWT).
+
+    Enterprise BFF pattern: checks httpOnly session cookie first,
+    falls back to Authorization: Bearer JWT for API clients.
+
+    Priority:
+    1. httpOnly cookie (kavachiq_session) → Redis session → user
+    2. Authorization: Bearer JWT → decode → user
+    """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
 
-    result = await db.execute(select(User).where(User.username == username))
-    user = result.scalar_one_or_none()
-    if user is None or not user.is_active:
-        raise credentials_exception
-    return user
+    # Priority 1: httpOnly cookie session (BFF pattern)
+    from app.services.session import get_session_data, COOKIE_NAME
+    session_id = request.cookies.get(COOKIE_NAME)
+    if session_id:
+        session = await get_session_data(session_id)
+        if session and session.get("user_id"):
+            result = await db.execute(select(User).where(User.id == session["user_id"]))
+            user = result.scalar_one_or_none()
+            if user and user.is_active:
+                # Attach session to request for downstream use
+                request.state.session = session
+                return user
+
+    # Priority 2: JWT Bearer token (backward compat for API clients)
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:]
+        try:
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+            username: str = payload.get("sub")
+            if username is None:
+                raise credentials_exception
+        except JWTError:
+            raise credentials_exception
+
+        result = await db.execute(select(User).where(User.username == username))
+        user = result.scalar_one_or_none()
+        if user and user.is_active:
+            return user
+
+    raise credentials_exception
 
 
 def require_role(*roles: UserRole):

@@ -118,10 +118,15 @@ class Settings(BaseSettings):
     # Format: "+msp_dashboard,-worm,+org_context"  (+ enables, - disables)
     FEATURE_OVERRIDES: str = ""
 
+    # Session Management (BFF pattern — httpOnly cookies + Redis)
+    SESSION_TTL_HOURS: int = 24                  # Redis session TTL (default 24 hours)
+    COOKIE_DOMAIN: str = ""                       # Cookie domain (empty = same origin, ".kavachiq.com" for prod)
+    BACKEND_URL: str = "http://localhost:8000"    # Backend URL for OAuth callback redirect_uri
+
     # Multi-tenant Connector (OAuth onboarding)
     CONNECTOR_APP_ID: str = ""        # KavachIQ Connector multi-tenant app ID
     CONNECTOR_APP_SECRET: str = ""    # KavachIQ Connector app secret
-    CONNECTOR_REDIRECT_URI: str = "http://localhost:5173/onboard/callback"
+    CONNECTOR_REDIRECT_URI: str = "http://localhost:8000/api/onboard/callback"  # Backend URL (BFF pattern)
 
     # Dispatcher (Control Plane / Data Plane separation)
     DISPATCH_MODE: str = "in_process"  # "in_process" | "redis"

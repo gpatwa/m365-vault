@@ -298,14 +298,27 @@ async def oauth_callback(
     error_description: str = Query(None),
     db: AsyncSession = Depends(get_db),
 ):
-    """Handle OAuth callback from any platform.
+    """Handle OAuth callback — BFF pattern (backend receives redirect from Microsoft).
 
-    Called from frontend after Microsoft redirects back.
-    Returns JSON (frontend handles the result).
+    Flow: Microsoft → backend callback → process consent → redirect to frontend.
+    Browser never sees OAuth tokens. Session cookie already set from login.
+
+    Supports both:
+    1. Direct backend callback (BFF): Microsoft redirects here, we redirect to frontend
+    2. Frontend proxy (legacy): Frontend calls this as API, gets JSON response
     """
+    from fastapi.responses import RedirectResponse
+    from urllib.parse import urlencode
+
+    # Detect if this is a direct browser redirect (BFF) or API call from frontend
+    is_browser_redirect = "text/html" in request.headers.get("accept", "")
+
     # Check for OAuth errors
     if error:
         logger.warning(f"OAuth error: {error} — {error_description}")
+        if is_browser_redirect:
+            params = urlencode({"error": error, "detail": error_description or ""})
+            return RedirectResponse(f"{settings.FRONTEND_URL}/onboard?{params}")
         return {"success": False, "error": error, "detail": error_description}
 
     # Skip state validation for admin consent (Microsoft doesn't always return state)
@@ -361,6 +374,25 @@ async def oauth_callback(
                 select(_func.count(ProtectedObject.id)).where(ProtectedObject.tenant_id == existing_tenant.id)
             )).scalar() or 0
 
+            # Update session with new tenant assignment
+            session_id = request.cookies.get("kavachiq_session")
+            if session_id and connecting_user_id:
+                from app.services.session import update_session
+                from app.services.auth import get_user_tenant_ids
+                user = await db.get(User, connecting_user_id)
+                if user:
+                    new_tenant_ids = await get_user_tenant_ids(db, user)
+                    await update_session(session_id, {"tenant_ids": new_tenant_ids})
+
+            # BFF: redirect browser to frontend dashboard
+            if is_browser_redirect:
+                params = urlencode({
+                    "onboard": "success",
+                    "tenant_name": existing_tenant.name,
+                    "tenant_id": existing_tenant.id,
+                })
+                return RedirectResponse(f"{settings.FRONTEND_URL}/?{params}")
+
             return {
                 "success": True,
                 "existing": True,
@@ -404,6 +436,27 @@ async def oauth_callback(
 
         await db.commit()
 
+        # Update session with new tenant
+        session_id = request.cookies.get("kavachiq_session")
+        if session_id and connecting_user_id:
+            from app.services.session import update_session
+            from app.services.auth import get_user_tenant_ids
+            user = await db.get(User, connecting_user_id)
+            if user:
+                new_tenant_ids = await get_user_tenant_ids(db, user)
+                await update_session(session_id, {"tenant_ids": new_tenant_ids})
+
+        # BFF: redirect browser to frontend
+        if is_browser_redirect:
+            tenant_name = result.tenant_name or tenant_record.name
+            params = urlencode({
+                "onboard": "success",
+                "tenant_name": tenant_name,
+                "tenant_id": tenant_record.id,
+                "new": "true",
+            })
+            return RedirectResponse(f"{settings.FRONTEND_URL}/?{params}")
+
         return {
             "success": True,
             "new": True,
@@ -416,6 +469,9 @@ async def oauth_callback(
 
     except Exception as e:
         logger.error(f"Onboarding callback failed: {e}", exc_info=True)
+        if is_browser_redirect:
+            params = urlencode({"error": "server_error", "detail": str(e)[:100]})
+            return RedirectResponse(f"{settings.FRONTEND_URL}/onboard?{params}")
         return {"success": False, "error": "server_error", "detail": str(e)[:200]}
 
 

@@ -80,7 +80,7 @@ services:
       DISPATCH_MODE: redis
       CONNECTOR_APP_ID: ${CONNECTOR_APP_ID:-}
       CONNECTOR_APP_SECRET: ${CONNECTOR_APP_SECRET:-}
-      CONNECTOR_REDIRECT_URI: ${CONNECTOR_REDIRECT_URI:-http://localhost:5173/onboard/callback}
+      CONNECTOR_REDIRECT_URI: ${CONNECTOR_REDIRECT_URI:-http://localhost:8000/api/onboard/callback}
       LICENSE_TIER: enterprise
       DEMO_MODE: "false"
       DEBUG: "true"

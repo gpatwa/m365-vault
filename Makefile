@@ -127,14 +127,15 @@ test-backend: ## Run backend tests (SQLite — fast, no Docker needed)
 .PHONY: test-pg
 test-pg: ## Run backend tests against Docker PostgreSQL (catches migration bugs)
 	@echo "🐘 Running tests against PostgreSQL (requires: make dev running)..."
-	@if ! docker compose ps postgres 2>/dev/null | grep -q "running"; then \
+	@if ! docker compose ps postgres 2>/dev/null | grep -qE "running|Up|healthy"; then \
 		echo "❌ PostgreSQL not running. Start with: make dev"; exit 1; \
 	fi
-	@cd backend && DATABASE_URL=postgresql+asyncpg://m365vault:m365vault_dev@localhost:5432/m365vault_test \
-		venv/bin/python -m pytest tests/ -v --override-ini="confcutdir=tests" \
-		-c tests/conftest_pg.py --tb=short \
-		-k "test_workload_lifecycle or test_auth_matrix or test_sidebar_data" \
-		2>&1 | tail -20
+	@cd backend && DATABASE_URL_OVERRIDE=postgresql+asyncpg://m365vault:m365vault_dev@localhost:5432/m365vault_test \
+		venv/bin/python -m pytest \
+		tests/test_workload_lifecycle.py \
+		tests/test_auth_matrix.py \
+		tests/test_sidebar_data_accuracy.py \
+		-q --tb=short
 	@echo "✅ PostgreSQL tests passed — migrations verified"
 
 .PHONY: lint

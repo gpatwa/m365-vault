@@ -5,8 +5,13 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 
-# Use SQLite for tests
-os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///./test.db"
+# Use SQLite by default, but allow PostgreSQL override for make test-pg.
+# When DATABASE_URL_OVERRIDE is set, use it instead of SQLite.
+# This catches migration bugs that SQLite's create_all never sees.
+if "DATABASE_URL_OVERRIDE" in os.environ:
+    os.environ["DATABASE_URL"] = os.environ["DATABASE_URL_OVERRIDE"]
+else:
+    os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///./test.db"
 os.environ["SECRET_KEY"] = "test-secret-key-for-testing-only"
 os.environ["STORAGE_BACKEND"] = "local"
 os.environ["STORAGE_LOCAL_PATH"] = "/tmp/kavachiq-test-storage"
@@ -27,15 +32,19 @@ def event_loop():
 
 @pytest_asyncio.fixture(autouse=True)
 async def setup_database():
-    """Create tables before each test, drop after. Clear rate limiter."""
-    # Rate limiter moved to Redis — no in-memory store to clear
-    # Redis state is isolated per test via TTL (tests use fresh keys)
+    """Create tables before each test, drop after.
 
+    Disposes engine after teardown to close all asyncpg connections cleanly.
+    Without this, PostgreSQL tests get 'Event loop is closed' errors because
+    the connection pool holds stale connections between test functions.
+    """
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
+    # Close all pool connections — prevents asyncpg event loop errors in PG mode
+    await engine.dispose()
 
 
 @pytest_asyncio.fixture

@@ -164,6 +164,21 @@ if [ -n "$CF_ZONE_ID" ] && [ -n "$CF_API_TOKEN" ]; then
   fi
 fi
 
+# ── Step 8: Post-deploy E2E sanity ──
+# Run the E2E certification tests against live production.
+# This catches migration issues (missing columns), broken endpoints,
+# and auth regressions that unit tests with SQLite can't catch.
+step "Running post-deploy E2E sanity tests..."
+if bash "$(dirname "$0")/e2e-azure-test.sh" --env "$ENV"; then
+  ok "E2E certification PASSED"
+else
+  E2E_EXIT=$?
+  warn "E2E certification: $E2E_EXIT tests failed (deploy succeeded, but check failures above)"
+  # Don't rollback on E2E failure — the deploy is live and health check passed.
+  # E2E failures may be pre-existing issues, not caused by this deploy.
+  # But log it clearly so operator investigates.
+fi
+
 echo ""
 echo -e "${GREEN}═══ Deploy Complete ═══${NC}"
 echo -e "  Backend:  https://$BACKEND_URL"

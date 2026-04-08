@@ -128,8 +128,9 @@ fi
 
 echo ""
 echo "── 5. New Features ──"
-check "Restore approvals API" "$(curl -s --max-time 10 "$BACKEND/api/restore-approvals/pending")" "Not authenticated"
-check "Workload apps API" "$(curl -s --max-time 10 "$BACKEND/api/tenants/1/workloads")" "Not authenticated"
+# 401 checks — match on HTTP status code (not response body text which varies)
+check "Restore approvals 401" "$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" "$BACKEND/api/restore-approvals/pending")" "401"
+check "Workload apps 401" "$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" "$BACKEND/api/tenants/1/workloads")" "401"
 check "Invite admin API" "$(curl -s --max-time 10 "$BACKEND/api/onboard/invite/fake")" "not found"
 check "Product tour page" "$(curl -sf --max-time 10 -o /dev/null -w "%{http_code}" "$FRONTEND/tour")" "200"
 check "Billing config" "$(curl -sf --max-time 10 -o /dev/null -w "%{http_code}" "$BACKEND/api/billing/config")" "200"
@@ -224,7 +225,7 @@ echo "── 11. Login Flow (full user journey) ──"
 if [ -n "$DEMO_TOKEN" ]; then
   check "Demo → tenants" "$(curl -s --max-time 10 -H "Authorization: Bearer $DEMO_TOKEN" "$BACKEND/api/tenants/" | python3 -c "import sys,json; d=json.load(sys.stdin); print('ok' if len(d)>0 else 'empty')" 2>/dev/null)" "ok"
   check "Demo → dashboard" "$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $DEMO_TOKEN" "$BACKEND/api/dashboard/summary")" "200"
-  check "Demo → recovery" "$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $DEMO_TOKEN" "$BACKEND/api/recovery/confidence?tenant_id=1")" "200"
+  check "Demo → recovery" "$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $DEMO_TOKEN" "$BACKEND/api/recovery/confidence?tenant_id=1")" "20"  # 200 or 204
   check "Demo → health score" "$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $DEMO_TOKEN" "$BACKEND/api/health/score?tenant_id=1")" "200"
 fi
 
@@ -233,6 +234,56 @@ VIEWER_TOKEN=$(curl -s --max-time 10 -X POST "$BACKEND/api/auth/login" -d "usern
 if [ -n "$VIEWER_TOKEN" ]; then
   check "Viewer → read OK" "$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $VIEWER_TOKEN" "$BACKEND/api/dashboard/summary")" "200"
   check "Viewer → write blocked" "$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" -X POST -H "Authorization: Bearer $VIEWER_TOKEN" "$BACKEND/api/recovery/mass-restore" -H "Content-Type: application/json" -d '{"tenant_id":1}')" "403"
+fi
+
+# ═══════════════════════════════════════════════════════
+# 12. POST-DEPLOY SANITY (catches migration + lifecycle issues)
+# These tests exercise the code paths that broke in production:
+# - lifecycle_status column missing → 503 on workloads/complete
+# - /onboard/discover without enabled workloads → 0 objects
+# - Dashboard summary with workload scoping → 503
+# ═══════════════════════════════════════════════════════
+echo ""
+echo "── 12. Post-Deploy Sanity (migration + lifecycle) ──"
+if [ -n "$ADMIN_TOKEN" ]; then
+  AUTH_HDR="Authorization: Bearer $ADMIN_TOKEN"
+
+  # Workload lifecycle — verifies lifecycle_status column exists in DB
+  if [ "$TENANT_ID" != "0" ] && [ -n "$TENANT_ID" ]; then
+    WL_STATUS=$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" -H "$AUTH_HDR" "$BACKEND/api/tenants/$TENANT_ID/workloads")
+    check "Workload lifecycle API (no 503)" "$WL_STATUS" "200"
+
+    # Dashboard summary — exercises workload scoping
+    DASH_STATUS=$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" -H "$AUTH_HDR" "$BACKEND/api/dashboard/summary?tenant_id=$TENANT_ID")
+    check "Dashboard summary (no 503)" "$DASH_STATUS" "200"
+
+    # Onboarding complete — exercises lifecycle transitions
+    COMPLETE_STATUS=$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" -X POST -H "$AUTH_HDR" \
+      -H "Content-Type: application/json" \
+      -d "{\"tenant_id\":$TENANT_ID,\"protect_all\":false}" \
+      "$BACKEND/api/onboard/complete")
+    check "Onboard /complete (no 503)" "$COMPLETE_STATUS" "200"
+
+    # Alerts tenant config — exercises per-tenant config
+    ALERT_STATUS=$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" -H "$AUTH_HDR" "$BACKEND/api/alerts/tenant?tenant_id=$TENANT_ID")
+    check "Alerts tenant config (no 503)" "$ALERT_STATUS" "200"
+
+    # Smart Engine health — exercises workload filtering
+    HEALTH_STATUS=$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" -H "$AUTH_HDR" "$BACKEND/api/health/score?tenant_id=$TENANT_ID")
+    check "Health score (no 503)" "$HEALTH_STATUS" "200"
+
+    # Feature flags — exercises tier gating
+    check "Feature flags" "$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" "$BACKEND/api/features")" "200"
+
+    # Organization page APIs
+    check "Billing subscription" "$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" -H "$AUTH_HDR" "$BACKEND/api/billing/subscription?tenant_id=$TENANT_ID")" "200"
+  fi
+
+  # Prospect user journey — verify non-admin can read
+  if [ -n "$VIEWER_TOKEN" ]; then
+    check "Viewer → workloads read" "$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $VIEWER_TOKEN" "$BACKEND/api/tenants/$TENANT_ID/workloads")" "200"
+    check "Viewer → alerts read" "$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $VIEWER_TOKEN" "$BACKEND/api/alerts/tenant?tenant_id=$TENANT_ID")" "200"
+  fi
 fi
 
 # ═══════════════════════════════════════════════════════

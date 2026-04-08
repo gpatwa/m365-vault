@@ -24,24 +24,32 @@ The `docker-compose.yml` also sets `platform: linux/amd64` on backend and fronte
 | `make az-cleanup` | Full Azure teardown + state reset |
 | `make bootstrap` | One-time Azure + GitHub setup |
 
-## CDN Cache Invalidation (Cloudflare)
+## CDN Caching Strategy (Cloudflare)
 
-The frontend is served through Cloudflare CDN. After deploying new frontend images,
-Cloudflare may serve stale `index.html` which references old JS bundles. The deploy
-script (`safe-deploy.sh`) automatically purges Cloudflare cache when these env vars are set:
+The frontend is served through Cloudflare CDN. Cache policy is controlled at the
+**origin (nginx)** — Cloudflare respects origin headers. No manual purge needed.
 
+**How it works (nginx.conf.template):**
+
+| Resource | Cache-Control | CDN-Cache-Control | Why |
+|---|---|---|---|
+| `index.html` (exact) | `no-cache, no-store` | `no-store` | Always fetch fresh HTML |
+| SPA routes (`/settings`, etc.) | `no-cache, no-store` | `no-store` | try_files → index.html, same policy |
+| `*.js`, `*.css` (hashed) | `public, immutable` | `max-age=31536000` | Filename changes per build, cache forever |
+
+**Key design decisions:**
+- `CDN-Cache-Control` header tells Cloudflare specifically what to cache at the edge
+- SPA `location /` block sets no-cache (not just `location = /index.html`) because
+  `try_files` serves index.html but internal redirects don't inherit headers from other blocks
+- Hashed assets use `immutable` — browsers never revalidate, CDN caches for 1 year
+- New deploy = new JS filenames → CDN misses → fetches from origin automatically
+
+**Optional: API purge for instant propagation (belt-and-suspenders):**
 ```bash
-export CLOUDFLARE_ZONE_ID="your-zone-id"    # From Cloudflare dashboard → Overview
-export CLOUDFLARE_API_TOKEN="your-api-token" # Create at dash.cloudflare.com/profile/api-tokens
+export CLOUDFLARE_ZONE_ID="your-zone-id"
+export CLOUDFLARE_API_TOKEN="your-api-token"
 ```
-
-**How it works:**
-- Vite hashes JS/CSS filenames (`index-jSrWQZtI.js`) — safe to cache forever
-- `index.html` has `Cache-Control: no-cache` in nginx — but Cloudflare may override
-- Deploy script purges only HTML files (not hashed assets) via Cloudflare API
-- If env vars not set, deploy succeeds but warns about potential stale UI
-
-**Cloudflare API token permissions needed:** `Zone → Cache Purge → Edit`
+If set, `safe-deploy.sh` purges CDN after health check. Not required — origin headers handle it.
 
 ## Architecture
 

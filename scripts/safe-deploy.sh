@@ -142,31 +142,26 @@ if [ -n "$OLD_REV" ]; then
   fi
 fi
 
-# ── Step 7: Purge Cloudflare CDN cache ──
-# Vite hashes JS/CSS filenames (cache-safe), but index.html must be fresh
-# so browsers fetch the new HTML which references new hashed bundles.
-# Without this, Cloudflare serves stale index.html → old JS → old code.
+# ── Step 7: Purge Cloudflare CDN cache (belt-and-suspenders) ──
+# Primary fix: nginx sets CDN-Cache-Control: no-store on HTML responses,
+# so Cloudflare never caches index.html. Hashed JS/CSS use immutable cache.
+# This API purge is an extra safety net for immediate propagation.
 CF_ZONE_ID="${CLOUDFLARE_ZONE_ID:-}"
 CF_API_TOKEN="${CLOUDFLARE_API_TOKEN:-}"
 
 if [ -n "$CF_ZONE_ID" ] && [ -n "$CF_API_TOKEN" ]; then
-  step "Purging Cloudflare CDN cache (index.html + config.js)..."
+  step "Purging Cloudflare CDN cache..."
   CF_RESP=$(curl -sf -X POST \
     "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/purge_cache" \
     -H "Authorization: Bearer ${CF_API_TOKEN}" \
     -H "Content-Type: application/json" \
-    --data '{"files":["https://kavachiq.com/","https://kavachiq.com/index.html","https://kavachiq.com/config.js","https://kavachiq.com/settings","https://kavachiq.com/login"]}' \
+    --data '{"purge_everything":true}' \
     2>/dev/null)
   if echo "$CF_RESP" | grep -q '"success":true'; then
-    ok "Cloudflare cache purged (HTML files only — hashed assets stay cached)"
+    ok "Cloudflare cache purged"
   else
-    warn "Cloudflare cache purge failed (deploy succeeded, but users may see stale UI for a few minutes)"
-    warn "Response: $(echo "$CF_RESP" | head -c 200)"
-    warn "Set CLOUDFLARE_ZONE_ID and CLOUDFLARE_API_TOKEN to enable automatic cache purge"
+    info "Cloudflare purge skipped (origin headers handle caching — this is optional)"
   fi
-else
-  warn "Cloudflare cache purge skipped — set CLOUDFLARE_ZONE_ID + CLOUDFLARE_API_TOKEN env vars"
-  info "Without this, users may see stale frontend for up to 4 hours after deploy"
 fi
 
 echo ""

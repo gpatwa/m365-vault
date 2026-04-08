@@ -156,11 +156,27 @@ export default function Layout() {
     // Show workloads only after tenant connected
     if (group.label === 'Workloads' && !onboarding.hasTenants) return { ...group, items: [] };
 
+    // Hide "More Workloads" (SharePoint, OneDrive, Teams) until tenant connected
+    if (group.label === 'More Workloads' && !onboarding.hasTenants) return { ...group, items: [] };
+
     // Show operations only after first backup
     if (group.label === 'Operations' && !onboarding.hasProtectedObjects) return { ...group, items: [] };
 
     // Show intelligence only after backups exist
     if (group.label === 'Intelligence' && !onboarding.hasBackups) return { ...group, items: [] };
+
+    // MSP group: always gated by role (already handled above), no onboarding gate needed
+
+    // Administration: only show Billing before tenant connected (prospect needs to see pricing)
+    // After tenant connected, show all admin items
+    if (group.label === 'Administration' && !onboarding.hasTenants) {
+      return {
+        ...group,
+        items: group.items.filter(item =>
+          item.path === '/billing' || item.path === '/settings'
+        ),
+      };
+    }
 
     return group;
   }).filter(g => !g.label || g.items.length > 0);

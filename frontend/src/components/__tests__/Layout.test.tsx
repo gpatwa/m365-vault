@@ -510,13 +510,29 @@ describe('Layout sidebar — Onboarding progressive disclosure', () => {
     setFeatureFlags(true);
   });
 
-  it('fresh user (no tenants) sees only Dashboard', () => {
+  it('fresh user (no tenants) sees only Dashboard + Billing + Organization', () => {
     setOnboardingFresh();
     renderLayout();
+    expandAllGroups();
     expectMenuItemVisible('Dashboard');
-    // Workloads group should have no items (hasTenants=false)
+    // Workloads hidden (no tenant)
     expectMenuItemHidden('Entra ID');
     expectMenuItemHidden('Exchange');
+    // More Workloads hidden (no tenant)
+    expectMenuItemHidden('SharePoint');
+    expectMenuItemHidden('OneDrive');
+    expectMenuItemHidden('Teams');
+    // Operations hidden (no protected objects)
+    expectMenuItemHidden('Jobs');
+    // Intelligence hidden (no backups)
+    expectMenuItemHidden('Smart Engine');
+    // Administration: only Billing + Organization visible before tenant connected
+    expectMenuItemVisible('Billing');
+    expectMenuItemVisible('Organization');
+    // Other admin items hidden before tenant connected
+    expectMenuItemHidden('SLA Policies');
+    expectMenuItemHidden('Audit Log');
+    expectMenuItemHidden('Performance');
   });
 
   it('user with tenant sees Workloads but not Operations', () => {
@@ -527,6 +543,23 @@ describe('Layout sidebar — Onboarding progressive disclosure', () => {
     expectMenuItemVisible('Exchange');
     // Operations hidden (no protected objects yet)
     expectMenuItemHidden('Jobs');
+  });
+
+  it('user with tenant sees More Workloads group', () => {
+    setOnboardingTenantOnly();
+    renderLayout();
+    expandAllGroups();
+    expectMenuItemVisible('SharePoint');
+    expectMenuItemVisible('OneDrive');
+  });
+
+  it('user with tenant sees full Administration', () => {
+    setOnboardingTenantOnly();
+    renderLayout();
+    expandAllGroups();
+    expectMenuItemVisible('SLA Policies');
+    expectMenuItemVisible('Audit Log');
+    expectMenuItemVisible('Billing');
   });
 
   it('fully onboarded user sees everything', () => {

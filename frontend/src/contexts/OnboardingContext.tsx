@@ -1,6 +1,4 @@
 import { createContext, useContext, useState, useMemo, type ReactNode } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '../api/client';
 import { useAuth } from './AuthContext';
 
 export type OnboardingStep =
@@ -39,7 +37,7 @@ const STORAGE_KEY = 'kavachiq_onboarding';
 const OnboardingContext = createContext<OnboardingState | null>(null);
 
 export function OnboardingProvider({ children }: { children: ReactNode }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, session } = useAuth();
 
   // Load saved state
   const [manualSteps, setManualSteps] = useState<Partial<Record<OnboardingStep, boolean>>>(() => {
@@ -51,29 +49,25 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     }
   });
 
-  // Fetch real data to auto-detect completed steps
-  const { data: summary } = useQuery({
-    queryKey: ['onboard-summary'],
-    queryFn: () => api.get<any>('/dashboard/summary'),
-    enabled: isAuthenticated,
-    refetchInterval: 30000,
-  });
+  // PERFORMANCE: Derive onboarding state from the SHARED session (AuthContext).
+  // The session already contains tenant_ids and onboarding_status.
+  // Previously this called GET /dashboard/summary on EVERY page load (+ 30s refetch!)
+  // which returned 503 and blocked progressive disclosure. Zero extra API calls now.
+  const hasTenants = !!(session?.tenant_ids?.length > 0) || !!(session?.tenants?.length > 0) || session?.redirect === false;
+  const hasProtectedObjects = !!session?.has_protected_objects || !!manualSteps.assign_protection;
+  const hasBackups = !!session?.has_backups || !!manualSteps.first_backup;
 
-  // Auto-detect step completion from real data
+  // Auto-detect step completion from session + manual overrides
   const steps = useMemo<Record<OnboardingStep, boolean>>(() => {
-    const hasTenants = summary?.tenants > 0;
-    const hasProtected = summary?.total_protected > 0;
-    const hasJobs = summary?.jobs_24h?.backup_total > 0 || (summary?.total_protected > 0 && hasTenants);
-
     return {
       create_account: isAuthenticated,
       connect_platform: hasTenants || !!manualSteps.connect_platform,
-      discover_workloads: (summary?.total_objects > 0) || !!manualSteps.discover_workloads,
-      assign_protection: hasProtected || !!manualSteps.assign_protection,
-      first_backup: hasJobs || !!manualSteps.first_backup,
+      discover_workloads: hasTenants || !!manualSteps.discover_workloads,
+      assign_protection: hasProtectedObjects || !!manualSteps.assign_protection,
+      first_backup: hasBackups || !!manualSteps.first_backup,
       explore_recovery: !!manualSteps.explore_recovery,
     };
-  }, [isAuthenticated, summary, manualSteps]);
+  }, [isAuthenticated, hasTenants, hasProtectedObjects, hasBackups, manualSteps]);
 
   const completedCount = STEPS_ORDER.filter(s => steps[s]).length;
   const currentStep = STEPS_ORDER.find(s => !steps[s]) || null;
@@ -98,9 +92,9 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     totalSteps: STEPS_ORDER.length,
     percentComplete: Math.round((completedCount / STEPS_ORDER.length) * 100),
     isComplete: completedCount === STEPS_ORDER.length,
-    hasTenants: summary?.tenants > 0,
-    hasProtectedObjects: summary?.total_protected > 0,
-    hasBackups: summary?.jobs_24h?.backup_total > 0,
+    hasTenants,
+    hasProtectedObjects,
+    hasBackups,
     completeStep,
     resetOnboarding,
   };

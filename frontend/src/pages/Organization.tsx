@@ -223,12 +223,11 @@ export default function Organization() {
    * All other queries use staleTime to avoid refetching on every navigation.
    */
 
-  const { data: tenant, isLoading: tenantLoading } = useQuery({
-    queryKey: ['org-tenant', selectedTenant?.id],
-    queryFn: () => api.get<any>(`/tenants/${selectedTenant?.id}`),
-    enabled: !!selectedTenant?.id,
-    staleTime: 60_000, // 1 min — tenant data rarely changes
-  });
+  // No separate /tenants/{id} call — that endpoint doesn't exist (returns 405).
+  // selectedTenant from useTenantSwitcher() already has full tenant data
+  // from the GET /tenants/ list query. Zero extra API calls.
+  const tenant = selectedTenant;
+  const tenantLoading = !selectedTenant;
 
   // LAZY: permissions check calls Microsoft Graph (slow!) — only on button click
   const { data: permStatus, refetch: recheckPerms, isFetching: permFetching } = useQuery({

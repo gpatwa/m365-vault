@@ -84,7 +84,13 @@ echo -e "${CYAN}── Phase 3: Start Stack ──${NC}"
 
 docker compose up -d 2>&1 | tail -3
 echo "  Waiting for services..."
-sleep 15
+# Retry health check with backoff (backend may need time for DB migration + Redis)
+for i in 1 2 3 4 5; do
+  HEALTH=$(curl -sf --max-time 5 "$BACKEND/health" 2>/dev/null || echo "")
+  if echo "$HEALTH" | grep -q '"status":"healthy"'; then break; fi
+  echo "  Waiting... (attempt $i/5)"
+  sleep $((i * 5))
+done
 
 # Check services are up
 check "Backend health" "$(curl -sf --max-time 10 "$BACKEND/health" 2>/dev/null || echo 'DOWN')" '"status":"healthy"'

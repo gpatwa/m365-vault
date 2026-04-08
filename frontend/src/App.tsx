@@ -78,26 +78,23 @@ function SmartHome() {
   useEffect(() => {
     console.log('[KavachIQ:SmartHome] mounted, token:', !!api.getToken());
 
-    // Server-driven routing: /auth/me returns onboarding_status + redirect.
-    // No sessionStorage. No username checks. Server is the source of truth.
-    api.get<any>('/auth/me')
-      .then((user) => {
-        console.log(`[KavachIQ:SmartHome] user=${user?.username} onboarding=${user?.onboarding_status} redirect=${user?.redirect}`);
+    // Server-driven routing via /auth/session.
+    // ONE call. Server returns everything. Zero client-side state decisions.
+    api.get<any>('/auth/session')
+      .then((session) => {
+        console.log(`[KavachIQ:SmartHome] user=${session?.user?.username} status=${session?.routing?.onboarding_status} redirect=${session?.routing?.redirect}`);
 
         // Server tells us exactly where to go
-        if (user?.redirect) {
-          // Set onboard mode for the onboarding wizard UI
-          if (user.onboarding_status === 'demo') {
-            sessionStorage.setItem('kavachiq_onboard_mode', 'demo');
-          } else {
-            sessionStorage.setItem('kavachiq_onboard_mode', 'fast');
-          }
-          setRedirect(user.redirect);
+        if (session?.routing?.redirect) {
+          // Set onboard mode for wizard UI (only state we keep in sessionStorage)
+          sessionStorage.setItem('kavachiq_onboard_mode',
+            session.routing.onboarding_status === 'demo' ? 'demo' : 'fast');
+          setRedirect(session.routing.redirect);
           return;
         }
 
         // MSP user → MSP dashboard
-        if (user?.role === 'msp_admin') {
+        if (session?.user?.role === 'msp_admin') {
           setRedirect('/msp');
           return;
         }
@@ -106,7 +103,7 @@ function SmartHome() {
         setChecked(true);
       })
       .catch((err) => {
-        console.error('[KavachIQ:SmartHome] auth failed:', err?.message);
+        console.error('[KavachIQ:SmartHome] session failed:', err?.message);
         setRedirect('/login');
       });
   }, []);

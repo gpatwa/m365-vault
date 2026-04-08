@@ -19,6 +19,7 @@ from app.models.worker_queue import WorkerQueueEntry  # noqa: F401 — ensure ta
 from app.models.msp_branding import MSPBranding  # noqa: F401 — ensure table is created
 from app.models.billing import BillingRecord     # noqa: F401 — ensure table is created
 from app.models.saas_workload_app import SaaSWorkloadApp  # noqa: F401 — ensure table is created
+from app.models.user_preference import UserPreference     # noqa: F401 — ensure table is created
 from app.models.user_tenant import UserTenant             # noqa: F401 — ensure table is created
 
 # Configure structured JSON logging for production
@@ -285,9 +286,9 @@ if settings.FORCE_HTTPS:
         return await call_next(request)
 
 
-# ── Tiered Rate Limiting ──
-# Different limits for different endpoint categories
-_rate_limit_store: dict[str, list[float]] = {}
+# ── Tiered Rate Limiting (Redis-backed, cross-pod) ──
+# Uses redis_state.increment_rate() for distributed counting.
+# Falls back to in-memory when Redis unavailable (dev without Redis).
 
 # Tiered limits: (path_prefix, requests_per_minute)
 RATE_LIMIT_TIERS = {
@@ -324,18 +325,14 @@ async def rate_limit_middleware(request: Request, call_next):
         or (request.client.host if request.client else "unknown")
     )
     bucket = f"{client_ip}:{path.split('/')[2] if path.startswith('/api/') else 'other'}"
-    now = time.time()
     window = 60
 
-    if bucket not in _rate_limit_store:
-        _rate_limit_store[bucket] = []
+    # Redis-backed rate counting (cross-pod, survives restart)
+    from app.services.redis_state import increment_rate
+    count = await increment_rate(bucket, window_seconds=window)
 
-    _rate_limit_store[bucket] = [t for t in _rate_limit_store[bucket] if now - t < window]
-
-    if len(_rate_limit_store[bucket]) >= limit:
-        remaining = 0
-        reset_at = int(_rate_limit_store[bucket][0] + window)
-        retry_after = max(1, reset_at - int(now))
+    if count > limit:
+        retry_after = window  # Simplified — Redis handles exact window
         return JSONResponse(
             status_code=429,
             content={
@@ -351,12 +348,10 @@ async def rate_limit_middleware(request: Request, call_next):
                 "Retry-After": str(retry_after),
                 "X-RateLimit-Limit": str(limit),
                 "X-RateLimit-Remaining": "0",
-                "X-RateLimit-Reset": str(reset_at),
             },
         )
 
-    _rate_limit_store[bucket].append(now)
-    remaining = limit - len(_rate_limit_store[bucket])
+    remaining = max(0, limit - count)
 
     response = await call_next(request)
     # Add rate limit headers to all responses so frontend knows its budget

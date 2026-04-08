@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -88,9 +88,13 @@ function OnboardingChecklist() {
   const { steps, completedCount, totalSteps, percentComplete, isComplete, completeStep } = useOnboarding();
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(!isComplete);
-  const [dismissed, setDismissed] = useState(
-    localStorage.getItem('kavachiq_checklist_dismissed') === 'true'
-  );
+  const [dismissed, setDismissed] = useState(false);
+  // Load from server session
+  useEffect(() => {
+    api.get<any>('/auth/session')
+      .then(s => { if (s?.preferences?.checklist_dismissed) setDismissed(true); })
+      .catch(() => {});
+  }, []);
   const [backupRunning, setBackupRunning] = useState<Record<string, 'idle' | 'running' | 'done' | 'error'>>({});
   const tenantId = useTenantId();
 
@@ -112,7 +116,7 @@ function OnboardingChecklist() {
 
   const handleDismiss = () => {
     setDismissed(true);
-    localStorage.setItem('kavachiq_checklist_dismissed', 'true');
+    api.put('/auth/preferences/checklist_dismissed', { value: 'true' }).catch(() => {});
   };
 
   return (

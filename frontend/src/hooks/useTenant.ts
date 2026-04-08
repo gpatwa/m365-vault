@@ -3,11 +3,9 @@ import { useState, useCallback, useEffect } from 'react';
 import { api } from '../api/client';
 import type { Tenant } from '../types';
 
-const SELECTED_TENANT_KEY = 'kavachiq_selected_tenant';
-
 /**
  * Returns the preferred active tenant ID.
- * Priority: localStorage selection > real M365 tenant > demo tenant > any tenant.
+ * Reads from server session, not localStorage.
  */
 export function useTenantId(): number | undefined {
   const { selectedTenantId } = useTenantSwitcher();
@@ -44,7 +42,8 @@ export function useTenantInfo(): {
  * Full tenant switcher hook — used by Layout header and any component
  * that needs to know/change the active tenant.
  *
- * Persists selection in localStorage. Falls back to first active tenant.
+ * Reads selected tenant from server session. Saves preference via API.
+ * No localStorage dependency.
  */
 export function useTenantSwitcher() {
   const { data: tenants, isLoading } = useQuery({
@@ -53,29 +52,48 @@ export function useTenantSwitcher() {
     staleTime: 60000,
   });
 
-  // Load saved selection from localStorage
-  const [selectedId, setSelectedId] = useState<number | undefined>(() => {
-    const saved = localStorage.getItem(SELECTED_TENANT_KEY);
-    return saved ? parseInt(saved) : undefined;
+  // Read saved selection from server (via session query or local cache)
+  const { data: sessionData } = useQuery({
+    queryKey: ['session'],
+    queryFn: () => api.get<any>('/auth/session'),
+    staleTime: 300000, // 5 min cache
   });
 
-  // Resolve the selected tenant — fall back to first active if saved is invalid
+  const serverSelectedId = sessionData?.preferences?.selected_tenant
+    ? parseInt(sessionData.preferences.selected_tenant)
+    : undefined;
+
+  const [selectedId, setSelectedId] = useState<number | undefined>(serverSelectedId);
+
+  // Sync from server when session loads
+  useEffect(() => {
+    if (serverSelectedId && serverSelectedId !== selectedId) {
+      setSelectedId(serverSelectedId);
+    }
+  }, [serverSelectedId]);
+
   const activeTenants = (tenants || []).filter(t => t.status === 'active');
   const savedTenant = activeTenants.find(t => t.id === selectedId);
   const defaultTenant = activeTenants.find(t => t.ms_tenant_id && !t.ms_tenant_id.startsWith('demo-')) || activeTenants[0];
   const selectedTenant = savedTenant || defaultTenant;
 
-  // Sync selectedId when tenants load and saved ID is invalid
+  // Auto-set default if nothing selected + update in-memory cache for API client
   useEffect(() => {
     if (tenants && tenants.length > 0 && !savedTenant && defaultTenant) {
       setSelectedId(defaultTenant.id);
-      localStorage.setItem(SELECTED_TENANT_KEY, String(defaultTenant.id));
+      (window as any).__kavachiq_selected_tenant = String(defaultTenant.id);
+      api.put(`/auth/preferences/selected_tenant`, { value: String(defaultTenant.id) }).catch(() => {});
     }
-  }, [tenants, savedTenant, defaultTenant]);
+    // Always keep in-memory cache in sync
+    if (selectedTenant?.id) {
+      (window as any).__kavachiq_selected_tenant = String(selectedTenant.id);
+    }
+  }, [tenants, savedTenant, defaultTenant, selectedTenant]);
 
   const switchTenant = useCallback((tenantId: number) => {
     setSelectedId(tenantId);
-    localStorage.setItem(SELECTED_TENANT_KEY, String(tenantId));
+    // Save to server (preference persists across devices)
+    api.put(`/auth/preferences/selected_tenant`, { value: String(tenantId) }).catch(() => {});
     // Reload page to refresh all data for new tenant
     window.location.reload();
   }, []);

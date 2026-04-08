@@ -72,13 +72,15 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${this.token}`;
     }
 
-    // Auto-inject tenant_id from tenant switcher selection
-    // Skip for auth, onboard, health, and tenant-list endpoints
+    // Auto-inject tenant_id from server session (cached in memory after first /auth/session call).
+    // Falls back to reading from the session cache stored by useTenantSwitcher.
+    // No localStorage dependency.
     let finalPath = path;
     const skipTenantPaths = ['/auth/', '/onboard/', '/health', '/tenants/', '/sla-policies', '/billing', '/features'];
     const shouldInject = !skipTenantPaths.some(p => path.startsWith(p)) && !path.includes('tenant_id=');
     if (shouldInject) {
-      const selectedTenant = localStorage.getItem('kavachiq_selected_tenant');
+      // Read from in-memory cache (set by useTenantSwitcher on session load)
+      const selectedTenant = (window as any).__kavachiq_selected_tenant;
       if (selectedTenant) {
         const separator = path.includes('?') ? '&' : '?';
         finalPath = `${path}${separator}tenant_id=${selectedTenant}`;

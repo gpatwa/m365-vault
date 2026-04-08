@@ -10,6 +10,7 @@ import ProductTour from './ProductTour';
 import FeedbackWidget from './FeedbackWidget';
 import ThemeToggle from './ThemeToggle';
 import { useTenantSwitcher } from '../hooks/useTenant';
+import { api } from '../api/client';
 
 interface NavItem {
   path: string;
@@ -107,9 +108,15 @@ export default function Layout() {
   const navigate = useNavigate();
   const [commandOpen, setCommandOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [showTour, setShowTour] = useState(
-    !localStorage.getItem('kavachiq_tour_completed')
-  );
+  const [showTour, setShowTour] = useState(false);
+  // Load tour status from server session
+  useEffect(() => {
+    api.get<any>('/auth/session')
+      .then(session => {
+        if (!session?.preferences?.tour_completed) setShowTour(true);
+      })
+      .catch(() => {});
+  }, []);
 
   // Close mobile sidebar on route change
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);

@@ -206,6 +206,147 @@ async def get_me(
     }
 
 
+@router.get("/session")
+async def get_session(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get complete user session — ONE call, ALL state.
+
+    Enterprise pattern: server owns all state. Browser stores only JWT.
+    Frontend calls this once on app load and renders based on response.
+    No localStorage, no sessionStorage (except JWT token).
+
+    Returns: user info, routing decision, active tenant, all preferences,
+    and feature flags for the active tenant.
+    """
+    from app.services.auth import get_user_tenant_ids
+    from app.models.user_preference import UserPreference
+    from app.models.tenant import Tenant
+
+    # 1. Get user's tenants
+    tenant_ids = await get_user_tenant_ids(db, current_user)
+    has_tenants = len(tenant_ids) > 0
+
+    # 2. Routing decision (server is truth)
+    if has_tenants:
+        onboarding_status = "complete"
+        redirect = None
+    elif current_user.username == "demo":
+        onboarding_status = "demo"
+        redirect = "/onboard/demo"
+    else:
+        onboarding_status = "pending"
+        redirect = "/onboard"
+
+    # 3. Load all preferences
+    pref_result = await db.execute(
+        select(UserPreference).where(UserPreference.user_id == current_user.id)
+    )
+    prefs = {p.key: p.value for p in pref_result.scalars().all()}
+
+    # 4. Resolve active tenant
+    selected_tenant_id = prefs.get("selected_tenant")
+    active_tenant = None
+    if selected_tenant_id and int(selected_tenant_id) in tenant_ids:
+        t = await db.get(Tenant, int(selected_tenant_id))
+        if t:
+            active_tenant = {"id": t.id, "name": t.name, "ms_tenant_id": t.ms_tenant_id}
+    elif tenant_ids:
+        # Default to first tenant
+        t = await db.get(Tenant, tenant_ids[0])
+        if t:
+            active_tenant = {"id": t.id, "name": t.name, "ms_tenant_id": t.ms_tenant_id}
+
+    # 5. Feature flags for active tenant tier
+    from app.services.feature_flags import feature_flags
+    features = {}
+    for category in ["workloads", "intelligence", "recovery", "compliance"]:
+        features[category] = [f for f in feature_flags.tier_config.get(category, [])
+                              if feature_flags.is_enabled(f)]
+
+    return {
+        "user": {
+            "id": current_user.id,
+            "username": current_user.username,
+            "email": current_user.email,
+            "full_name": current_user.full_name,
+            "role": current_user.role.value,
+            "is_platform_admin": current_user.username == "admin",
+        },
+        "routing": {
+            "onboarding_status": onboarding_status,
+            "redirect": redirect,
+        },
+        "tenant": active_tenant,
+        "tenant_count": len(tenant_ids),
+        "preferences": {
+            "theme": prefs.get("theme", "dark"),
+            "selected_tenant": prefs.get("selected_tenant"),
+            "tour_completed": prefs.get("tour_completed") == "true",
+            "checklist_dismissed": prefs.get("checklist_dismissed") == "true",
+            "recent_commands": prefs.get("recent_commands", "[]"),
+        },
+        "feature_flags": features,
+    }
+
+
+class PreferenceValue(BaseModel):
+    value: str = ""
+
+
+@router.put("/preferences/{key}")
+async def set_preference(
+    key: str,
+    body: PreferenceValue = PreferenceValue(),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Set a user preference. Replaces localStorage/sessionStorage.
+
+    Preferences are stored in DB and follow the user across devices.
+    Frontend calls this when user changes theme, switches tenant,
+    dismisses tour, etc.
+    """
+    from app.models.user_preference import UserPreference, PREF_KEYS
+
+    # Validate key (optional — allow any key for extensibility)
+    value = body.value
+    if len(key) > 100:
+        raise HTTPException(400, detail="Preference key too long (max 100 chars)")
+
+    # Upsert: insert or update
+    existing = await db.execute(
+        select(UserPreference).where(
+            UserPreference.user_id == current_user.id,
+            UserPreference.key == key,
+        )
+    )
+    pref = existing.scalar_one_or_none()
+    if pref:
+        pref.value = value
+    else:
+        pref = UserPreference(user_id=current_user.id, key=key, value=value)
+        db.add(pref)
+
+    await db.commit()
+    return {"key": key, "value": value}
+
+
+@router.get("/preferences")
+async def get_preferences(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get all preferences for the current user."""
+    from app.models.user_preference import UserPreference
+
+    result = await db.execute(
+        select(UserPreference).where(UserPreference.user_id == current_user.id)
+    )
+    return {p.key: p.value for p in result.scalars().all()}
+
+
 # ── Password Reset + Email Verification ──
 
 

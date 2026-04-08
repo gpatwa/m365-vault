@@ -117,7 +117,10 @@ export default function ProductTour({ onComplete }: ProductTourProps) {
 
   const complete = () => {
     setIsVisible(false);
-    localStorage.setItem('kavachiq_tour_completed', 'true');
+    // Save to server (persists across devices, no localStorage)
+    import('../api/client').then(({ api }) => {
+      api.put('/auth/preferences/tour_completed', { value: 'true' }).catch(() => {});
+    });
     navigate('/');
     onComplete();
   };

@@ -30,6 +30,7 @@ interface Platform {
 
 export default function Onboard() {
   const { logout } = useAuth();
+  const navigate = useNavigate();
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState<string | null>(null);
@@ -96,8 +97,12 @@ export default function Onboard() {
   return (
     <div className="min-h-screen bg-background text-foreground px-4 py-6">
     <div className="max-w-3xl mx-auto">
-      {/* Sign out link */}
-      <div className="flex justify-end mb-4">
+      {/* Navigation: Dashboard link + Sign out */}
+      <div className="flex justify-end gap-4 mb-4">
+        <button onClick={() => navigate('/')}
+          className="flex items-center gap-1.5 text-sm text-blue-400 hover:text-blue-300 transition-colors">
+          <ArrowRight className="w-4 h-4 rotate-180" /> Go to Dashboard
+        </button>
         <button onClick={() => { logout(); window.location.href = '/'; }}
           className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-muted-foreground transition-colors">
           <LogOut className="w-4 h-4" /> Sign Out

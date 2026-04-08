@@ -2243,29 +2243,29 @@ export function OnboardCallback() {
 
       {/* Step 3: Fast mode = Done | Demo mode = Intelligence */}
       {step === 3 && onboardMode === 'fast' && (
-        <div className="text-center">
-          <div className="w-20 h-20 bg-green-500/10 border-2 border-green-500/30 rounded-full flex items-center justify-center mx-auto mb-6 animate-in zoom-in">
-            <Shield className="w-10 h-10 text-green-500" />
+        <div className="text-center max-w-lg mx-auto">
+          <div className="w-24 h-24 bg-green-500/10 border-2 border-green-500/30 rounded-full flex items-center justify-center mx-auto mb-6 animate-in zoom-in">
+            <Shield className="w-12 h-12 text-green-500" />
           </div>
-          <h2 className="text-3xl font-bold text-foreground mb-2">You're Protected</h2>
-          <p className="text-muted-foreground mb-2">{tenantName} is now secured by KavachIQ</p>
+          <h2 className="text-3xl font-bold text-foreground mb-3">You're Protected</h2>
+          <p className="text-muted-foreground mb-6">{tenantName} is now secured by KavachIQ</p>
 
-          <div className="bg-card border border-border rounded-xl p-4 mb-6 text-left max-w-md mx-auto">
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+          <div className="bg-card border border-border rounded-xl p-5 mb-8 text-left">
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
                 <span>{selectedWorkloads.size} workloads protected with automatic backups</span>
               </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+              <div className="flex items-center gap-3">
+                <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
                 <span>First backup initiated in background</span>
               </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+              <div className="flex items-center gap-3">
+                <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
                 <span>Smart Engine anomaly detection active</span>
               </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+              <div className="flex items-center gap-3">
+                <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
                 <span>Identity-first recovery configured</span>
               </div>
             </div>
@@ -2273,25 +2273,29 @@ export function OnboardCallback() {
 
           <button
             onClick={() => {
+              // Mark onboarding complete so user isn't redirected back here
+              sessionStorage.setItem('demo_onboard_complete', '1');
               clearOnboardState();
               sessionStorage.removeItem(ONBOARD_MODE_KEY);
               navigate('/');
             }}
-            className="w-full max-w-md py-3 bg-gradient-to-r from-teal-500 to-blue-600 text-white rounded-xl font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+            className="w-full py-4 bg-gradient-to-r from-teal-500 to-blue-600 text-white rounded-xl font-bold text-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
           >
-            Go to Dashboard <ArrowRight className="w-4 h-4" />
+            Go to Dashboard <ArrowRight className="w-5 h-5" />
           </button>
 
-          <button
-            onClick={() => {
-              // Switch to demo mode to see the full experience
-              sessionStorage.setItem(ONBOARD_MODE_KEY, 'demo');
-              window.location.reload();
-            }}
-            className="mt-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Want the full tour? Explore Smart Engine &amp; Recovery Simulation
-          </button>
+          <p className="mt-4 text-sm text-muted-foreground">
+            <button
+              onClick={() => {
+                sessionStorage.setItem(ONBOARD_MODE_KEY, 'demo');
+                window.location.reload();
+              }}
+              className="text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              Want the full tour?
+            </button>
+            {' '}Explore Smart Engine &amp; Recovery Simulation
+          </p>
         </div>
       )}
 

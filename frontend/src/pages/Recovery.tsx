@@ -131,7 +131,8 @@ export default function Recovery() {
               }
             } catch (err: any) {
               if (err?.status === 401 || err?.message?.includes('401')) {
-                window.location.href = '/login';
+                // Auth handled by React Router — clearToken triggers ProtectedRoute redirect
+                api.clearToken();
               } else {
                 alert(`Restore consent failed: ${err?.message || 'Unknown error'}`);
               }

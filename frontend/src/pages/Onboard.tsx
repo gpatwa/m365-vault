@@ -103,7 +103,7 @@ export default function Onboard() {
           className="flex items-center gap-1.5 text-sm text-blue-400 hover:text-blue-300 transition-colors">
           <ArrowRight className="w-4 h-4 rotate-180" /> Go to Dashboard
         </button>
-        <button onClick={() => { logout(); window.location.href = '/'; }}
+        <button onClick={() => { logout(); navigate('/login'); }}
           className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-muted-foreground transition-colors">
           <LogOut className="w-4 h-4" /> Sign Out
         </button>
@@ -2288,7 +2288,7 @@ export function OnboardCallback() {
             <button
               onClick={() => {
                 sessionStorage.setItem(ONBOARD_MODE_KEY, 'demo');
-                window.location.reload();
+                navigate('/onboard/demo');
               }}
               className="text-blue-400 hover:text-blue-300 transition-colors"
             >

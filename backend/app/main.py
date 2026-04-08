@@ -101,6 +101,10 @@ async def lifespan(app: FastAPI):
                     "ALTER TABLE restore_jobs ADD COLUMN IF NOT EXISTS initiated_by_user_id INTEGER",
                     "ALTER TABLE restore_jobs ADD COLUMN IF NOT EXISTS approval_required INTEGER DEFAULT 0",
                     "ALTER TABLE restore_jobs ADD COLUMN IF NOT EXISTS approval_status VARCHAR(20)",
+                    # Workload lifecycle state machine (008_workload_lifecycle.sql)
+                    "ALTER TABLE tenant_workload_apps ADD COLUMN IF NOT EXISTS lifecycle_status VARCHAR(20) DEFAULT 'disabled' NOT NULL",
+                    # Update existing enabled workloads to have correct lifecycle status
+                    "UPDATE tenant_workload_apps SET lifecycle_status = 'enabled' WHERE enabled = 1 AND lifecycle_status = 'disabled'",
                 ]:
                     try:
                         await _conn.execute(_text(sql))

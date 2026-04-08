@@ -91,7 +91,8 @@ class ApiClient {
 
     if (res.status === 401) {
       this.clearToken();
-      window.location.href = '/login';
+      // Don't hard-redirect — let React Router handle via AuthContext re-render.
+      // ProtectedRoute checks token → no token → <Navigate to="/login" />
       throw new ApiError({ message: 'Unauthorized', status: 401 });
     }
 

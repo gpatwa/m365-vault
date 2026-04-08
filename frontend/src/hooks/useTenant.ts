@@ -53,10 +53,13 @@ export function useTenantSwitcher() {
   });
 
   // Read saved selection from server (via session query or local cache)
+  // Only fetch session if user has a token (prevents 401 loop on login page)
+  const hasToken = !!api.getToken();
   const { data: sessionData } = useQuery({
     queryKey: ['session'],
     queryFn: () => api.get<any>('/auth/session'),
     staleTime: 300000, // 5 min cache
+    enabled: hasToken, // Don't fire when not authenticated
   });
 
   const serverSelectedId = sessionData?.preferences?.selected_tenant

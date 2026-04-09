@@ -296,18 +296,21 @@ fi
 echo ""
 echo "── 13. Operational Maturity ──"
 
-# Prometheus metrics
+# Prometheus metrics (grep -q for boolean match)
 METRICS=$(curl -s --max-time 10 "$BACKEND/metrics")
-check "Prometheus /metrics" "$(echo "$METRICS" | grep -c 'kavachiq_http_requests_total')" "1"
-check "Metrics histograms" "$(echo "$METRICS" | grep -c 'kavachiq_http_request_duration_seconds')" "1"
+check "Prometheus /metrics" "$(echo "$METRICS" | grep -q 'kavachiq_http_requests_total' && echo 'ok' || echo 'missing')" "ok"
+check "Metrics histograms" "$(echo "$METRICS" | grep -q 'kavachiq_http_request_duration_seconds' && echo 'ok' || echo 'missing')" "ok"
 
-# Tenant isolation (demo user should only see their tenant's restore jobs)
-if [ -n "$DEMO_TOKEN" ] && [ -n "$DEMO_TENANT_ID" ]; then
+# Tenant isolation (demo user should only see their own tenants' restore jobs — not all tenants)
+if [ -n "$DEMO_TOKEN" ]; then
+  # Get demo user's allowed tenant IDs
+  DEMO_TIDS=$(curl -s --max-time 10 -H "Authorization: Bearer $DEMO_TOKEN" "$BACKEND/api/tenants/" | python3 -c "import sys,json; print(','.join(str(t['id']) for t in json.load(sys.stdin)))" 2>/dev/null)
   RESTORE_CHECK=$(curl -s --max-time 10 -H "Authorization: Bearer $DEMO_TOKEN" "$BACKEND/api/jobs/restore" | python3 -c "
 import sys,json
 d=json.load(sys.stdin)
+allowed={$DEMO_TIDS} if '$DEMO_TIDS' else set()
 tids=set(i.get('tenant_id') for i in d.get('items',[]))
-print('ok' if not tids or tids <= {$DEMO_TENANT_ID} else 'LEAK')
+print('ok' if not tids or tids <= allowed else 'LEAK')
 " 2>/dev/null)
   check "Restore jobs tenant-scoped" "$RESTORE_CHECK" "ok"
 fi

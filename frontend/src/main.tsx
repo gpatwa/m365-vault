@@ -19,7 +19,8 @@ import App from './App';
  *
  * This default covers ACTIVE cadence. Pages override for their context.
  * Tab focus triggers immediate refresh (user comes back, sees fresh data).
- * Background tabs pause polling (saves API calls, battery).
+ * Background polling stays ON — when user switches back, data is already current.
+ * Cost: ~8 API calls per 30s per open tab. Acceptable for SaaS monitoring dashboard.
  */
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,7 +30,7 @@ const queryClient = new QueryClient({
       refetchOnReconnect: true,
       staleTime: 30_000,
       refetchInterval: 30_000,
-      refetchIntervalInBackground: false,
+      refetchIntervalInBackground: true,
     },
   },
 });

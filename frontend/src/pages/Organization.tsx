@@ -235,7 +235,8 @@ export default function Organization() {
     queryFn: () => api.get<any>(`/tenants/${selectedTenant?.id}/permissions`),
     enabled: false, // NEVER auto-fetch — only via refetch() on button click
     retry: false,
-    staleTime: 300_000, // 5 min — permissions don't change without user action
+    staleTime: 300_000,
+    refetchInterval: false, // STATIC: only refresh on window focus or manual action
   });
 
   const {
@@ -246,7 +247,8 @@ export default function Organization() {
     queryFn: () => api.get<WorkloadStatusResponse>(`/tenants/${selectedTenant?.id}/workloads`),
     enabled: !!selectedTenant?.id,
     retry: false,
-    staleTime: 60_000, // 1 min — lifecycle changes only on user action
+    staleTime: 60_000,
+    refetchInterval: false, // STATIC: changes only on user action
   });
 
   const { data: subscription } = useQuery({
@@ -254,7 +256,8 @@ export default function Organization() {
     queryFn: () => api.get<SubscriptionInfo>(`/billing/subscription?tenant_id=${selectedTenant?.id}`),
     enabled: !!selectedTenant?.id,
     retry: false,
-    staleTime: 300_000, // 5 min — subscription doesn't change often
+    staleTime: 300_000,
+    refetchInterval: false, // STATIC: subscription doesn't change often
   });
 
   /* ---- Mutations ---- */

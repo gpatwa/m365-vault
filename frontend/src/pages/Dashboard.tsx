@@ -280,10 +280,10 @@ export default function Dashboard() {
 
   // Data Fetching
 
+  // Dashboard uses ACTIVE cadence (30s global default) — no overrides needed
   const { data: summary } = useQuery({
     queryKey: ['dashboard-summary'],
     queryFn: () => api.get<DashboardSummary>('/dashboard/summary'),
-    refetchInterval: 30000,
   });
 
   const { data: activityData } = useQuery({
@@ -294,7 +294,6 @@ export default function Dashboard() {
   const { data: healthData } = useQuery({
     queryKey: ['health-score', tenantId],
     queryFn: () => api.get<{ score: number; components: any; details: any }>(`/health/score?tenant_id=${tenantId}`),
-    refetchInterval: 60000,
     enabled: !!tenantId,
   });
 
@@ -306,13 +305,13 @@ export default function Dashboard() {
   const { data: unprotectedData } = useQuery({
     queryKey: ['dashboard-unprotected'],
     queryFn: () => api.get<{ total_unprotected: number; total_at_risk: number }>('/dashboard/unprotected'),
-    refetchInterval: 30000,
   });
 
   const { data: licenseData } = useQuery({
     queryKey: ['usage-license'],
     queryFn: () => api.get<any>('/usage/license'),
-    staleTime: 60000,
+    staleTime: 300_000, // STATIC: license/usage doesn't change often
+    refetchInterval: 300_000,
   });
 
   // Computed: Hero Stats

@@ -622,6 +622,15 @@ async def health():
         checks["storage"] = f"unhealthy: {str(e)[:100]}"
         healthy = False
 
+    # Check Redis queue depth (observability for KEDA auto-scaling)
+    if settings.DISPATCH_MODE == "redis":
+        try:
+            from app.interfaces.dispatcher_factory import get_dispatcher
+            dispatcher = get_dispatcher()
+            checks["queues"] = await dispatcher.queue_length()
+        except Exception as e:
+            checks["queues"] = f"unavailable: {str(e)[:100]}"
+
     status_code = 200 if healthy else 503
     return JSONResponse(
         status_code=status_code,

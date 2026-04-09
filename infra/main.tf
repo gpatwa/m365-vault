@@ -148,6 +148,9 @@ module "container_apps" {
   worker_memory             = var.worker_memory
   worker_min_replicas       = var.worker_min_replicas
   worker_max_replicas       = var.worker_max_replicas
+  worker_concurrency        = var.worker_concurrency
+  worker_scale_threshold    = var.worker_scale_threshold
+  redis_enable_tls          = var.redis_enable_tls
   # Key Vault (for secret references — no secrets in Terraform state)
   keyvault_uri              = module.keyvault.vault_uri
   # Non-sensitive config (safe in state)

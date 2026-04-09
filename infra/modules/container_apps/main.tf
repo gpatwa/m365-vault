@@ -351,18 +351,29 @@ resource "azurerm_container_app" "worker" {
     min_replicas = var.worker_min_replicas
     max_replicas = var.worker_max_replicas
 
-    # KEDA scaler: scale workers based on Redis queue depth
-    # Queue length 0 → scale to min_replicas (0 in staging = scale-to-zero)
-    # Queue length 5+ → scale up additional workers
-    # Queue length 20+ → scale to max (handles backup-all across tenants)
+    # KEDA scalers: scale workers based on actual Redis queue depth.
+    # ACA evaluates all rules and picks the one demanding more replicas.
+    # Backup queue handles bulk traffic (batch child jobs, scheduled backups).
+    # Restore queue handles on-demand restore operations.
     custom_scale_rule {
-      name             = "redis-queue-depth"
+      name             = "backup-queue"
       custom_rule_type = "redis"
       metadata = {
-        address       = var.redis_url
-        listName      = "kavachiq:worker:queue"
-        listLength    = "5"
-        enableTLS     = "false"
+        address    = var.redis_url
+        listName   = "kavachiq:backup_queue"
+        listLength = var.worker_scale_threshold
+        enableTLS  = var.redis_enable_tls
+      }
+    }
+
+    custom_scale_rule {
+      name             = "restore-queue"
+      custom_rule_type = "redis"
+      metadata = {
+        address    = var.redis_url
+        listName   = "kavachiq:restore_queue"
+        listLength = var.worker_scale_threshold
+        enableTLS  = var.redis_enable_tls
       }
     }
 
@@ -407,7 +418,7 @@ resource "azurerm_container_app" "worker" {
       }
       env {
         name  = "WORKER_CONCURRENCY"
-        value = "3"
+        value = var.worker_concurrency
       }
     }
   }

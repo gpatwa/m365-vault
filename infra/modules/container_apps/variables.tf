@@ -142,6 +142,24 @@ variable "worker_max_replicas" {
   default = 3
 }
 
+variable "worker_concurrency" {
+  description = "Async tasks per worker replica (WORKER_CONCURRENCY env var)"
+  type        = string
+  default     = "3"
+}
+
+variable "worker_scale_threshold" {
+  description = "Redis queue items per worker replica before KEDA scales up"
+  type        = string
+  default     = "5"
+}
+
+variable "redis_enable_tls" {
+  description = "Enable TLS for KEDA Redis scaler connection (true for Azure Cache)"
+  type        = string
+  default     = "false"
+}
+
 variable "tags" {
   type    = map(string)
   default = {}

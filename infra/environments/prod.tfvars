@@ -17,11 +17,14 @@ backend_memory        = "2Gi"
 backend_min_replicas  = 2
 backend_max_replicas  = 10
 
-# Worker — production sizing
-worker_cpu            = 1.0
-worker_memory         = "2Gi"
-worker_min_replicas   = 2
-worker_max_replicas   = 6
+# Worker — production sizing, KEDA scales on Redis queue depth
+worker_cpu              = 1.0
+worker_memory           = "2Gi"
+worker_min_replicas     = 1
+worker_max_replicas     = 10
+worker_concurrency      = "5"
+worker_scale_threshold  = "3"
+redis_enable_tls        = "true"
 
 # Redis — Standard C1 for prod (replicated, ~$75/mo)
 redis_sku             = "Standard"

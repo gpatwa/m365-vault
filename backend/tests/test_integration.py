@@ -126,18 +126,18 @@ class TestDashboardHealth:
         assert "database" in data["checks"]
 
     @pytest.mark.asyncio
-    async def test_health_score_empty(self, auth_client: AsyncClient):
+    async def test_health_score_empty(self, auth_client: AsyncClient, test_tenant):
         """Health score with no data returns valid structure."""
-        resp = await auth_client.get("/api/health/score?tenant_id=999")
+        resp = await auth_client.get(f"/api/health/score?tenant_id={test_tenant}")
         assert resp.status_code == 200
         data = resp.json()
         assert "score" in data
         assert "components" in data
 
     @pytest.mark.asyncio
-    async def test_anomalies_empty(self, auth_client: AsyncClient):
+    async def test_anomalies_empty(self, auth_client: AsyncClient, test_tenant):
         """Anomalies endpoint with no data returns empty list."""
-        resp = await auth_client.get("/api/health/anomalies?tenant_id=999")
+        resp = await auth_client.get(f"/api/health/anomalies?tenant_id={test_tenant}")
         assert resp.status_code == 200
         data = resp.json()
         assert data["total"] == 0
@@ -233,9 +233,9 @@ class TestSearch:
     """Test search endpoints."""
 
     @pytest.mark.asyncio
-    async def test_global_search_empty(self, auth_client: AsyncClient):
+    async def test_global_search_empty(self, auth_client: AsyncClient, test_tenant):
         """Global search with no data returns valid response."""
-        resp = await auth_client.get("/api/search?query=test&tenant_id=1&page_size=10")
+        resp = await auth_client.get(f"/api/search?query=test&tenant_id={test_tenant}&page_size=10")
         # 200 or 422 (if tenant_id required) are both acceptable
         assert resp.status_code in (200, 422)
 
@@ -254,15 +254,15 @@ class TestReportsUsage:
     """Test reports and usage endpoints."""
 
     @pytest.mark.asyncio
-    async def test_backup_performance_report(self, auth_client: AsyncClient):
+    async def test_backup_performance_report(self, auth_client: AsyncClient, test_tenant):
         """Backup performance report returns valid structure."""
-        resp = await auth_client.get("/api/reports/backup-performance?period=7d&tenant_id=1")
+        resp = await auth_client.get(f"/api/reports/backup-performance?period=7d&tenant_id={test_tenant}")
         assert resp.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_storage_analytics(self, auth_client: AsyncClient):
+    async def test_storage_analytics(self, auth_client: AsyncClient, test_tenant):
         """Storage analytics returns valid structure."""
-        resp = await auth_client.get("/api/reports/storage-analytics?tenant_id=1")
+        resp = await auth_client.get(f"/api/reports/storage-analytics?tenant_id={test_tenant}")
         assert resp.status_code == 200
 
     @pytest.mark.asyncio

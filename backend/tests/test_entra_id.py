@@ -4,18 +4,18 @@ from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
-async def test_entra_id_summary_no_tenant(auth_client: AsyncClient):
+async def test_entra_id_summary_no_tenant(auth_client: AsyncClient, test_tenant):
     """Entra ID summary returns not-protected when no tenant exists."""
-    response = await auth_client.get("/api/entra-id/summary?tenant_id=999")
+    response = await auth_client.get(f"/api/entra-id/summary?tenant_id={test_tenant}")
     assert response.status_code == 200
     data = response.json()
     assert data["protected"] is False or data.get("protected") is None
 
 
 @pytest.mark.asyncio
-async def test_entra_id_snapshots_empty(auth_client: AsyncClient):
+async def test_entra_id_snapshots_empty(auth_client: AsyncClient, test_tenant):
     """Entra ID snapshots returns empty for non-existent tenant."""
-    response = await auth_client.get("/api/entra-id/snapshots?tenant_id=999")
+    response = await auth_client.get(f"/api/entra-id/snapshots?tenant_id={test_tenant}")
     assert response.status_code == 200
     data = response.json()
     assert data["total"] == 0
@@ -50,9 +50,9 @@ async def test_entra_id_compare_empty(auth_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_entra_id_backup_no_tenant(auth_client: AsyncClient):
+async def test_entra_id_backup_no_tenant(auth_client: AsyncClient, test_tenant):
     """Backup returns 404 when no Entra ID object exists."""
-    response = await auth_client.post("/api/entra-id/backup?tenant_id=999")
+    response = await auth_client.post(f"/api/entra-id/backup?tenant_id={test_tenant}")
     assert response.status_code == 404
 
 

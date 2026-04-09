@@ -403,9 +403,9 @@ async def test_mass_restore_includes_criticality_fields(auth_client: AsyncClient
 # ══════════════════════════════════════════════════════════
 
 @pytest.mark.asyncio
-async def test_mvb_plan_api_no_plan(auth_client: AsyncClient):
+async def test_mvb_plan_api_no_plan(auth_client: AsyncClient, test_tenant):
     """GET mvb-plan returns no_plan for tenant without a plan."""
-    response = await auth_client.get("/api/recovery/mvb-plan?tenant_id=999")
+    response = await auth_client.get(f"/api/recovery/mvb-plan?tenant_id={test_tenant}")
     assert response.status_code == 200
     assert response.json()["status"] == "no_plan"
 
@@ -516,9 +516,9 @@ async def test_confidence_v2_weights_critical_users(auth_client: AsyncClient, db
 
 
 @pytest.mark.asyncio
-async def test_confidence_v2_empty_tenant(auth_client: AsyncClient):
+async def test_confidence_v2_empty_tenant(auth_client: AsyncClient, test_tenant):
     """Confidence v2 for empty tenant returns 0."""
-    response = await auth_client.get("/api/recovery/confidence/v2?tenant_id=999")
+    response = await auth_client.get(f"/api/recovery/confidence/v2?tenant_id={test_tenant}")
     assert response.status_code == 200
     data = response.json()
     assert data["score"] == 0

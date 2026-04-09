@@ -44,9 +44,8 @@ async def backup_performance(
     since = datetime.utcnow() - delta
     days = int(delta.total_seconds() / 86400)
 
-    filters = [BackupJob.created_at >= since]
     allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
-    stmt = stmt.where(BackupJob.tenant_id.in_(allowed_ids))
+    filters = [BackupJob.created_at >= since, BackupJob.tenant_id.in_(allowed_ids)]
 
     # Overall stats
     total = (await db.execute(select(func.count(BackupJob.id)).where(*filters))).scalar() or 0
@@ -97,9 +96,7 @@ async def backup_performance(
         date = (datetime.utcnow() - timedelta(days=days - 1 - i)).date()
         day_start = datetime.combine(date, datetime.min.time())
         day_end = datetime.combine(date, datetime.max.time())
-        day_filters = [BackupJob.created_at >= day_start, BackupJob.created_at <= day_end]
-        allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
-        stmt = stmt.where(BackupJob.tenant_id.in_(allowed_ids))
+        day_filters = [BackupJob.created_at >= day_start, BackupJob.created_at <= day_end, BackupJob.tenant_id.in_(allowed_ids)]
 
         day_total = (await db.execute(select(func.count(BackupJob.id)).where(*day_filters))).scalar() or 0
         day_completed = (await db.execute(select(func.count(BackupJob.id)).where(*day_filters, BackupJob.status == JobStatus.COMPLETED))).scalar() or 0
@@ -141,9 +138,8 @@ async def storage_analytics(
     """Storage usage, dedup savings, compression ratio, growth trend."""
     from app.models.dedup import DedupEntry
 
-    filters = [Snapshot.status == SnapshotStatus.COMPLETED]
     allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
-    stmt = stmt.where(ProtectedObject.tenant_id.in_(allowed_ids))
+    filters = [Snapshot.status == SnapshotStatus.COMPLETED]
 
     # Total storage
     if tenant_id:

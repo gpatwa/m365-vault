@@ -28,6 +28,11 @@ def mock_deps():
     db = AsyncMock()
     db.add = MagicMock()
     db.flush = AsyncMock()
+    # begin_nested() must return an async context manager for savepoint-per-item
+    nested_ctx = AsyncMock()
+    nested_ctx.__aenter__ = AsyncMock(return_value=None)
+    nested_ctx.__aexit__ = AsyncMock(return_value=False)
+    db.begin_nested = MagicMock(return_value=nested_ctx)
 
     graph = AsyncMock()
     graph.get_all_pages = AsyncMock(return_value=[])

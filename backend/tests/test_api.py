@@ -82,8 +82,8 @@ async def test_alerts_config(auth_client: AsyncClient):
 # ── Health Score ──
 
 @pytest.mark.asyncio
-async def test_health_score(auth_client: AsyncClient):
-    response = await auth_client.get("/api/health/score?tenant_id=1")
+async def test_health_score(auth_client: AsyncClient, test_tenant):
+    response = await auth_client.get(f"/api/health/score?tenant_id={test_tenant}")
     assert response.status_code == 200
     data = response.json()
     assert "score" in data
@@ -93,14 +93,14 @@ async def test_health_score(auth_client: AsyncClient):
 # ── Reports ──
 
 @pytest.mark.asyncio
-async def test_reports_backup_performance(auth_client: AsyncClient):
-    response = await auth_client.get("/api/reports/backup-performance?period=7d&tenant_id=1")
+async def test_reports_backup_performance(auth_client: AsyncClient, test_tenant):
+    response = await auth_client.get(f"/api/reports/backup-performance?period=7d&tenant_id={test_tenant}")
     assert response.status_code == 200
 
 
 @pytest.mark.asyncio
-async def test_reports_storage(auth_client: AsyncClient):
-    response = await auth_client.get("/api/reports/storage-analytics?tenant_id=1")
+async def test_reports_storage(auth_client: AsyncClient, test_tenant):
+    response = await auth_client.get(f"/api/reports/storage-analytics?tenant_id={test_tenant}")
     assert response.status_code == 200
 
 
@@ -124,8 +124,8 @@ async def test_usage_platform(auth_client: AsyncClient):
 # ── Search ──
 
 @pytest.mark.asyncio
-async def test_intent_search(auth_client: AsyncClient):
-    response = await auth_client.get("/api/search/intent?q=exchange%20backup%20status&tenant_id=1")
+async def test_intent_search(auth_client: AsyncClient, test_tenant):
+    response = await auth_client.get(f"/api/search/intent?q=exchange%20backup%20status&tenant_id={test_tenant}")
     assert response.status_code == 200
     data = response.json()
     assert "intent" in data

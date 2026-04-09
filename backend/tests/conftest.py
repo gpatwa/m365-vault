@@ -176,3 +176,49 @@ async def db():
     """Database session for direct DB operations in tests."""
     async with async_session() as session:
         yield session
+
+
+@pytest_asyncio.fixture
+async def test_tenant(auth_client: AsyncClient):
+    """Create a test tenant with full membership for the authenticated user.
+
+    Returns the tenant_id that auth_client has access to. Use this in any test
+    that needs a valid tenant_id for API calls.
+
+    This is the systemic fix for 54 tests that were failing with 403 because
+    they used hardcoded tenant_ids (1, 999) without creating memberships.
+    """
+    from app.database import async_session as _session
+    from app.models.tenant import Tenant, TenantStatus
+    from app.models.user import User
+    from app.models.user_tenant import UserTenant
+    from sqlalchemy import select
+
+    async with _session() as db:
+        # Create tenant
+        tenant = Tenant(
+            name="Test Tenant",
+            ms_tenant_id="test-tenant-for-tests",
+            client_id="test-client-id",
+            client_secret_encrypted="test-enc",
+            status=TenantStatus.ACTIVE,
+        )
+        db.add(tenant)
+        await db.flush()
+
+        # Find the authenticated user (testadmin from auth_client fixture)
+        result = await db.execute(select(User).where(User.username == "testadmin"))
+        user = result.scalar_one_or_none()
+
+        if user:
+            membership = UserTenant(
+                user_id=user.id,
+                tenant_id=tenant.id,
+                role="owner",
+                is_default=1,
+            )
+            db.add(membership)
+
+        await db.commit()
+        await db.refresh(tenant)
+        yield tenant.id

@@ -6,9 +6,9 @@ from httpx import AsyncClient
 # ── Recovery Confidence Score ──
 
 @pytest.mark.asyncio
-async def test_confidence_score(auth_client: AsyncClient):
+async def test_confidence_score(auth_client: AsyncClient, test_tenant):
     """Confidence score returns valid structure."""
-    response = await auth_client.get("/api/recovery/confidence?tenant_id=1")
+    response = await auth_client.get(f"/api/recovery/confidence?tenant_id={test_tenant}")
     assert response.status_code == 200
     data = response.json()
     assert "score" in data
@@ -24,9 +24,9 @@ async def test_confidence_score(auth_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_confidence_score_empty_tenant(auth_client: AsyncClient):
+async def test_confidence_score_empty_tenant(auth_client: AsyncClient, test_tenant):
     """Confidence score for non-existent tenant returns 0."""
-    response = await auth_client.get("/api/recovery/confidence?tenant_id=999")
+    response = await auth_client.get(f"/api/recovery/confidence?tenant_id={test_tenant}")
     assert response.status_code == 200
     data = response.json()
     assert data["score"] == 0 or data["factors"]["completeness"]["score"] == 0
@@ -35,9 +35,9 @@ async def test_confidence_score_empty_tenant(auth_client: AsyncClient):
 # ── RPO/RTO ──
 
 @pytest.mark.asyncio
-async def test_rpo_rto(auth_client: AsyncClient):
+async def test_rpo_rto(auth_client: AsyncClient, test_tenant):
     """RPO/RTO returns valid structure."""
-    response = await auth_client.get("/api/recovery/rpo-rto?tenant_id=1")
+    response = await auth_client.get(f"/api/recovery/rpo-rto?tenant_id={test_tenant}")
     assert response.status_code == 200
     data = response.json()
     assert "overall_rpo_compliance" in data
@@ -47,9 +47,9 @@ async def test_rpo_rto(auth_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_rpo_rto_empty_tenant(auth_client: AsyncClient):
+async def test_rpo_rto_empty_tenant(auth_client: AsyncClient, test_tenant):
     """RPO/RTO for empty tenant returns 0 compliance."""
-    response = await auth_client.get("/api/recovery/rpo-rto?tenant_id=999")
+    response = await auth_client.get(f"/api/recovery/rpo-rto?tenant_id={test_tenant}")
     assert response.status_code == 200
     data = response.json()
     assert data["overall_rpo_compliance"] == 0
@@ -89,9 +89,9 @@ async def test_runbook_has_all_scenarios(auth_client: AsyncClient):
 # ── Recovery Verification ──
 
 @pytest.mark.asyncio
-async def test_verify_recovery(auth_client: AsyncClient):
+async def test_verify_recovery(auth_client: AsyncClient, test_tenant):
     """Recovery verification returns valid structure."""
-    response = await auth_client.get("/api/recovery/verify?tenant_id=1")
+    response = await auth_client.get(f"/api/recovery/verify?tenant_id={test_tenant}")
     assert response.status_code == 200
     data = response.json()
     assert "verified" in data
@@ -103,9 +103,9 @@ async def test_verify_recovery(auth_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_verify_empty_tenant(auth_client: AsyncClient):
+async def test_verify_empty_tenant(auth_client: AsyncClient, test_tenant):
     """Verification for empty tenant returns not verified."""
-    response = await auth_client.get("/api/recovery/verify?tenant_id=999")
+    response = await auth_client.get(f"/api/recovery/verify?tenant_id={test_tenant}")
     assert response.status_code == 200
     data = response.json()
     assert data["verified"] is False
@@ -115,10 +115,10 @@ async def test_verify_empty_tenant(auth_client: AsyncClient):
 # ── Mass Recovery ──
 
 @pytest.mark.asyncio
-async def test_mass_restore_dry_run(auth_client: AsyncClient):
+async def test_mass_restore_dry_run(auth_client: AsyncClient, test_tenant):
     """Mass restore dry run shows plan without executing."""
     response = await auth_client.post("/api/recovery/mass-restore", json={
-        "tenant_id": 1,
+        "tenant_id": test_tenant,
         "dry_run": True,
     })
     # 200 with plan or 404 if no objects
@@ -130,10 +130,10 @@ async def test_mass_restore_dry_run(auth_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_mass_restore_no_objects(auth_client: AsyncClient):
+async def test_mass_restore_no_objects(auth_client: AsyncClient, test_tenant):
     """Mass restore returns 404 when no protected objects."""
     response = await auth_client.post("/api/recovery/mass-restore", json={
-        "tenant_id": 999,
+        "tenant_id": test_tenant,
         "dry_run": True,
     })
     assert response.status_code == 404
@@ -142,16 +142,16 @@ async def test_mass_restore_no_objects(auth_client: AsyncClient):
 # ── Test Restore ──
 
 @pytest.mark.asyncio
-async def test_test_restore_no_objects(auth_client: AsyncClient):
+async def test_test_restore_no_objects(auth_client: AsyncClient, test_tenant):
     """Test restore returns 404 when no objects to test."""
-    response = await auth_client.post("/api/recovery/test-restore?tenant_id=999")
+    response = await auth_client.post(f"/api/recovery/test-restore?tenant_id={test_tenant}")
     assert response.status_code == 404
 
 
 @pytest.mark.asyncio
-async def test_test_restore_with_workload_filter(auth_client: AsyncClient):
+async def test_test_restore_with_workload_filter(auth_client: AsyncClient, test_tenant):
     """Test restore accepts workload filter."""
-    response = await auth_client.post("/api/recovery/test-restore?tenant_id=1&workload=exchange")
+    response = await auth_client.post(f"/api/recovery/test-restore?tenant_id={test_tenant}&workload=exchange")
     # 200 with results or 404 if no exchange objects
     assert response.status_code in (200, 404)
     if response.status_code == 200:
@@ -164,13 +164,13 @@ async def test_test_restore_with_workload_filter(auth_client: AsyncClient):
 # ── All Recovery Endpoints Exist ──
 
 @pytest.mark.asyncio
-async def test_all_recovery_endpoints_exist(auth_client: AsyncClient):
+async def test_all_recovery_endpoints_exist(auth_client: AsyncClient, test_tenant):
     """Verify all recovery endpoints are registered."""
     endpoints = [
-        ("GET", "/api/recovery/confidence?tenant_id=1"),
-        ("GET", "/api/recovery/rpo-rto?tenant_id=1"),
+        ("GET", f"/api/recovery/confidence?tenant_id={test_tenant}"),
+        ("GET", f"/api/recovery/rpo-rto?tenant_id={test_tenant}"),
         ("GET", "/api/recovery/runbooks"),
-        ("GET", "/api/recovery/verify?tenant_id=1"),
+        ("GET", f"/api/recovery/verify?tenant_id={test_tenant}"),
     ]
     for method, path in endpoints:
         response = await auth_client.get(path)

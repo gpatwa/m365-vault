@@ -98,36 +98,11 @@ async def _run_migrations():
                 )
 
 
-    # PostgreSQL enum value migrations (safe to re-run)
-    enum_migrations = [
-        # v1.3.0: Entra ID + Teams workloads
-        ("workloadtype", ["ENTRA_ID", "TEAMS"]),
-        # v1.3.0: Entra ID + Teams item types
-        ("itemtype", [
-            "USER", "GROUP", "DIRECTORY_ROLE", "ROLE_ASSIGNMENT",
-            "CONDITIONAL_ACCESS_POLICY", "APP_REGISTRATION", "NAMED_LOCATION",
-            "CHAT_MESSAGE", "CHANNEL_MESSAGE", "TEAM_CHANNEL", "MEETING",
-            "CHAT", "CHAT_ATTACHMENT",
-        ]),
-    ]
-
-    # v1.8.0: dead_letter status for backup and restore jobs
-    enum_migrations.extend([
-        ("jobstatus", ["dead_letter"]),
-        ("restorestatus", ["dead_letter"]),
-    ])
-
-    # v1.9.0: ErrorCategory enum values for failed_items table
-    # Missing from previous migrations — caused every Exchange/OneDrive backup
-    # to dead-letter (PendingRollbackError cascade from invalid enum insert).
-    enum_migrations.extend([
-        ("errorcategory", [
-            "permission_denied", "not_found", "throttled", "timeout",
-            "quota_exceeded", "file_too_large", "encryption_error",
-            "storage_error", "invalid_data", "auth_expired", "server_error",
-            "network_error", "internal_transient", "unknown",
-        ]),
-    ])
+    # PostgreSQL enum value sync — auto-derived from Python enum classes.
+    # This guarantees Python enums and PostgreSQL enums can never drift apart.
+    # When a developer adds a value to any Python enum, it automatically appears
+    # in PostgreSQL on next deploy. No hand-maintained migration list needed.
+    enum_migrations = _collect_enum_values()
 
     for enum_name, values in enum_migrations:
         for value in values:
@@ -137,6 +112,40 @@ async def _run_migrations():
                 )
             except Exception:
                 pass  # Enum value already exists or not PostgreSQL
+
+
+def _collect_enum_values() -> list[tuple[str, list[str]]]:
+    """Auto-derive PostgreSQL enum values from all Python enum classes.
+
+    Scans every SQLAlchemy model for Enum columns, maps the PostgreSQL type name
+    to the Python enum's values. This makes it impossible for Python and PostgreSQL
+    enums to diverge — adding a value to a Python enum automatically syncs on deploy.
+    """
+    import enum as _enum
+    from sqlalchemy import Enum as SAEnum, inspect as sa_inspect
+
+    enum_map: dict[str, set[str]] = {}
+
+    for mapper in Base.registry.mappers:
+        for column in mapper.columns:
+            if isinstance(column.type, SAEnum):
+                # Get the PostgreSQL enum type name (lowercase)
+                pg_type_name = column.type.name
+                if not pg_type_name:
+                    continue
+                # Get all values from the Python enum class
+                enum_class = column.type.enum_class
+                if enum_class and issubclass(enum_class, _enum.Enum):
+                    values = {e.value for e in enum_class}
+                elif column.type.enums:
+                    values = set(column.type.enums)
+                else:
+                    continue
+                if pg_type_name not in enum_map:
+                    enum_map[pg_type_name] = set()
+                enum_map[pg_type_name].update(values)
+
+    return [(name, sorted(values)) for name, values in sorted(enum_map.items())]
 
 
 def _text(sql: str):

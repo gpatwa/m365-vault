@@ -101,9 +101,9 @@ async def test_teams_restore_invalid_snapshot(auth_client: AsyncClient):
 # ── Entra ID Restore ──
 
 @pytest.mark.asyncio
-async def test_entra_restore_no_object(auth_client: AsyncClient):
+async def test_entra_restore_no_object(auth_client: AsyncClient, test_tenant):
     """Entra ID restore returns 404 when no Entra object exists."""
-    response = await auth_client.post("/api/entra-id/restore?tenant_id=999", json={
+    response = await auth_client.post(f"/api/entra-id/restore?tenant_id={test_tenant}", json={
         "snapshot_id": 1, "restore_type": "item_level", "item_ids": [1],
     })
     assert response.status_code == 404
@@ -124,9 +124,9 @@ async def test_list_restore_jobs(auth_client: AsyncClient):
 # ── Self-Service Restore ──
 
 @pytest.mark.asyncio
-async def test_self_restore_search(auth_client: AsyncClient):
+async def test_self_restore_search(auth_client: AsyncClient, test_tenant):
     """Self-restore search returns results structure."""
-    response = await auth_client.get("/api/self-restore/search?query=test&tenant_id=1")
+    response = await auth_client.get(f"/api/self-restore/search?query=test&tenant_id={test_tenant}")
     assert response.status_code == 200
     data = response.json()
     assert "total" in data
@@ -134,19 +134,19 @@ async def test_self_restore_search(auth_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_self_restore_requires_query(auth_client: AsyncClient):
+async def test_self_restore_requires_query(auth_client: AsyncClient, test_tenant):
     """Self-restore search requires query parameter."""
-    response = await auth_client.get("/api/self-restore/search?tenant_id=1")
+    response = await auth_client.get(f"/api/self-restore/search?tenant_id={test_tenant}")
     assert response.status_code in (200, 422)  # Empty query returns empty or validation error
 
 
 # ── Mass Recovery ──
 
 @pytest.mark.asyncio
-async def test_mass_recovery_empty(auth_client: AsyncClient):
+async def test_mass_recovery_empty(auth_client: AsyncClient, test_tenant):
     """Mass recovery with no failed jobs returns appropriate response."""
     response = await auth_client.post("/api/jobs/mass-recovery", json={
-        "tenant_id": 1, "workload_type": "exchange",
+        "tenant_id": test_tenant, "workload_type": "exchange",
     })
     # 200 = success, 404 = no failed jobs, 422 = validation error
     assert response.status_code in (200, 404, 422)

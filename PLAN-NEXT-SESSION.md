@@ -1,146 +1,133 @@
-# KavachIQ — Next Session Plan
+# KavachIQ — Enterprise Release Readiness Plan
 
 ## Session Context
 
-**Date**: April 8, 2026
+**Date**: April 9, 2026
 **Branch**: `main` (all work merged)
-**Deployed**: `v1775693680` on `kavachiq.com`
-**Tests**: 401 total (351 backend + 50 frontend), `make release ENV=dev` passes
+**Deployed**: kavachiq.com
+**Tests**: 768 backend + 50 frontend + 70 E2E (all passing)
 
 ## What Was Shipped This Session
 
-| Feature | Files Changed | Status |
-|---|---|---|
-| Workload Lifecycle state machine | `workload_lifecycle.py`, `onboarding.py`, `dashboard.py`, `scheduler.py`, `smart_engine.py` | Deployed |
-| 3 Frontend UIs (Organization, Alerts, eDiscovery) | `Organization.tsx`, `AlertSettings.tsx`, `eDiscovery.tsx` | Deployed |
-| Auth matrix + data accuracy tests | `test_auth_matrix.py` (185), `test_sidebar_data_accuracy.py` (26), `test_workload_lifecycle.py` (14) | Passing |
-| Frontend test infrastructure | Vitest + testing-library, `RoleGate.test.tsx` (8), `Layout.test.tsx` (40) | Passing |
-| RoleGate route guards | `RoleGate.tsx`, `App.tsx` (MSP/tenants/features gated) | Deployed |
-| Sidebar progressive disclosure | `Layout.tsx` (More Workloads, Admin hidden for prospects), `CommandPalette.tsx` (uses visiblePaths) | Deployed |
-| CDN caching | `nginx.conf.template` (CDN-Cache-Control: no-store for HTML, immutable for hashed assets) | Deployed |
-| Performance | 4→1 session calls, lazy permissions, staleTime on all queries, removed /dashboard/summary from OnboardingContext | Deployed |
-| Onboarding fixes | Auto-enable workloads in /discover, Azure redirect URI, lifecycle_status migration | Deployed |
-| Release pipeline | `make release` = test-local → test-pg → safe-deploy → e2e-test (65 checks) | Working |
-| PostgreSQL test target | `make test-pg` (225 tests against Docker PG) | Working |
-| Landing page refresh | Pricing with workload limits, 6 feature cards, competitor comparison, FAQ | Deployed |
+| Feature | Status |
+|---------|--------|
+| Batch scheduler (parent-child jobs, 500-item batches) | Deployed |
+| Anomaly detection ceiling (dedup, auto-resolve, TTL) | Deployed |
+| Server-side onboarding state machine | Deployed |
+| KEDA auto-scaling fix (was watching wrong queue) | Deployed |
+| Atomic seed data module | Deployed |
+| Tenant isolation fix (6 cross-tenant data leaks) | Deployed |
+| Prometheus observability (prometheus-client, histograms) | Deployed |
+| Encryption key versioning (zero-downtime rotation) | Deployed |
+| Secret expiry monitoring + diagnostics | Deployed |
+| Cost attribution (Redis metering, cost breakdown API) | Deployed |
+| Security scan + 10 findings fixed | Deployed |
 
-## Three Systemic Issues for Next Session
+## P0 — Ship Blockers (Must Fix Before Any Customer)
 
-### 1. Scalable Batch Scheduler (RESEARCH NEEDED)
+### 1. Fix 54 Failing Tests
+**Risk**: HIGH — 93% pass rate is not shippable
+**Root cause**: Mostly 403 errors — test fixtures create users without tenant memberships, same pattern as the demo user bug we fixed. The tests that fail are all in modules that require tenant access (recovery, restore, teams, org_context, MVB plan, entra_id).
+**Fix**: Update test fixtures to create proper UserTenantMembership records.
+**Effort**: 2-3 hours
 
-**Problem**: Current scheduler creates 1 job per workload type per SLA cycle. That 1 job processes ALL objects of that type sequentially. For a tenant with 100K Exchange mailboxes, one job takes 20+ hours with no parallelism.
+### 2. Root-Cause 1.3% Backup Success Rate
+**Risk**: CRITICAL — product doesn't work if backups fail
+**Symptoms**: Pre-existing issue from previous session. Backend "degraded" status.
+**Investigation needed**:
+- Check Graph API token refresh (are tokens expiring mid-backup?)
+- Check connection pool exhaustion (pool_size=25, max_overflow=50)
+- Check worker logs for common error patterns
+- Check if demo tenant's M365 connector secret has expired
+**Effort**: 2-4 hours (investigation) + fix time
 
-**What exists today**:
-- `backend/app/services/scheduler.py` — `check_and_schedule_backups()` creates jobs
-- `backend/app/services/fair_scheduler.py` — `TenantFairScheduler` with per-tenant semaphore (max 3 concurrent)
-- `backend/app/services/adaptive_concurrency.py` — AIMD limiter for Graph API (auto-reduces on 429)
-- `backend/app/models/backup_job.py` — BackupJob model (no parent/child relationship)
-- `backend/app/services/graph_client.py` — `batch_request()` with `GRAPH_BATCH_SIZE` chunking
+### 3. Upgrade Vulnerable Dependencies
+**Risk**: HIGH — CVEs in auth (JWT) and encryption (AES-256)
+**Packages**:
+- `python-jose==3.3.0` → `3.4.0` (PYSEC-2024-232, PYSEC-2024-233)
+- `cryptography==43.0.1` → `46.0.6` (CVE-2024-12797, CVE-2026-26007, CVE-2026-34073)
+**Verification**: Run encryption round-trip tests + JWT login flow after upgrade
+**Effort**: 1 hour
 
-**Research needed**: How do Veeam, Druva, Commvault, Rubrik handle 100K+ item workloads?
-- Parent-child job model (batch coordinator + workers)?
-- Graph API pagination strategy ($top=999, delta queries)?
-- Checkpoint/resume for long-running jobs?
-- KEDA auto-scaling based on queue depth?
-- How to split 100K items into optimal batch sizes?
+### 4. Activate Alembic Migrations
+**Risk**: HIGH — no way to safely change schema in production
+**Steps**:
+1. `alembic revision --autogenerate -m "baseline"` (generates initial migration)
+2. `alembic stamp head` on production DB (marks as already applied)
+3. Add `alembic upgrade head` to Dockerfile CMD
+4. Remove ad-hoc ALTER TABLE from main.py and database.py (next release)
+**Effort**: 2 hours
 
-**Proposed direction** (needs validation via research):
-```
-BackupJob (parent) — tenant_id=1, workload=exchange, objects_total=100000
-  ├── BackupJob (child) — batch_offset=0, batch_size=500
-  ├── BackupJob (child) — batch_offset=500, batch_size=500
-  └── ... (200 batches)
-```
-- TenantFairScheduler runs 3 child batches concurrently per tenant
-- Each batch uses AdaptiveConcurrencyLimiter for Graph API
-- Parent aggregates results when all children complete
-- Add: `parent_job_id`, `batch_offset`, `batch_size` to BackupJob model
+### 5. Grafana + Alerting
+**Risk**: HIGH — metrics exist but nobody watches
+**Alert rules needed**:
+- Backup failure rate > 10% (5-minute window) → PagerDuty critical
+- Queue depth > 100 for > 10 minutes → PagerDuty warning
+- Health score < 50 for any tenant → PagerDuty warning
+- Secret expiring < 7 days → PagerDuty warning
+- Worker pod count = 0 for > 5 minutes → PagerDuty critical
+- HTTP error rate > 5% → PagerDuty warning
+**Effort**: 1 day
 
-### 2. Anomaly Detection Ceiling + Auto-Resolution
+## P1 — Before Enterprise Sales Motion
 
-**Problem**: `AnomalyEvent` table grows unbounded. No dedup, no auto-resolve, no TTL. 3442 anomalies accumulated for demo tenant. `resolved` field exists but nothing ever sets it to 1.
+### 6. Load Testing
+- 50 tenants × 1,000 mailboxes
+- Verify batch scheduler splits correctly
+- Measure: backup throughput (MB/s), queue drain time, Graph API throttle rate
+- **Effort**: 1 day
 
-**What exists today**:
-- `backend/app/services/smart_engine.py` — `detect_anomalies()` creates events, `_check_metric()` creates AnomalyEvent
-- `backend/app/models/health_baseline.py` — AnomalyEvent model has `resolved` int field (default 0)
-- Grace period: tenants with <3 snapshots skip detection ✅
-- Health score: `anomaly_score = max(100 - (active_anomalies * 20), 0)` — drops to 0 at 5+ anomalies
+### 7. Incident Runbook
+- Worker pods stuck → restart, check Redis
+- Redis OOM → flush metering keys, check for queue backlog
+- Database connection pool → check pool_utilization metric, increase pool_size
+- Graph API mass throttling → check AIMD limiter, reduce WORKER_CONCURRENCY
+- Backup failure spike → check Graph token, connector secret expiry
+- **Effort**: 1 day
 
-**Fix (3 mechanisms)**:
-1. **Dedup**: Before creating event, check if identical unresolved anomaly exists → skip. Max 10 active per tenant (5 workloads × 2 metrics).
-2. **Auto-resolve**: After detection cycle, mark anomalies as resolved if their metric is now normal.
-3. **TTL cleanup**: Scheduler job deletes resolved >90 days, auto-resolves unresolved >30 days.
+### 8. SOC 2 Documentation
+- Data flow diagrams (client → CDN → API → worker → Graph API → Azure Blob)
+- Encryption documentation (KEK/DEK, AES-256-GCM, envelope encryption)
+- Access control matrix (roles, tenant isolation, RLS roadmap)
+- Data retention policy (SLA-based, WORM support, legal hold)
+- Incident response plan (based on runbook + alerting)
+- **Effort**: 3-5 days
 
-**Files to modify**:
-- `backend/app/services/smart_engine.py` — add dedup check in `_check_metric()`, add auto-resolve in `detect_anomalies()`
-- `backend/app/services/scheduler.py` — add `cleanup_old_anomalies()` job
+### 9. Backup Validation Pipeline
+- Connect validation to batch scheduler
+- After parent job aggregates: auto-validate random 10% sample
+- Track validation_status on Snapshot model (already has the field)
+- **Effort**: 1 day
 
-### 3. Server-Side Onboarding State Machine
+### 10. Multi-Region / DR
+- Active-passive: primary (eastus) + standby (westus2)
+- Azure Blob GRS already configured for prod (geo-redundant)
+- Database: Azure Flexible Server read replica in secondary region
+- DNS failover via Cloudflare (already on Cloudflare)
+- **Effort**: 1 week
 
-**Problem**: Onboarding state spread across 5 places (session response, localStorage ×2, sessionStorage, URL params). Frontend derives steps with OR logic. Steps can un-complete if data changes.
+## P2 — Expected Within 6 Months
 
-**What exists today**:
-- `backend/app/api/auth.py` GET /auth/session returns: `has_tenants`, `has_protected_objects`, `has_backups`, `onboarding_status`
-- `frontend/src/contexts/OnboardingContext.tsx` derives 6 steps from session + localStorage `manualSteps`
-- `frontend/src/pages/Dashboard.tsx` renders checklist from OnboardingContext
-
-**Fix**: New `onboarding_steps` table — records step completion as immutable events:
-```sql
-CREATE TABLE onboarding_steps (
-  id SERIAL PRIMARY KEY,
-  user_id INT REFERENCES users(id),
-  step VARCHAR(50) NOT NULL,
-  completed_at TIMESTAMP NOT NULL,
-  metadata_json TEXT,
-  UNIQUE(user_id, step)
-);
-```
-
-**Mark steps at the point they happen**:
-- `create_account` → `POST /auth/register`
-- `connect_platform` → `GET /onboard/callback`
-- `discover_workloads` → `POST /onboard/discover`
-- `assign_protection` → `POST /onboard/complete`
-- `first_backup` → backup engine job completion
-- `explore_recovery` → `POST /api/onboarding/steps/explore_recovery/complete`
-
-**Session response** enriched: `{ onboarding: { steps: { create_account: "2026-04-08T...", ... }, completed: 4, total: 6 } }`
-
-**Frontend** simplified: reads `session.onboarding.steps`, no localStorage, no derivation.
-
-## Known Issues in Production
-
-| Issue | Severity | Notes |
-|---|---|---|
-| Backend degraded (1.3% backup success rate) | HIGH | Pre-existing, backup engine issue |
-| 3442 active anomalies for demo tenant | MEDIUM | Will be fixed by anomaly ceiling |
-| 1 E2E failure (Demo → recovery endpoint) | LOW | Pre-existing, recovery endpoint returns 403 |
-| 3 PG test failures (FK violations on alerts PUT) | LOW | SQLite doesn't enforce FK, PG does |
-
-## Architecture Reference
-
-```
-Frontend: React 19 + Vite 8 + TypeScript + Tailwind
-Backend: Python 3.12 + FastAPI 0.135 + SQLAlchemy (asyncpg for PG, aiosqlite for tests)
-Database: PostgreSQL 16 (Azure Flexible Server in prod, Docker locally)
-Storage: Azure Blob Storage (prod), MinIO (dev)
-CDN: Cloudflare (origin-controlled caching via CDN-Cache-Control headers)
-Deployment: Azure Container Apps, ACR, Terraform
-Auth: httpOnly cookies + Redis sessions (BFF pattern)
-Scheduler: APScheduler (in-process), dispatches to workers via Redis queue
-```
+| Item | Notes |
+|------|-------|
+| Audit log export (CSV/SIEM) | Audit log exists, needs export endpoint |
+| SSO enforcement per-tenant | SSO implemented but optional |
+| Data residency controls | Per-tenant storage region selection |
+| Per-tenant API rate limits | Current limiting is per-user, not per-tenant |
+| Webhook notifications | Callback on backup completion/failure |
+| PostgreSQL Row-Level Security | Defense-in-depth (app-level filtering done) |
 
 ## How to Start Next Session
 
 ```bash
 # Verify everything works
-make dev              # Start Docker Compose (PG + MinIO + Redis)
-make test-backend     # 351 SQLite tests
-make test-pg          # 225 PostgreSQL tests
-cd frontend && npx vitest run  # 50 frontend tests
+make dev                         # Start Docker Compose
+make test-backend                # 768+ pass
+make test-pg                     # 221+ pass
+cd frontend && npx vitest run    # 50 pass
 
 # Deploy
-make release ENV=dev  # Full pipeline
+make safe-deploy ENV=dev         # 70/70 E2E pass
 ```
 
-**First task**: Research enterprise SaaS backup scheduler patterns (Veeam, Druva, Commvault) for 100K+ item handling. Then implement all 3 systemic fixes.
+**First tasks**: Items 1-4 (fix failing tests, backup success rate, dependency upgrades, Alembic activation).

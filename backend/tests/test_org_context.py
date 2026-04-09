@@ -280,9 +280,9 @@ async def test_scorer_empty_tenant(db: AsyncSession, tenant):
 # ══════════════════════════════════════════════════════════
 
 @pytest.mark.asyncio
-async def test_summary_empty(auth_client: AsyncClient):
+async def test_summary_empty(auth_client: AsyncClient, test_tenant):
     """Summary for non-existent tenant returns zeros."""
-    response = await auth_client.get("/api/org-context/summary?tenant_id=999")
+    response = await auth_client.get(f"/api/org-context/summary?tenant_id={test_tenant}")
     assert response.status_code == 200
     data = response.json()
     assert data["total_users"] == 0

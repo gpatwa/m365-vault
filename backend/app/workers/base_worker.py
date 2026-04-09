@@ -228,79 +228,82 @@ class BaseWorker(ABC):
         wrapped_dek: str,
         counters: dict,
     ):
-        """Process a single item through the storage pipeline."""
+        """Process a single item through the storage pipeline.
+
+        Each item runs in its own savepoint (nested transaction). If one item
+        fails — DB pool contention, invalid data, storage error — the savepoint
+        rolls back and the parent transaction continues cleanly. No more
+        PendingRollbackError cascade from one bad item killing an entire batch.
+        """
         try:
-            # Serialize to bytes
-            if item.binary_data is not None:
-                data = item.binary_data
-            elif item.raw_data is not None:
-                data = json.dumps(item.raw_data, default=str).encode("utf-8")
-            else:
-                logger.warning(f"[{self.workload_name()}] Item {item.id} has no data, skipping")
-                return
+            async with self.db.begin_nested():
+                # Serialize to bytes
+                if item.binary_data is not None:
+                    data = item.binary_data
+                elif item.raw_data is not None:
+                    data = json.dumps(item.raw_data, default=str).encode("utf-8")
+                else:
+                    logger.warning(f"[{self.workload_name()}] Item {item.id} has no data, skipping")
+                    return
 
-            # Store through compression/dedup/encryption pipeline
-            result = await self.storage.store_item(
-                tenant_id=protected_object.tenant_id,
-                workload=self.workload_name(),
-                object_id=protected_object.ms_object_id,
-                snapshot_id=snapshot.id,
-                item_id=item.id,
-                data=data,
-                wrapped_dek=wrapped_dek,
-                mime_type=item.mime_type,
-                filename=item.extra_fields.get("file_name"),
-                db=self.db,
-            )
+                # Store through compression/dedup/encryption pipeline
+                result = await self.storage.store_item(
+                    tenant_id=protected_object.tenant_id,
+                    workload=self.workload_name(),
+                    object_id=protected_object.ms_object_id,
+                    snapshot_id=snapshot.id,
+                    item_id=item.id,
+                    data=data,
+                    wrapped_dek=wrapped_dek,
+                    mime_type=item.mime_type,
+                    filename=item.extra_fields.get("file_name"),
+                    db=self.db,
+                )
 
-            # Create catalog entry
-            snapshot_item = SnapshotItem(
-                snapshot_id=snapshot.id,
-                item_type=item.item_type,
-                ms_item_id=item.id,
-                name=item.name[:1000] if item.name else "Unknown",
-                path=item.path[:2000] if item.path else "",
-                size_bytes=len(data),
-                compressed_size=result.compressed_size,
-                content_hash=result.content_hash,
-                storage_flags=result.storage_flags,
-                blob_path=result.blob_path,
-                metadata_json=json.dumps(item.metadata) if item.metadata else None,
-                # Workload-specific fields
-                subject=item.extra_fields.get("subject"),
-                sender=item.extra_fields.get("sender"),
-                recipients=item.extra_fields.get("recipients"),
-                received_at=item.extra_fields.get("received_at"),
-                file_name=item.extra_fields.get("file_name"),
-                mime_type=item.extra_fields.get("content_mime_type") or item.mime_type,
-                last_modified_at=item.extra_fields.get("last_modified_at"),
-            )
-            self.db.add(snapshot_item)
+                # Create catalog entry
+                snapshot_item = SnapshotItem(
+                    snapshot_id=snapshot.id,
+                    item_type=item.item_type,
+                    ms_item_id=item.id,
+                    name=item.name[:1000] if item.name else "Unknown",
+                    path=item.path[:2000] if item.path else "",
+                    size_bytes=len(data),
+                    compressed_size=result.compressed_size,
+                    content_hash=result.content_hash,
+                    storage_flags=result.storage_flags,
+                    blob_path=result.blob_path,
+                    metadata_json=json.dumps(item.metadata) if item.metadata else None,
+                    # Workload-specific fields
+                    subject=item.extra_fields.get("subject"),
+                    sender=item.extra_fields.get("sender"),
+                    recipients=item.extra_fields.get("recipients"),
+                    received_at=item.extra_fields.get("received_at"),
+                    file_name=item.extra_fields.get("file_name"),
+                    mime_type=item.extra_fields.get("content_mime_type") or item.mime_type,
+                    last_modified_at=item.extra_fields.get("last_modified_at"),
+                )
+                self.db.add(snapshot_item)
 
+            # Only count after savepoint commits successfully
             counters["count"] += 1
             counters["size"] += len(data)
 
         except Exception as e:
+            # Savepoint already rolled back — session is clean for the next item
             counters["failed"] += 1
             logger.error(f"[{self.workload_name()}] Failed to backup item {item.id}: {e}")
             try:
-                # Rollback any partial state before recording the failure.
-                # Prevents PendingRollbackError cascade if the item processing
-                # left the session in an error state (e.g., DB pool contention).
-                try:
-                    await self.db.rollback()
-                except Exception:
-                    pass
-                await record_failed_item(
-                    db=self.db,
-                    snapshot_id=snapshot.id,
-                    protected_object_id=protected_object.id,
-                    error=e,
-                    ms_item_id=item.id,
-                    item_type_str=item.item_type.value if hasattr(item.item_type, 'value') else str(item.item_type),
-                    item_name=item.name[:500] if item.name else "Unknown",
-                    item_path=item.path[:500] if item.path else "",
-                )
+                async with self.db.begin_nested():
+                    await record_failed_item(
+                        db=self.db,
+                        snapshot_id=snapshot.id,
+                        protected_object_id=protected_object.id,
+                        error=e,
+                        ms_item_id=item.id,
+                        item_type_str=item.item_type.value if hasattr(item.item_type, 'value') else str(item.item_type),
+                        item_name=item.name[:500] if item.name else "Unknown",
+                        item_path=item.path[:500] if item.path else "",
+                    )
             except Exception as record_err:
                 logger.error(f"[{self.workload_name()}] Failed to record error for {item.id}: {record_err}")
 

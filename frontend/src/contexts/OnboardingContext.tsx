@@ -65,6 +65,8 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const completeStep = useCallback(async (step: OnboardingStep) => {
     try {
       await fetch(`/api/onboard/steps/${step}/complete`, { method: 'POST', credentials: 'include' });
+      // Refetch session to update onboarding state immediately
+      window.dispatchEvent(new Event('kavachiq:session-refresh'));
     } catch {
       // Silently fail — step will be marked on next action
     }

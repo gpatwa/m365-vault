@@ -81,6 +81,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   }, [loadSession]);
 
+  // Listen for session refresh events (e.g., after completing onboarding steps)
+  useEffect(() => {
+    const handler = () => loadSession();
+    window.addEventListener('kavachiq:session-refresh', handler);
+    return () => window.removeEventListener('kavachiq:session-refresh', handler);
+  }, [loadSession]);
+
   const setPreference = useCallback(async (key: string, value: string) => {
     try {
       await api.put(`/auth/preferences/${key}`, { value });

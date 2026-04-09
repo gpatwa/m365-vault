@@ -112,7 +112,9 @@ function OnboardingChecklist() {
 
   const anyBackupDone = Object.values(backupRunning).some(s => s === 'done');
 
-  if (dismissed || (isComplete && !expanded)) return null;
+  // Auto-hide when: explicitly dismissed, fully complete, or user is clearly past onboarding
+  // A user with 5+ steps done (has backups running) doesn't need "Getting started"
+  if (dismissed || (isComplete && !expanded) || (completedCount >= 5 && !expanded)) return null;
 
   const handleDismiss = () => {
     setDismissed(true);

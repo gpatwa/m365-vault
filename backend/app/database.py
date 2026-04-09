@@ -117,6 +117,18 @@ async def _run_migrations():
         ("restorestatus", ["dead_letter"]),
     ])
 
+    # v1.9.0: ErrorCategory enum values for failed_items table
+    # Missing from previous migrations — caused every Exchange/OneDrive backup
+    # to dead-letter (PendingRollbackError cascade from invalid enum insert).
+    enum_migrations.extend([
+        ("errorcategory", [
+            "permission_denied", "not_found", "throttled", "timeout",
+            "quota_exceeded", "file_too_large", "encryption_error",
+            "storage_error", "invalid_data", "auth_expired", "server_error",
+            "network_error", "internal_transient", "unknown",
+        ]),
+    ])
+
     for enum_name, values in enum_migrations:
         for value in values:
             try:

@@ -284,6 +284,13 @@ class BaseWorker(ABC):
             counters["failed"] += 1
             logger.error(f"[{self.workload_name()}] Failed to backup item {item.id}: {e}")
             try:
+                # Rollback any partial state before recording the failure.
+                # Prevents PendingRollbackError cascade if the item processing
+                # left the session in an error state (e.g., DB pool contention).
+                try:
+                    await self.db.rollback()
+                except Exception:
+                    pass
                 await record_failed_item(
                     db=self.db,
                     snapshot_id=snapshot.id,

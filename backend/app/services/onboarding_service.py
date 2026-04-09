@@ -20,45 +20,58 @@ async def mark_step(
 ) -> bool:
     """Mark an onboarding step as completed. Idempotent — skips if already done.
 
+    Uses a savepoint (nested transaction) so failures never corrupt the caller's
+    session. This is critical for call sites like register() where we don't want
+    an onboarding tracking failure to rollback the entire user creation.
+
     Returns True if newly marked, False if already completed.
     """
     if step not in ONBOARDING_STEPS:
         logger.warning(f"Unknown onboarding step: {step}")
         return False
 
-    existing = await db.execute(
-        select(OnboardingStep).where(
-            OnboardingStep.user_id == user_id,
-            OnboardingStep.step == step,
-        )
-    )
-    if existing.scalar_one_or_none():
-        return False
+    try:
+        async with db.begin_nested():
+            existing = await db.execute(
+                select(OnboardingStep).where(
+                    OnboardingStep.user_id == user_id,
+                    OnboardingStep.step == step,
+                )
+            )
+            if existing.scalar_one_or_none():
+                return False
 
-    record = OnboardingStep(
-        user_id=user_id,
-        step=step,
-        completed_at=datetime.utcnow(),
-        metadata_json=json.dumps(metadata) if metadata else None,
-    )
-    db.add(record)
-    await db.flush()
-    logger.info(f"Onboarding step '{step}' completed for user {user_id}")
-    return True
+            record = OnboardingStep(
+                user_id=user_id,
+                step=step,
+                completed_at=datetime.utcnow(),
+                metadata_json=json.dumps(metadata) if metadata else None,
+            )
+            db.add(record)
+
+        logger.info(f"Onboarding step '{step}' completed for user {user_id}")
+        return True
+    except Exception as e:
+        logger.debug(f"mark_step({step}) for user {user_id} skipped: {e}")
+        return False
 
 
 async def get_steps(db: AsyncSession, user_id: int) -> dict:
     """Get all completed onboarding steps for a user.
 
     Returns: {"create_account": "2026-04-08T...", ...} for completed steps.
+    Safe to call even if onboarding_steps table doesn't exist yet.
     """
-    result = await db.execute(
-        select(OnboardingStep).where(OnboardingStep.user_id == user_id)
-    )
-    steps = {}
-    for record in result.scalars().all():
-        steps[record.step] = record.completed_at.isoformat()
-    return steps
+    try:
+        result = await db.execute(
+            select(OnboardingStep).where(OnboardingStep.user_id == user_id)
+        )
+        steps = {}
+        for record in result.scalars().all():
+            steps[record.step] = record.completed_at.isoformat()
+        return steps
+    except Exception:
+        return {}
 
 
 async def get_onboarding_summary(db: AsyncSession, user_id: int) -> dict:

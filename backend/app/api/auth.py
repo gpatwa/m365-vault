@@ -82,7 +82,7 @@ async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
     db.add(user)
     await db.flush()
 
-    # Mark onboarding step
+    # Mark onboarding step (mark_step uses savepoints internally — safe)
     try:
         from app.services.onboarding_service import mark_step
         await mark_step(db, user.id, "create_account")

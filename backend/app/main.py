@@ -21,6 +21,7 @@ from app.models.billing import BillingRecord     # noqa: F401 — ensure table i
 from app.models.saas_workload_app import SaaSWorkloadApp  # noqa: F401 — ensure table is created
 from app.models.user_preference import UserPreference     # noqa: F401 — ensure table is created
 from app.models.user_tenant import UserTenant             # noqa: F401 — ensure table is created
+from app.models.onboarding_step import OnboardingStep     # noqa: F401 — ensure table is created
 
 # Configure structured JSON logging for production
 if settings.LOG_FORMAT == "json":

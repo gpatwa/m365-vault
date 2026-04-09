@@ -320,7 +320,7 @@ def create_workload_router(
             tenant_id=tenant_id,
             workload_type=workload_type.value,
             status=JobStatus.IN_PROGRESS,
-            total_objects=len(objects),
+            objects_total=len(objects),
         )
         db.add(job)
         await db.flush()
@@ -346,7 +346,7 @@ def create_workload_router(
                 })
 
         successful = sum(1 for r in results if r["status"] not in ("failed", "error"))
-        job.objects_completed = successful
+        job.objects_processed = successful
         job.objects_failed = len(results) - successful
         job.status = JobStatus.COMPLETED if successful == len(results) else (
             JobStatus.FAILED if successful == 0 else JobStatus.COMPLETED

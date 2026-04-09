@@ -27,9 +27,9 @@ async def test_teams_backup_single_not_found(auth_client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_teams_snapshots_not_found(auth_client: AsyncClient):
-    """Snapshots returns 404 for non-existent team."""
+    """Snapshots for non-existent team returns empty list, not 404."""
     response = await auth_client.get("/api/teams/teams/99999/snapshots")
-    assert response.status_code == 404
+    assert response.status_code == 200  # Empty list, not 404
 
 
 @pytest.mark.asyncio

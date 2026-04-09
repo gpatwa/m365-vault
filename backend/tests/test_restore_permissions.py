@@ -11,6 +11,7 @@ import pytest_asyncio
 from datetime import datetime, timedelta
 from httpx import AsyncClient
 
+from sqlalchemy import select
 from app.database import async_session
 from app.models.tenant import Tenant, TenantStatus
 from app.models.protected_object import ProtectedObject, WorkloadType, ProtectionStatus
@@ -19,6 +20,7 @@ from app.models.restore_job import RestoreJob, RestoreType, RestoreStatus
 from app.models.restore_approval import RestoreApproval
 from app.models.audit_log import AuditLog
 from app.models.user import User, UserRole
+from app.models.user_tenant import UserTenant
 
 
 # ═══════════════════════════════════════════════════════
@@ -74,6 +76,13 @@ async def _seed_tenant_with_snapshot():
         db.add(tenant)
         await db.flush()
 
+        # Create memberships for all known test users
+        result = await db.execute(select(User))
+        users = result.scalars().all()
+        for u in users:
+            db.add(UserTenant(user_id=u.id, tenant_id=tenant.id, role="owner", is_default=0))
+        await db.flush()
+
         obj = ProtectedObject(
             tenant_id=tenant.id, workload_type=WorkloadType.EXCHANGE,
             ms_object_id="mbx-restore-001", display_name="Alice Mailbox",
@@ -108,6 +117,13 @@ async def _seed_entra_tenant_with_snapshot():
             status=TenantStatus.ACTIVE,
         )
         db.add(tenant)
+        await db.flush()
+
+        # Create memberships for all known test users
+        result = await db.execute(select(User))
+        users = result.scalars().all()
+        for u in users:
+            db.add(UserTenant(user_id=u.id, tenant_id=tenant.id, role="owner", is_default=0))
         await db.flush()
 
         obj = ProtectedObject(
@@ -431,6 +447,11 @@ async def test_approval_workflow_approve():
             status=TenantStatus.ACTIVE,
         )
         db.add(tenant)
+        await db.flush()
+
+        # Create memberships for both users
+        db.add(UserTenant(user_id=user1.id, tenant_id=tenant.id, role="owner", is_default=1))
+        db.add(UserTenant(user_id=user2.id, tenant_id=tenant.id, role="owner", is_default=1))
         await db.flush()
 
         obj = ProtectedObject(

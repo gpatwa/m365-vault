@@ -5,9 +5,12 @@ import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from sqlalchemy import select
 from app.models.tenant import Tenant, TenantStatus
 from app.models.protected_object import ProtectedObject, WorkloadType, ProtectionStatus
 from app.models.org_context import UserContext, SiteContext, VIPGroup, VIPGroupMember
+from app.models.user import User
+from app.models.user_tenant import UserTenant
 from app.services.criticality_scorer import CriticalityScorer
 
 
@@ -27,6 +30,13 @@ async def tenant(db: AsyncSession):
     )
     db.add(t)
     await db.flush()
+
+    # Create UserTenantMembership for the testadmin user
+    user = (await db.execute(select(User).where(User.username == "testadmin"))).scalar_one_or_none()
+    if user:
+        db.add(UserTenant(user_id=user.id, tenant_id=t.id, role="owner", is_default=1))
+        await db.flush()
+
     return t
 
 

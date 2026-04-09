@@ -230,6 +230,11 @@ class TestWorkerPartialFailureChaos:
         db = AsyncMock()
         db.add = MagicMock()
         db.flush = AsyncMock()
+        # begin_nested must return an async context manager for savepoints
+        nested_ctx = AsyncMock()
+        nested_ctx.__aenter__ = AsyncMock(return_value=None)
+        nested_ctx.__aexit__ = AsyncMock(return_value=False)
+        db.begin_nested = MagicMock(return_value=nested_ctx)
         graph = AsyncMock()
         storage = AsyncMock()
         storage.store_item = AsyncMock(return_value=MockResult())
@@ -238,7 +243,7 @@ class TestWorkerPartialFailureChaos:
 
     @pytest.mark.asyncio
     async def test_partial_failure_20_items_every_3rd_fails(self, mock_deps):
-        """20 items, every 3rd fails → ~13 succeed, ~7 fail."""
+        """20 items, every 3rd has no data (skipped) → exactly 14 succeed."""
         db, graph, storage, enc = mock_deps
         worker = FailEveryNthWorker(db, graph, storage, enc, fail_every=3)
         obj = MagicMock(ms_object_id="chaos", tenant_id=1, id=1, display_name="Chaos Test")
@@ -246,8 +251,10 @@ class TestWorkerPartialFailureChaos:
 
         item_count, total_size, _ = await worker.backup(obj, snapshot, "dek", concurrency=5)
 
-        # ~13 should succeed (20 - 6 or 7 failures)
-        assert 12 <= item_count <= 14  # Approximately 2/3 succeed
+        # With savepoints, only injected items fail — no cascade.
+        # Counter goes 1..20; items at 3,6,9,12,15,18 have no data (skipped).
+        # Remaining 14 items succeed.
+        assert item_count == 14
         assert total_size > 0
 
     @pytest.mark.asyncio
@@ -321,6 +328,11 @@ class TestStorageFailureChaos:
         db = AsyncMock()
         db.add = MagicMock()
         db.flush = AsyncMock()
+        # begin_nested must return an async context manager for savepoints
+        nested_ctx = AsyncMock()
+        nested_ctx.__aenter__ = AsyncMock(return_value=None)
+        nested_ctx.__aexit__ = AsyncMock(return_value=False)
+        db.begin_nested = MagicMock(return_value=nested_ctx)
         storage = AsyncMock()
         storage.store_item = flaky_store
 
@@ -330,5 +342,6 @@ class TestStorageFailureChaos:
 
         item_count, total_size, _ = await worker.backup(obj, snapshot, "dek", concurrency=3)
 
-        # ~7 out of 10 should succeed (every 3rd fails)
-        assert 6 <= item_count <= 8
+        # With savepoints, only the injected items fail — no cascade.
+        # 10 items, storage fails at calls 3,6,9 = exactly 3 failures, 7 successes.
+        assert item_count == 7

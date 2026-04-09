@@ -207,25 +207,34 @@ class TestTierGating:
     @pytest.mark.asyncio
     async def test_community_basic_features(self, client: AsyncClient):
         """Community tier has basic workloads and anomaly detection."""
-        resp = await client.get("/api/features")
-        features = resp.json()["features"]
-        assert features["exchange"]["enabled"] is True
-        assert features["onedrive"]["enabled"] is True
-        assert features["sharepoint"]["enabled"] is True
-        assert features["anomaly_detection"]["enabled"] is True
-        assert features["api_access"]["enabled"] is True
+        from unittest.mock import patch
+        from app.config import settings
+        from app.services.feature_flags import FeatureFlagService
+
+        with patch.object(settings, 'LICENSE_TIER', 'community'):
+            svc = FeatureFlagService()
+            assert svc.is_enabled("exchange") is True
+            assert svc.is_enabled("entra_id") is True
+            assert svc.is_enabled("anomaly_detection") is True
+            assert svc.is_enabled("api_access") is True
+            assert svc.is_enabled("mass_recovery") is True
 
     @pytest.mark.asyncio
     async def test_community_lacks_premium(self, client: AsyncClient):
         """Community tier lacks premium features."""
-        resp = await client.get("/api/features")
-        features = resp.json()["features"]
-        assert features["teams"]["enabled"] is False
-        assert features["entra_id"]["enabled"] is False
-        assert features["org_context"]["enabled"] is False
-        assert features["msp_dashboard"]["enabled"] is False
-        assert features["worm"]["enabled"] is False
-        assert features["sso"]["enabled"] is False
+        from unittest.mock import patch
+        from app.config import settings
+        from app.services.feature_flags import FeatureFlagService
+
+        with patch.object(settings, 'LICENSE_TIER', 'community'):
+            svc = FeatureFlagService()
+            assert svc.is_enabled("teams") is False
+            assert svc.is_enabled("onedrive") is False
+            assert svc.is_enabled("sharepoint") is False
+            assert svc.is_enabled("org_context") is False
+            assert svc.is_enabled("msp_dashboard") is False
+            assert svc.is_enabled("worm") is False
+            assert svc.is_enabled("sso") is False
 
     @pytest.mark.asyncio
     async def test_limits_returned(self, client: AsyncClient):

@@ -20,6 +20,8 @@ from app.models.tenant import Tenant, TenantStatus
 from app.models.protected_object import ProtectedObject, WorkloadType, ProtectionStatus
 from app.models.snapshot import Snapshot, SnapshotStatus, SnapshotType
 from app.models.org_context import UserContext, SiteContext, VIPGroup, VIPGroupMember, RecoveryPlan
+from app.models.user import User
+from app.models.user_tenant import UserTenant
 from app.services.mvb_plan_generator import MVBPlanGenerator
 from app.services.criticality_scorer import CriticalityScorer
 
@@ -40,6 +42,12 @@ async def enterprise_tenant(db: AsyncSession):
     )
     db.add(tenant)
     await db.flush()
+
+    # Create UserTenantMembership for the testadmin user
+    user = (await db.execute(select(User).where(User.username == "testadmin"))).scalar_one_or_none()
+    if user:
+        db.add(UserTenant(user_id=user.id, tenant_id=tenant.id, role="owner", is_default=1))
+        await db.flush()
 
     now = datetime.utcnow()
     objects = []

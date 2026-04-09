@@ -27,15 +27,20 @@ async def check_and_schedule_backups():
     """Check all protected objects and create backup jobs as needed per SLA,
     then execute any queued jobs.
 
+    Batch decomposition: when a (tenant, workload) group has more objects than
+    BATCH_THRESHOLD, creates a parent coordinator job + child batch jobs.
+    Each child handles BATCH_SIZE objects. TenantFairScheduler runs up to 3
+    child batches concurrently per tenant.
+
     Lifecycle enforcement: only schedules backups for objects whose workload
     is in PROTECTED lifecycle state. Paused/disabled workloads are skipped.
     """
     async with async_session() as db:
         try:
             from app.models.tenant_workload_app import TenantWorkloadApp, WorkloadLifecycle
+            from collections import defaultdict
 
             # Get all active protected objects with SLA policies (skip inactive tenants)
-            # Also join TenantWorkloadApp to enforce lifecycle=PROTECTED
             result = await db.execute(
                 select(ProtectedObject, SLAPolicy)
                 .join(SLAPolicy, ProtectedObject.sla_policy_id == SLAPolicy.id)
@@ -54,14 +59,13 @@ async def check_and_schedule_backups():
                 if tid not in _protected_cache:
                     from app.services.workload_lifecycle import get_protected_workloads
                     _protected_cache[tid] = await get_protected_workloads(db, tid)
-                # If no workload lifecycle configured (legacy), allow all
                 if not _protected_cache[tid]:
                     return True
                 return wl_value in _protected_cache[tid]
 
-            jobs_created = 0
+            # Group eligible objects by (tenant_id, workload_type, sla_policy_id)
+            groups = defaultdict(lambda: {"count": 0, "sla_id": None})
             for obj, sla in rows:
-                # Lifecycle check: only backup objects whose workload is PROTECTED
                 wl_value = obj.workload_type.value if hasattr(obj.workload_type, 'value') else str(obj.workload_type)
                 if not await _is_workload_protected(obj.tenant_id, wl_value):
                     continue
@@ -72,27 +76,74 @@ async def check_and_schedule_backups():
                     if datetime.utcnow() < next_backup_at:
                         continue
 
-                # Check if there's already a running/queued job for this object
+                key = (obj.tenant_id, wl_value)
+                groups[key]["count"] += 1
+                groups[key]["sla_id"] = sla.id
+
+            jobs_created = 0
+            for (tenant_id, workload_type), info in groups.items():
+                obj_count = info["count"]
+                sla_id = info["sla_id"]
+
+                # Check if there's already a running/queued job for this tenant+workload
                 existing = await db.execute(
                     select(BackupJob).where(
-                        BackupJob.tenant_id == obj.tenant_id,
-                        BackupJob.workload_type == obj.workload_type.value,
+                        BackupJob.tenant_id == tenant_id,
+                        BackupJob.workload_type == workload_type,
                         BackupJob.status.in_([JobStatus.QUEUED, JobStatus.IN_PROGRESS]),
+                        BackupJob.parent_job_id.is_(None),  # Only check top-level jobs
                     )
                 )
                 if existing.scalar_one_or_none():
                     continue
 
-                # Create a new backup job
-                job = BackupJob(
-                    tenant_id=obj.tenant_id,
-                    workload_type=obj.workload_type.value,
-                    sla_policy_id=sla.id,
-                    status=JobStatus.QUEUED,
-                    objects_total=1,
-                )
-                db.add(job)
-                jobs_created += 1
+                batch_threshold = settings.BATCH_THRESHOLD
+                batch_size = settings.BATCH_SIZE
+
+                if obj_count <= batch_threshold:
+                    # Small workload: single job (no batching)
+                    job = BackupJob(
+                        tenant_id=tenant_id,
+                        workload_type=workload_type,
+                        sla_policy_id=sla_id,
+                        status=JobStatus.QUEUED,
+                        objects_total=obj_count,
+                    )
+                    db.add(job)
+                    jobs_created += 1
+                else:
+                    # Large workload: parent + child batch jobs
+                    parent = BackupJob(
+                        tenant_id=tenant_id,
+                        workload_type=workload_type,
+                        sla_policy_id=sla_id,
+                        status=JobStatus.IN_PROGRESS,
+                        objects_total=obj_count,
+                    )
+                    db.add(parent)
+                    await db.flush()  # Get parent.id
+
+                    num_batches = (obj_count + batch_size - 1) // batch_size
+                    for i in range(num_batches):
+                        offset = i * batch_size
+                        size = min(batch_size, obj_count - offset)
+                        child = BackupJob(
+                            tenant_id=tenant_id,
+                            workload_type=workload_type,
+                            sla_policy_id=sla_id,
+                            status=JobStatus.QUEUED,
+                            objects_total=size,
+                            parent_job_id=parent.id,
+                            batch_offset=offset,
+                            batch_size=size,
+                        )
+                        db.add(child)
+
+                    jobs_created += num_batches
+                    logger.info(
+                        f"Batch scheduler: {workload_type} tenant={tenant_id} "
+                        f"split {obj_count} objects into {num_batches} batches of {batch_size}"
+                    )
 
             await db.commit()
 
@@ -108,7 +159,11 @@ async def check_and_schedule_backups():
 
 
 async def execute_queued_jobs():
-    """Pick up and execute all queued backup jobs via dispatcher."""
+    """Pick up and execute all queued backup jobs via dispatcher.
+
+    Skips parent coordinator jobs — only dispatches leaf jobs (single jobs
+    without a parent, or child batch jobs).
+    """
     from app.interfaces.dispatcher_factory import get_dispatcher
     from app.interfaces.job_message import BackupJobMessage
 
@@ -116,9 +171,17 @@ async def execute_queued_jobs():
 
     async with async_session() as db:
         try:
+            # Only dispatch leaf jobs: either no parent (single jobs) or child batches
+            # Parent coordinator jobs have children and are never dispatched directly
             result = await db.execute(
                 select(BackupJob)
-                .where(BackupJob.status == JobStatus.QUEUED)
+                .where(
+                    BackupJob.status == JobStatus.QUEUED,
+                    or_(
+                        BackupJob.parent_job_id.isnot(None),   # Child batch job
+                        BackupJob.batch_size.is_(None),         # Single (non-batched) job
+                    ),
+                )
                 .order_by(BackupJob.created_at)
             )
             jobs = result.scalars().all()
@@ -137,6 +200,11 @@ async def execute_queued_jobs():
                         logger.info(f"Job {job.id} completed: status={job_result.status}")
                     else:
                         logger.error(f"Job {job.id} failed: {job_result.error}")
+
+                    # Mark onboarding step on first successful backup
+                    if job_result.success and job_result.status == "completed":
+                        await _mark_first_backup_step(db, job.tenant_id)
+
                 except Exception as e:
                     logger.error(f"Backup job {job.id} dispatch failed: {e}")
                     job.status = JobStatus.FAILED
@@ -146,6 +214,138 @@ async def execute_queued_jobs():
 
         except Exception as e:
             logger.error(f"Job executor error: {e}")
+            await db.rollback()
+
+
+async def _mark_first_backup_step(db: AsyncSession, tenant_id: int):
+    """Mark 'first_backup' onboarding step for all users of this tenant."""
+    try:
+        from app.models.user_tenant import UserTenantMembership
+        from app.services.onboarding_service import mark_step
+
+        result = await db.execute(
+            select(UserTenantMembership.user_id).where(
+                UserTenantMembership.tenant_id == tenant_id
+            )
+        )
+        for (user_id,) in result.all():
+            await mark_step(db, user_id, "first_backup")
+    except Exception as e:
+        logger.debug(f"Onboarding step mark skipped: {e}")
+
+
+async def aggregate_parent_jobs():
+    """Aggregate child batch results into parent coordinator jobs.
+
+    When all children of a parent are COMPLETED/FAILED/PARTIAL, compute the
+    parent's aggregate status and totals.
+    """
+    async with async_session() as db:
+        try:
+            from sqlalchemy import func as _func
+
+            # Find parent jobs that are IN_PROGRESS (coordinators waiting for children)
+            parents_result = await db.execute(
+                select(BackupJob).where(
+                    BackupJob.status == JobStatus.IN_PROGRESS,
+                    BackupJob.parent_job_id.is_(None),
+                    BackupJob.batch_size.is_(None),  # Parents don't have batch_size
+                )
+            )
+            parents = parents_result.scalars().all()
+
+            for parent in parents:
+                # Check if this parent has children
+                children_result = await db.execute(
+                    select(BackupJob).where(BackupJob.parent_job_id == parent.id)
+                )
+                children = children_result.scalars().all()
+                if not children:
+                    continue
+
+                # Check if all children are in terminal state
+                terminal = {JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.PARTIAL, JobStatus.DEAD_LETTER}
+                if not all(c.status in terminal for c in children):
+                    continue
+
+                # Aggregate results
+                total_processed = sum(c.objects_processed or 0 for c in children)
+                total_failed = sum(c.objects_failed or 0 for c in children)
+                total_size = sum(c.total_size_bytes or 0 for c in children)
+                total_items = sum(c.total_items or 0 for c in children)
+
+                parent.objects_processed = total_processed
+                parent.objects_failed = total_failed
+                parent.total_size_bytes = total_size
+                parent.total_items = total_items
+                parent.completed_at = datetime.utcnow()
+
+                # Determine parent status
+                completed_children = sum(1 for c in children if c.status == JobStatus.COMPLETED)
+                if completed_children == len(children):
+                    parent.status = JobStatus.COMPLETED
+                elif completed_children == 0:
+                    parent.status = JobStatus.FAILED
+                else:
+                    parent.status = JobStatus.PARTIAL
+
+                logger.info(
+                    f"Parent job {parent.id} aggregated: {completed_children}/{len(children)} "
+                    f"children completed, status={parent.status.value}"
+                )
+
+            await db.commit()
+
+        except Exception as e:
+            logger.error(f"Parent job aggregation error: {e}")
+            await db.rollback()
+
+
+async def cleanup_old_anomalies():
+    """TTL cleanup for anomaly events.
+
+    - Deletes resolved anomalies older than ANOMALY_DELETE_AFTER_DAYS (90 days).
+    - Auto-resolves unresolved anomalies older than ANOMALY_RESOLVE_AFTER_DAYS (30 days).
+    """
+    from app.models.health_baseline import AnomalyEvent
+
+    async with async_session() as db:
+        try:
+            resolve_cutoff = datetime.utcnow() - timedelta(days=settings.ANOMALY_RESOLVE_AFTER_DAYS)
+            delete_cutoff = datetime.utcnow() - timedelta(days=settings.ANOMALY_DELETE_AFTER_DAYS)
+
+            # Auto-resolve stale unresolved anomalies (>30 days old)
+            stale_result = await db.execute(
+                select(AnomalyEvent).where(
+                    AnomalyEvent.resolved == 0,
+                    AnomalyEvent.detected_at < resolve_cutoff,
+                )
+            )
+            resolved_count = 0
+            for event in stale_result.scalars().all():
+                event.resolved = 1
+                resolved_count += 1
+
+            # Delete old resolved anomalies (>90 days old)
+            from sqlalchemy import delete as sql_delete
+            delete_result = await db.execute(
+                sql_delete(AnomalyEvent).where(
+                    AnomalyEvent.resolved == 1,
+                    AnomalyEvent.detected_at < delete_cutoff,
+                )
+            )
+            deleted_count = delete_result.rowcount
+
+            await db.commit()
+
+            if resolved_count > 0 or deleted_count > 0:
+                logger.info(
+                    f"Anomaly cleanup: auto-resolved {resolved_count} stale, "
+                    f"deleted {deleted_count} old resolved"
+                )
+
+        except Exception as e:
+            logger.error(f"Anomaly cleanup error: {e}")
             await db.rollback()
 
 
@@ -439,6 +639,20 @@ def start_scheduler():
         replace_existing=True,
     )
     scheduler.add_job(
+        aggregate_parent_jobs,
+        IntervalTrigger(minutes=2),
+        id="parent_job_aggregator",
+        name="Aggregate child batch results into parent jobs",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        cleanup_old_anomalies,
+        IntervalTrigger(hours=6),
+        id="anomaly_cleanup",
+        name="TTL cleanup for anomaly events",
+        replace_existing=True,
+    )
+    scheduler.add_job(
         cleanup_expired_snapshots,
         IntervalTrigger(hours=6),
         id="retention_cleanup",
@@ -495,7 +709,7 @@ def start_scheduler():
         replace_existing=True,
     )
     scheduler.start()
-    logger.info("Scheduler started (backup, retry, smart engine, WORM, stale detector, org context)")
+    logger.info("Scheduler started (backup, batch aggregator, anomaly cleanup, retry, smart engine, WORM, stale detector, org context)")
 
 
 def stop_scheduler():

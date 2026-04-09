@@ -37,4 +37,8 @@ class BackupJob(Base):
     max_retries = Column(Integer, default=3)            # Max auto-retries allowed
     retry_of_job_id = Column(Integer, ForeignKey("backup_jobs.id"), nullable=True)  # Links to original failed job
     failed_object_ids = Column(Text, nullable=True)     # JSON: list of object IDs that failed (for targeted retry)
+    # Batch scheduler: parent-child job decomposition for large workloads
+    parent_job_id = Column(Integer, ForeignKey("backup_jobs.id"), nullable=True, index=True)
+    batch_offset = Column(Integer, nullable=True)       # Starting index in object list
+    batch_size = Column(Integer, nullable=True)          # Number of objects in this batch
     created_at = Column(DateTime, default=datetime.utcnow)

@@ -147,6 +147,10 @@ class SmartEngine:
         Grace period: tenants with <3 completed snapshots are skipped entirely.
         This prevents false positives for newly onboarded tenants that don't have
         enough baseline data yet.
+
+        Dedup: won't create duplicate anomaly events for the same metric.
+        Auto-resolve: marks anomalies as resolved when metric returns to normal.
+        Ceiling: max ANOMALY_MAX_PER_TENANT active anomalies per tenant.
         """
         # Grace period: skip anomaly detection for tenants with insufficient baseline
         snapshot_count_result = await self.db.execute(
@@ -171,6 +175,7 @@ class SmartEngine:
 
         threshold = settings.ANOMALY_Z_SCORE_THRESHOLD
         anomalies = []
+        flagged_metrics = set()  # Track which (workload, metric) were flagged this cycle
 
         # Get latest completed snapshot per workload
         result = await self.db.execute(
@@ -202,6 +207,7 @@ class SmartEngine:
             )
             if anomaly:
                 anomalies.append(anomaly)
+                flagged_metrics.add((workload, "item_count"))
 
             # Check size_bytes
             anomaly = await self._check_metric(
@@ -210,6 +216,23 @@ class SmartEngine:
             )
             if anomaly:
                 anomalies.append(anomaly)
+                flagged_metrics.add((workload, "size_bytes"))
+
+        # Auto-resolve: mark anomalies as resolved if their metric is now normal
+        unresolved_result = await self.db.execute(
+            select(AnomalyEvent).where(
+                AnomalyEvent.tenant_id == tenant_id,
+                AnomalyEvent.resolved == 0,
+            )
+        )
+        resolved_count = 0
+        for event in unresolved_result.scalars().all():
+            key = (event.workload_type, event.metric_name)
+            if key not in flagged_metrics:
+                event.resolved = 1
+                resolved_count += 1
+        if resolved_count > 0:
+            logger.info(f"Auto-resolved {resolved_count} anomalies for tenant {tenant_id}")
 
         return anomalies
 
@@ -217,7 +240,11 @@ class SmartEngine:
         self, tenant_id: int, workload: str, metric: str,
         actual: float, threshold: float,
     ) -> dict | None:
-        """Check a single metric against its baseline."""
+        """Check a single metric against its baseline.
+
+        Dedup: skips creating a new event if an identical unresolved anomaly exists.
+        Ceiling: skips if tenant already has ANOMALY_MAX_PER_TENANT active anomalies.
+        """
         result = await self.db.execute(
             select(HealthBaseline).where(
                 HealthBaseline.tenant_id == tenant_id,
@@ -241,6 +268,44 @@ class SmartEngine:
                 f"(z-score={z_score:.1f})"
             )
 
+            anomaly_dict = {
+                "workload": workload,
+                "metric": metric,
+                "actual": actual,
+                "expected": baseline.avg_value,
+                "z_score": round(z_score, 2),
+                "severity": severity,
+                "message": message,
+            }
+
+            # Dedup: check for existing unresolved anomaly with same signature
+            existing = await self.db.execute(
+                select(AnomalyEvent).where(
+                    AnomalyEvent.tenant_id == tenant_id,
+                    AnomalyEvent.workload_type == workload,
+                    AnomalyEvent.metric_name == metric,
+                    AnomalyEvent.resolved == 0,
+                )
+            )
+            if existing.scalar_one_or_none():
+                logger.debug(f"Anomaly dedup: {workload}/{metric} already active for tenant {tenant_id}")
+                return anomaly_dict  # Return for alerting but don't create duplicate
+
+            # Ceiling: max active anomalies per tenant
+            active_count_result = await self.db.execute(
+                select(func.count(AnomalyEvent.id)).where(
+                    AnomalyEvent.tenant_id == tenant_id,
+                    AnomalyEvent.resolved == 0,
+                )
+            )
+            active_count = active_count_result.scalar() or 0
+            if active_count >= settings.ANOMALY_MAX_PER_TENANT:
+                logger.warning(
+                    f"Anomaly ceiling reached for tenant {tenant_id}: "
+                    f"{active_count}/{settings.ANOMALY_MAX_PER_TENANT} active"
+                )
+                return anomaly_dict
+
             # Record anomaly event
             event = AnomalyEvent(
                 tenant_id=tenant_id,
@@ -255,16 +320,7 @@ class SmartEngine:
             self.db.add(event)
 
             logger.warning(f"Anomaly detected: {message}")
-
-            return {
-                "workload": workload,
-                "metric": metric,
-                "actual": actual,
-                "expected": baseline.avg_value,
-                "z_score": round(z_score, 2),
-                "severity": severity,
-                "message": message,
-            }
+            return anomaly_dict
 
         return None
 

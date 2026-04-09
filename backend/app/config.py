@@ -192,6 +192,13 @@ class Settings(BaseSettings):
 
     # Scheduler
     SCHEDULER_CHECK_INTERVAL_SECONDS: int = 60
+    BATCH_THRESHOLD: int = 500       # Objects per workload before splitting into batches
+    BATCH_SIZE: int = 500            # Objects per child batch job
+
+    # Anomaly Detection
+    ANOMALY_MAX_PER_TENANT: int = 10  # Max active anomalies per tenant (ceiling)
+    ANOMALY_RESOLVE_AFTER_DAYS: int = 30  # Auto-resolve unresolved anomalies older than this
+    ANOMALY_DELETE_AFTER_DAYS: int = 90   # Delete resolved anomalies older than this
 
     class Config:
         env_file = ".env"

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useCallback, useMemo, type ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 
 export type OnboardingStep =
@@ -32,61 +32,47 @@ const STEPS_ORDER: OnboardingStep[] = [
   'explore_recovery',
 ];
 
-const STORAGE_KEY = 'kavachiq_onboarding';
-
 const OnboardingContext = createContext<OnboardingState | null>(null);
 
 export function OnboardingProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, session } = useAuth();
 
-  // Load saved state
-  const [manualSteps, setManualSteps] = useState<Partial<Record<OnboardingStep, boolean>>>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : {};
-    } catch {
-      return {};
-    }
-  });
+  // Server-side onboarding state machine.
+  // Steps are immutable: once completed on the server, they never un-complete.
+  // The session response includes: { onboarding: { steps: { step_name: "iso_date", ... }, completed: N, total: 6 } }
+  const serverSteps = session?.onboarding?.steps || {};
 
-  // PERFORMANCE: Derive onboarding state from the SHARED session (AuthContext).
-  // Zero extra API calls — reads from the session query that AuthContext already fetches.
-  //
-  // Backend GET /auth/session returns:
-  //   has_tenants: boolean, tenant_count: number, onboarding_status: string, redirect: string|null
-  // It does NOT return: tenant_ids, has_protected_objects, has_backups
-  // So we use has_tenants (boolean) and onboarding_status ("complete"/"pending"/"demo")
   const hasTenants = !!session?.has_tenants || session?.tenant_count > 0 || session?.onboarding_status === 'complete';
-  const hasProtectedObjects = !!session?.has_protected_objects || session?.onboarding_status === 'complete' || !!manualSteps.assign_protection;
-  const hasBackups = !!session?.has_backups || session?.onboarding_status === 'complete' || !!manualSteps.first_backup;
+  const hasProtectedObjects = !!session?.has_protected_objects || session?.onboarding_status === 'complete';
+  const hasBackups = !!session?.has_backups || session?.onboarding_status === 'complete';
 
-  // Auto-detect step completion from session + manual overrides
+  // Derive step completion from server state.
+  // Fallback to session-derived values for backward compatibility during migration.
   const steps = useMemo<Record<OnboardingStep, boolean>>(() => {
     return {
-      create_account: isAuthenticated,
-      connect_platform: hasTenants || !!manualSteps.connect_platform,
-      discover_workloads: hasTenants || !!manualSteps.discover_workloads,
-      assign_protection: hasProtectedObjects || !!manualSteps.assign_protection,
-      first_backup: hasBackups || !!manualSteps.first_backup,
-      explore_recovery: !!manualSteps.explore_recovery,
+      create_account: !!serverSteps.create_account || isAuthenticated,
+      connect_platform: !!serverSteps.connect_platform || hasTenants,
+      discover_workloads: !!serverSteps.discover_workloads || hasTenants,
+      assign_protection: !!serverSteps.assign_protection || hasProtectedObjects,
+      first_backup: !!serverSteps.first_backup || hasBackups,
+      explore_recovery: !!serverSteps.explore_recovery,
     };
-  }, [isAuthenticated, hasTenants, hasProtectedObjects, hasBackups, manualSteps]);
+  }, [isAuthenticated, hasTenants, hasProtectedObjects, hasBackups, serverSteps]);
 
   const completedCount = STEPS_ORDER.filter(s => steps[s]).length;
   const currentStep = STEPS_ORDER.find(s => !steps[s]) || null;
 
-  const completeStep = (step: OnboardingStep) => {
-    setManualSteps(prev => {
-      const next = { ...prev, [step]: true };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      return next;
-    });
-  };
+  const completeStep = useCallback(async (step: OnboardingStep) => {
+    try {
+      await fetch(`/api/onboard/steps/${step}/complete`, { method: 'POST', credentials: 'include' });
+    } catch {
+      // Silently fail — step will be marked on next action
+    }
+  }, []);
 
-  const resetOnboarding = () => {
-    setManualSteps({});
-    localStorage.removeItem(STORAGE_KEY);
-  };
+  const resetOnboarding = useCallback(() => {
+    // No-op: server-side steps are immutable
+  }, []);
 
   const state: OnboardingState = {
     steps,

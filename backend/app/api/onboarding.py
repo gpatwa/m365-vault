@@ -376,6 +376,15 @@ async def oauth_callback(
                     new_tenant_ids = await get_user_tenant_ids(db, user)
                     await update_session(session_id, {"tenant_ids": new_tenant_ids})
 
+            # Mark onboarding step: connect_platform
+            if connecting_user_id:
+                try:
+                    from app.services.onboarding_service import mark_step
+                    await mark_step(db, connecting_user_id, "connect_platform")
+                    await db.commit()
+                except Exception:
+                    pass
+
             # BFF: redirect browser to frontend dashboard
             if is_browser_redirect:
                 params = urlencode({
@@ -424,6 +433,15 @@ async def oauth_callback(
         # NO auto-discovery on new tenant creation — discovery runs when customer
         # explicitly selects workloads in Step 2 via /discover endpoint.
         # This is the key change: opt-in per workload, not discover-everything.
+
+        # Mark onboarding step: connect_platform
+        if connecting_user_id:
+            try:
+                from app.services.onboarding_service import mark_step
+                await mark_step(db, connecting_user_id, "connect_platform")
+            except Exception:
+                pass
+
         await db.commit()
         disc_result = {"mailboxes": 0, "onedrives": 0, "sites": 0, "teams": 0, "entra_objects": 0}
 
@@ -546,6 +564,14 @@ async def complete_onboarding(
 
     # Activate tenant
     tenant.status = TenantStatus.ACTIVE
+
+    # Mark onboarding step: assign_protection
+    try:
+        from app.services.onboarding_service import mark_step
+        await mark_step(db, current_user.id, "assign_protection")
+    except Exception:
+        pass
+
     await db.commit()
 
     logger.info(f"Onboarding complete: tenant={tenant.id} protected={protected_count} objects, workloads={sorted(enabled)}")
@@ -649,6 +675,13 @@ async def selective_discovery(
     from app.models.tenant_workload_app import WorkloadLifecycle
     for wl in req.workloads:
         await transition_workload(db, req.tenant_id, wl, WorkloadLifecycle.DISCOVERED)
+
+    # Mark onboarding step: discover_workloads
+    try:
+        from app.services.onboarding_service import mark_step
+        await mark_step(db, current_user.id, "discover_workloads")
+    except Exception:
+        pass
 
     await db.commit()
 
@@ -1114,3 +1147,33 @@ async def check_invite_completion(
         "ms_tenant_id": invite.ms_tenant_id,
         "completed_at": invite.completed_at.isoformat() if invite.completed_at else None,
     }
+
+
+# ── Onboarding Step Completion (server-side state machine) ──
+
+
+MANUAL_STEPS = {"explore_recovery"}  # Steps that can be completed explicitly by frontend
+
+
+@router.post("/steps/{step}/complete")
+async def complete_onboarding_step(
+    step: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Explicitly mark an onboarding step as completed.
+
+    Only allowed for manual steps (explore_recovery). Other steps are marked
+    automatically at their action points (register, callback, discover, complete).
+    """
+    from app.services.onboarding_service import mark_step, ONBOARDING_STEPS
+
+    if step not in ONBOARDING_STEPS:
+        raise HTTPException(400, detail=f"Unknown step: {step}")
+    if step not in MANUAL_STEPS:
+        raise HTTPException(400, detail=f"Step '{step}' is marked automatically — cannot be set manually")
+
+    was_new = await mark_step(db, current_user.id, step)
+    await db.commit()
+
+    return {"step": step, "completed": True, "was_new": was_new}

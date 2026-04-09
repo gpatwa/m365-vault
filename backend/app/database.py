@@ -74,6 +74,10 @@ async def _run_migrations():
         # v2.2.0: Organizational Context Layer — criticality scoring
         ("protected_objects", "criticality_score", "INTEGER DEFAULT 50"),
         ("protected_objects", "criticality_tier", "VARCHAR(20) DEFAULT 'medium'"),
+        # v2.3.0: Batch scheduler — parent-child job decomposition
+        ("backup_jobs", "parent_job_id", "INTEGER"),
+        ("backup_jobs", "batch_offset", "INTEGER"),
+        ("backup_jobs", "batch_size", "INTEGER"),
     ]
     async with engine.begin() as conn:
         for table, column, col_type in migrations:

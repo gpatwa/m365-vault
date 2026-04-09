@@ -82,6 +82,13 @@ async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
     db.add(user)
     await db.flush()
 
+    # Mark onboarding step
+    try:
+        from app.services.onboarding_service import mark_step
+        await mark_step(db, user.id, "create_account")
+    except Exception:
+        pass  # Don't fail registration for onboarding tracking
+
     # Send welcome + verification email (non-blocking, don't fail registration)
     try:
         from app.services.email_service import email_service
@@ -374,6 +381,13 @@ async def get_me(
         except Exception:
             pass  # Don't fail session endpoint for optional onboarding data
 
+    # Server-side onboarding steps
+    try:
+        from app.services.onboarding_service import get_onboarding_summary
+        onboarding_summary = await get_onboarding_summary(db, current_user.id)
+    except Exception:
+        onboarding_summary = {"steps": {}, "completed": 0, "total": 6}
+
     return {
         "id": current_user.id,
         "username": current_user.username,
@@ -388,6 +402,7 @@ async def get_me(
         "onboarding_status": onboarding_status,
         "redirect": redirect,
         "preferences": preferences,
+        "onboarding": onboarding_summary,
     }
 
 

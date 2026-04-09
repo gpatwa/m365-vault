@@ -225,8 +225,12 @@ echo "── 11. Login Flow (full user journey) ──"
 if [ -n "$DEMO_TOKEN" ]; then
   check "Demo → tenants" "$(curl -s --max-time 10 -H "Authorization: Bearer $DEMO_TOKEN" "$BACKEND/api/tenants/" | python3 -c "import sys,json; d=json.load(sys.stdin); print('ok' if len(d)>0 else 'empty')" 2>/dev/null)" "ok"
   check "Demo → dashboard" "$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $DEMO_TOKEN" "$BACKEND/api/dashboard/summary")" "200"
-  check "Demo → recovery" "$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $DEMO_TOKEN" "$BACKEND/api/recovery/confidence?tenant_id=1")" "20"  # 200 or 204
-  check "Demo → health score" "$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $DEMO_TOKEN" "$BACKEND/api/health/score?tenant_id=1")" "200"
+  # Resolve demo user's actual tenant_id (don't hardcode — tenant IDs vary per environment)
+  DEMO_TENANT_ID=$(curl -s --max-time 10 -H "Authorization: Bearer $DEMO_TOKEN" "$BACKEND/api/tenants/" | python3 -c "import sys,json; ts=json.load(sys.stdin); print(ts[0]['id'] if ts else '')" 2>/dev/null)
+  if [ -n "$DEMO_TENANT_ID" ]; then
+    check "Demo → recovery" "$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $DEMO_TOKEN" "$BACKEND/api/recovery/confidence?tenant_id=$DEMO_TENANT_ID")" "20"  # 200 or 204
+    check "Demo → health score" "$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $DEMO_TOKEN" "$BACKEND/api/health/score?tenant_id=$DEMO_TENANT_ID")" "200"
+  fi
 fi
 
 # Viewer can read but not write

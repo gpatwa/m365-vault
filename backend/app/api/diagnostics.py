@@ -435,3 +435,16 @@ async def resilience_overview(
             "item_concurrency": settings.ITEM_CONCURRENCY,
         },
     }
+
+
+@router.get("/secrets")
+async def get_secret_diagnostics(
+    current_user: User = Depends(require_backup_permission),
+):
+    """Secret expiry status for all SaaS workload apps.
+
+    Returns status (healthy/warning/critical/expired) without
+    exposing actual secret values. Used for operational monitoring.
+    """
+    from app.services.secret_rotation import get_secret_status
+    return await get_secret_status()

@@ -22,6 +22,7 @@ from app.models.saas_workload_app import SaaSWorkloadApp  # noqa: F401 — ensur
 from app.models.user_preference import UserPreference     # noqa: F401 — ensure table is created
 from app.models.user_tenant import UserTenant             # noqa: F401 — ensure table is created
 from app.models.onboarding_step import OnboardingStep     # noqa: F401 — ensure table is created
+from app.models.usage_metric import TenantUsageMetric     # noqa: F401 — ensure table is created
 
 # Configure structured JSON logging for production
 if settings.LOG_FORMAT == "json":
@@ -289,16 +290,29 @@ async def rate_limit_middleware(request: Request, call_next):
 
 @app.middleware("http")
 async def correlation_id_middleware(request: Request, call_next):
-    """Add correlation ID to every request for tracing."""
+    """Add correlation ID + Prometheus metrics to every request."""
+    from app.observability import http_requests_total, http_request_duration_seconds, normalize_path
+
     correlation_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4())[:8])
     request.state.correlation_id = correlation_id
 
     start_time = time.time()
     response = await call_next(request)
     duration_ms = round((time.time() - start_time) * 1000, 1)
+    duration_s = duration_ms / 1000.0
 
     response.headers["X-Correlation-ID"] = correlation_id
     response.headers["X-Response-Time"] = f"{duration_ms}ms"
+
+    # Prometheus metrics (skip /metrics to avoid self-referential noise)
+    path_template = normalize_path(request.url.path)
+    if path_template != "/metrics":
+        http_requests_total.labels(
+            method=request.method, path_template=path_template, status=str(response.status_code)
+        ).inc()
+        http_request_duration_seconds.labels(
+            method=request.method, path_template=path_template
+        ).observe(duration_s)
 
     # Log request (skip noisy health checks)
     if not request.url.path.startswith("/health"):
@@ -457,55 +471,39 @@ async def root():
 async def prometheus_metrics():
     """Prometheus-compatible metrics endpoint for Grafana/PagerDuty/Datadog.
 
-    Returns key SaaS metrics in Prometheus text format.
+    Uses prometheus-client library for proper metric types (Counter, Histogram, Gauge).
+    Gauges are updated on each scrape; Counters/Histograms are updated by middleware.
     """
-    from app.database import async_session, engine
-    from sqlalchemy import text, func
+    from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+    from fastapi.responses import Response
+    from app.observability import tenants_active, db_pool_utilization, queue_depth
 
-    lines = []
-    lines.append(f'# HELP kavachiq_version Application version')
-    lines.append(f'kavachiq_version{{version="{settings.APP_VERSION}"}} 1')
-
+    # Update gauge metrics on each scrape
     try:
+        from app.database import async_session, engine
+        from sqlalchemy import text
         async with async_session() as db:
-            # Tenant count
             tc = (await db.execute(text("SELECT COUNT(*) FROM tenants WHERE status = 'active'"))).scalar() or 0
-            lines.append(f'kavachiq_tenants_active {tc}')
-
-            # User count
-            uc = (await db.execute(text("SELECT COUNT(*) FROM users WHERE is_active = 1"))).scalar() or 0
-            lines.append(f'kavachiq_users_active {uc}')
-
-            # Protected objects
-            po = (await db.execute(text("SELECT COUNT(*) FROM protected_objects WHERE status = 'protected'"))).scalar() or 0
-            pt = (await db.execute(text("SELECT COUNT(*) FROM protected_objects"))).scalar() or 0
-            lines.append(f'kavachiq_objects_protected {po}')
-            lines.append(f'kavachiq_objects_total {pt}')
-
-            # Backup jobs (24h)
-            bj = (await db.execute(text("SELECT COUNT(*) FROM backup_jobs WHERE started_at > NOW() - INTERVAL '24 hours'"))).scalar() or 0
-            bf = (await db.execute(text("SELECT COUNT(*) FROM backup_jobs WHERE status = 'failed' AND started_at > NOW() - INTERVAL '24 hours'"))).scalar() or 0
-            lines.append(f'kavachiq_backup_jobs_24h {bj}')
-            lines.append(f'kavachiq_backup_failures_24h {bf}')
-
-            # Snapshots
-            sc = (await db.execute(text("SELECT COUNT(*) FROM snapshots WHERE status = 'completed'"))).scalar() or 0
-            lines.append(f'kavachiq_snapshots_total {sc}')
-
-    except Exception:
-        lines.append('kavachiq_metrics_error 1')
-
-    # DB pool stats
-    try:
+            tenants_active.set(tc)
         pool = engine.pool
-        lines.append(f'kavachiq_db_pool_size {pool.size()}')
-        lines.append(f'kavachiq_db_pool_checked_out {pool.checkedout()}')
-        lines.append(f'kavachiq_db_pool_overflow {pool.overflow()}')
+        total = pool.size() + pool.overflow()
+        db_pool_utilization.set(pool.checkedout() / max(total, 1))
     except Exception:
         pass
 
-    from fastapi.responses import PlainTextResponse
-    return PlainTextResponse("\n".join(lines) + "\n", media_type="text/plain")
+    # Update queue depth gauges
+    try:
+        if settings.DISPATCH_MODE == "redis":
+            from app.interfaces.dispatcher_factory import get_dispatcher
+            dispatcher = get_dispatcher()
+            lengths = await dispatcher.queue_length()
+            for q, length in lengths.items():
+                if length >= 0:
+                    queue_depth.labels(queue=q).set(length)
+    except Exception:
+        pass
+
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 # DEBUG ENDPOINTS REMOVED — were leaking password hashes and stack traces.

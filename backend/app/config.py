@@ -164,6 +164,18 @@ class Settings(BaseSettings):
     STRIPE_PRICE_ENTERPRISE: str = ""
     TRIAL_PERIOD_DAYS: int = 14
 
+    # Encryption Key Versioning (zero-downtime rotation)
+    ENCRYPTION_KEY_VERSION: int = 1           # Current KEK version
+    ENCRYPTION_MASTER_KEY_V1: str = ""        # Previous KEK (decrypt-only during rotation)
+
+    # Secret Rotation
+    SECRET_ROTATION_WARNING_DAYS: int = 30    # Alert threshold for expiring secrets
+    SECRET_ROTATION_CRITICAL_DAYS: int = 7    # Critical alert threshold
+
+    # Observability
+    OTEL_ENABLED: bool = False
+    OTEL_SERVICE_NAME: str = "kavachiq-backend"
+
     # Smart Engine
     ANOMALY_Z_SCORE_THRESHOLD: float = 2.0   # Standard deviations to flag as anomaly
     HEALTH_CHECK_INTERVAL_MINUTES: int = 5

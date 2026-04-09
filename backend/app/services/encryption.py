@@ -14,30 +14,63 @@ from app.config import settings
 
 
 class EncryptionService:
-    """Envelope encryption service using AES-256-GCM."""
+    """Envelope encryption service using AES-256-GCM.
+
+    Supports key versioning for zero-downtime master key rotation:
+    - encrypt_dek always uses the current version (ENCRYPTION_KEY_VERSION)
+    - decrypt_dek reads the "v" field and selects the correct KEK
+    - Old DEKs without "v" field use the current key (backward compat)
+
+    Rotation workflow:
+    1. Set new ENCRYPTION_MASTER_KEY, move old to ENCRYPTION_MASTER_KEY_V1
+    2. Increment ENCRYPTION_KEY_VERSION
+    3. New wraps use new key, old unwraps still work via version map
+    """
 
     def __init__(self):
-        master_key = settings.ENCRYPTION_MASTER_KEY.encode("utf-8")
-        # Ensure master key is exactly 32 bytes
-        if len(master_key) < 32:
-            master_key = master_key.ljust(32, b"0")
-        elif len(master_key) > 32:
-            master_key = master_key[:32]
-        self._kek = master_key
+        self._current_version = getattr(settings, "ENCRYPTION_KEY_VERSION", 1)
+        self._kek_versions = {}
+
+        # Current key
+        self._kek = self._normalize_key(settings.ENCRYPTION_MASTER_KEY)
+        self._kek_versions[self._current_version] = self._kek
+
+        # Previous key (for decrypt-only during rotation)
+        prev_key = getattr(settings, "ENCRYPTION_MASTER_KEY_V1", "")
+        if prev_key:
+            prev_version = self._current_version - 1
+            self._kek_versions[prev_version] = self._normalize_key(prev_key)
+
+    @staticmethod
+    def _normalize_key(key_str: str) -> bytes:
+        """Ensure key is exactly 32 bytes for AES-256."""
+        key_bytes = key_str.encode("utf-8")
+        if len(key_bytes) < 32:
+            key_bytes = key_bytes.ljust(32, b"0")
+        elif len(key_bytes) > 32:
+            key_bytes = key_bytes[:32]
+        return key_bytes
+
+    def _get_kek(self, version: int = None) -> bytes:
+        """Get KEK for a specific version, falling back to current."""
+        if version is not None and version in self._kek_versions:
+            return self._kek_versions[version]
+        return self._kek
 
     def generate_dek(self) -> bytes:
         """Generate a random 256-bit Data Encryption Key."""
         return os.urandom(32)
 
     def encrypt_dek(self, dek: bytes) -> str:
-        """Encrypt a DEK with the KEK (key wrapping).
+        """Encrypt a DEK with the current KEK (key wrapping).
 
-        Returns base64-encoded JSON with nonce + ciphertext.
+        Returns base64-encoded JSON with version, nonce + ciphertext.
         """
         aesgcm = AESGCM(self._kek)
         nonce = os.urandom(12)
         encrypted = aesgcm.encrypt(nonce, dek, None)
         wrapped = {
+            "v": self._current_version,
             "nonce": base64.b64encode(nonce).decode(),
             "ciphertext": base64.b64encode(encrypted).decode(),
             "wrapped_at": datetime.utcnow().isoformat(),
@@ -45,9 +78,15 @@ class EncryptionService:
         return base64.b64encode(json.dumps(wrapped).encode()).decode()
 
     def decrypt_dek(self, wrapped_dek: str) -> bytes:
-        """Decrypt a wrapped DEK using the KEK."""
+        """Decrypt a wrapped DEK using the versioned KEK.
+
+        Reads the "v" field to select the correct key. Legacy DEKs
+        without a "v" field use the current key (backward compat).
+        """
         wrapped = json.loads(base64.b64decode(wrapped_dek))
-        aesgcm = AESGCM(self._kek)
+        version = wrapped.get("v")  # None for legacy DEKs
+        kek = self._get_kek(version)
+        aesgcm = AESGCM(kek)
         nonce = base64.b64decode(wrapped["nonce"])
         ciphertext = base64.b64decode(wrapped["ciphertext"])
         return aesgcm.decrypt(nonce, ciphertext, None)

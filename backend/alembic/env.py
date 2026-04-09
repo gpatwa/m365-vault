@@ -22,6 +22,22 @@ from app.models.snapshot import Snapshot, SnapshotItem, FailedItem  # noqa
 from app.models.audit_log import AuditLog  # noqa
 from app.models.dedup import DedupEntry  # noqa
 from app.models.health_baseline import HealthBaseline, AnomalyEvent  # noqa
+from app.models.worker_queue import WorkerQueueEntry  # noqa
+from app.models.user_tenant import UserTenant  # noqa
+from app.models.user_preference import UserPreference  # noqa
+from app.models.onboarding_step import OnboardingStep  # noqa
+from app.models.billing import BillingRecord  # noqa
+from app.models.msp_branding import MSPBranding  # noqa
+from app.models.saas_workload_app import SaaSWorkloadApp  # noqa
+from app.models.usage_metric import TenantUsageMetric  # noqa
+try:
+    from app.models.tenant_workload_app import TenantWorkloadApp  # noqa
+    from app.models.restore_approval import RestoreApproval  # noqa
+    from app.models.admin_invite import AdminInvite  # noqa
+    from app.models.agent_activity import AgentActivity  # noqa
+    from app.models.mvb_plan import MVBRecoveryPlan  # noqa
+except ImportError:
+    pass  # Optional models — may not exist in all branches
 
 config = context.config
 

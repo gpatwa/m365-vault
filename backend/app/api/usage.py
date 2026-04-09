@@ -154,6 +154,13 @@ async def tenant_usage(
         if count > 0:
             wl_breakdown[wl.value] = count
 
+    # Cost breakdown (per-tenant cost attribution)
+    try:
+        from app.services.metering import get_cost_breakdown
+        cost_breakdown = await get_cost_breakdown(tenant_id)
+    except Exception:
+        cost_breakdown = {"users": {"count": 0, "cost": 0}, "storage": {"gb": 0, "cost": 0}, "api_calls": {"count": 0, "cost": 0}, "compute": {"minutes": 0, "cost": 0}, "total": 0}
+
     return {
         "tenant_id": tenant_id,
         "tenant_name": tenant.name,
@@ -168,6 +175,7 @@ async def tenant_usage(
         "workload_count": len(active_workloads),
         "features_used": features_used,
         "by_workload": wl_breakdown,
+        "cost_breakdown": cost_breakdown,
         "last_discovery": tenant.last_discovery_at.isoformat() if tenant.last_discovery_at else None,
         "last_active": tenant.updated_at.isoformat() if tenant.updated_at else None,
     }

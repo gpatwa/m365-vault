@@ -291,6 +291,38 @@ if [ -n "$ADMIN_TOKEN" ]; then
 fi
 
 # ═══════════════════════════════════════════════════════
+# 13. OPERATIONAL MATURITY (observability, isolation, rotation, cost)
+# ═══════════════════════════════════════════════════════
+echo ""
+echo "── 13. Operational Maturity ──"
+
+# Prometheus metrics
+METRICS=$(curl -s --max-time 10 "$BACKEND/metrics")
+check "Prometheus /metrics" "$(echo "$METRICS" | grep -c 'kavachiq_http_requests_total')" "1"
+check "Metrics histograms" "$(echo "$METRICS" | grep -c 'kavachiq_http_request_duration_seconds')" "1"
+
+# Tenant isolation (demo user should only see their tenant's restore jobs)
+if [ -n "$DEMO_TOKEN" ] && [ -n "$DEMO_TENANT_ID" ]; then
+  RESTORE_CHECK=$(curl -s --max-time 10 -H "Authorization: Bearer $DEMO_TOKEN" "$BACKEND/api/jobs/restore" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+tids=set(i.get('tenant_id') for i in d.get('items',[]))
+print('ok' if not tids or tids <= {$DEMO_TENANT_ID} else 'LEAK')
+" 2>/dev/null)
+  check "Restore jobs tenant-scoped" "$RESTORE_CHECK" "ok"
+fi
+
+# Secret diagnostics
+if [ -n "$ADMIN_TOKEN" ]; then
+  check "Secret diagnostics" "$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $ADMIN_TOKEN" "$BACKEND/api/diagnostics/secrets")" "200"
+fi
+
+# Cost attribution
+if [ -n "$DEMO_TOKEN" ] && [ -n "$DEMO_TENANT_ID" ]; then
+  check "Usage cost breakdown" "$(curl -s --max-time 10 -H "Authorization: Bearer $DEMO_TOKEN" "$BACKEND/api/usage/tenant/$DEMO_TENANT_ID" | python3 -c "import sys,json; d=json.load(sys.stdin); print('ok' if 'cost_breakdown' in d else 'missing')" 2>/dev/null)" "ok"
+fi
+
+# ═══════════════════════════════════════════════════════
 # SUMMARY
 # ═══════════════════════════════════════════════════════
 echo ""

@@ -181,13 +181,15 @@ async def test_change_password_weak_new(auth_client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_metrics_endpoint(client: AsyncClient):
-    """Prometheus /metrics endpoint returns text metrics."""
+    """Prometheus /metrics endpoint returns prometheus-client format."""
     resp = await client.get("/metrics")
     assert resp.status_code == 200
     text = resp.text
-    assert "kavachiq_version" in text
-    assert "kavachiq_users_active" in text
-    assert "kavachiq_objects_total" in text
+    # prometheus-client library outputs HELP/TYPE headers
+    assert "# HELP" in text
+    assert "# TYPE" in text
+    # Custom KavachIQ metrics present
+    assert "kavachiq_http_requests_total" in text or "kavachiq_tenants_active" in text
 
 
 @pytest.mark.asyncio

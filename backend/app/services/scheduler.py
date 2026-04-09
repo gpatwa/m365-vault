@@ -629,6 +629,24 @@ async def collect_security_signals():
             logger.error(f"Security signal scheduler error: {e}")
 
 
+async def _run_secret_check():
+    """Check for expiring SaaS workload app secrets."""
+    try:
+        from app.services.secret_rotation import check_expiring_secrets
+        await check_expiring_secrets()
+    except Exception as e:
+        logger.error(f"Secret expiry check error: {e}")
+
+
+async def _run_metering_flush():
+    """Flush usage metrics from Redis counters to database."""
+    try:
+        from app.services.metering import flush_to_db
+        await flush_to_db()
+    except Exception as e:
+        logger.error(f"Metering flush error: {e}")
+
+
 def start_scheduler():
     """Start the background scheduler."""
     scheduler.add_job(
@@ -708,8 +726,22 @@ def start_scheduler():
         name="Collect privileged roles and security signals",
         replace_existing=True,
     )
+    scheduler.add_job(
+        _run_secret_check,
+        IntervalTrigger(hours=6),
+        id="secret_expiry_checker",
+        name="Check for expiring Entra app secrets",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        _run_metering_flush,
+        IntervalTrigger(minutes=5),
+        id="metering_flush",
+        name="Flush usage metrics from Redis to DB",
+        replace_existing=True,
+    )
     scheduler.start()
-    logger.info("Scheduler started (backup, batch aggregator, anomaly cleanup, retry, smart engine, WORM, stale detector, org context)")
+    logger.info("Scheduler started (backup, batch aggregator, anomaly cleanup, retry, smart engine, WORM, stale detector, org context, secret check, metering)")
 
 
 def stop_scheduler():

@@ -93,9 +93,10 @@ async def list_restore_jobs(
     current_user: User = Depends(get_current_user),
 ):
     """List restore jobs with filtering."""
-    stmt = select(RestoreJob)
-    if tenant_id:
-        stmt = stmt.where(RestoreJob.tenant_id == tenant_id)
+    from app.services.auth import resolve_tenant_filter
+    allowed = await resolve_tenant_filter(db, current_user, tenant_id)
+
+    stmt = select(RestoreJob).where(RestoreJob.tenant_id.in_(allowed))
     if status:
         stmt = stmt.where(RestoreJob.status == status)
 
@@ -138,8 +139,12 @@ async def get_backup_job(
     current_user: User = Depends(get_current_user),
 ):
     """Get details of a specific backup job."""
+    from app.services.auth import resolve_tenant_filter
     job = await db.get(BackupJob, job_id)
     if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    allowed = await resolve_tenant_filter(db, current_user)
+    if job.tenant_id not in allowed:
         raise HTTPException(status_code=404, detail="Job not found")
     return {
         "id": job.id,
@@ -165,8 +170,12 @@ async def get_restore_job(
     current_user: User = Depends(get_current_user),
 ):
     """Get details of a specific restore job."""
+    from app.services.auth import resolve_tenant_filter
     job = await db.get(RestoreJob, job_id)
     if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    allowed = await resolve_tenant_filter(db, current_user)
+    if job.tenant_id not in allowed:
         raise HTTPException(status_code=404, detail="Job not found")
     return {
         "id": job.id,

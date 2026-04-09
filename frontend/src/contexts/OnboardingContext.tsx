@@ -50,12 +50,15 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   });
 
   // PERFORMANCE: Derive onboarding state from the SHARED session (AuthContext).
-  // The session already contains tenant_ids and onboarding_status.
-  // Previously this called GET /dashboard/summary on EVERY page load (+ 30s refetch!)
-  // which returned 503 and blocked progressive disclosure. Zero extra API calls now.
-  const hasTenants = !!(session?.tenant_ids?.length > 0) || !!(session?.tenants?.length > 0) || session?.redirect === false;
-  const hasProtectedObjects = !!session?.has_protected_objects || !!manualSteps.assign_protection;
-  const hasBackups = !!session?.has_backups || !!manualSteps.first_backup;
+  // Zero extra API calls — reads from the session query that AuthContext already fetches.
+  //
+  // Backend GET /auth/session returns:
+  //   has_tenants: boolean, tenant_count: number, onboarding_status: string, redirect: string|null
+  // It does NOT return: tenant_ids, has_protected_objects, has_backups
+  // So we use has_tenants (boolean) and onboarding_status ("complete"/"pending"/"demo")
+  const hasTenants = !!session?.has_tenants || session?.tenant_count > 0 || session?.onboarding_status === 'complete';
+  const hasProtectedObjects = !!session?.has_protected_objects || session?.onboarding_status === 'complete' || !!manualSteps.assign_protection;
+  const hasBackups = !!session?.has_backups || session?.onboarding_status === 'complete' || !!manualSteps.first_backup;
 
   // Auto-detect step completion from session + manual overrides
   const steps = useMemo<Record<OnboardingStep, boolean>>(() => {

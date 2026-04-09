@@ -348,6 +348,32 @@ async def get_me(
     )
     preferences = {p.key: p.value for p in prefs_result.scalars().all()}
 
+    # Onboarding progress — used by frontend OnboardingContext for progressive disclosure
+    has_protected = False
+    has_backups = False
+    if has_tenants:
+        try:
+            from app.models.protected_object import ProtectedObject, ProtectionStatus
+            from app.models.backup_job import BackupJob
+            from sqlalchemy import func as _func
+
+            prot_count = (await db.execute(
+                _func.count(ProtectedObject.id).select().where(
+                    ProtectedObject.tenant_id.in_(tenant_ids),
+                    ProtectedObject.status == ProtectionStatus.PROTECTED,
+                )
+            )).scalar() or 0
+            has_protected = prot_count > 0
+
+            job_count = (await db.execute(
+                _func.count(BackupJob.id).select().where(
+                    BackupJob.tenant_id.in_(tenant_ids),
+                )
+            )).scalar() or 0
+            has_backups = job_count > 0
+        except Exception:
+            pass  # Don't fail session endpoint for optional onboarding data
+
     return {
         "id": current_user.id,
         "username": current_user.username,
@@ -357,6 +383,8 @@ async def get_me(
         "is_platform_admin": current_user.username == "admin",
         "has_tenants": has_tenants,
         "tenant_count": len(tenant_ids),
+        "has_protected_objects": has_protected,
+        "has_backups": has_backups,
         "onboarding_status": onboarding_status,
         "redirect": redirect,
         "preferences": preferences,

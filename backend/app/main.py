@@ -242,8 +242,9 @@ async def lifespan(app: FastAPI):
                         GROUP BY ut.user_id
                     """))
                     logger.info("Auto-fix: onboarding steps backfilled for existing users")
+                    logger.info("Onboarding backfill complete")
         except Exception as e:
-            logger.warning(f"Onboarding backfill skipped: {e}")
+            logger.error(f"Onboarding backfill FAILED: {e}", exc_info=True)
 
     start_scheduler()
     logger.info("Scheduler started")

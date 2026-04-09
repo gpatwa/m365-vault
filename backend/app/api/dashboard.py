@@ -123,13 +123,17 @@ async def get_summary(
         select(func.count(RestoreJob.id)).where(RestoreJob.created_at >= since_24h)
     )).scalar()
 
-    # Snapshot stats
+    # Snapshot stats — scoped to user's tenants via protected_object → tenant
     total_snapshots = (await db.execute(
-        select(func.count(Snapshot.id)).where(Snapshot.status == SnapshotStatus.COMPLETED)
+        select(func.count(Snapshot.id))
+        .join(ProtectedObject, Snapshot.protected_object_id == ProtectedObject.id)
+        .where(Snapshot.status == SnapshotStatus.COMPLETED, ProtectedObject.tenant_id.in_(allowed_ids))
     )).scalar()
 
     total_backup_size = (await db.execute(
-        select(func.sum(Snapshot.size_bytes)).where(Snapshot.status == SnapshotStatus.COMPLETED)
+        select(func.sum(Snapshot.size_bytes))
+        .join(ProtectedObject, Snapshot.protected_object_id == ProtectedObject.id)
+        .where(Snapshot.status == SnapshotStatus.COMPLETED, ProtectedObject.tenant_id.in_(allowed_ids))
     )).scalar() or 0
 
     # Storage stats
@@ -164,6 +168,9 @@ async def get_activity(
     current_user: User = Depends(get_current_user),
 ):
     """Get backup/restore activity over time for charts."""
+    from app.services.auth import resolve_tenant_filter
+    allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
+
     activity = []
 
     for i in range(days):
@@ -171,11 +178,12 @@ async def get_activity(
         day_start = datetime.combine(date, datetime.min.time())
         day_end = datetime.combine(date, datetime.max.time())
 
-        # Backup jobs for this day
+        # Backup jobs for this day — scoped to user's tenants
         backup_count = (await db.execute(
             select(func.count(BackupJob.id)).where(
                 BackupJob.created_at >= day_start,
                 BackupJob.created_at <= day_end,
+                BackupJob.tenant_id.in_(allowed_ids),
             )
         )).scalar()
 
@@ -184,6 +192,7 @@ async def get_activity(
                 BackupJob.created_at >= day_start,
                 BackupJob.created_at <= day_end,
                 BackupJob.status == JobStatus.COMPLETED,
+                BackupJob.tenant_id.in_(allowed_ids),
             )
         )).scalar()
 
@@ -192,15 +201,19 @@ async def get_activity(
             select(func.count(RestoreJob.id)).where(
                 RestoreJob.created_at >= day_start,
                 RestoreJob.created_at <= day_end,
+                RestoreJob.tenant_id.in_(allowed_ids),
             )
         )).scalar()
 
         # Data backed up this day
         data_size = (await db.execute(
-            select(func.sum(Snapshot.size_bytes)).where(
+            select(func.sum(Snapshot.size_bytes))
+            .join(ProtectedObject, Snapshot.protected_object_id == ProtectedObject.id)
+            .where(
                 Snapshot.created_at >= day_start,
                 Snapshot.created_at <= day_end,
                 Snapshot.status == SnapshotStatus.COMPLETED,
+                ProtectedObject.tenant_id.in_(allowed_ids),
             )
         )).scalar() or 0
 

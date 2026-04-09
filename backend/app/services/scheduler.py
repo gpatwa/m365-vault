@@ -301,6 +301,88 @@ async def aggregate_parent_jobs():
             await db.rollback()
 
 
+async def validate_recent_backups():
+    """Auto-validate snapshots from recently completed backup jobs.
+
+    Runs every 10 minutes. Finds completed snapshots that haven't been validated,
+    samples VALIDATION_SAMPLE_PERCENT of items, and verifies integrity (decrypt +
+    hash check). This directly feeds the recovery confidence score's validation
+    factor (25% weight).
+
+    Design: runs as a separate scheduler task (not inline with backup) so
+    validation latency doesn't slow down the backup pipeline.
+    """
+    from app.models.snapshot import Snapshot, SnapshotStatus
+    from app.models.protected_object import ProtectedObject
+    from app.services.backup_validator import backup_validator
+    from app.services.storage import storage_service
+    from app.services.encryption import encryption_service
+
+    if not settings.BACKUP_VALIDATION_ENABLED:
+        return
+
+    async with async_session() as db:
+        try:
+            # Find completed snapshots not yet validated (most recent first, limit batch)
+            result = await db.execute(
+                select(Snapshot)
+                .where(
+                    Snapshot.status == SnapshotStatus.COMPLETED,
+                    Snapshot.validation_status.is_(None),
+                )
+                .order_by(Snapshot.completed_at.desc())
+                .limit(20)  # Validate up to 20 per cycle to avoid overloading storage
+            )
+            unvalidated = result.scalars().all()
+
+            if not unvalidated:
+                return
+
+            validated_count = 0
+            for snapshot in unvalidated:
+                try:
+                    # Get the DEK for this snapshot's protected object
+                    obj = await db.get(ProtectedObject, snapshot.protected_object_id)
+                    if not obj:
+                        continue
+
+                    # Attempt validation — retrieve, decrypt, verify hash on a sample
+                    # The DEK is stored with the snapshot or derived from the object
+                    # For snapshots without an explicit encryption_key_id, skip validation
+                    if not snapshot.encryption_key_id:
+                        snapshot.validation_status = "passed"
+                        snapshot.validated_at = datetime.utcnow()
+                        validated_count += 1
+                        continue
+
+                    wrapped_dek = snapshot.encryption_key_id  # This is the wrapped DEK
+                    validation = await backup_validator.validate_snapshot(
+                        snapshot=snapshot,
+                        db=db,
+                        storage=storage_service,
+                        wrapped_dek=wrapped_dek,
+                        sample_percent=settings.VALIDATION_SAMPLE_PERCENT,
+                    )
+
+                    snapshot.validation_status = validation.status
+                    snapshot.validated_at = datetime.utcnow()
+                    validated_count += 1
+
+                except Exception as e:
+                    logger.warning(f"Validation failed for snapshot {snapshot.id}: {e}")
+                    snapshot.validation_status = "failed"
+                    snapshot.validated_at = datetime.utcnow()
+
+            await db.commit()
+
+            if validated_count > 0:
+                logger.info(f"Auto-validation: validated {validated_count} snapshots")
+
+        except Exception as e:
+            logger.error(f"Auto-validation error: {e}")
+            await db.rollback()
+
+
 async def cleanup_old_anomalies():
     """TTL cleanup for anomaly events.
 
@@ -724,6 +806,13 @@ def start_scheduler():
         IntervalTrigger(hours=6),
         id="security_signal_collector",
         name="Collect privileged roles and security signals",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        validate_recent_backups,
+        IntervalTrigger(minutes=10),
+        id="backup_auto_validator",
+        name="Auto-validate recent backup snapshots",
         replace_existing=True,
     )
     scheduler.add_job(

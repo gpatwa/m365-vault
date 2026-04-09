@@ -33,17 +33,17 @@ const queryClient = new QueryClient({
   },
 });
 
-// Global poll: invalidate all queries every 30 seconds.
-// Uses native setInterval which works in ALL tab states.
-// React Query only refetches queries that are stale (staleTime expired).
+// Global poll: force refetch all active queries every 30 seconds.
+// invalidateQueries() only marks stale — doesn't trigger fetch in hidden tabs.
+// refetchQueries() forces immediate network requests regardless of tab state.
 setInterval(() => {
-  queryClient.invalidateQueries();
+  queryClient.refetchQueries({ type: 'active' });
 }, 30_000);
 
-// Refresh immediately when tab becomes visible (user switches back)
+// Immediate refresh when user switches back to this tab
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
-    queryClient.invalidateQueries();
+    queryClient.refetchQueries({ type: 'active' });
   }
 });
 

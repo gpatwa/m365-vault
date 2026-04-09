@@ -196,11 +196,20 @@ async def lifespan(app: FastAPI):
                 except Exception as e:
                     logger.debug(f"User-tenant sync skipped: {e}")
 
-            # 5. Backfill onboarding steps for seeded users (safe to re-run)
-            if not _is_sqlite:
-                try:
+    except Exception as e:
+        logger.warning(f"Auto-migration skipped: {e}")
+
+    # 5. Backfill onboarding steps (runs in separate transaction after migration commits)
+    if not _is_sqlite:
+        try:
+            async with _engine.begin() as _conn2:
+                # Check if onboarding_steps table exists
+                exists = await _conn2.scalar(_text(
+                    "SELECT 1 FROM information_schema.tables WHERE table_name = 'onboarding_steps'"
+                ))
+                if exists:
                     # Mark create_account for all existing users that don't have it
-                    await _conn.execute(_text("""
+                    await _conn2.execute(_text("""
                         INSERT INTO onboarding_steps (user_id, step, completed_at)
                         SELECT u.id, 'create_account', u.created_at
                         FROM users u
@@ -211,7 +220,7 @@ async def lifespan(app: FastAPI):
                     """))
                     # For users with tenants: mark connect_platform, discover_workloads, assign_protection
                     for step in ['connect_platform', 'discover_workloads', 'assign_protection']:
-                        await _conn.execute(_text(f"""
+                        await _conn2.execute(_text(f"""
                             INSERT INTO onboarding_steps (user_id, step, completed_at)
                             SELECT DISTINCT ut.user_id, '{step}', NOW()
                             FROM user_tenants ut
@@ -221,7 +230,7 @@ async def lifespan(app: FastAPI):
                             )
                         """))
                     # For users with completed backup jobs: mark first_backup
-                    await _conn.execute(_text("""
+                    await _conn2.execute(_text("""
                         INSERT INTO onboarding_steps (user_id, step, completed_at)
                         SELECT DISTINCT ut.user_id, 'first_backup', MIN(bj.completed_at)
                         FROM user_tenants ut
@@ -233,11 +242,8 @@ async def lifespan(app: FastAPI):
                         GROUP BY ut.user_id
                     """))
                     logger.info("Auto-fix: onboarding steps backfilled for existing users")
-                except Exception as e:
-                    logger.debug(f"Onboarding backfill skipped: {e}")
-
-    except Exception as e:
-        logger.warning(f"Auto-migration skipped: {e}")
+        except Exception as e:
+            logger.warning(f"Onboarding backfill skipped: {e}")
 
     start_scheduler()
     logger.info("Scheduler started")

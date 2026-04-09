@@ -11,15 +11,22 @@ from datetime import date, datetime
 logger = logging.getLogger(__name__)
 
 
+METERING_KEY_TTL = 7 * 86400  # 7-day safety net TTL for metering keys
+
+
 async def record_api_call(tenant_id: int, calls: int = 1, throttled: int = 0):
     """Record Graph API calls for a tenant. Atomic via Redis INCRBY."""
     try:
         r = await _get_redis()
         today = date.today().isoformat()
         prefix = f"kavachiq:meter:{tenant_id}:{today}"
-        await r.incrby(f"{prefix}:graph_api_calls", calls)
+        key = f"{prefix}:graph_api_calls"
+        await r.incrby(key, calls)
+        await r.expire(key, METERING_KEY_TTL)
         if throttled:
-            await r.incrby(f"{prefix}:graph_api_throttled", throttled)
+            tkey = f"{prefix}:graph_api_throttled"
+            await r.incrby(tkey, throttled)
+            await r.expire(tkey, METERING_KEY_TTL)
     except Exception as e:
         logger.debug(f"Metering record_api_call failed: {e}")
 

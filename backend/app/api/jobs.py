@@ -192,13 +192,16 @@ async def get_restore_job(
 
 @router.get("/failed-summary")
 async def get_failed_jobs_summary(
+    tenant_id: int = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Get summary of all failed/partial jobs and their retry eligibility."""
+    from app.services.auth import resolve_tenant_filter
     from app.services.retry_engine import RetryEngine
+    allowed = await resolve_tenant_filter(db, current_user, tenant_id)
     engine = RetryEngine(db)
-    return await engine.get_failed_jobs_summary()
+    return await engine.get_failed_jobs_summary(tenant_ids=allowed)
 
 
 @router.post("/backup/{job_id}/retry")
@@ -208,7 +211,17 @@ async def retry_backup_job(
     current_user: User = Depends(require_backup_permission),
 ):
     """Manually retry a failed backup job. Requires ADMIN or OPERATOR role."""
+    from app.services.auth import resolve_tenant_filter
     from app.services.retry_engine import RetryEngine
+
+    # Validate tenant access on the job being retried
+    job = await db.get(BackupJob, job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    allowed = await resolve_tenant_filter(db, current_user)
+    if job.tenant_id not in allowed:
+        raise HTTPException(status_code=404, detail="Job not found")
+
     engine = RetryEngine(db)
     try:
         return await engine.retry_single_job(job_id)
@@ -222,9 +235,11 @@ async def retry_all_failed_jobs(
     current_user: User = Depends(require_backup_permission),
 ):
     """Trigger immediate retry of all eligible failed jobs. Requires ADMIN or OPERATOR role."""
+    from app.services.auth import resolve_tenant_filter
     from app.services.retry_engine import RetryEngine
+    allowed = await resolve_tenant_filter(db, current_user)
     engine = RetryEngine(db)
-    return await engine.process_failed_jobs()
+    return await engine.process_failed_jobs(tenant_ids=allowed)
 
 
 @router.post("/snapshots/{snapshot_id}/retry")
@@ -234,7 +249,22 @@ async def retry_failed_snapshot(
     current_user: User = Depends(require_backup_permission),
 ):
     """Retry a specific failed snapshot by creating a new backup. Requires ADMIN or OPERATOR role."""
+    from app.services.auth import resolve_tenant_filter
     from app.services.retry_engine import RetryEngine
+    from app.models.snapshot import Snapshot
+    from app.models.protected_object import ProtectedObject
+
+    # Validate tenant access via snapshot → protected_object → tenant
+    snapshot = await db.get(Snapshot, snapshot_id)
+    if not snapshot:
+        raise HTTPException(status_code=404, detail="Snapshot not found")
+    obj = await db.get(ProtectedObject, snapshot.protected_object_id)
+    if not obj:
+        raise HTTPException(status_code=404, detail="Snapshot not found")
+    allowed = await resolve_tenant_filter(db, current_user)
+    if obj.tenant_id not in allowed:
+        raise HTTPException(status_code=404, detail="Snapshot not found")
+
     engine = RetryEngine(db)
     try:
         return await engine.retry_failed_snapshot(snapshot_id)
@@ -255,8 +285,12 @@ async def mass_recovery(
     current_user: User = Depends(require_restore_permission),
 ):
     """Trigger mass recovery for multiple objects. Requires ADMIN role (write access)."""
+    from app.services.auth import require_tenant_access
     from app.services.restore_engine import RestoreEngine
     from app.models.restore_job import RestoreType
+
+    # Explicit tenant access check (tenant_id is in body, not query param)
+    await require_tenant_access(db, req.tenant_id, current_user)
 
     engine = RestoreEngine(db)
     jobs = await engine.mass_recovery(
@@ -283,6 +317,16 @@ async def list_snapshots(
 ):
     """List snapshots for a specific protected object (unified across all workloads)."""
     from app.models.snapshot import Snapshot, SnapshotStatus
+    from app.models.protected_object import ProtectedObject
+    from app.services.auth import resolve_tenant_filter
+
+    # Validate tenant access via protected_object → tenant
+    obj = await db.get(ProtectedObject, protected_object_id)
+    if not obj:
+        raise HTTPException(status_code=404, detail="Object not found")
+    allowed = await resolve_tenant_filter(db, current_user)
+    if obj.tenant_id not in allowed:
+        raise HTTPException(status_code=404, detail="Object not found")
 
     stmt = select(Snapshot).where(Snapshot.protected_object_id == protected_object_id)
     count_stmt = select(func.count()).select_from(stmt.subquery())

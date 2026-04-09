@@ -102,15 +102,15 @@ async def ensure_seed_users(engine: AsyncEngine):
 
         # connect_platform / discover_workloads / assign_protection for users with tenants
         for step in ("connect_platform", "discover_workloads", "assign_protection"):
-            await conn.execute(text(f"""
+            await conn.execute(text("""
                 INSERT INTO onboarding_steps (user_id, step, completed_at)
-                SELECT DISTINCT ut.user_id, '{step}', NOW()
+                SELECT DISTINCT ut.user_id, :step, NOW()
                 FROM user_tenants ut
                 WHERE NOT EXISTS (
                     SELECT 1 FROM onboarding_steps os
-                    WHERE os.user_id = ut.user_id AND os.step = '{step}'
+                    WHERE os.user_id = ut.user_id AND os.step = :step
                 )
-            """))
+            """), {"step": step})
 
         # first_backup for users whose tenants have completed backups
         await conn.execute(text("""
@@ -155,7 +155,6 @@ def _get_password(username: str) -> str:
     generated = secrets.token_urlsafe(12)
     logger.warning(
         f"Auto-generated password for '{username}'. "
-        f"Set {env_key} env var for deterministic password. "
-        f"Generated: {generated}"
+        f"Set {env_key} env var for deterministic credentials."
     )
     return generated

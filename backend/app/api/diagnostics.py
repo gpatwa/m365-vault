@@ -119,7 +119,7 @@ async def test_connector(
         "status": overall,
         "message": message,
         "app_id": app_id,
-        "secret_hint": f"{secret[:4]}...{secret[-4:]}" if secret else None,
+        "secret_configured": bool(secret),
         "secret_length": len(secret) if secret else 0,
         "results": results,
         "tested_at": datetime.utcnow().isoformat(),
@@ -199,12 +199,12 @@ async def test_msal_direct(
     # Debug info
     results["debug"] = {
         "settings_app_id": app_id,
-        "settings_secret_hint": f"{secret[:4]}...{secret[-4:]}" if secret else None,
+        "settings_secret_configured": bool(secret),
         "settings_secret_len": len(secret) if secret else 0,
         "connector_app_id": connector.app_id if 'connector' in dir() else None,
-        "connector_secret_hint": f"{connector.app_secret[:4]}...{connector.app_secret[-4:]}" if 'connector' in dir() and connector.app_secret else None,
+        "connector_secret_configured": bool(connector.app_secret) if 'connector' in dir() else None,
         "connector_secret_len": len(connector.app_secret) if 'connector' in dir() and connector.app_secret else 0,
-        "secrets_match": (secret == connector.app_secret) if 'connector' in dir() else None,
+        "secrets_configured": bool(secret) and bool(connector.app_secret if 'connector' in dir() else None),
         "target_tenant": tenant_id,
     }
 
@@ -350,7 +350,7 @@ async def show_environment(
         "connector_app_id": settings.CONNECTOR_APP_ID or "(not set)",
         "connector_secret_set": bool(settings.CONNECTOR_APP_SECRET),
         "connector_secret_length": len(settings.CONNECTOR_APP_SECRET) if settings.CONNECTOR_APP_SECRET else 0,
-        "connector_secret_hint": f"{settings.CONNECTOR_APP_SECRET[:4]}...{settings.CONNECTOR_APP_SECRET[-4:]}" if settings.CONNECTOR_APP_SECRET and len(settings.CONNECTOR_APP_SECRET) > 8 else "(too short)",
+        "connector_secret_configured": bool(settings.CONNECTOR_APP_SECRET),
         "database_url_set": bool(settings.DATABASE_URL),
         "encryption_key_set": bool(settings.ENCRYPTION_MASTER_KEY),
         "debug": getattr(settings, "DEBUG", False),

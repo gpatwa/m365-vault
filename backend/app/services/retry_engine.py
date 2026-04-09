@@ -30,7 +30,7 @@ class RetryEngine:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def process_failed_jobs(self) -> dict:
+    async def process_failed_jobs(self, tenant_ids: list[int] = None) -> dict:
         """Scan for failed/partial jobs eligible for retry and re-execute them.
 
         A job is eligible if:
@@ -38,14 +38,18 @@ class RetryEngine:
         - retry_count < max_retries
         - enough time has elapsed since last attempt (backoff)
 
+        Args:
+            tenant_ids: If provided, only retry jobs for these tenants (tenant isolation).
+
         Returns summary dict.
         """
-        result = await self.db.execute(
-            select(BackupJob).where(
-                BackupJob.status.in_([JobStatus.FAILED, JobStatus.PARTIAL]),
-                BackupJob.retry_count < BackupJob.max_retries,
-            ).order_by(BackupJob.completed_at)
+        stmt = select(BackupJob).where(
+            BackupJob.status.in_([JobStatus.FAILED, JobStatus.PARTIAL]),
+            BackupJob.retry_count < BackupJob.max_retries,
         )
+        if tenant_ids is not None:
+            stmt = stmt.where(BackupJob.tenant_id.in_(tenant_ids))
+        result = await self.db.execute(stmt.order_by(BackupJob.completed_at))
         failed_jobs = result.scalars().all()
 
         retried = 0
@@ -240,13 +244,14 @@ class RetryEngine:
             "size_bytes": new_snapshot.size_bytes,
         }
 
-    async def get_failed_jobs_summary(self) -> dict:
+    async def get_failed_jobs_summary(self, tenant_ids: list[int] = None) -> dict:
         """Get a summary of all failed/partial jobs and their retry eligibility."""
-        result = await self.db.execute(
-            select(BackupJob).where(
-                BackupJob.status.in_([JobStatus.FAILED, JobStatus.PARTIAL])
-            ).order_by(BackupJob.completed_at.desc())
+        stmt = select(BackupJob).where(
+            BackupJob.status.in_([JobStatus.FAILED, JobStatus.PARTIAL])
         )
+        if tenant_ids is not None:
+            stmt = stmt.where(BackupJob.tenant_id.in_(tenant_ids))
+        result = await self.db.execute(stmt.order_by(BackupJob.completed_at.desc()))
         failed_jobs = result.scalars().all()
 
         jobs_info = []

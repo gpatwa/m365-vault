@@ -353,16 +353,18 @@ resource "azurerm_container_app" "worker" {
 
     # KEDA scalers: scale workers based on actual Redis queue depth.
     # ACA evaluates all rules and picks the one demanding more replicas.
-    # Backup queue handles bulk traffic (batch child jobs, scheduled backups).
-    # Restore queue handles on-demand restore operations.
+    # Redis URL referenced from Container App secrets (not plaintext metadata).
     custom_scale_rule {
       name             = "backup-queue"
       custom_rule_type = "redis"
       metadata = {
-        address    = var.redis_url
         listName   = "kavachiq:backup_queue"
         listLength = var.worker_scale_threshold
         enableTLS  = var.redis_enable_tls
+      }
+      authentication {
+        secret_name       = "redis-url"
+        trigger_parameter = "address"
       }
     }
 
@@ -370,10 +372,13 @@ resource "azurerm_container_app" "worker" {
       name             = "restore-queue"
       custom_rule_type = "redis"
       metadata = {
-        address    = var.redis_url
         listName   = "kavachiq:restore_queue"
         listLength = var.worker_scale_threshold
         enableTLS  = var.redis_enable_tls
+      }
+      authentication {
+        secret_name       = "redis-url"
+        trigger_parameter = "address"
       }
     }
 

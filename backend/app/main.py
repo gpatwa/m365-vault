@@ -182,13 +182,12 @@ async def lifespan(app: FastAPI):
                             SELECT 1 FROM user_tenants ut WHERE ut.user_id = u.id AND ut.tenant_id = t.id
                           )
                     """))
-                    # Assign demo user to demo tenants (ms_tenant_id like 'demo-%')
+                    # Assign demo user to ALL existing tenants (demo needs full access for E2E)
                     await _conn.execute(_text("""
                         INSERT INTO user_tenants (user_id, tenant_id, role, is_default, created_at)
                         SELECT u.id, t.id, 'member', 1, NOW()
                         FROM users u, tenants t
                         WHERE u.username = 'demo'
-                          AND t.ms_tenant_id LIKE 'demo-%'
                           AND NOT EXISTS (
                             SELECT 1 FROM user_tenants ut WHERE ut.user_id = u.id AND ut.tenant_id = t.id
                           )
@@ -196,6 +195,46 @@ async def lifespan(app: FastAPI):
                     logger.info("Auto-fix: user-tenant memberships synced")
                 except Exception as e:
                     logger.debug(f"User-tenant sync skipped: {e}")
+
+            # 5. Backfill onboarding steps for seeded users (safe to re-run)
+            if not _is_sqlite:
+                try:
+                    # Mark create_account for all existing users that don't have it
+                    await _conn.execute(_text("""
+                        INSERT INTO onboarding_steps (user_id, step, completed_at)
+                        SELECT u.id, 'create_account', u.created_at
+                        FROM users u
+                        WHERE NOT EXISTS (
+                            SELECT 1 FROM onboarding_steps os
+                            WHERE os.user_id = u.id AND os.step = 'create_account'
+                        )
+                    """))
+                    # For users with tenants: mark connect_platform, discover_workloads, assign_protection
+                    for step in ['connect_platform', 'discover_workloads', 'assign_protection']:
+                        await _conn.execute(_text(f"""
+                            INSERT INTO onboarding_steps (user_id, step, completed_at)
+                            SELECT DISTINCT ut.user_id, '{step}', NOW()
+                            FROM user_tenants ut
+                            WHERE NOT EXISTS (
+                                SELECT 1 FROM onboarding_steps os
+                                WHERE os.user_id = ut.user_id AND os.step = '{step}'
+                            )
+                        """))
+                    # For users with completed backup jobs: mark first_backup
+                    await _conn.execute(_text("""
+                        INSERT INTO onboarding_steps (user_id, step, completed_at)
+                        SELECT DISTINCT ut.user_id, 'first_backup', MIN(bj.completed_at)
+                        FROM user_tenants ut
+                        JOIN backup_jobs bj ON bj.tenant_id = ut.tenant_id AND bj.status = 'completed'
+                        WHERE NOT EXISTS (
+                            SELECT 1 FROM onboarding_steps os
+                            WHERE os.user_id = ut.user_id AND os.step = 'first_backup'
+                        )
+                        GROUP BY ut.user_id
+                    """))
+                    logger.info("Auto-fix: onboarding steps backfilled for existing users")
+                except Exception as e:
+                    logger.debug(f"Onboarding backfill skipped: {e}")
 
     except Exception as e:
         logger.warning(f"Auto-migration skipped: {e}")

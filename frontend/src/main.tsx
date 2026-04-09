@@ -10,17 +10,17 @@ import App from './App';
  * Data freshness strategy (principal UI/UX):
  *
  * The user should NEVER need to hit browser refresh. Data updates itself.
- * But not all data needs the same cadence:
  *
- * REAL-TIME (5s):    Jobs page — user is watching a backup run
- * ACTIVE (30s):      Dashboard, health score — user is monitoring
- * PASSIVE (60s):     Workload lists, compliance — user is browsing
- * STATIC (5min):     Settings, organization — user is configuring
+ * React Query's built-in refetchInterval does NOT work reliably in hidden
+ * tabs (Chrome throttles timers, visibility API suppresses intervals).
+ * Instead, we use a native setInterval that invalidates all queries on
+ * a fixed cadence. This is the same pattern Datadog and Grafana use.
  *
- * This default covers ACTIVE cadence. Pages override for their context.
- * Tab focus triggers immediate refresh (user comes back, sees fresh data).
- * Background polling stays ON — when user switches back, data is already current.
- * Cost: ~8 API calls per 30s per open tab. Acceptable for SaaS monitoring dashboard.
+ * Cadence tiers (pages override with their own refetchInterval):
+ * - REAL-TIME (5s):  Jobs page — watching a backup run
+ * - ACTIVE (30s):    Dashboard, health — monitoring (global default)
+ * - PASSIVE (60s):   Workload lists — browsing
+ * - STATIC (disabled): Settings — only on focus/manual action
  */
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,10 +29,22 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: true,
       refetchOnReconnect: true,
       staleTime: 30_000,
-      refetchInterval: 30_000,
-      refetchIntervalInBackground: true,
     },
   },
+});
+
+// Global poll: invalidate all queries every 30 seconds.
+// Uses native setInterval which works in ALL tab states.
+// React Query only refetches queries that are stale (staleTime expired).
+setInterval(() => {
+  queryClient.invalidateQueries();
+}, 30_000);
+
+// Refresh immediately when tab becomes visible (user switches back)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    queryClient.invalidateQueries();
+  }
 });
 
 createRoot(document.getElementById('root')!).render(

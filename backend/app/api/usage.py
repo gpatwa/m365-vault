@@ -245,21 +245,37 @@ async def license_status(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Current license tier, usage vs limits, alerts."""
+    """Current license tier, usage vs limits, alerts.
+
+    Scoped to the user's accessible tenants — a prospect with one tenant
+    sees only their tenant's usage, not platform-wide totals.
+    """
+    from app.services.auth import resolve_tenant_filter
+    allowed_ids = await resolve_tenant_filter(db, current_user)
+
     tier_name = settings.LICENSE_TIER
     tier = LICENSE_TIERS.get(tier_name, LICENSE_TIERS["community"])
 
-    # Current usage
+    # Current usage — scoped to user's tenants
     total_protected = (await db.execute(
-        select(func.count(ProtectedObject.id)).where(ProtectedObject.status == ProtectionStatus.PROTECTED)
+        select(func.count(ProtectedObject.id)).where(
+            ProtectedObject.status == ProtectionStatus.PROTECTED,
+            ProtectedObject.tenant_id.in_(allowed_ids),
+        )
     )).scalar() or 0
 
     total_tenants = (await db.execute(
-        select(func.count(Tenant.id)).where(Tenant.status == TenantStatus.ACTIVE)
+        select(func.count(Tenant.id)).where(
+            Tenant.status == TenantStatus.ACTIVE,
+            Tenant.id.in_(allowed_ids),
+        )
     )).scalar() or 0
 
     wl_result = await db.execute(
-        select(distinct(ProtectedObject.workload_type)).where(ProtectedObject.status == ProtectionStatus.PROTECTED)
+        select(distinct(ProtectedObject.workload_type)).where(
+            ProtectedObject.status == ProtectionStatus.PROTECTED,
+            ProtectedObject.tenant_id.in_(allowed_ids),
+        )
     )
     active_workloads = len(wl_result.all())
 

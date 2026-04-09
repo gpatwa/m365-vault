@@ -211,7 +211,7 @@ async def lifespan(app: FastAPI):
                     # Mark create_account for all existing users that don't have it
                     await _conn2.execute(_text("""
                         INSERT INTO onboarding_steps (user_id, step, completed_at)
-                        SELECT u.id, 'create_account', u.created_at
+                        SELECT u.id, 'create_account', COALESCE(u.created_at, NOW())
                         FROM users u
                         WHERE NOT EXISTS (
                             SELECT 1 FROM onboarding_steps os
@@ -230,11 +230,12 @@ async def lifespan(app: FastAPI):
                             )
                         """))
                     # For users with completed backup jobs: mark first_backup
+                    # Cast status comparison to text — PG uses enum type for jobstatus
                     await _conn2.execute(_text("""
                         INSERT INTO onboarding_steps (user_id, step, completed_at)
-                        SELECT DISTINCT ut.user_id, 'first_backup', MIN(bj.completed_at)
+                        SELECT DISTINCT ut.user_id, 'first_backup', COALESCE(MIN(bj.completed_at), NOW())
                         FROM user_tenants ut
-                        JOIN backup_jobs bj ON bj.tenant_id = ut.tenant_id AND bj.status = 'completed'
+                        JOIN backup_jobs bj ON bj.tenant_id = ut.tenant_id AND bj.status::text = 'completed'
                         WHERE NOT EXISTS (
                             SELECT 1 FROM onboarding_steps os
                             WHERE os.user_id = ut.user_id AND os.step = 'first_backup'

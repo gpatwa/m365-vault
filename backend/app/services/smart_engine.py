@@ -379,7 +379,11 @@ class SmartEngine:
                 AnomalyEvent.detected_at >= since,
             )
         )
-        active_anomalies = anomaly_result.scalar() or 0
+        active_anomalies_raw = anomaly_result.scalar() or 0
+        # Cap at ceiling — legacy data may exceed the limit.
+        # The score reflects operational reality (capped), while raw count
+        # is available for cleanup tracking. Background job resolves excess.
+        active_anomalies = min(active_anomalies_raw, settings.ANOMALY_MAX_PER_TENANT)
         anomaly_score = max(100 - (active_anomalies * 20), 0)  # -20 per anomaly
 
         # Storage score (10%) — based on having recent backups

@@ -38,6 +38,7 @@ fi
 
 RG="rg-m365vault-${ENV}"
 BACKEND_APP="m365vault-backend-${ENV}"
+WORKER_APP="m365vault-worker-${ENV}"
 FRONTEND_APP="m365vault-frontend-${ENV}"
 ACR="acrm365vault${ENV}"
 MAX_WAIT=300  # 5 minutes
@@ -75,14 +76,18 @@ docker push "$ACR.azurecr.io/m365vault-frontend:$TAG" || { fail "Frontend push f
 docker push "$ACR.azurecr.io/m365vault-frontend:latest" || true
 ok "Images pushed: $TAG"
 
-# ── Step 3: Update container app ──
-step "Updating backend to $TAG..."
+# ── Step 3: Update all container apps (backend + worker + frontend) ──
+step "Updating backend + worker + frontend to $TAG..."
 az containerapp update --name "$BACKEND_APP" --resource-group "$RG" \
   --image "$ACR.azurecr.io/m365vault-backend:$TAG" --output none || { fail "Backend update failed"; exit 1; }
 
+# Worker uses the SAME backend image (different entrypoint: python -m app.worker)
+az containerapp update --name "$WORKER_APP" --resource-group "$RG" \
+  --image "$ACR.azurecr.io/m365vault-backend:$TAG" --output none || { fail "Worker update failed"; exit 1; }
+
 az containerapp update --name "$FRONTEND_APP" --resource-group "$RG" \
   --image "$ACR.azurecr.io/m365vault-frontend:$TAG" --output none || { fail "Frontend update failed"; exit 1; }
-ok "Container apps updated"
+ok "All container apps updated"
 
 # ── Step 4: Wait for new revision to be healthy ──
 step "Waiting for new revision to be healthy (max ${MAX_WAIT}s)..."

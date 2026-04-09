@@ -345,8 +345,10 @@ export default function Dashboard() {
       },
       {
         label: 'Backups (24h)',
-        value: summary?.jobs_24h?.backup_total ?? 0,
-        subtitle: `${summary?.jobs_24h?.backup_successful ?? 0} successful, ${summary?.jobs_24h?.backup_failed ?? 0} failed`,
+        value: summary?.jobs_24h?.backup_successful ?? 0,
+        subtitle: (summary?.jobs_24h?.backup_failed ?? 0) > 0
+          ? `${summary?.jobs_24h?.backup_failed} failed`
+          : `${summary?.jobs_24h?.backup_successful ?? 0} successful, 0 failed`,
         icon: Database,
         color: (summary?.jobs_24h?.backup_failed ?? 0) > 0 ? 'amber' : 'green',
         onClick: () => navigate('/jobs'),

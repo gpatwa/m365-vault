@@ -40,10 +40,10 @@ async def ensure_seed_users(engine: AsyncEngine):
     ]
 
     # Users who should be assigned to ALL tenants
+    # Prospect is NOT here — they get assigned to their own tenant during onboarding
     TENANT_ACCESS = {
         "admin": "owner",     # Platform admin — owns all tenants
         "demo": "member",     # Demo user — needs full access for E2E
-        "prospect": "member", # Prospect — assigned during onboarding
     }
 
     async with engine.begin() as conn:
@@ -66,7 +66,7 @@ async def ensure_seed_users(engine: AsyncEngine):
             logger.info(f"Seed: created {len(SEED_USERS)} users")
 
         # ── 2. Ensure tenant memberships ────────────────────────────────
-        # Assign configured users to ALL existing tenants (idempotent)
+        # Only admin and demo get ALL tenants. Other users get tenants via onboarding.
         for username, role in TENANT_ACCESS.items():
             await conn.execute(text("""
                 INSERT INTO user_tenants (user_id, tenant_id, role, is_default, created_at)
@@ -78,6 +78,22 @@ async def ensure_seed_users(engine: AsyncEngine):
                     WHERE ut.user_id = u.id AND ut.tenant_id = t.id
                   )
             """), {"username": username, "role": role})
+
+        # Clean up: prospect should only have their own tenant (not all tenants)
+        # Keep only their earliest membership (from original onboarding)
+        await conn.execute(text("""
+            DELETE FROM user_tenants ut
+            USING users u
+            WHERE ut.user_id = u.id
+              AND u.username = 'prospect'
+              AND ut.tenant_id != (
+                SELECT ut2.tenant_id FROM user_tenants ut2
+                JOIN users u2 ON ut2.user_id = u2.id
+                WHERE u2.username = 'prospect'
+                ORDER BY ut2.created_at ASC
+                LIMIT 1
+              )
+        """))
 
         # ── 3. Ensure onboarding steps ──────────────────────────────────
         # Check if onboarding_steps table exists (might not on first deploy

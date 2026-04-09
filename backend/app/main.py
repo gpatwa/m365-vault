@@ -83,15 +83,13 @@ async def lifespan(app: FastAPI):
     storage_module.storage_service = storage_module.StorageService(backend)
     logger.info(f"Storage backend: {settings.STORAGE_BACKEND}")
 
-    # Auto-migrate + auto-seed: ensure schema columns and demo users exist
-    # Skip ALTER TABLE on SQLite (pre-deploy check uses SQLite)
+    # ── Schema migration (PostgreSQL only — SQLite uses create_all) ──
     _is_sqlite = "sqlite" in settings.DATABASE_URL
-    try:
-        from app.database import engine as _engine
-        from sqlalchemy import text as _text
-        async with _engine.begin() as _conn:
-            # 1. Schema migration (PostgreSQL only — SQLite uses create_all)
-            if not _is_sqlite:
+    if not _is_sqlite:
+        try:
+            from app.database import engine as _engine
+            from sqlalchemy import text as _text
+            async with _engine.begin() as _conn:
                 for sql in [
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified INTEGER DEFAULT 0",
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_token VARCHAR(255)",
@@ -102,150 +100,27 @@ async def lifespan(app: FastAPI):
                     "ALTER TABLE restore_jobs ADD COLUMN IF NOT EXISTS initiated_by_user_id INTEGER",
                     "ALTER TABLE restore_jobs ADD COLUMN IF NOT EXISTS approval_required INTEGER DEFAULT 0",
                     "ALTER TABLE restore_jobs ADD COLUMN IF NOT EXISTS approval_status VARCHAR(20)",
-                    # Workload lifecycle state machine (008_workload_lifecycle.sql)
                     "ALTER TABLE tenant_workload_apps ADD COLUMN IF NOT EXISTS lifecycle_status VARCHAR(20) DEFAULT 'disabled' NOT NULL",
-                    # Update existing enabled workloads to have correct lifecycle status
                     "UPDATE tenant_workload_apps SET lifecycle_status = 'enabled' WHERE enabled = 1 AND lifecycle_status = 'disabled'",
                 ]:
                     try:
                         await _conn.execute(_text(sql))
                     except Exception:
                         pass
-                logger.info("Auto-migration: schema columns verified")
+            logger.info("Auto-migration: schema columns verified")
+        except Exception as e:
+            logger.warning(f"Auto-migration skipped: {e}")
 
-            # 2. Auto-seed users if DB is empty (fresh deploy)
-            # Passwords from env vars or auto-generated (never hardcoded in source)
-            try:
-                result = await _conn.execute(_text("SELECT COUNT(*) FROM users"))
-                user_count = result.scalar() or 0
-                if user_count == 0:
-                    import os as _os
-                    import secrets as _secrets
-                    from app.services.auth import hash_password as _hash
-
-                    def _get_seed_password(username: str) -> str:
-                        """Get seed password from env var or generate a secure random one."""
-                        env_key = f"SEED_PASSWORD_{username.upper()}"
-                        pwd = _os.environ.get(env_key)
-                        if pwd:
-                            return pwd
-                        # Auto-generate: 16 chars, URL-safe (letters + digits + _-)
-                        generated = _secrets.token_urlsafe(12)
-                        logger.warning(
-                            f"Auto-generated password for '{username}'. "
-                            f"Set {env_key} env var for deterministic password. "
-                            f"Generated: {generated}"
-                        )
-                        return generated
-
-                    for uname, email, role in [
-                        ("admin", "admin@kavachiq.com", "ADMIN"),
-                        ("demo", "demo@kavachiq.com", "ADMIN"),
-                        ("prospect", "prospect@kavachiq.com", "ADMIN"),
-                        ("viewer", "viewer@kavachiq.com", "VIEWER"),
-                    ]:
-                        pwd = _get_seed_password(uname)
-                        hashed = _hash(pwd)
-                        await _conn.execute(_text(
-                            "INSERT INTO users (username, email, password_hash, full_name, role, is_active, email_verified) "
-                            f"VALUES ('{uname}', '{email}', '{hashed}', '{uname.title()} User', '{role}', 1, 1)"
-                        ))
-                    logger.info("Auto-seed: created admin + demo + prospect + viewer users (fresh DB)")
-            except Exception as seed_err:
-                logger.warning(f"Auto-seed skipped: {seed_err}")
-
-            # 3. Fix stale tenant counters (denormalized fields)
-            if not _is_sqlite:
-                try:
-                    await _conn.execute(_text("""
-                        UPDATE tenants SET
-                          total_mailboxes = (SELECT COUNT(*) FROM protected_objects WHERE tenant_id = tenants.id AND workload_type = 'EXCHANGE'),
-                          total_entra_objects = (SELECT COUNT(*) FROM protected_objects WHERE tenant_id = tenants.id AND workload_type = 'ENTRA_ID'),
-                          total_onedrives = (SELECT COUNT(*) FROM protected_objects WHERE tenant_id = tenants.id AND workload_type = 'ONEDRIVE'),
-                          total_sites = (SELECT COUNT(*) FROM protected_objects WHERE tenant_id = tenants.id AND workload_type = 'SHAREPOINT'),
-                          total_teams = (SELECT COUNT(*) FROM protected_objects WHERE tenant_id = tenants.id AND workload_type = 'TEAMS')
-                    """))
-                    logger.info("Auto-fix: tenant object counters synced")
-                except Exception:
-                    pass
-
-            # 4. Auto-assign user-tenant memberships (migration for existing data)
-            if not _is_sqlite:
-                try:
-                    # Assign admin to ALL existing tenants (platform admin)
-                    await _conn.execute(_text("""
-                        INSERT INTO user_tenants (user_id, tenant_id, role, is_default, created_at)
-                        SELECT u.id, t.id, 'owner', 1, NOW()
-                        FROM users u, tenants t
-                        WHERE u.username = 'admin'
-                          AND NOT EXISTS (
-                            SELECT 1 FROM user_tenants ut WHERE ut.user_id = u.id AND ut.tenant_id = t.id
-                          )
-                    """))
-                    # Assign demo user to ALL existing tenants (demo needs full access for E2E)
-                    await _conn.execute(_text("""
-                        INSERT INTO user_tenants (user_id, tenant_id, role, is_default, created_at)
-                        SELECT u.id, t.id, 'member', 1, NOW()
-                        FROM users u, tenants t
-                        WHERE u.username = 'demo'
-                          AND NOT EXISTS (
-                            SELECT 1 FROM user_tenants ut WHERE ut.user_id = u.id AND ut.tenant_id = t.id
-                          )
-                    """))
-                    logger.info("Auto-fix: user-tenant memberships synced")
-                except Exception as e:
-                    logger.debug(f"User-tenant sync skipped: {e}")
-
-    except Exception as e:
-        logger.warning(f"Auto-migration skipped: {e}")
-
-    # 5. Backfill onboarding steps (runs in separate transaction after migration commits)
+    # ── Seed data: users, memberships, onboarding steps, counters ──
+    # Single module handles everything — atomic, idempotent, complete.
     if not _is_sqlite:
         try:
-            async with _engine.begin() as _conn2:
-                # Check if onboarding_steps table exists
-                exists = await _conn2.scalar(_text(
-                    "SELECT 1 FROM information_schema.tables WHERE table_name = 'onboarding_steps'"
-                ))
-                if exists:
-                    # Mark create_account for all existing users that don't have it
-                    await _conn2.execute(_text("""
-                        INSERT INTO onboarding_steps (user_id, step, completed_at)
-                        SELECT u.id, 'create_account', COALESCE(u.created_at, NOW())
-                        FROM users u
-                        WHERE NOT EXISTS (
-                            SELECT 1 FROM onboarding_steps os
-                            WHERE os.user_id = u.id AND os.step = 'create_account'
-                        )
-                    """))
-                    # For users with tenants: mark connect_platform, discover_workloads, assign_protection
-                    for step in ['connect_platform', 'discover_workloads', 'assign_protection']:
-                        await _conn2.execute(_text(f"""
-                            INSERT INTO onboarding_steps (user_id, step, completed_at)
-                            SELECT DISTINCT ut.user_id, '{step}', NOW()
-                            FROM user_tenants ut
-                            WHERE NOT EXISTS (
-                                SELECT 1 FROM onboarding_steps os
-                                WHERE os.user_id = ut.user_id AND os.step = '{step}'
-                            )
-                        """))
-                    # For users with completed backup jobs: mark first_backup
-                    # Cast status comparison to text — PG uses enum type for jobstatus
-                    await _conn2.execute(_text("""
-                        INSERT INTO onboarding_steps (user_id, step, completed_at)
-                        SELECT DISTINCT ut.user_id, 'first_backup', COALESCE(MIN(bj.completed_at), NOW())
-                        FROM user_tenants ut
-                        JOIN backup_jobs bj ON bj.tenant_id = ut.tenant_id AND bj.status::text = 'completed'
-                        WHERE NOT EXISTS (
-                            SELECT 1 FROM onboarding_steps os
-                            WHERE os.user_id = ut.user_id AND os.step = 'first_backup'
-                        )
-                        GROUP BY ut.user_id
-                    """))
-                    logger.info("Auto-fix: onboarding steps backfilled for existing users")
-                    logger.info("Onboarding backfill complete")
+            from app.database import engine as _engine
+            from app.services.seed import ensure_seed_users, sync_tenant_counters
+            await ensure_seed_users(_engine)
+            await sync_tenant_counters(_engine)
         except Exception as e:
-            logger.error(f"Onboarding backfill FAILED: {e}", exc_info=True)
+            logger.warning(f"Seed data: {e}")
 
     start_scheduler()
     logger.info("Scheduler started")

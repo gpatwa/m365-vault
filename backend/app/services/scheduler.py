@@ -384,17 +384,44 @@ async def validate_recent_backups():
 
 
 async def cleanup_old_anomalies():
-    """TTL cleanup for anomaly events.
+    """TTL cleanup + ceiling enforcement for anomaly events.
 
+    - Enforces ceiling: tenants with > MAX active anomalies get oldest resolved
     - Deletes resolved anomalies older than ANOMALY_DELETE_AFTER_DAYS (90 days).
     - Auto-resolves unresolved anomalies older than ANOMALY_RESOLVE_AFTER_DAYS (30 days).
     """
     from app.models.health_baseline import AnomalyEvent
+    from sqlalchemy import func as _func
 
     async with async_session() as db:
         try:
             resolve_cutoff = datetime.utcnow() - timedelta(days=settings.ANOMALY_RESOLVE_AFTER_DAYS)
             delete_cutoff = datetime.utcnow() - timedelta(days=settings.ANOMALY_DELETE_AFTER_DAYS)
+
+            # Ceiling enforcement: resolve excess anomalies per tenant
+            # This catches tenants that accumulated anomalies before the ceiling was added
+            ceiling = settings.ANOMALY_MAX_PER_TENANT
+            tenant_counts = await db.execute(
+                select(AnomalyEvent.tenant_id, _func.count(AnomalyEvent.id).label("cnt"))
+                .where(AnomalyEvent.resolved == 0)
+                .group_by(AnomalyEvent.tenant_id)
+                .having(_func.count(AnomalyEvent.id) > ceiling)
+            )
+            ceiling_resolved = 0
+            for tenant_id, count in tenant_counts.all():
+                excess = count - ceiling
+                # Resolve oldest excess anomalies
+                oldest = await db.execute(
+                    select(AnomalyEvent)
+                    .where(AnomalyEvent.tenant_id == tenant_id, AnomalyEvent.resolved == 0)
+                    .order_by(AnomalyEvent.detected_at.asc())
+                    .limit(excess)
+                )
+                for event in oldest.scalars().all():
+                    event.resolved = 1
+                    ceiling_resolved += 1
+            if ceiling_resolved > 0:
+                logger.info(f"Anomaly ceiling enforcement: resolved {ceiling_resolved} excess anomalies")
 
             # Auto-resolve stale unresolved anomalies (>30 days old)
             stale_result = await db.execute(

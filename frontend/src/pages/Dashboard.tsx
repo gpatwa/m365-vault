@@ -87,7 +87,8 @@ const BACKUP_WORKLOADS = [
 function OnboardingChecklist() {
   const { steps, completedCount, totalSteps, percentComplete, isComplete, completeStep } = useOnboarding();
   const navigate = useNavigate();
-  const [expanded, setExpanded] = useState(!isComplete);
+  // Start collapsed if user is past onboarding (5+ steps or fully complete)
+  const [expanded, setExpanded] = useState(completedCount < 5 && !isComplete);
   const [dismissed, setDismissed] = useState(false);
   // Load from server session
   useEffect(() => {

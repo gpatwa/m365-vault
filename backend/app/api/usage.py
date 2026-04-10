@@ -13,7 +13,7 @@ from app.models.restore_job import RestoreJob
 from app.models.snapshot import Snapshot, SnapshotStatus
 from app.models.sla_policy import SLAPolicy
 from app.models.user import User
-from app.services.auth import get_current_user, require_tenant_access_dep
+from app.services.auth import get_current_user, require_tenant_access_dep, resolve_tenant_filter
 
 router = APIRouter(prefix="/api/usage", tags=["Usage & License"], dependencies=[Depends(require_tenant_access_dep())])
 
@@ -82,6 +82,10 @@ async def tenant_usage(
     current_user: User = Depends(get_current_user),
 ):
     """Per-tenant usage metrics."""
+    allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
+    if tenant_id not in allowed_ids:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+
     tenant = await db.get(Tenant, tenant_id)
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant not found")
@@ -186,34 +190,42 @@ async def platform_usage(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Platform-wide usage summary."""
+    """Platform-wide usage summary — scoped to user's accessible tenants."""
+    allowed_ids = await resolve_tenant_filter(db, current_user)
+
     total_tenants = (await db.execute(
-        select(func.count(Tenant.id)).where(Tenant.status == TenantStatus.ACTIVE)
+        select(func.count(Tenant.id)).where(Tenant.status == TenantStatus.ACTIVE, Tenant.id.in_(allowed_ids))
     )).scalar() or 0
 
     total_users = (await db.execute(
         select(func.count(ProtectedObject.id)).where(
-            ProtectedObject.status == ProtectionStatus.PROTECTED
+            ProtectedObject.status == ProtectionStatus.PROTECTED,
+            ProtectedObject.tenant_id.in_(allowed_ids),
         )
     )).scalar() or 0
 
     total_storage = (await db.execute(
-        select(func.sum(Snapshot.size_bytes)).where(Snapshot.status == SnapshotStatus.COMPLETED)
+        select(func.sum(Snapshot.size_bytes))
+        .join(ProtectedObject, Snapshot.protected_object_id == ProtectedObject.id)
+        .where(Snapshot.status == SnapshotStatus.COMPLETED, ProtectedObject.tenant_id.in_(allowed_ids))
     )).scalar() or 0
 
     total_snapshots = (await db.execute(
-        select(func.count(Snapshot.id)).where(Snapshot.status == SnapshotStatus.COMPLETED)
+        select(func.count(Snapshot.id))
+        .join(ProtectedObject, Snapshot.protected_object_id == ProtectedObject.id)
+        .where(Snapshot.status == SnapshotStatus.COMPLETED, ProtectedObject.tenant_id.in_(allowed_ids))
     )).scalar() or 0
 
     since_30d = datetime.utcnow() - timedelta(days=30)
     jobs_30d = (await db.execute(
-        select(func.count(BackupJob.id)).where(BackupJob.created_at >= since_30d)
+        select(func.count(BackupJob.id)).where(BackupJob.created_at >= since_30d, BackupJob.tenant_id.in_(allowed_ids))
     )).scalar() or 0
 
-    # Active workloads platform-wide
+    # Active workloads — scoped to user's tenants
     wl_result = await db.execute(
         select(distinct(ProtectedObject.workload_type)).where(
-            ProtectedObject.status == ProtectionStatus.PROTECTED
+            ProtectedObject.status == ProtectionStatus.PROTECTED,
+            ProtectedObject.tenant_id.in_(allowed_ids),
         )
     )
     active_workloads = [row[0].value for row in wl_result.all()]
@@ -348,7 +360,8 @@ async def usage_trends(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Usage trends over time: users, storage, jobs."""
+    """Usage trends over time: users, storage, jobs — scoped to user's tenants."""
+    allowed_ids = await resolve_tenant_filter(db, current_user)
     days = int(period.rstrip("d")) if period.endswith("d") else 30
     days = max(1, min(days, 90))
     trend = []
@@ -357,27 +370,32 @@ async def usage_trends(
         date = (datetime.utcnow() - timedelta(days=days - 1 - i)).date()
         day_end = datetime.combine(date, datetime.max.time())
 
-        # Cumulative protected objects as of this date
+        # Cumulative protected objects as of this date — scoped
         users = (await db.execute(
             select(func.count(ProtectedObject.id)).where(
                 ProtectedObject.status == ProtectionStatus.PROTECTED,
                 ProtectedObject.created_at <= day_end,
+                ProtectedObject.tenant_id.in_(allowed_ids),
             )
         )).scalar() or 0
 
-        # Cumulative storage
+        # Cumulative storage — scoped
         storage = (await db.execute(
-            select(func.sum(Snapshot.size_bytes)).where(
+            select(func.sum(Snapshot.size_bytes))
+            .join(ProtectedObject, Snapshot.protected_object_id == ProtectedObject.id)
+            .where(
                 Snapshot.status == SnapshotStatus.COMPLETED,
                 Snapshot.created_at <= day_end,
+                ProtectedObject.tenant_id.in_(allowed_ids),
             )
         )).scalar() or 0
 
-        # Jobs on this day
+        # Jobs on this day — scoped
         day_start = datetime.combine(date, datetime.min.time())
         jobs = (await db.execute(
             select(func.count(BackupJob.id)).where(
                 BackupJob.created_at >= day_start, BackupJob.created_at <= day_end,
+                BackupJob.tenant_id.in_(allowed_ids),
             )
         )).scalar() or 0
 

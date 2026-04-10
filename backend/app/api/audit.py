@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.audit_log import AuditLog
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.services.auth import get_current_user
 from app.utils.query import ListParams, apply_sorting, apply_pagination
 
@@ -29,6 +29,10 @@ async def list_audit_logs(
 ):
     """List audit log entries with filtering, sorting, and pagination."""
     stmt = select(AuditLog)
+
+    # Non-admin users can only see their own audit logs
+    if current_user.role != UserRole.ADMIN:
+        stmt = stmt.where(AuditLog.user_id == current_user.id)
 
     if action:
         stmt = stmt.where(AuditLog.action.ilike(f"%{action}%"))
@@ -90,6 +94,10 @@ async def export_audit_logs(
 
     since = datetime.utcnow() - timedelta(days=days)
     stmt = select(AuditLog).where(AuditLog.timestamp >= since)
+
+    # Non-admin users can only export their own audit logs
+    if current_user.role != UserRole.ADMIN:
+        stmt = stmt.where(AuditLog.user_id == current_user.id)
 
     if action:
         stmt = stmt.where(AuditLog.action.ilike(f"%{action}%"))

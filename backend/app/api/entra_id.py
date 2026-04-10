@@ -8,7 +8,7 @@ from app.database import get_db
 from app.models.protected_object import ProtectedObject, WorkloadType
 from app.models.snapshot import Snapshot, SnapshotItem, SnapshotStatus, ItemType
 from app.models.user import User
-from app.services.auth import get_current_user, require_tenant_access_dep
+from app.services.auth import get_current_user, require_tenant_access_dep, resolve_tenant_filter
 from app.interfaces.dispatcher_factory import get_dispatcher
 from app.interfaces.job_message import BackupObjectMessage, RestoreJobMessage
 from app.models.restore_job import RestoreJob, RestoreType, RestoreStatus
@@ -37,6 +37,10 @@ async def entra_id_summary(
     current_user: User = Depends(get_current_user),
 ):
     """Get summary of backed-up Entra ID objects for a tenant."""
+    allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
+    if tenant_id not in allowed_ids:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+
     # Get the Entra ID protected object
     result = await db.execute(
         select(ProtectedObject).where(
@@ -100,6 +104,10 @@ async def list_snapshots(
     current_user: User = Depends(get_current_user),
 ):
     """List Entra ID backup snapshots for a tenant."""
+    allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
+    if tenant_id not in allowed_ids:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+
     # Find the Entra ID protected object
     obj_result = await db.execute(
         select(ProtectedObject).where(
@@ -155,9 +163,13 @@ async def list_snapshot_items(
     current_user: User = Depends(get_current_user),
 ):
     """Browse items in an Entra ID snapshot with sorting, search, and pagination."""
-    # Verify snapshot exists
+    # Verify snapshot exists and tenant access
+    allowed_ids = await resolve_tenant_filter(db, current_user)
     snapshot = await db.get(Snapshot, snapshot_id)
     if not snapshot:
+        raise HTTPException(status_code=404, detail="Snapshot not found")
+    obj = await db.get(ProtectedObject, snapshot.protected_object_id)
+    if not obj or obj.tenant_id not in allowed_ids:
         raise HTTPException(status_code=404, detail="Snapshot not found")
 
     stmt = select(SnapshotItem).where(
@@ -216,6 +228,15 @@ async def get_snapshot_item(
     current_user: User = Depends(get_current_user),
 ):
     """Get full details of a single backed-up Entra ID object."""
+    # Verify tenant access via Snapshot → ProtectedObject
+    allowed_ids = await resolve_tenant_filter(db, current_user)
+    snapshot = await db.get(Snapshot, snapshot_id)
+    if not snapshot:
+        raise HTTPException(status_code=404, detail="Snapshot not found")
+    po = await db.get(ProtectedObject, snapshot.protected_object_id)
+    if not po or po.tenant_id not in allowed_ids:
+        raise HTTPException(status_code=404, detail="Snapshot not found")
+
     result = await db.execute(
         select(SnapshotItem).where(
             SnapshotItem.id == item_id,
@@ -248,6 +269,10 @@ async def backup_entra_id(
     current_user: User = Depends(get_current_user),
 ):
     """Trigger on-demand backup of Entra ID directory."""
+    allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
+    if tenant_id not in allowed_ids:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+
     result = await db.execute(
         select(ProtectedObject).where(
             ProtectedObject.tenant_id == tenant_id,
@@ -289,6 +314,15 @@ async def compare_snapshots(
     - Incident response: what was modified during a breach
     - Compliance: verify no unauthorized changes
     """
+    # Verify tenant access for both snapshots (if they exist)
+    allowed_ids = await resolve_tenant_filter(db, current_user)
+    for sid in (snapshot_a, snapshot_b):
+        snap = await db.get(Snapshot, sid)
+        if snap:
+            po = await db.get(ProtectedObject, snap.protected_object_id)
+            if not po or po.tenant_id not in allowed_ids:
+                raise HTTPException(status_code=404, detail=f"Snapshot {sid} not found")
+
     # Get items from both snapshots
     items_a_result = await db.execute(
         select(SnapshotItem).where(
@@ -401,6 +435,10 @@ async def restore_entra_id(
     Supports: Conditional Access policies, groups, app registrations, named locations.
     Users and directory roles are read-only and will be skipped.
     """
+    allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
+    if tenant_id not in allowed_ids:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+
     result = await db.execute(
         select(ProtectedObject).where(
             ProtectedObject.tenant_id == tenant_id,

@@ -1,12 +1,12 @@
 """Health monitoring API routes — Smart Engine endpoints."""
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.user import User
 from app.models.health_baseline import HealthBaseline, AnomalyEvent
-from app.services.auth import get_current_user
+from app.services.auth import get_current_user, resolve_tenant_filter
 from app.services.smart_engine import SmartEngine
 
 router = APIRouter(prefix="/api/health", tags=["Health"])
@@ -19,6 +19,9 @@ async def get_health_score(
     current_user: User = Depends(get_current_user),
 ):
     """Get tenant health score (0-100) with component breakdown."""
+    allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
+    if tenant_id not in allowed_ids:
+        raise HTTPException(status_code=404, detail="Tenant not found")
     engine = SmartEngine(db)
     return await engine.compute_health_score(tenant_id)
 
@@ -32,6 +35,9 @@ async def get_anomalies(
     current_user: User = Depends(get_current_user),
 ):
     """Get recent anomaly events for a tenant."""
+    allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
+    if tenant_id not in allowed_ids:
+        raise HTTPException(status_code=404, detail="Tenant not found")
     stmt = select(AnomalyEvent).where(AnomalyEvent.tenant_id == tenant_id)
     if active_only:
         stmt = stmt.where(AnomalyEvent.resolved == 0)
@@ -67,6 +73,9 @@ async def get_baselines(
     current_user: User = Depends(get_current_user),
 ):
     """Get current health baselines for a tenant."""
+    allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
+    if tenant_id not in allowed_ids:
+        raise HTTPException(status_code=404, detail="Tenant not found")
     result = await db.execute(
         select(HealthBaseline).where(HealthBaseline.tenant_id == tenant_id)
         .order_by(HealthBaseline.workload_type, HealthBaseline.metric_name)
@@ -98,6 +107,9 @@ async def run_health_check(
     current_user: User = Depends(get_current_user),
 ):
     """Manually trigger health check: update baselines + detect anomalies."""
+    allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
+    if tenant_id not in allowed_ids:
+        raise HTTPException(status_code=404, detail="Tenant not found")
     engine = SmartEngine(db)
     await engine.update_baselines(tenant_id)
     anomalies = await engine.detect_anomalies(tenant_id)

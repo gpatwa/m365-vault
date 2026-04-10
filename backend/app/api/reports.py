@@ -242,15 +242,21 @@ async def failure_analysis(
     """Failed items by category, workload, resolution rate, MTTR."""
     delta = _parse_period(period)
     since = datetime.utcnow() - delta
+    allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
 
-    # Total failed items
+    # Total failed items — scoped via ProtectedObject.tenant_id
     total_count = (await db.execute(
-        select(func.count(FailedItem.id)).where(FailedItem.created_at >= since)
+        select(func.count(FailedItem.id))
+        .join(ProtectedObject, FailedItem.protected_object_id == ProtectedObject.id)
+        .where(FailedItem.created_at >= since, ProtectedObject.tenant_id.in_(allowed_ids))
     )).scalar() or 0
 
     resolved_count = (await db.execute(
-        select(func.count(FailedItem.id)).where(
-            FailedItem.created_at >= since, FailedItem.is_resolved == True
+        select(func.count(FailedItem.id))
+        .join(ProtectedObject, FailedItem.protected_object_id == ProtectedObject.id)
+        .where(
+            FailedItem.created_at >= since, FailedItem.is_resolved == True,
+            ProtectedObject.tenant_id.in_(allowed_ids),
         )
     )).scalar() or 0
 
@@ -259,7 +265,8 @@ async def failure_analysis(
     # By error category
     cat_result = await db.execute(
         select(FailedItem.error_category, func.count(FailedItem.id))
-        .where(FailedItem.created_at >= since)
+        .join(ProtectedObject, FailedItem.protected_object_id == ProtectedObject.id)
+        .where(FailedItem.created_at >= since, ProtectedObject.tenant_id.in_(allowed_ids))
         .group_by(FailedItem.error_category)
         .order_by(func.count(FailedItem.id).desc())
     )
@@ -269,7 +276,7 @@ async def failure_analysis(
     wl_result = await db.execute(
         select(ProtectedObject.workload_type, func.count(FailedItem.id))
         .join(ProtectedObject, FailedItem.protected_object_id == ProtectedObject.id)
-        .where(FailedItem.created_at >= since)
+        .where(FailedItem.created_at >= since, ProtectedObject.tenant_id.in_(allowed_ids))
         .group_by(ProtectedObject.workload_type)
     )
     by_workload = {row[0].value if hasattr(row[0], 'value') else str(row[0]): row[1] for row in wl_result.all()}
@@ -285,6 +292,7 @@ async def failure_analysis(
             select(func.count(BackupJob.id)).where(
                 BackupJob.created_at >= day_start, BackupJob.created_at <= day_end,
                 BackupJob.status.in_([JobStatus.FAILED, JobStatus.PARTIAL]),
+                BackupJob.tenant_id.in_(allowed_ids),
             )
         )).scalar() or 0
         trend.append({"date": date.isoformat(), "failed_jobs": count})
@@ -376,46 +384,59 @@ async def security_summary(
     current_user: User = Depends(get_current_user),
 ):
     """Security overview: sensitive data, malware scans, WORM status, anomalies."""
-    # Sensitive data findings (from snapshot items metadata)
+    allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
+
+    # Sensitive data findings (from snapshot items metadata) — scoped via Snapshot → ProtectedObject
     sensitive_items = (await db.execute(
-        select(func.count(SnapshotItem.id)).where(
-            SnapshotItem.metadata_json.like('%sensitive_data%')
+        select(func.count(SnapshotItem.id))
+        .join(Snapshot, SnapshotItem.snapshot_id == Snapshot.id)
+        .join(ProtectedObject, Snapshot.protected_object_id == ProtectedObject.id)
+        .where(
+            SnapshotItem.metadata_json.like('%sensitive_data%'),
+            ProtectedObject.tenant_id.in_(allowed_ids),
         )
     )).scalar() or 0
 
-    # WORM status
+    # WORM status — scope by SLA policies used by user's tenants' objects
+    tenant_sla_ids_stmt = select(ProtectedObject.sla_policy_id).where(
+        ProtectedObject.tenant_id.in_(allowed_ids),
+        ProtectedObject.sla_policy_id.isnot(None),
+    ).distinct()
     worm_policies = (await db.execute(
-        select(func.count(SLAPolicy.id)).where(SLAPolicy.worm_enabled == 1)
+        select(func.count(SLAPolicy.id)).where(SLAPolicy.worm_enabled == 1, SLAPolicy.id.in_(tenant_sla_ids_stmt))
     )).scalar() or 0
 
     legal_hold_policies = (await db.execute(
-        select(func.count(SLAPolicy.id)).where(SLAPolicy.legal_hold == 1)
+        select(func.count(SLAPolicy.id)).where(SLAPolicy.legal_hold == 1, SLAPolicy.id.in_(tenant_sla_ids_stmt))
     )).scalar() or 0
 
     locked_snapshots = (await db.execute(
-        select(func.count(Snapshot.id)).where(
+        select(func.count(Snapshot.id))
+        .join(ProtectedObject, Snapshot.protected_object_id == ProtectedObject.id)
+        .where(
             Snapshot.locked_until.isnot(None),
             Snapshot.locked_until > datetime.utcnow(),
+            ProtectedObject.tenant_id.in_(allowed_ids),
         )
     )).scalar() or 0
 
-    # Malware scan results
+    # Malware scan results — scoped by tenant_id
     from app.models.restore_job import RestoreJob
     scanned_restores = (await db.execute(
-        select(func.count(RestoreJob.id)).where(RestoreJob.scan_status.isnot(None))
+        select(func.count(RestoreJob.id)).where(RestoreJob.scan_status.isnot(None), RestoreJob.tenant_id.in_(allowed_ids))
     )).scalar() or 0
 
     blocked_restores = (await db.execute(
-        select(func.count(RestoreJob.id)).where(RestoreJob.scan_status == "blocked")
+        select(func.count(RestoreJob.id)).where(RestoreJob.scan_status == "blocked", RestoreJob.tenant_id.in_(allowed_ids))
     )).scalar() or 0
 
-    # Active anomalies
+    # Active anomalies — scoped by tenant_id
     active_anomalies = (await db.execute(
-        select(func.count(AnomalyEvent.id)).where(AnomalyEvent.resolved == 0)
+        select(func.count(AnomalyEvent.id)).where(AnomalyEvent.resolved == 0, AnomalyEvent.tenant_id.in_(allowed_ids))
     )).scalar() or 0
 
     critical_anomalies = (await db.execute(
-        select(func.count(AnomalyEvent.id)).where(AnomalyEvent.resolved == 0, AnomalyEvent.severity == "critical")
+        select(func.count(AnomalyEvent.id)).where(AnomalyEvent.resolved == 0, AnomalyEvent.severity == "critical", AnomalyEvent.tenant_id.in_(allowed_ids))
     )).scalar() or 0
 
     return {

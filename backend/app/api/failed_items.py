@@ -13,7 +13,7 @@ from app.models.snapshot import (
 )
 from app.models.protected_object import ProtectedObject
 from app.models.user import User
-from app.services.auth import get_current_user, require_tenant_access_dep
+from app.services.auth import get_current_user, require_tenant_access_dep, resolve_tenant_filter
 from app.utils.query import ListParams, apply_sorting, apply_pagination
 
 router = APIRouter(prefix="/api/failed-items", tags=["Failed Items"], dependencies=[Depends(require_tenant_access_dep())])
@@ -38,7 +38,9 @@ async def list_failed_items(
     that are auto-retried. Only shows customer-actionable protection gaps.
     Pass include_transient=true to see all errors (admin debugging).
     """
-    stmt = select(FailedItem)
+    allowed_ids = await resolve_tenant_filter(db, current_user)
+    stmt = select(FailedItem).join(ProtectedObject, FailedItem.protected_object_id == ProtectedObject.id)
+    stmt = stmt.where(ProtectedObject.tenant_id.in_(allowed_ids))
 
     # Hide internal/transient errors by default — customers shouldn't see DB pool errors
     if not include_transient:
@@ -53,7 +55,7 @@ async def list_failed_items(
         )
 
     if workload_type:
-        stmt = stmt.join(ProtectedObject, FailedItem.protected_object_id == ProtectedObject.id).where(
+        stmt = stmt.where(
             ProtectedObject.workload_type == workload_type
         )
     if snapshot_id:
@@ -102,12 +104,14 @@ async def failed_items_summary(
 
     Excludes internal transient errors — only shows customer-actionable gaps.
     """
+    allowed_ids = await resolve_tenant_filter(db, current_user)
     stmt = select(
         FailedItem.error_category,
         func.count(FailedItem.id).label("count"),
         func.sum(case((FailedItem.is_resolved == True, 1), else_=0)).label("resolved"),
         func.sum(case((FailedItem.can_retry == True, 1), else_=0)).label("retriable"),
-    ).where(
+    ).join(ProtectedObject, FailedItem.protected_object_id == ProtectedObject.id).where(
+        ProtectedObject.tenant_id.in_(allowed_ids),
         ~FailedItem.error_message.ilike("%sqlalchemy%"),
         ~FailedItem.error_message.ilike("%concurrent operations%"),
         ~FailedItem.error_message.ilike("%session is provisioning%"),
@@ -151,7 +155,7 @@ async def failed_items_summary(
     # Sort by unresolved count descending
     categories.sort(key=lambda x: x["unresolved"], reverse=True)
 
-    # Per-workload breakdown
+    # Per-workload breakdown — scoped to user's tenants
     wl_stmt = (
         select(
             ProtectedObject.workload_type,
@@ -160,6 +164,7 @@ async def failed_items_summary(
             func.sum(case((FailedItem.can_retry == True, 1), else_=0)).label("retriable"),
         )
         .join(ProtectedObject, FailedItem.protected_object_id == ProtectedObject.id)
+        .where(ProtectedObject.tenant_id.in_(allowed_ids))
         .group_by(ProtectedObject.workload_type)
     )
     wl_result = await db.execute(wl_stmt)
@@ -174,7 +179,7 @@ async def failed_items_summary(
         top_stmt = (
             select(FailedItem.error_category, func.count(FailedItem.id).label("cnt"))
             .join(ProtectedObject, FailedItem.protected_object_id == ProtectedObject.id)
-            .where(ProtectedObject.workload_type == row.workload_type, FailedItem.is_resolved == False)
+            .where(ProtectedObject.workload_type == row.workload_type, FailedItem.is_resolved == False, ProtectedObject.tenant_id.in_(allowed_ids))
             .group_by(FailedItem.error_category)
             .order_by(desc(func.count(FailedItem.id)))
             .limit(1)
@@ -209,6 +214,16 @@ async def failed_items_for_snapshot(
     current_user: User = Depends(get_current_user),
 ):
     """Get all failed items for a specific snapshot with category breakdown."""
+    # Verify tenant access via Snapshot → ProtectedObject
+    allowed_ids = await resolve_tenant_filter(db, current_user)
+    snap = await db.get(Snapshot, snapshot_id)
+    if snap:
+        obj = await db.get(ProtectedObject, snap.protected_object_id)
+        if not obj or obj.tenant_id not in allowed_ids:
+            raise HTTPException(status_code=404, detail="Snapshot not found")
+    else:
+        raise HTTPException(status_code=404, detail="Snapshot not found")
+
     # Get items
     stmt = (
         select(FailedItem)
@@ -259,8 +274,11 @@ async def resolve_failed_items(
     current_user: User = Depends(get_current_user),
 ):
     """Mark failed items as resolved/acknowledged by admin."""
+    allowed_ids = await resolve_tenant_filter(db, current_user)
     result = await db.execute(
-        select(FailedItem).where(FailedItem.id.in_(req.item_ids))
+        select(FailedItem)
+        .join(ProtectedObject, FailedItem.protected_object_id == ProtectedObject.id)
+        .where(FailedItem.id.in_(req.item_ids), ProtectedObject.tenant_id.in_(allowed_ids))
     )
     items = result.scalars().all()
 
@@ -285,6 +303,16 @@ async def dismiss_by_category(
     current_user: User = Depends(get_current_user),
 ):
     """Dismiss (resolve) all failed items of a specific error category within a snapshot."""
+    # Verify tenant access via Snapshot → ProtectedObject
+    allowed_ids = await resolve_tenant_filter(db, current_user)
+    snap = await db.get(Snapshot, snapshot_id)
+    if snap:
+        obj = await db.get(ProtectedObject, snap.protected_object_id)
+        if not obj or obj.tenant_id not in allowed_ids:
+            raise HTTPException(status_code=404, detail="Snapshot not found")
+    else:
+        raise HTTPException(status_code=404, detail="Snapshot not found")
+
     try:
         cat_enum = ErrorCategory(category)
     except ValueError:
@@ -318,11 +346,15 @@ async def retry_failed_items(
 
     This creates a new targeted backup for just the failed items.
     """
+    allowed_ids = await resolve_tenant_filter(db, current_user)
     result = await db.execute(
-        select(FailedItem).where(
+        select(FailedItem)
+        .join(ProtectedObject, FailedItem.protected_object_id == ProtectedObject.id)
+        .where(
             FailedItem.id.in_(item_ids),
             FailedItem.can_retry == True,
             FailedItem.is_resolved == False,
+            ProtectedObject.tenant_id.in_(allowed_ids),
         )
     )
     items = result.scalars().all()

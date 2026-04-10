@@ -30,7 +30,7 @@ from app.models.protected_object import ProtectedObject, WorkloadType, Protectio
 from app.models.snapshot import Snapshot, SnapshotItem, SnapshotStatus, ItemType
 from app.models.restore_job import RestoreJob, RestoreType, RestoreStatus
 from app.models.user import User
-from app.services.auth import get_current_user, require_backup_permission, require_restore_permission, require_tenant_access_dep
+from app.services.auth import get_current_user, require_backup_permission, require_restore_permission, require_tenant_access_dep, resolve_tenant_filter
 from app.services.catalog import CatalogService
 from app.services.resilience import idempotency_store
 from app.api.dependencies import run_backup_preflight, get_idempotency_key
@@ -85,6 +85,9 @@ def create_workload_router(
         current_user: User = Depends(get_current_user),
     ):
         f"""List all {tag} {plural} for a tenant with sorting and pagination."""
+        allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
+        if tenant_id not in allowed_ids:
+            raise HTTPException(status_code=404, detail="Tenant not found")
         stmt = select(ProtectedObject).where(
             ProtectedObject.tenant_id == tenant_id,
             ProtectedObject.workload_type == workload_type,
@@ -143,6 +146,13 @@ def create_workload_router(
         current_user: User = Depends(get_current_user),
     ):
         f"""List all snapshots for a {object_name}."""
+        # Verify tenant access on the protected object
+        allowed_ids = await resolve_tenant_filter(db, current_user)
+        obj = await db.get(ProtectedObject, object_id)
+        if not obj:
+            return []
+        if obj.tenant_id not in allowed_ids:
+            raise HTTPException(status_code=404, detail=f"{object_name.title()} not found")
         result = await db.execute(
             select(Snapshot)
             .where(Snapshot.protected_object_id == object_id)
@@ -175,6 +185,11 @@ def create_workload_router(
         current_user: User = Depends(get_current_user),
     ):
         f"""Browse items within a {object_name} snapshot."""
+        # Verify tenant access on the protected object
+        allowed_ids = await resolve_tenant_filter(db, current_user)
+        obj = await db.get(ProtectedObject, object_id)
+        if not obj or obj.tenant_id not in allowed_ids:
+            raise HTTPException(status_code=404, detail=f"{object_name.title()} not found")
         catalog = CatalogService(db)
         it = ItemType(item_type) if item_type else None
         items = await catalog.browse_snapshot(
@@ -197,6 +212,9 @@ def create_workload_router(
         current_user: User = Depends(get_current_user),
     ):
         f"""Search {tag} items across all snapshots."""
+        allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
+        if tenant_id not in allowed_ids:
+            raise HTTPException(status_code=404, detail="Tenant not found")
         catalog = CatalogService(db)
         # Use workload-specific search for Exchange (emails), files for OD/SP, generic for others
         if workload_type == WorkloadType.EXCHANGE:
@@ -225,8 +243,9 @@ def create_workload_router(
         current_user: User = Depends(require_restore_permission),
     ):
         f"""Restore {object_name} data from a snapshot."""
+        allowed_ids = await resolve_tenant_filter(db, current_user)
         obj = await db.get(ProtectedObject, object_id)
-        if not obj:
+        if not obj or obj.tenant_id not in allowed_ids:
             raise HTTPException(status_code=404, detail=f"{object_name.title()} not found")
 
         snapshot = await db.get(Snapshot, req.snapshot_id)
@@ -272,8 +291,9 @@ def create_workload_router(
         current_user: User = Depends(require_backup_permission),
     ):
         f"""Manually trigger a backup for a {object_name}."""
+        allowed_ids = await resolve_tenant_filter(db, current_user)
         obj = await db.get(ProtectedObject, object_id)
-        if not obj:
+        if not obj or obj.tenant_id not in allowed_ids:
             raise HTTPException(status_code=404, detail=f"{object_name.title()} not found")
 
         result = await get_dispatcher().dispatch_backup_object(
@@ -297,6 +317,10 @@ def create_workload_router(
         idempotency_key: str | None = Depends(get_idempotency_key),
     ):
         f"""Trigger backup for ALL {tag} {plural} in a tenant."""
+        allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
+        if tenant_id not in allowed_ids:
+            raise HTTPException(status_code=404, detail="Tenant not found")
+
         if idempotency_key:
             cached = idempotency_store.get(current_user.id, idempotency_key)
             if cached is not None:

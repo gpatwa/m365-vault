@@ -81,6 +81,7 @@ async def get_summary(
         total_items_result = await db.execute(
             select(func.sum(ProtectedObject.total_items_backed_up)).where(
                 ProtectedObject.workload_type == wt,
+                ProtectedObject.tenant_id.in_(allowed_ids),
             )
         )
         total_items = total_items_result.scalar() or 0
@@ -102,13 +103,14 @@ async def get_summary(
     since_24h = datetime.utcnow() - timedelta(hours=24)
 
     backup_jobs_24h = (await db.execute(
-        select(func.count(BackupJob.id)).where(BackupJob.created_at >= since_24h)
+        select(func.count(BackupJob.id)).where(BackupJob.created_at >= since_24h, BackupJob.tenant_id.in_(allowed_ids))
     )).scalar()
 
     successful_backups_24h = (await db.execute(
         select(func.count(BackupJob.id)).where(
             BackupJob.created_at >= since_24h,
             BackupJob.status == JobStatus.COMPLETED,
+            BackupJob.tenant_id.in_(allowed_ids),
         )
     )).scalar()
 
@@ -116,11 +118,12 @@ async def get_summary(
         select(func.count(BackupJob.id)).where(
             BackupJob.created_at >= since_24h,
             BackupJob.status == JobStatus.FAILED,
+            BackupJob.tenant_id.in_(allowed_ids),
         )
     )).scalar()
 
     restore_jobs_24h = (await db.execute(
-        select(func.count(RestoreJob.id)).where(RestoreJob.created_at >= since_24h)
+        select(func.count(RestoreJob.id)).where(RestoreJob.created_at >= since_24h, RestoreJob.tenant_id.in_(allowed_ids))
     )).scalar()
 
     # Snapshot stats — scoped to user's tenants via protected_object → tenant
@@ -237,13 +240,14 @@ async def get_compliance(
 ):
     """Get SLA compliance status."""
     from app.models.sla_policy import SLAPolicy
+    from app.services.auth import resolve_tenant_filter
+    allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
 
     stmt = select(ProtectedObject, SLAPolicy).join(
         SLAPolicy, ProtectedObject.sla_policy_id == SLAPolicy.id
     ).where(ProtectedObject.status == ProtectionStatus.PROTECTED)
 
-    if tenant_id:
-        stmt = stmt.where(ProtectedObject.tenant_id == tenant_id)
+    stmt = stmt.where(ProtectedObject.tenant_id.in_(allowed_ids))
 
     result = await db.execute(stmt)
     rows = result.all()
@@ -309,6 +313,9 @@ async def get_unprotected_items(
     current_user: User = Depends(get_current_user),
 ):
     """Get all unprotected items grouped by workload, with at-risk details."""
+    from app.services.auth import resolve_tenant_filter
+    allowed_ids = await resolve_tenant_filter(db, current_user, tenant_id)
+
     # Unprotected objects: no SLA assigned OR status is not PROTECTED
     stmt = select(ProtectedObject).where(
         or_(
@@ -316,8 +323,7 @@ async def get_unprotected_items(
             ProtectedObject.sla_policy_id.is_(None),
         )
     )
-    if tenant_id:
-        stmt = stmt.where(ProtectedObject.tenant_id == tenant_id)
+    stmt = stmt.where(ProtectedObject.tenant_id.in_(allowed_ids))
 
     stmt = stmt.order_by(ProtectedObject.workload_type, ProtectedObject.display_name)
     result = await db.execute(stmt)
@@ -328,8 +334,7 @@ async def get_unprotected_items(
         ProtectedObject.status == ProtectionStatus.PROTECTED,
         ProtectedObject.last_backup_status == "failed",
     )
-    if tenant_id:
-        failed_stmt = failed_stmt.where(ProtectedObject.tenant_id == tenant_id)
+    failed_stmt = failed_stmt.where(ProtectedObject.tenant_id.in_(allowed_ids))
 
     failed_result = await db.execute(failed_stmt)
     at_risk = failed_result.scalars().all()

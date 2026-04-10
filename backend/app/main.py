@@ -117,8 +117,9 @@ async def lifespan(app: FastAPI):
     if not _is_sqlite:
         try:
             from app.database import engine as _engine
-            from app.services.seed import ensure_seed_users, sync_tenant_counters
+            from app.services.seed import ensure_seed_users, ensure_workload_lifecycle, sync_tenant_counters
             await ensure_seed_users(_engine)
+            await ensure_workload_lifecycle(_engine)
             await sync_tenant_counters(_engine)
         except Exception as e:
             logger.warning(f"Seed data: {e}")

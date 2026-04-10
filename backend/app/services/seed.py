@@ -144,6 +144,55 @@ async def ensure_seed_users(engine: AsyncEngine):
     logger.info("Seed: users, memberships, and onboarding steps verified")
 
 
+async def ensure_workload_lifecycle(engine: AsyncEngine):
+    """Create TenantWorkloadApp rows for legacy tenants that onboarded before
+    the per-workload app separation feature.
+
+    Legacy tenants have protected objects but no TenantWorkloadApp rows.
+    This creates rows with correct lifecycle_status based on actual data:
+    - Workloads with PROTECTED objects → lifecycle_status = 'protected'
+    - Other workloads → not created (they don't exist for this tenant)
+
+    The tenant's main client_id/client_secret_encrypted are used as credentials
+    since legacy tenants used a single app for all workloads.
+    """
+    is_sqlite = "sqlite" in str(engine.url)
+    if is_sqlite:
+        return
+
+    async with engine.begin() as conn:
+        # Find active tenants with protected objects but no workload app rows
+        await conn.execute(text("""
+            INSERT INTO tenant_workload_apps (
+                tenant_id, workload, client_id, client_secret_encrypted,
+                consent_status, lifecycle_status, backup_ready, enabled, created_at, updated_at
+            )
+            SELECT DISTINCT
+                po.tenant_id,
+                LOWER(po.workload_type::text),
+                t.client_id,
+                t.client_secret_encrypted,
+                'consented',
+                'protected',
+                1,
+                1,
+                NOW(),
+                NOW()
+            FROM protected_objects po
+            JOIN tenants t ON po.tenant_id = t.id
+            WHERE po.status = 'protected'
+              AND t.status = 'active'
+              AND t.client_id IS NOT NULL
+              AND NOT EXISTS (
+                  SELECT 1 FROM tenant_workload_apps twa
+                  WHERE twa.tenant_id = po.tenant_id
+                    AND twa.workload = LOWER(po.workload_type::text)
+              )
+        """))
+
+    logger.info("Seed: workload lifecycle records verified for legacy tenants")
+
+
 async def sync_tenant_counters(engine: AsyncEngine):
     """Sync denormalized tenant object counters from protected_objects table."""
     is_sqlite = "sqlite" in str(engine.url)

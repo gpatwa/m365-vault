@@ -16,7 +16,7 @@ import {
   Scale, Shield, FileText, Calendar, User, Filter,
 } from 'lucide-react';
 import { api } from '../api/client';
-import { useTenantSwitcher } from '../hooks/useTenant';
+import { useTenantSwitcher, useEnabledWorkloadKeys } from '../hooks/useTenant';
 import { useToast } from '../components/Toast';
 import { WORKLOADS, WORKLOAD_MAP } from '../config/workloads';
 import {
@@ -84,6 +84,7 @@ export default function EDiscovery() {
   const { selectedTenant } = useTenantSwitcher();
   const tenantId = selectedTenant?.id;
   const toast = useToast();
+  const enabledKeys = useEnabledWorkloadKeys();
 
   // Search state
   const [searchInput, setSearchInput] = useState('');
@@ -287,7 +288,7 @@ export default function EDiscovery() {
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-2">Workloads</label>
                 <div className="flex flex-wrap gap-2">
-                  {WORKLOADS.map((wl) => {
+                  {WORKLOADS.filter(wl => !enabledKeys || enabledKeys.has(wl.key)).map((wl) => {
                     const active = workloadFilters.includes(wl.key);
                     return (
                       <button

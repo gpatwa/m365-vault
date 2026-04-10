@@ -155,7 +155,7 @@ async def failed_items_summary(
     # Sort by unresolved count descending
     categories.sort(key=lambda x: x["unresolved"], reverse=True)
 
-    # Per-workload breakdown — scoped to user's tenants
+    # Per-workload breakdown — scoped to user's tenants, excludes internal errors
     wl_stmt = (
         select(
             ProtectedObject.workload_type,
@@ -164,7 +164,14 @@ async def failed_items_summary(
             func.sum(case((FailedItem.can_retry == True, 1), else_=0)).label("retriable"),
         )
         .join(ProtectedObject, FailedItem.protected_object_id == ProtectedObject.id)
-        .where(ProtectedObject.tenant_id.in_(allowed_ids))
+        .where(
+            ProtectedObject.tenant_id.in_(allowed_ids),
+            ~FailedItem.error_message.ilike("%sqlalchemy%"),
+            ~FailedItem.error_message.ilike("%concurrent operations%"),
+            ~FailedItem.error_message.ilike("%session is provisioning%"),
+            ~FailedItem.error_message.ilike("%no active connection%"),
+            ~FailedItem.error_message.ilike("%asyncpg%"),
+        )
         .group_by(ProtectedObject.workload_type)
     )
     wl_result = await db.execute(wl_stmt)

@@ -148,28 +148,29 @@ async def ensure_workload_lifecycle(engine: AsyncEngine):
     """Create TenantWorkloadApp rows for legacy tenants that onboarded before
     the per-workload app separation feature.
 
-    Legacy tenants have protected objects but no TenantWorkloadApp rows.
-    This creates rows with correct lifecycle_status based on actual data:
-    - Workloads with PROTECTED objects → lifecycle_status = 'protected'
-    - Other workloads → not created (they don't exist for this tenant)
+    Conservative approach: only creates lifecycle records for workloads that
+    have COMPLETED backup jobs (proof the user chose to protect them). Workloads
+    that were auto-discovered but never backed up are NOT marked as protected —
+    they stay as upsell opportunities.
 
-    The tenant's main client_id/client_secret_encrypted are used as credentials
-    since legacy tenants used a single app for all workloads.
+    Product principle: customers choose which workloads to protect.
+    We don't auto-discover everything and bill for it.
     """
     is_sqlite = "sqlite" in str(engine.url)
     if is_sqlite:
         return
 
     async with engine.begin() as conn:
-        # Find active tenants with protected objects but no workload app rows
+        # Only create lifecycle records for workloads with completed backup jobs.
+        # This proves the user explicitly chose to protect this workload.
         await conn.execute(text("""
             INSERT INTO tenant_workload_apps (
                 tenant_id, workload, client_id, client_secret_encrypted,
                 consent_status, lifecycle_status, backup_ready, enabled, created_at, updated_at
             )
             SELECT DISTINCT
-                po.tenant_id,
-                LOWER(po.workload_type::text),
+                bj.tenant_id,
+                LOWER(bj.workload_type),
                 t.client_id,
                 t.client_secret_encrypted,
                 'consented',
@@ -178,15 +179,15 @@ async def ensure_workload_lifecycle(engine: AsyncEngine):
                 1,
                 NOW(),
                 NOW()
-            FROM protected_objects po
-            JOIN tenants t ON po.tenant_id = t.id
-            WHERE po.status::text = 'PROTECTED'
+            FROM backup_jobs bj
+            JOIN tenants t ON bj.tenant_id = t.id
+            WHERE bj.status::text = 'completed'
               AND t.status::text = 'ACTIVE'
               AND t.client_id IS NOT NULL
               AND NOT EXISTS (
                   SELECT 1 FROM tenant_workload_apps twa
-                  WHERE twa.tenant_id = po.tenant_id
-                    AND twa.workload = LOWER(po.workload_type::text)
+                  WHERE twa.tenant_id = bj.tenant_id
+                    AND twa.workload = LOWER(bj.workload_type)
               )
         """))
 

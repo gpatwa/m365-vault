@@ -117,11 +117,38 @@ WHERE tenant_id = 4
   AND workload_type NOT IN ('ENTRA_ID', 'EXCHANGE');
 ```
 
-### Phase 4: Jobs — Exclude Dead-Lettered from Success Rate
+### Phase 4: Jobs Page Redesign — Competitor-Informed
 
-- Jobs page hero card "Success Rate" should exclude `dead_letter` status from the denominator
-- Success Rate = completed / (completed + failed + partial) — dead_letter is excluded
-- Add "Dead Letter" tab showing archived jobs with "Clear All" button for admins
+**Problem**: Shows "4% success rate" because dead-lettered legacy jobs inflate the denominator. No major backup product (Veeam, Druva, Commvault, Datto) shows an all-time cumulative success rate.
+
+**Competitive research findings**:
+- **Veeam**: Per-session history, tri-state (Success/Warning/Failed), counts not %
+- **Druva**: Buckets (OK / With Errors / Failed / Inactive), time-scoped
+- **Commvault**: 16-day bar chart with daily success %, per-day stacked bars
+- **Datto**: 24h success rate + protected seat ratio. Executive "Hero report"
+- **All products**: Dead-lettered/abandoned jobs are NEVER in the success denominator
+
+**Redesign spec**:
+
+**Hero cards (replace current)**:
+```
+SUCCESSFUL (24H)    PARTIAL (24H)     FAILED (24H)      PROTECTED
+     12                 0                 0              25/25 objects
+  All workloads     0 warnings       0 failures        100% coverage
+```
+
+**Changes**:
+1. **Time-scoped metrics**: Default to 24h. Add selector: 24h | 7d | 30d
+2. **Exclude dead_letter from rate**: `success_rate = completed / (completed + failed + partial)`
+3. **Tri-state display**: Show "Partial" (already PARTIAL status in model) as distinct from Failed
+4. **Dead letter tab**: Separate "Archived" tab for dead_letter + cancelled jobs. Not in main view.
+5. **Per-day trend bar chart**: Stacked bars (success green / partial yellow / failed red) like Commvault
+
+**KavachIQ differentiators (no competitor has these)**:
+1. **Recovery Confidence badge**: Show the score on Jobs page — "Recovery readiness: 65/100"
+2. **Error category drill-down**: Top failure reasons with resolution guidance (from FailedItem model)
+3. **Smart Engine anomaly flag**: Alert if backup duration or item count deviates from baseline
+4. **Cost per backup**: "$0.003/backup" from the metering system
 
 **Files**: `frontend/src/pages/Jobs.tsx`, `backend/app/api/jobs.py`
 

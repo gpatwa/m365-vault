@@ -180,8 +180,8 @@ async def ensure_workload_lifecycle(engine: AsyncEngine):
                 NOW()
             FROM protected_objects po
             JOIN tenants t ON po.tenant_id = t.id
-            WHERE po.status = 'protected'
-              AND t.status = 'active'
+            WHERE po.status::text = 'PROTECTED'
+              AND t.status::text = 'ACTIVE'
               AND t.client_id IS NOT NULL
               AND NOT EXISTS (
                   SELECT 1 FROM tenant_workload_apps twa

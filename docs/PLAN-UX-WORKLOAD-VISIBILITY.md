@@ -144,11 +144,58 @@ SUCCESSFUL (24H)    PARTIAL (24H)     FAILED (24H)      PROTECTED
 4. **Dead letter tab**: Separate "Archived" tab for dead_letter + cancelled jobs. Not in main view.
 5. **Per-day trend bar chart**: Stacked bars (success green / partial yellow / failed red) like Commvault
 
-**KavachIQ differentiators (no competitor has these)**:
-1. **Recovery Confidence badge**: Show the score on Jobs page — "Recovery readiness: 65/100"
-2. **Error category drill-down**: Top failure reasons with resolution guidance (from FailedItem model)
-3. **Smart Engine anomaly flag**: Alert if backup duration or item count deviates from baseline
-4. **Cost per backup**: "$0.003/backup" from the metering system
+**Design principle** (from enterprise admin research):
+> "Success is boring — make it look boring. Failure is urgent — make it impossible to miss."
+> Enterprise admins spend < 30 seconds on a good day. They have 3 questions:
+> 1. Is everything backed up? (coverage)
+> 2. Did today's backups succeed? (freshness)
+> 3. Can I recover if I need to? (recoverability)
+
+**What to REMOVE from customer-facing Jobs page**:
+- Dead-letter status (internal — admin/SRE only)
+- Raw total job counts (creates anxiety: "4051 jobs")
+- All-time cumulative success rate (misleading, no competitor shows this)
+- Individual job rows when all succeeded (nobody reads 100 green rows)
+- Duration/timing for successful jobs (no one acts on it)
+- Cost per backup, queue depth, worker metrics (engineer data, not customer value)
+
+**Redesigned Jobs page — "3 questions in 10 seconds"**:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  ✅ All backups succeeded today                          │
+│  25/25 objects protected • Last backup: just now         │
+│  Recovery Confidence: 65/100 (Fair)                      │
+└─────────────────────────────────────────────────────────┘
+
+By Workload (24h)
+┌──────────────────┐  ┌──────────────────┐
+│ Entra ID    ✅   │  │ Exchange    ✅   │
+│ 1/1 objects      │  │ 6/6 objects      │
+│ Last: just now   │  │ Last: just now   │
+│ 1,926 items      │  │ 48 items         │
+└──────────────────┘  └──────────────────┘
+
+[Show details ▾]  ← expands to job table ONLY when user wants it
+```
+
+**When something fails — the failure path**:
+```
+┌─────────────────────────────────────────────────────────┐
+│  ⚠️ 2 items failed in Exchange backup                    │
+│  23/25 objects succeeded • 2 need attention              │
+│                                         [View Failures →]│
+└─────────────────────────────────────────────────────────┘
+
+WHAT FAILED:
+│ sarah@patwa.com │ Permission denied │ Grant Mail.Read → [Fix Guide]
+│ alex@patwa.com  │ Throttled (429)   │ Will retry automatically
+```
+
+**KavachIQ differentiator** (what no competitor does):
+- **Recovery Confidence on the Jobs page** — answers "can I recover?" without navigating away
+- **Error resolution guidance inline** — not just "failed" but WHY and HOW TO FIX
+- These two features make KavachIQ the only product where the Jobs page answers all 3 admin questions
 
 **Files**: `frontend/src/pages/Jobs.tsx`, `backend/app/api/jobs.py`
 

@@ -448,3 +448,53 @@ async def get_secret_diagnostics(
     """
     from app.services.secret_rotation import get_secret_status
     return await get_secret_status()
+
+
+@router.post("/cleanup-stale-data")
+async def cleanup_stale_data(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_backup_permission),
+):
+    """Remove stale data from pre-launch era: dead-lettered jobs, internal
+    failed items, and resolved anomalies. Admin-only.
+
+    Safe for pre-launch environments with no customers. Removes:
+    - Dead-lettered backup jobs (internal failures, not recoverable)
+    - Failed items with internal error messages (sqlalchemy, asyncpg, etc.)
+    - Resolved anomaly events (already cleaned up)
+    - All remaining active anomaly events (mark resolved)
+    """
+    from sqlalchemy import text
+
+    results = {}
+
+    # 1. Delete dead-lettered backup jobs
+    r = await db.execute(text("DELETE FROM backup_jobs WHERE status::text = 'dead_letter'"))
+    results["dead_letter_jobs_deleted"] = r.rowcount
+
+    # 2. Delete internal failed items
+    r = await db.execute(text("""
+        DELETE FROM failed_items
+        WHERE error_message ILIKE '%sqlalchemy%'
+           OR error_message ILIKE '%concurrent operations%'
+           OR error_message ILIKE '%session is provisioning%'
+           OR error_message ILIKE '%asyncpg%'
+           OR error_message ILIKE '%no active connection%'
+           OR error_category::text = 'internal_transient'
+    """))
+    results["internal_failed_items_deleted"] = r.rowcount
+
+    # 3. Delete resolved anomalies
+    r = await db.execute(text("DELETE FROM anomaly_events WHERE resolved = 1"))
+    results["resolved_anomalies_deleted"] = r.rowcount
+
+    # 4. Resolve all remaining stale anomalies
+    r = await db.execute(text("UPDATE anomaly_events SET resolved = 1 WHERE resolved = 0"))
+    results["stale_anomalies_resolved"] = r.rowcount
+
+    await db.commit()
+
+    import logging
+    logging.getLogger(__name__).info(f"Stale data cleanup: {results}")
+
+    return {"status": "cleaned", **results}

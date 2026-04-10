@@ -56,6 +56,23 @@ export default function SmartEngine() {
     return value.toFixed(0);
   };
 
+  const humanMetricName = (metric: string): string => {
+    const map: Record<string, string> = {
+      item_count: 'Item count',
+      size_bytes: 'Backup size',
+      error_rate: 'Error rate',
+      duration_sec: 'Duration',
+    };
+    return map[metric] || metric.replace(/_/g, ' ');
+  };
+
+  const humanZScore = (z: number): string => {
+    if (z > 10) return 'Extremely unusual';
+    if (z > 5) return 'Very unusual';
+    if (z > 2) return 'Unusual';
+    return 'Normal range';
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -132,14 +149,16 @@ export default function SmartEngine() {
                     a.severity === 'critical' ? 'bg-red-100 text-red-400' : 'bg-yellow-100 text-yellow-700'
                   }`}>{a.severity}</span>
                   <span className="text-xs font-medium text-muted-foreground capitalize">{a.workload}</span>
-                  <span className="text-xs text-muted-foreground">{a.metric}</span>
+                  <span className="text-xs text-muted-foreground">{humanMetricName(a.metric)}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                    a.z_score > 10 ? 'bg-red-500/10 text-red-400' : a.z_score > 5 ? 'bg-orange-500/10 text-orange-400' : 'bg-yellow-500/10 text-yellow-700'
+                  }`}>{humanZScore(a.z_score)}</span>
                   {a.resolved && <span className="ml-auto text-xs text-green-600 font-medium">Resolved</span>}
                 </div>
                 <p className="text-sm text-muted-foreground">{a.message}</p>
                 <div className="flex gap-4 mt-1 text-xs text-muted-foreground">
                   <span>Expected: {formatMetric(a.metric, a.expected)}</span>
                   <span>Actual: {formatMetric(a.metric, a.actual)}</span>
-                  <span>z-score: {a.z_score}</span>
                   <span>{new Date(a.detected_at).toLocaleString()}</span>
                 </div>
               </div>
@@ -160,23 +179,19 @@ export default function SmartEngine() {
                 <tr>
                   <th className="text-left px-3 py-2 font-medium text-muted-foreground">Workload</th>
                   <th className="text-left px-3 py-2 font-medium text-muted-foreground">Metric</th>
-                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Avg</th>
-                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Std Dev</th>
-                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Range</th>
+                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Normal Range</th>
                   <th className="text-right px-3 py-2 font-medium text-muted-foreground">Samples</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {baselines?.items.length === 0 && (
-                  <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">No baselines yet. Run a health check to start collecting.</td></tr>
+                  <tr><td colSpan={4} className="p-8 text-center text-muted-foreground">No baselines yet. Run a health check to start collecting.</td></tr>
                 )}
                 {baselines?.items.map((b, i) => (
                   <tr key={i} className="hover:bg-muted/50">
                     <td className="px-3 py-2 capitalize font-medium text-muted-foreground">{b.workload.replace('_', ' ')}</td>
-                    <td className="px-3 py-2 text-muted-foreground">{b.metric}</td>
-                    <td className="px-3 py-2 text-right font-mono">{formatMetric(b.metric, b.avg)}</td>
-                    <td className="px-3 py-2 text-right font-mono text-muted-foreground">{formatMetric(b.metric, b.std_dev)}</td>
-                    <td className="px-3 py-2 text-right font-mono text-muted-foreground text-xs">{formatMetric(b.metric, b.min)} – {formatMetric(b.metric, b.max)}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{humanMetricName(b.metric)}</td>
+                    <td className="px-3 py-2 text-right font-mono text-muted-foreground">{formatMetric(b.metric, b.min)} – {formatMetric(b.metric, b.max)}</td>
                     <td className="px-3 py-2 text-right text-muted-foreground">{b.samples}</td>
                   </tr>
                 ))}

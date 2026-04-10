@@ -14,6 +14,11 @@ import Breadcrumb, { type BreadcrumbItem } from './Breadcrumb';
 import HeroSummaryBar, { type HeroStat } from './HeroSummaryBar';
 import ActionBanner, { type ActionItem } from './ActionBanner';
 
+interface SLAStatus {
+  status: 'on_track' | 'at_risk';
+  overdueCount?: number;
+}
+
 interface WorkloadPageLayoutProps {
   /** Workload display name (e.g., "Exchange", "SharePoint") */
   workloadLabel: string;
@@ -31,6 +36,7 @@ interface WorkloadPageLayoutProps {
     totalItems: number;
     totalSize: number;
     successRate?: number;
+    slaStatus?: SLAStatus;
   };
   /** Backup all handler */
   onBackupAll?: () => void;
@@ -82,6 +88,7 @@ export default function WorkloadPageLayout({
   ];
 
   // Build hero stats
+  const sla = stats.slaStatus;
   const heroStats: HeroStat[] = [
     {
       label: 'Protected',
@@ -101,12 +108,21 @@ export default function WorkloadPageLayout({
       subtitle: formatSize(stats.totalSize),
       color: 'blue',
     },
-    {
-      label: 'Success Rate',
-      value: `${stats.successRate ?? 100}%`,
-      subtitle: stats.successRate === 100 ? 'All backups succeeded' : 'Some failures',
-      color: (stats.successRate ?? 100) >= 95 ? 'green' : (stats.successRate ?? 100) >= 80 ? 'amber' : 'red',
-    },
+    sla
+      ? {
+          label: 'SLA Status',
+          value: sla.status === 'on_track' ? 'On Track' : 'At Risk',
+          subtitle: sla.status === 'on_track'
+            ? 'All objects within SLA'
+            : `${sla.overdueCount ?? 0} object${(sla.overdueCount ?? 0) !== 1 ? 's' : ''} overdue`,
+          color: sla.status === 'on_track' ? 'green' : 'amber',
+        }
+      : {
+          label: 'SLA Status',
+          value: `${stats.successRate ?? 100}%`,
+          subtitle: stats.successRate === 100 ? 'All backups succeeded' : 'Some failures',
+          color: (stats.successRate ?? 100) >= 95 ? 'green' : (stats.successRate ?? 100) >= 80 ? 'amber' : 'red',
+        },
   ];
 
   // Build action items
@@ -144,7 +160,7 @@ export default function WorkloadPageLayout({
             </p>
           </div>
         </div>
-        {onBackupAll && (
+        {onBackupAll && (unprotected > 0 || (sla && sla.status === 'at_risk') || !stats.lastBackup) && (
           <button
             onClick={onBackupAll}
             disabled={isBackingUp}

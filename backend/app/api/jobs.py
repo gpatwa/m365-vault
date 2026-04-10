@@ -31,6 +31,11 @@ async def list_backup_jobs(
     stmt = select(BackupJob).where(BackupJob.tenant_id.in_(allowed))
     if status:
         stmt = stmt.where(BackupJob.status == status)
+    else:
+        # By default, hide internal states from customers.
+        # Dead-letter and cancelled are system operations, not customer-visible.
+        # Admins can still filter explicitly by passing status=dead_letter.
+        stmt = stmt.where(BackupJob.status.notin_([JobStatus.DEAD_LETTER, JobStatus.CANCELLED]))
     if workload_type:
         stmt = stmt.where(BackupJob.workload_type == workload_type)
     if params.search:
@@ -99,6 +104,11 @@ async def list_restore_jobs(
     stmt = select(RestoreJob).where(RestoreJob.tenant_id.in_(allowed))
     if status:
         stmt = stmt.where(RestoreJob.status == status)
+    else:
+        # Hide internal states (dead_letter, cancelled) from customer view
+        from app.models.restore_job import RestoreStatus
+        if hasattr(RestoreStatus, 'DEAD_LETTER'):
+            stmt = stmt.where(RestoreJob.status.notin_([RestoreStatus.DEAD_LETTER]))
 
     count_stmt = select(func.count()).select_from(stmt.subquery())
     total = (await db.execute(count_stmt)).scalar()

@@ -31,20 +31,24 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
-  permission_denied: 'Permission Denied',
-  not_found: 'Not Found',
-  throttled: 'Rate Limited',
-  timeout: 'Timeout',
-  quota_exceeded: 'Quota Exceeded',
-  file_too_large: 'File Too Large',
-  encryption_error: 'Encryption Error',
-  storage_error: 'Storage Error',
-  invalid_data: 'Invalid Data',
-  auth_expired: 'Auth Expired',
-  server_error: 'Server Error',
-  network_error: 'Network Error',
-  unknown: 'Unknown',
+  permission_denied: 'Access denied by Microsoft',
+  not_found: 'Item deleted in Microsoft 365',
+  throttled: 'Microsoft rate limit — will retry',
+  timeout: 'Request timed out — will retry',
+  quota_exceeded: 'Quota exceeded',
+  file_too_large: 'File too large for backup',
+  encryption_error: 'Encryption error',
+  storage_error: 'Storage error',
+  invalid_data: 'Invalid data format',
+  auth_expired: 'Credentials need renewal',
+  server_error: 'Microsoft service error — will retry',
+  network_error: 'Network issue — will retry',
+  internal_transient: '', // hidden
+  unknown: 'Unexpected error',
 };
+
+// Categories hidden from user display
+const HIDDEN_CATEGORIES = new Set(['internal_transient']);
 
 const ItemTypeIcon = ({ type }: { type: string | null }) => {
   switch (type) {
@@ -132,13 +136,13 @@ export default function FailedItems() {
     onError: (err: any) => { setActionMsg(`Error: ${err.message}`); setTimeout(() => setActionMsg(''), 5000); },
   });
 
-  // Category filter options
-  const categoryFilterOptions: { value: string; label: string }[] = (summary?.categories || []).map(
-    (cat: FailedItemCategory) => ({
+  // Category filter options — hide internal categories from user
+  const categoryFilterOptions: { value: string; label: string }[] = (summary?.categories || [])
+    .filter((cat: FailedItemCategory) => !HIDDEN_CATEGORIES.has(cat.category))
+    .map((cat: FailedItemCategory) => ({
       value: cat.category,
       label: `${CATEGORY_LABELS[cat.category] || cat.category} (${cat.unresolved})`,
-    })
-  );
+    }));
 
   // DataTable columns
   const columns: Column<FailedItemEntry>[] = [
@@ -159,16 +163,25 @@ export default function FailedItems() {
       key: 'error_category',
       label: 'Error',
       sortable: true,
-      render: (row) => (
-        <div>
-          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${CATEGORY_COLORS[row.error_category] || CATEGORY_COLORS.unknown}`}>
-            {CATEGORY_LABELS[row.error_category] || row.error_category}
-          </span>
-          <p className="text-[11px] text-muted-foreground mt-0.5 max-w-[200px] truncate" title={row.error_message}>
-            {row.error_message}
-          </p>
-        </div>
-      ),
+      render: (row) => {
+        const label = CATEGORY_LABELS[row.error_category] || row.error_category;
+        // Hide raw error messages that look like stack traces or technical details
+        const rawMsg = row.error_message || '';
+        const isStackTrace = rawMsg.includes('Traceback') || rawMsg.includes('at ') || rawMsg.includes('Error:') || rawMsg.length > 200;
+        const cleanMessage = isStackTrace ? null : rawMsg.split('.')[0]; // First sentence only
+        return (
+          <div>
+            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${CATEGORY_COLORS[row.error_category] || CATEGORY_COLORS.unknown}`}>
+              {label}
+            </span>
+            {cleanMessage && cleanMessage !== label && (
+              <p className="text-[11px] text-muted-foreground mt-0.5 max-w-[200px] truncate" title={rawMsg}>
+                {cleanMessage}
+              </p>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: 'item_path',
@@ -351,7 +364,7 @@ export default function FailedItems() {
             </div>
           </div>
           <div className="divide-y">
-            {summary.categories.map((cat: FailedItemCategory) => {
+            {summary.categories.filter((cat: FailedItemCategory) => !HIDDEN_CATEGORIES.has(cat.category)).map((cat: FailedItemCategory) => {
               const isExpanded = expandedCategory === cat.category;
               return (
                 <div key={cat.category}>

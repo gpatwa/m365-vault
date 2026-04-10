@@ -102,8 +102,15 @@ async def get_summary(
     # Recent job stats (last 24h)
     since_24h = datetime.utcnow() - timedelta(hours=24)
 
+    # Exclude internal states (dead_letter, cancelled) from customer-facing counts
+    customer_visible = [JobStatus.QUEUED, JobStatus.IN_PROGRESS, JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.PARTIAL]
+
     backup_jobs_24h = (await db.execute(
-        select(func.count(BackupJob.id)).where(BackupJob.created_at >= since_24h, BackupJob.tenant_id.in_(allowed_ids))
+        select(func.count(BackupJob.id)).where(
+            BackupJob.created_at >= since_24h,
+            BackupJob.tenant_id.in_(allowed_ids),
+            BackupJob.status.in_(customer_visible),
+        )
     )).scalar()
 
     successful_backups_24h = (await db.execute(

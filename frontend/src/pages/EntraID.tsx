@@ -209,6 +209,14 @@ export default function EntraID() {
         totalItems: summary.item_count || 0,
         totalSize: summary.size_bytes || 0,
         successRate: 100,
+        slaStatus: {
+          status: summary.protected && summary.last_backup
+            ? ((Date.now() - new Date(summary.last_backup).getTime()) > 24 * 60 * 60 * 1000 ? 'at_risk' : 'on_track')
+            : (!summary.protected ? 'at_risk' : 'on_track'),
+          overdueCount: summary.protected && summary.last_backup
+            ? ((Date.now() - new Date(summary.last_backup).getTime()) > 24 * 60 * 60 * 1000 ? 1 : 0)
+            : 0,
+        },
       }}
       onBackupAll={() => backupMutation.mutate()}
       isBackingUp={backupMutation.isPending}

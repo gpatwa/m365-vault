@@ -81,6 +81,16 @@ export default function Exchange() {
     const totalItems = items.reduce((sum, m) => sum + (m.total_items || 0), 0);
     const totalSize = items.reduce((sum, m) => sum + (m.total_size_bytes || 0), 0);
     const backupTimes = items.map(m => m.last_backup_at).filter(Boolean).sort().reverse();
+
+    // Derive SLA status: objects overdue if last_backup_at is older than 24h (default SLA window)
+    const SLA_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
+    const now = Date.now();
+    const overdueCount = items.filter(m =>
+      m.status === 'protected' && m.last_backup_at &&
+      (now - new Date(m.last_backup_at).getTime()) > SLA_WINDOW_MS
+    ).length;
+    const unprotectedCount = items.filter(m => m.status !== 'protected').length;
+
     return {
       protected: protectedCount,
       total: items.length,
@@ -88,6 +98,10 @@ export default function Exchange() {
       totalItems,
       totalSize,
       successRate: 100,
+      slaStatus: {
+        status: (overdueCount > 0 || unprotectedCount > 0) ? 'at_risk' as const : 'on_track' as const,
+        overdueCount: overdueCount + unprotectedCount,
+      },
     };
   }, [statsData]);
 

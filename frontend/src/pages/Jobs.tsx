@@ -176,7 +176,9 @@ export default function Jobs() {
     const result: Record<Workload, { stats: WorkloadStats; backupJobs: BackupJob[]; restoreJobs: RestoreJob[] }> = {} as any;
 
     for (const w of WORKLOADS) {
-      const wBackup = backupJobs.filter(j => j.workload_type === w);
+      const wBackupAll = backupJobs.filter(j => j.workload_type === w);
+      // Exclude dead_letter and cancelled from stats (they skew success rates)
+      const wBackup = wBackupAll.filter(j => !['dead_letter', 'cancelled'].includes(j.status));
       const wRestore = restoreJobs;
 
       const completedJobs = wBackup.filter(j => j.status === 'completed' && j.completed_at);
@@ -208,7 +210,7 @@ export default function Jobs() {
           avgDurationSec,
           totalSize: wBackup.reduce((sum, j) => sum + (j.total_size_bytes || 0), 0),
         },
-        backupJobs: wBackup,
+        backupJobs: wBackupAll,
         restoreJobs: wRestore,
       };
     }

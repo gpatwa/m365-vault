@@ -298,6 +298,13 @@ export default function Dashboard() {
     enabled: !!tenantId,
   });
 
+  const { data: recoveryData } = useQuery({
+    queryKey: ['recovery-confidence', tenantId],
+    queryFn: () => api.get<{ score: number; grade: string; label: string }>(`/recovery/confidence?tenant_id=${tenantId}`),
+    enabled: !!tenantId,
+    staleTime: 60_000,
+  });
+
   const { data: compliance } = useQuery({
     queryKey: ['dashboard-compliance'],
     queryFn: () => api.get<{ compliance_rate: number; non_compliant: number; violations: any[] }>('/dashboard/compliance'),
@@ -324,6 +331,27 @@ export default function Dashboard() {
     const healthScore = healthData?.score ?? 0;
     const successRate = healthData?.components?.success_rate ?? 0;
     const totalExposed = (unprotectedData?.total_unprotected ?? 0) + (unprotectedData?.total_at_risk ?? 0);
+    const actionItemsCount = totalExposed + (summary?.jobs_24h?.backup_failed ?? 0);
+    const recoveryScore = recoveryData?.score ?? null;
+
+    // Fourth card: show Action Items when there are issues, otherwise show Recovery Confidence
+    const fourthCard: HeroStat = actionItemsCount > 0
+      ? {
+          label: 'Action Items',
+          value: actionItemsCount,
+          subtitle: totalExposed > 0 ? `${unprotectedData?.total_unprotected ?? 0} unprotected` : `${summary?.jobs_24h?.backup_failed ?? 0} failed`,
+          icon: AlertTriangle,
+          color: 'red',
+          onClick: () => navigate('/failed-items'),
+        }
+      : {
+          label: 'Recovery',
+          value: recoveryScore !== null ? `${recoveryScore}%` : '\u2014',
+          subtitle: recoveryData?.grade ? `Grade: ${recoveryData.grade}` : 'Loading',
+          icon: ShieldCheck,
+          color: (recoveryScore ?? 0) >= 80 ? 'green' : (recoveryScore ?? 0) >= 50 ? 'amber' : 'blue',
+          onClick: () => navigate('/recovery'),
+        };
 
     return [
       {
@@ -353,16 +381,9 @@ export default function Dashboard() {
         color: (summary?.jobs_24h?.backup_failed ?? 0) > 0 ? 'amber' : 'green',
         onClick: () => navigate('/jobs'),
       },
-      {
-        label: 'Action Items',
-        value: totalExposed + (summary?.jobs_24h?.backup_failed ?? 0),
-        subtitle: totalExposed > 0 ? `${unprotectedData?.total_unprotected ?? 0} unprotected` : 'All clear',
-        icon: AlertTriangle,
-        color: totalExposed > 0 ? 'red' : 'green',
-        onClick: () => navigate('/failed-items'),
-      },
+      fourthCard,
     ];
-  }, [summary, healthData, unprotectedData, navigate]);
+  }, [summary, healthData, unprotectedData, recoveryData, navigate]);
 
   // Computed: Action Banners
 
@@ -682,14 +703,16 @@ export default function Dashboard() {
             {/* Storage — merged into license card */}
             <div className="pt-2 border-t border-border">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Storage</p>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <p className="text-lg font-bold text-foreground">{summary?.snapshots?.total_size_gb ?? 0} GB</p>
-                  <p className="text-[10px] text-muted-foreground">Backup Size</p>
-                </div>
+              <div className={`grid gap-3 ${(summary?.snapshots?.total_size_gb ?? 0) > 0 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                {(summary?.snapshots?.total_size_gb ?? 0) > 0 && (
+                  <div>
+                    <p className="text-lg font-bold text-foreground">{summary?.snapshots?.total_size_gb} GB</p>
+                    <p className="text-[10px] text-muted-foreground">Backup Size</p>
+                  </div>
+                )}
                 <div>
                   <p className="text-lg font-bold text-foreground">{summary?.snapshots?.total ?? 0}</p>
-                  <p className="text-[10px] text-muted-foreground">Snapshots</p>
+                  <p className="text-[10px] text-muted-foreground">Recovery Points</p>
                 </div>
                 <div>
                   <p className="text-lg font-bold text-foreground">{licenseData?.retention_days ?? 30}d</p>
@@ -697,19 +720,6 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-
-            {licenseData?.features && (
-              <div className="pt-2 border-t border-border">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">Included Workloads</p>
-                <div className="flex flex-wrap gap-1">
-                  {licenseData.features.map((f: string) => (
-                    <span key={f} className="text-[10px] px-1.5 py-0.5 bg-muted border border-border rounded text-muted-foreground capitalize">
-                      {f.replace('_', ' ')}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
             <button
               onClick={() => navigate('/usage')}
               className="w-full text-xs text-primary hover:text-primary/80 font-medium pt-1"

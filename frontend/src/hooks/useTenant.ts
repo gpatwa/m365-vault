@@ -3,6 +3,75 @@ import { useState, useCallback, useEffect } from 'react';
 import { api } from '../api/client';
 import type { Tenant } from '../types';
 
+/* ------------------------------------------------------------------ */
+/*  Workload lifecycle status types                                    */
+/* ------------------------------------------------------------------ */
+
+interface WorkloadStatusEntry {
+  workload: string;
+  lifecycle_status: 'disabled' | 'enabled' | 'discovered' | 'protected' | 'paused';
+  consent_status: string;
+  backup_ready: boolean;
+  restore_ready: boolean;
+  enabled: boolean;
+  client_id: string | null;
+  error_message: string | null;
+  created_at: string;
+}
+
+interface WorkloadStatusResponse {
+  tenant_id: number;
+  workloads: WorkloadStatusEntry[];
+}
+
+/* ------------------------------------------------------------------ */
+/*  useWorkloadStatuses — shared query for workload lifecycle data      */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Fetches workload statuses for the selected tenant.
+ * Shared across Layout sidebar, workload pages, etc.
+ * Uses staleTime: 60s to avoid redundant fetches.
+ */
+export function useWorkloadStatuses() {
+  const tenantId = useTenantId();
+  const { data, isLoading } = useQuery({
+    queryKey: ['workload-statuses', tenantId],
+    queryFn: () => api.get<WorkloadStatusResponse>(`/tenants/${tenantId}/workloads`),
+    enabled: !!tenantId,
+    staleTime: 60_000,
+  });
+  return { workloadStatuses: data?.workloads ?? [], isLoading };
+}
+
+/* ------------------------------------------------------------------ */
+/*  useWorkloadEnabled — check if a specific workload is enabled       */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Returns whether a specific workload is enabled (lifecycle_status !== 'disabled')
+ * for the current tenant. Returns undefined while loading.
+ */
+export function useWorkloadEnabled(workloadKey: string): boolean | undefined {
+  const { workloadStatuses, isLoading } = useWorkloadStatuses();
+  if (isLoading && workloadStatuses.length === 0) return undefined; // still loading
+  const wl = workloadStatuses.find(w => w.workload === workloadKey);
+  return wl ? wl.lifecycle_status !== 'disabled' : false;
+}
+
+/**
+ * Returns the set of enabled workload keys for the current tenant.
+ */
+export function useEnabledWorkloadKeys(): Set<string> | undefined {
+  const { workloadStatuses, isLoading } = useWorkloadStatuses();
+  if (isLoading && workloadStatuses.length === 0) return undefined;
+  return new Set(
+    workloadStatuses
+      .filter(w => w.lifecycle_status !== 'disabled')
+      .map(w => w.workload)
+  );
+}
+
 /**
  * Returns the preferred active tenant ID.
  * Reads from server session, not localStorage.

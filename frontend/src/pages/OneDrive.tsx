@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getActivePlatformLabel } from '../config/platforms';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { HardDrive, Folder, FileText, ArrowRight, RefreshCw, Download, Loader2 } from 'lucide-react';
@@ -6,7 +7,7 @@ import { api } from '../api/client';
 import DataTable, { type Column } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
 import CriticalityBadge from '../components/CriticalityBadge';
-import { useTenantId } from '../hooks/useTenant';
+import { useTenantId, useWorkloadEnabled } from '../hooks/useTenant';
 import { WorkloadPageLayout, Breadcrumb } from '../components/design-system';
 import { formatSize, timeAgo } from '../utils/format';
 import RestoreDialog from '../components/RestoreDialog';
@@ -19,6 +20,8 @@ export default function OneDrive() {
   const [showRestore, setShowRestore] = useState(false);
   const tenantId = useTenantId();
   const qc = useQueryClient();
+  const navigate = useNavigate();
+  const workloadEnabled = useWorkloadEnabled('onedrive');
 
   const backupAllMutation = useMutation({
     mutationFn: () => api.post(`/onedrive/backup-all?tenant_id=${tenantId}`),
@@ -72,6 +75,27 @@ export default function OneDrive() {
       lastBackup: backupTimes[0] || null, totalItems, totalSize, successRate: 100,
     };
   }, [statsData]);
+
+  // ── "Available" state — workload not enabled for this tenant ──
+  if (workloadEnabled === false) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+          <HardDrive className="w-8 h-8 text-muted-foreground" />
+        </div>
+        <h2 className="text-xl font-semibold mb-2">OneDrive is available</h2>
+        <p className="text-muted-foreground mb-6 max-w-md">
+          Enable OneDrive protection to start backing up your files and folders.
+        </p>
+        <button
+          onClick={() => navigate('/settings')}
+          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Enable in Organization Settings &rarr;
+        </button>
+      </div>
+    );
+  }
 
   // ── Snapshot browse view ──
   if (selectedSnapshot) {

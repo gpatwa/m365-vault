@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { getActivePlatformLabel } from '../config/platforms';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, Loader2, RotateCcw, Briefcase, CheckCircle2, PlayCircle } from 'lucide-react';
+import { AlertTriangle, Loader2, RotateCcw, Briefcase, CheckCircle2, PlayCircle, ShieldCheck } from 'lucide-react';
 import { api } from '../api/client';
 import { PRIORITY_WORKLOAD_KEYS, WORKLOAD_MAP } from '../config/workloads';
 import WorkloadSwimlane from '../components/jobs/WorkloadSwimlane';
@@ -216,15 +216,24 @@ export default function Jobs() {
     return result;
   }, [allBackupJobs, allRestoreJobs]);
 
-  // Total stats across all workloads
+  // Total stats across all workloads — excludes dead_letter and cancelled from counts
   const totalStats = useMemo(() => {
     const all = allBackupJobs?.items ?? [];
+    const activeJobs = all.filter(j => j.status !== 'dead_letter' && j.status !== 'cancelled');
+    const completed = activeJobs.filter(j => j.status === 'completed').length;
+    const failed = activeJobs.filter(j => j.status === 'failed').length;
+    const in_progress = activeJobs.filter(j => j.status === 'in_progress').length;
+    const queued = activeJobs.filter(j => j.status === 'queued').length;
+    // Success rate denominator: only jobs that have a terminal status (completed, failed, partial)
+    const terminalJobs = activeJobs.filter(j => ['completed', 'failed', 'partial'].includes(j.status));
+    const successRate = terminalJobs.length > 0 ? Math.round(completed / terminalJobs.length * 100) : 100;
     return {
-      total: all.length,
-      completed: all.filter(j => j.status === 'completed').length,
-      failed: all.filter(j => j.status === 'failed').length,
-      in_progress: all.filter(j => j.status === 'in_progress').length,
-      queued: all.filter(j => j.status === 'queued').length,
+      total: activeJobs.length,
+      completed,
+      failed,
+      in_progress,
+      queued,
+      successRate,
     };
   }, [allBackupJobs]);
 
@@ -233,17 +242,26 @@ export default function Jobs() {
   };
 
   const heroStats: HeroStat[] = [
+    // Binary status banner: green if 0 failures, amber if any failures
+    totalStats.failed === 0
+      ? {
+          label: 'Backup Status',
+          value: 'All Succeeded',
+          subtitle: `${totalStats.completed} backups completed`,
+          icon: ShieldCheck,
+          color: 'green',
+        }
+      : {
+          label: 'Backup Status',
+          value: `${totalStats.failed} Need Attention`,
+          subtitle: failedSummary ? `${failedSummary.ready_now} ready to retry` : 'Review failures',
+          icon: AlertTriangle,
+          color: 'amber',
+        },
     {
-      label: 'Total Jobs',
-      value: totalStats.total,
-      subtitle: 'All workloads',
-      icon: Briefcase,
-      color: 'blue',
-    },
-    {
-      label: 'Completed',
+      label: 'Successful',
       value: totalStats.completed,
-      subtitle: totalStats.total > 0 ? `${Math.round(totalStats.completed / totalStats.total * 100)}% success rate` : 'No jobs yet',
+      subtitle: `${totalStats.successRate}% success rate`,
       icon: CheckCircle2,
       color: 'green',
     },

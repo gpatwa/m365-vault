@@ -55,6 +55,9 @@ vi.mock('../../hooks/useTenant', () => ({
     switchTenant: vi.fn(),
     isMultiTenant: false,
   }),
+  // Return undefined = still loading, so sidebar filter doesn't activate
+  // (preserves existing test behavior for all role/flag tests)
+  useEnabledWorkloadKeys: () => undefined,
 }));
 
 // Mock API client

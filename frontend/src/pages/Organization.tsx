@@ -346,13 +346,13 @@ export default function Organization() {
 
   // Determine real connection state:
   // - hasWorkloads: at least one workload enabled (user completed onboarding step 2)
-  // - hasConsent: at least one workload has consent granted (Microsoft OAuth completed)
   const hasWorkloads = Object.keys(statusMap).length > 0;
-  const hasConsent = Object.values(statusMap).some(ws => ws.consent_status === 'consented' || ws.consent_status === 'granted');
 
-  // Real connection status: "active" in DB is not enough — user must have
-  // actually completed OAuth and enabled workloads for a real connection.
-  const isReallyConnected = isActive && hasConsent;
+  // Connection status: tenant.status === 'active' is the primary indicator.
+  // Legacy tenants (onboarded before per-workload app separation) may not have
+  // TenantWorkloadApp rows, so consent_status can be missing even though the
+  // tenant is fully connected and protecting data. Use isActive as the truth source.
+  const isReallyConnected = isActive;
 
   const enabledCount = Object.values(statusMap).filter(
     ws => ws.lifecycle_status !== 'disabled'
@@ -455,8 +455,8 @@ export default function Organization() {
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
           </div>
-        ) : !isReallyConnected && !hasWorkloads ? (
-          /* Empty state — user hasn't connected Microsoft yet */
+        ) : !isActive && !hasWorkloads ? (
+          /* Empty state — user hasn't connected Microsoft yet (tenant not active) */
           <div className="bg-card border border-border rounded-xl p-8 text-center">
             <Shield className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
             <h3 className="text-sm font-semibold text-foreground mb-1">No workloads configured</h3>

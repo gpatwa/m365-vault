@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Mail, HardDrive, Globe, Shield, ShieldCheck, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search, RotateCcw, BarChart3, Gauge, ChevronDown, Menu, X, Users, Palette, Play, Bot, CreditCard, Scale } from 'lucide-react';
+import { LayoutDashboard, Mail, HardDrive, Globe, Shield, ShieldCheck, Activity, Building2, FileText, LogOut, ShieldAlert, KeyRound, MessageSquare, Bell, Brain, Search, RotateCcw, BarChart3, Gauge, ChevronDown, Menu, X, Users, Palette, Play, Bot, CreditCard, Scale, Plus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useOnboarding } from '../contexts/OnboardingContext';
 import { useFeatureFlags } from '../contexts/FeatureFlagContext';
@@ -9,7 +9,7 @@ import CommandPalette from './CommandPalette';
 import ProductTour from './ProductTour';
 import FeedbackWidget from './FeedbackWidget';
 import ThemeToggle from './ThemeToggle';
-import { useTenantSwitcher } from '../hooks/useTenant';
+import { useTenantSwitcher, useEnabledWorkloadKeys } from '../hooks/useTenant';
 
 
 interface NavItem {
@@ -135,6 +135,16 @@ export default function Layout() {
   try { featureFlags = useFeatureFlags(); } catch { /* FeatureFlagProvider not mounted yet */ }
   const isFeatureEnabled = (flag: string) => featureFlags?.isEnabled?.(flag) ?? true;
 
+  // Workload lifecycle statuses — filter sidebar to only show enabled workloads
+  const enabledWorkloadKeys = useEnabledWorkloadKeys();
+
+  // Map sidebar paths to workload keys for filtering
+  const pathToWorkloadKey: Record<string, string> = {
+    '/sharepoint': 'sharepoint',
+    '/onedrive': 'onedrive',
+    '/teams': 'teams',
+  };
+
   const visibleGroups = navGroups
     // Filter groups by role
     .filter(group => !group.roles || group.roles.includes(userRole) || (group.roles.includes('platform_admin') && isPlatformAdmin))
@@ -156,6 +166,23 @@ export default function Layout() {
 
     // Hide "More Workloads" (SharePoint, OneDrive, Teams) until tenant connected
     if (group.label === 'More Workloads' && !onboarding.hasTenants) return { ...group, items: [] };
+
+    // Filter "More Workloads" to only show enabled workloads
+    if (group.label === 'More Workloads' && enabledWorkloadKeys) {
+      const filtered = group.items.filter(item => {
+        const wlKey = pathToWorkloadKey[item.path];
+        return wlKey && enabledWorkloadKeys.has(wlKey);
+      });
+      // If no additional workloads are enabled, show "+ Add Workload" link to settings
+      if (filtered.length === 0) {
+        return {
+          ...group,
+          label: '+ Add Workload',
+          items: [{ path: '/settings', label: 'Enable in Settings', icon: Plus }],
+        };
+      }
+      return { ...group, items: filtered };
+    }
 
     // Show operations only after first backup
     if (group.label === 'Operations' && !onboarding.hasProtectedObjects) return { ...group, items: [] };

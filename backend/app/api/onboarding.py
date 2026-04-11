@@ -1207,16 +1207,23 @@ async def reset_onboarding(
 @router.delete("/steps/reset/{username}")
 async def reset_user_onboarding(
     username: str,
+    full: bool = Query(False),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Reset onboarding for any user by username. Platform admin only.
 
-    Used for internal testing — reset a prospect/demo user's onboarding
-    so they see the full checklist on next login.
+    Partial reset (default): clears onboarding steps only.
+    Full reset (?full=true): clears steps + tenant membership + preferences.
+    Full reset returns the user to day-zero — they see the "Connect Microsoft 365"
+    wizard on next login, not the dashboard.
+
+    Used for internal testing and sales demos.
     """
     if current_user.username != "admin":
         raise HTTPException(403, detail="Platform admin only")
+    if username == "admin":
+        raise HTTPException(400, detail="Cannot reset the admin user")
 
     from app.models.onboarding_step import OnboardingStep
     from sqlalchemy import delete as sql_delete
@@ -1226,9 +1233,29 @@ async def reset_user_onboarding(
     if not target_user:
         raise HTTPException(404, detail=f"User '{username}' not found")
 
-    result = await db.execute(
+    results = {}
+
+    # 1. Always clear onboarding steps
+    r = await db.execute(
         sql_delete(OnboardingStep).where(OnboardingStep.user_id == target_user.id)
     )
+    results["steps_cleared"] = r.rowcount
+
+    # 2. Full reset: also clear tenant membership and preferences
+    if full:
+        from app.models.user_tenant import UserTenant
+        from app.models.user_preference import UserPreference
+
+        r = await db.execute(
+            sql_delete(UserTenant).where(UserTenant.user_id == target_user.id)
+        )
+        results["tenant_memberships_cleared"] = r.rowcount
+
+        r = await db.execute(
+            sql_delete(UserPreference).where(UserPreference.user_id == target_user.id)
+        )
+        results["preferences_cleared"] = r.rowcount
+
     await db.commit()
 
-    return {"reset": True, "username": username, "steps_cleared": result.rowcount}
+    return {"reset": True, "full": full, "username": username, **results}

@@ -73,6 +73,14 @@ git log --oneline -2
 # c2c7e9b feat: admin cleanup endpoint + clean stale data script
 ```
 
+## BLOCKER: Docker Desktop Won't Start
+
+Docker Desktop daemon is unresponsive. Manual fix needed:
+1. Open Docker Desktop from Applications
+2. Click gear icon → Troubleshoot → "Clean / Purge Data" or "Restart Docker Engine"
+3. Wait for Docker to fully initialize (green whale icon in menu bar)
+4. Verify: `docker ps` returns a header row
+
 ## First Task: Deploy + Clean Data
 
 ```bash

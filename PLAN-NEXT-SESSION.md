@@ -1,138 +1,137 @@
-# KavachIQ — Enterprise Release Readiness
+# KavachIQ — Next Session Plan
 
 ## Session Context
 
-**Date**: April 9, 2026
-**Branch**: `main`
-**Deployed**: kavachiq.com (v1775763605)
+**Date**: April 10, 2026
+**Branch**: `main` (all code committed)
+**Last deployed**: v1775845463 (P2+P3 UX changes)
+**Pending deploy**: 2 commits (cleanup endpoint + stale data fixes)
 **Tests**: 824 backend (100%) + 50 frontend (100%) + 70 E2E (100%)
-
----
-
-## Readiness Scorecard
-
-| # | Item | Status | Evidence |
-|---|------|--------|----------|
-| 1 | Fix failing tests | ✅ DONE | 824/824 pass (was 742/796, then 768/822, now 0 failures) |
-| 2 | Backup success rate | ✅ DONE | Root cause: missing errorcategory PG enum. Fixed with auto-derive + savepoint-per-item. Exchange 17/17, OneDrive 17/17 confirmed in production. |
-| 3 | Dependency CVEs | ✅ DONE | python-jose 3.4.0, cryptography 46.0.7, msal 1.35.1 |
-| 4 | Alembic migrations | ✅ DONE | Baseline generated from live PG, stamped, env.py has all 22 models |
-| 5 | Grafana + alerting | ❌ NOT DONE | Prometheus /metrics endpoint deployed, needs Grafana dashboards + PagerDuty |
-| 6 | Load test | ✅ DONE | 10 tenants × 2K objects = 20K total. Scheduler: 0.51s, 39,493 obj/sec. Batch decomposition correct. |
-| 7 | Incident runbook | ❌ NOT DONE | |
-| 8 | SOC 2 documentation | ✅ DONE | 9-section .docx at docs/SOC2-Security-Architecture.docx |
-| 9 | Backup validation pipeline | ✅ DONE | Auto-validates 20 snapshots/10min, feeds recovery confidence score (25% weight) |
-| 10 | Multi-region / DR | ❌ NOT DONE | Single region, Azure Blob GRS for storage |
-
----
 
 ## What Was Shipped This Session
 
-### Job Execution Layer
-- Batch scheduler (parent-child jobs, 500-item batches)
-- Anomaly detection ceiling (dedup, auto-resolve, TTL)
+This was a massive session covering enterprise readiness across 6 areas:
+
+### 1. Job Execution Layer
+- Batch scheduler (parent-child, 500-item batches)
+- Anomaly detection ceiling (dedup, auto-resolve, TTL)  
 - Server-side onboarding state machine
-- KEDA auto-scaling fix + tune for batch workloads
-- Atomic seed data module (replaces 5 inline SQL sections)
+- KEDA auto-scaling fix + tune
+- Atomic seed data module
 
-### Operational Maturity Layer
-- Tenant isolation (11 cross-tenant endpoints fixed)
-- Prometheus observability (prometheus-client, HTTP histograms, queue depth gauges)
-- Encryption key versioning (zero-downtime KEK rotation)
-- Secret expiry monitoring (6-hour check + /api/diagnostics/secrets)
-- Cost attribution (Redis metering, cost_breakdown in usage API)
-- Backup validation pipeline (auto-validate → recovery confidence score)
-- SOC 2 security architecture document
+### 2. Operational Maturity
+- Tenant isolation (30+ endpoints fixed across 9 files)
+- Prometheus observability (prometheus-client, histograms)
+- Encryption key versioning (zero-downtime rotation)
+- Secret expiry monitoring
+- Cost attribution (Redis metering, cost breakdown API)
+- Backup validation pipeline (auto-validates → recovery score)
 
-### Critical Bug Fixes
-- Missing errorcategory PG enum (root cause of 98.7% backup failure)
-- Auto-derive enum values from Python classes (enum drift impossible)
-- Savepoint-per-item in backup worker (session poisoning impossible)
-- safe-deploy.sh now updates worker container (was running stale code)
-- 3 UnboundLocalError bugs in reports.py
-- workload_base.py column name mismatch
+### 3. Critical Bug Fixes  
+- Missing errorcategory enum (root cause of 98.7% backup failure)
+- Auto-derive enum values from Python classes
+- Savepoint-per-item in backup worker
+- safe-deploy.sh now updates worker container
+- Reports.py UnboundLocalError bugs
 
-### Security (10 findings from audit)
-- Seed password removed from logs (CRITICAL)
-- 11 cross-tenant IDOR endpoints fixed (HIGH)
-- f-string SQL → parameterized queries (HIGH)
-- KEDA Redis URL moved to secret reference (HIGH)
-- python-jose + cryptography + msal upgraded (HIGH)
-- Secret hints removed from diagnostics (MEDIUM)
-- Redis metering keys get 7-day TTL (MEDIUM)
+### 4. Security
+- 30+ cross-tenant data leaks fixed (systematic audit)
+- Seed password removed from logs
+- f-string SQL → parameterized queries
+- KEDA Redis URL moved to secret reference
+- Dependency CVEs fixed (python-jose, cryptography, msal)
 
-### Test Infrastructure
-- 100% pass rate: 824 backend, 50 frontend, 70 E2E
-- test_tenant fixture (systemic fix for tenant isolation in tests)
-- Load test script (tests/load_test.py)
-- 3 auto-validation tests
+### 5. Test Infrastructure
+- 100% pass rate: 824 backend, 50 frontend, 70 E2E (was 54 failures)
+- test_tenant fixture (systemic fix)
+- Load test script (39,493 obj/sec throughput)
+- User validation script (24 checks per user)
 
----
+### 6. UX Redesign (P0-P3)
+- Sidebar: only enabled workloads + "Add Workload"
+- Organization: "Connected" status (was showing "Not Connected")
+- Jobs: binary success/failure, dead-letter hidden from customers
+- Non-enabled workloads: "Available — Enable in Settings"
+- Smart Engine: z-scores → human-readable
+- Dashboard: Recovery Confidence card, cleanup low-value metrics
+- Failed Items: human-readable errors
+- Workload detail: SLA Status, conditional Backup All
+- Data freshness: native setInterval polling (bypasses React Query visibility gate)
 
-## What's Left
+### 7. Documentation
+- SOC 2 Security Architecture (.docx)
+- Autonomous On-Call Agent Design
+- Page-by-Page UX Redesign Plan
+- Enterprise Readiness Plan
 
-### P0 — Remaining (block first customer)
+## Pending Deploy (2 commits on main, not yet deployed)
 
-**5. Grafana + PagerDuty** — 1 day
-- Prometheus metrics shipping to /metrics. Nobody watches.
-- Need: Azure Monitor Prometheus scraping → Grafana dashboard → PagerDuty alerts
-- Alert rules: backup failure >10%, queue depth >100 for 10min, health <50, secret expiring <7d, worker=0 for 5min
-
-**7. Incident Runbook** — 1 day
-- Worker stuck: check Redis, restart pod
-- Redis OOM: flush metering keys, check queue backlog
-- DB pool: check kavachiq_db_pool_utilization_ratio metric
-- Graph throttling: check AIMD limiter, reduce WORKER_CONCURRENCY
-- Backup spike: check connector secret expiry via /api/diagnostics/secrets
-
-### P1 — Before enterprise sales
-
-**10. Multi-Region / DR** — 1 week
-- Active-passive: primary (eastus) + standby (westus2)
-- Azure Blob GRS already configured for prod
-- Database: Azure Flexible Server read replica
-- DNS failover via Cloudflare
-
-### P2 — Expected within 6 months
-
-| Item | Notes |
-|------|-------|
-| Audit log export (CSV/SIEM) | Model exists, needs export endpoint |
-| SSO enforcement per-tenant | SSO works but optional |
-| Data residency controls | Per-tenant storage region |
-| Per-tenant API rate limits | Current is per-user |
-| Webhook notifications | Callback on backup/restore events |
-| PostgreSQL Row-Level Security | App-level done, RLS is defense-in-depth |
-| Public docs site (docs.kavachiq.com) | API reference, getting started, integration guides |
-
----
-
-## Production Health (Live)
-
-```
-Recovery Confidence: 52/100 (Grade C)
-  Freshness:     100% ████████████████████ 67/67 objects within SLA
-  Completeness:  100% ████████████████████ 67/67 protected
-  Restore:        10% ██░░░░░░░░░░░░░░░░░░ 0/1 restores succeeded
-  Validation:      0% ░░░░░░░░░░░░░░░░░░░░ 0/1073 → auto-validating 20/cycle
-
-Backups: Exchange ✅ OneDrive ✅ (confirmed post-fix)
-Validation: climbing ~120/hour, full backlog cleared in ~9 hours
-Projected score tomorrow: ~75/100 (Grade B)
+```bash
+# These commits are ready — just need Docker build + deploy
+git log --oneline -2
+# 2f3e304 fix: three remaining UX gaps + conservative workload migration
+# c2c7e9b feat: admin cleanup endpoint + clean stale data script
 ```
 
----
+## First Task: Deploy + Clean Data
 
-## How to Start Next Session
+```bash
+# 1. Deploy the pending commits
+make safe-deploy ENV=dev
+
+# 2. Clean stale data via the new admin endpoint
+TOKEN=$(curl -s -X POST "https://api.kavachiq.com/api/auth/login" \
+  -d "username=admin&password=Admin123!" | \
+  python3 -c "import sys,json; print(json.load(sys.stdin).get('access_token',''))")
+
+curl -s -X POST -H "Authorization: Bearer $TOKEN" \
+  "https://api.kavachiq.com/api/diagnostics/cleanup-stale-data" | python3 -m json.tool
+
+# 3. Validate all users
+./scripts/validate-user.sh prospect Prospect2026!
+./scripts/validate-user.sh demo ShieldiDemo2026!
+./scripts/validate-user.sh admin Admin123!
+
+# 4. Verify visually — check these pages as prospect:
+#    - Protection Gaps: Exchange card should be clean (0 unresolved)
+#    - eDiscovery: only Entra ID + Exchange in workload filter
+#    - Dashboard: all numbers consistent
+#    - SharePoint/OneDrive/Teams: "Available" state
+```
+
+## Remaining Items
+
+### Still Pending from Readiness Plan
+| Item | Effort | Priority |
+|------|--------|----------|
+| Reports PDF export + email scheduling | 4-6h | P2 |
+| Grafana dashboards + PagerDuty alert rules | 1 day | P1 (autonomous agent replaces this) |
+| Incident runbook | 1 day | P1 (autonomous agent replaces this) |
+| Multi-region / DR | 1 week | P1 (before enterprise sales) |
+
+### Autonomous On-Call Agent (designed, not implemented)
+Design at `docs/DESIGN-AUTONOMOUS-ONCALL-AGENT.md`:
+- Phase 1: Alert ingestion + 8 deterministic runbooks (1 week)
+- Phase 2: Claude Agent SDK diagnosis layer (1 week)
+- Phase 3: Grafana + PagerDuty integration (2-3 days)
+- Phase 4: Learning loop (ongoing)
+
+### Production Health
+```
+Recovery Confidence: 70→72/100 (Grade B, climbing)
+  Freshness:     100%
+  Completeness:  100%
+  Validation:    35→46% (auto-validator running, ~120/hour)
+  
+Backups: Exchange ✅ OneDrive ✅ (confirmed working)
+Tests: 824 + 50 + 70 = 944 total, 100% pass rate
+```
+
+## How to Start
 
 ```bash
 make dev                         # Docker Compose (PG + Redis + MinIO)
 make test-backend                # 824 pass, 0 fail
 cd frontend && npx vitest run    # 50 pass
-make safe-deploy ENV=dev         # 70/70 E2E
-
-# Load test
-cd backend && python3 -m tests.load_test
+make safe-deploy ENV=dev         # Deploy pending commits
 ```
-
-**Priority**: Grafana + PagerDuty (item 5), then incident runbook (item 7).

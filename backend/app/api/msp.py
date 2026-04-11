@@ -992,6 +992,39 @@ async def offboard_tenant(
     now = datetime.utcnow()
     tenant.status = TenantStatus.INACTIVE
     tenant.updated_at = now
+
+    # Clear user state for this tenant — memberships, onboarding steps, preferences
+    from app.models.user_tenant import UserTenant
+    from app.models.onboarding_step import OnboardingStep
+    from app.models.user_preference import UserPreference
+    from sqlalchemy import delete as sql_delete
+
+    # Find all users who ONLY have this tenant (not multi-tenant users)
+    tenant_users = (await db.execute(
+        select(UserTenant.user_id).where(UserTenant.tenant_id == tenant_id)
+    )).scalars().all()
+
+    users_reset = 0
+    for user_id in tenant_users:
+        # Check if this user has other tenants
+        other_tenants = (await db.execute(
+            select(func.count(UserTenant.id)).where(
+                UserTenant.user_id == user_id,
+                UserTenant.tenant_id != tenant_id,
+            )
+        )).scalar() or 0
+
+        if other_tenants == 0:
+            # Single-tenant user — full reset (back to onboarding)
+            await db.execute(sql_delete(OnboardingStep).where(OnboardingStep.user_id == user_id))
+            await db.execute(sql_delete(UserPreference).where(UserPreference.user_id == user_id))
+            users_reset += 1
+
+    # Remove all memberships for this tenant
+    memberships_removed = (await db.execute(
+        sql_delete(UserTenant).where(UserTenant.tenant_id == tenant_id)
+    )).rowcount
+
     await db.commit()
 
     # Calculate retention info
@@ -1014,6 +1047,8 @@ async def offboard_tenant(
             "Scheduled backups stopped — no new backups will run",
             "Existing backup data preserved per SLA retention policies",
             "Connector credentials retained (encrypted) for potential reactivation",
+            f"{memberships_removed} user-tenant membership(s) removed",
+            f"{users_reset} single-tenant user(s) reset to onboarding",
         ],
         "retention": {
             "max_retention_days": max_retention,

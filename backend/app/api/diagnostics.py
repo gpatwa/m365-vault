@@ -492,6 +492,22 @@ async def cleanup_stale_data(
     r = await db.execute(text("UPDATE anomaly_events SET resolved = 1 WHERE resolved = 0"))
     results["stale_anomalies_resolved"] = r.rowcount
 
+    # 5. Unprotect objects for disabled workloads
+    # If a workload was disabled (TenantWorkloadApp removed or lifecycle='disabled'),
+    # its protected objects should be UNPROTECTED so they don't count in metrics
+    r = await db.execute(text("""
+        UPDATE protected_objects
+        SET status = 'UNPROTECTED', sla_policy_id = NULL
+        WHERE status = 'PROTECTED'
+          AND NOT EXISTS (
+              SELECT 1 FROM tenant_workload_apps twa
+              WHERE twa.tenant_id = protected_objects.tenant_id
+                AND twa.workload = LOWER(protected_objects.workload_type::text)
+                AND twa.lifecycle_status != 'disabled'
+          )
+    """))
+    results["objects_unprotected_for_disabled_workloads"] = r.rowcount
+
     await db.commit()
 
     import logging

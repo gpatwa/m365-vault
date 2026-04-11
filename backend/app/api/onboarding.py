@@ -1177,3 +1177,58 @@ async def complete_onboarding_step(
     await db.commit()
 
     return {"step": step, "completed": True, "was_new": was_new}
+
+
+@router.delete("/steps/reset")
+async def reset_onboarding(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Reset all onboarding steps for the current user. Admin-only.
+
+    Used for internal testing and sales demos — clears all completed steps
+    so the onboarding checklist appears fresh on next page load.
+    """
+    from app.services.auth import require_role, UserRole
+    if current_user.role not in ("admin", "ADMIN"):
+        raise HTTPException(403, detail="Admin only")
+
+    from app.models.onboarding_step import OnboardingStep
+    from sqlalchemy import delete as sql_delete
+
+    result = await db.execute(
+        sql_delete(OnboardingStep).where(OnboardingStep.user_id == current_user.id)
+    )
+    await db.commit()
+
+    return {"reset": True, "steps_cleared": result.rowcount}
+
+
+@router.delete("/steps/reset/{username}")
+async def reset_user_onboarding(
+    username: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Reset onboarding for any user by username. Platform admin only.
+
+    Used for internal testing — reset a prospect/demo user's onboarding
+    so they see the full checklist on next login.
+    """
+    if current_user.username != "admin":
+        raise HTTPException(403, detail="Platform admin only")
+
+    from app.models.onboarding_step import OnboardingStep
+    from sqlalchemy import delete as sql_delete
+
+    target = await db.execute(select(User).where(User.username == username))
+    target_user = target.scalar_one_or_none()
+    if not target_user:
+        raise HTTPException(404, detail=f"User '{username}' not found")
+
+    result = await db.execute(
+        sql_delete(OnboardingStep).where(OnboardingStep.user_id == target_user.id)
+    )
+    await db.commit()
+
+    return {"reset": True, "username": username, "steps_cleared": result.rowcount}

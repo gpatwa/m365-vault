@@ -6,6 +6,7 @@ import { api } from '../api/client';
 import DataTable, { type Column } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
 import CriticalityBadge from '../components/CriticalityBadge';
+import { ItemCountDelta, HealthDots, ValidationBadge } from '../components/BackupIndicators';
 import { WorkloadPageLayout, Breadcrumb } from '../components/design-system';
 import { useTenantId } from '../hooks/useTenant';
 import { useFeatureFlags } from '../contexts/FeatureFlagContext';
@@ -126,14 +127,22 @@ export default function Exchange() {
       key: 'status',
       label: 'Status',
       sortable: true,
-      render: (row) => <StatusBadge status={row.status} />,
+      render: (row) => (
+        <span className="inline-flex items-center">
+          <StatusBadge status={row.status} />
+          <ValidationBadge status={(row as any).validation_status} />
+        </span>
+      ),
     },
     {
       key: 'last_backup_at',
       label: 'Last Backup',
       sortable: true,
       render: (row) => (
-        <span className="text-muted-foreground">{row.last_backup_at ? timeAgo(row.last_backup_at) : 'Never'}</span>
+        <div className="flex flex-col gap-1">
+          <span className="text-muted-foreground">{row.last_backup_at ? timeAgo(row.last_backup_at) : 'Never'}</span>
+          <HealthDots history={(row as any).backup_history_7d} />
+        </div>
       ),
     },
     {
@@ -142,7 +151,17 @@ export default function Exchange() {
       sortable: true,
       render: (row) => row.criticality_tier ? <CriticalityBadge tier={row.criticality_tier} score={row.criticality_score} /> : <span className="text-muted-foreground">—</span>,
     },
-    { key: 'total_items', label: 'Items', sortable: true },
+    {
+      key: 'total_items',
+      label: 'Items',
+      sortable: true,
+      render: (row) => (
+        <span className="text-muted-foreground">
+          {row.total_items ?? '—'}
+          <ItemCountDelta delta={(row as any).item_count_delta} />
+        </span>
+      ),
+    },
     {
       key: 'total_size_bytes',
       label: 'Size',

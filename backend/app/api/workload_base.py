@@ -41,6 +41,83 @@ from app.utils.query import ListParams, apply_sorting, apply_pagination
 logger = logging.getLogger(__name__)
 
 
+async def _enrich_objects(db: AsyncSession, object_ids: list[int]) -> dict:
+    """Enrich protected objects with backup intelligence.
+
+    Returns per-object dict with:
+    - item_count_delta: change from previous to latest snapshot
+    - backup_history_7d: [{"date": "2026-04-10", "status": "success"}, ...]
+    - validation_status: latest snapshot's validation result
+    """
+    from datetime import timedelta
+
+    enrichment = {}
+
+    # Get the 2 most recent completed snapshots per object (for delta calculation)
+    # And the latest validation_status
+    for obj_id in object_ids:
+        data = {}
+
+        # Latest 2 snapshots for delta
+        snaps = (await db.execute(
+            select(Snapshot.item_count, Snapshot.validation_status, Snapshot.completed_at)
+            .where(
+                Snapshot.protected_object_id == obj_id,
+                Snapshot.status == SnapshotStatus.COMPLETED,
+            )
+            .order_by(desc(Snapshot.completed_at))
+            .limit(2)
+        )).all()
+
+        if len(snaps) >= 2:
+            current_count = snaps[0].item_count or 0
+            previous_count = snaps[1].item_count or 0
+            data["item_count_delta"] = current_count - previous_count
+        elif len(snaps) == 1:
+            data["item_count_delta"] = 0  # First snapshot, no delta
+        else:
+            data["item_count_delta"] = None
+
+        # Validation status from latest snapshot
+        if snaps:
+            data["validation_status"] = snaps[0].validation_status
+        else:
+            data["validation_status"] = None
+
+        # 7-day backup history (success/fail/none per day)
+        history = []
+        today = datetime.utcnow().date()
+        for i in range(6, -1, -1):  # 7 days ago to today
+            day = today - timedelta(days=i)
+            day_start = datetime.combine(day, datetime.min.time())
+            day_end = datetime.combine(day, datetime.max.time())
+
+            day_snap = (await db.execute(
+                select(Snapshot.status)
+                .where(
+                    Snapshot.protected_object_id == obj_id,
+                    Snapshot.completed_at >= day_start,
+                    Snapshot.completed_at <= day_end,
+                )
+                .order_by(desc(Snapshot.completed_at))
+                .limit(1)
+            )).scalar_one_or_none()
+
+            if day_snap:
+                status_val = day_snap.value if hasattr(day_snap, 'value') else str(day_snap)
+                history.append({
+                    "date": day.isoformat(),
+                    "status": "success" if status_val == "completed" else "failed",
+                })
+            else:
+                history.append({"date": day.isoformat(), "status": "none"})
+
+        data["backup_history_7d"] = history
+        enrichment[obj_id] = data
+
+    return enrichment
+
+
 class RestoreRequest(BaseModel):
     """Standard restore request — shared across all workloads."""
     snapshot_id: int
@@ -114,6 +191,13 @@ def create_workload_router(
         result = await db.execute(stmt)
         objects = result.scalars().all()
 
+        # Enrich with per-object backup intelligence:
+        # - item_count_delta: change since previous snapshot
+        # - backup_history_7d: 7-day pass/fail/none array
+        # - validation_status: latest snapshot's validation result
+        object_ids = [o.id for o in objects]
+        enrichment = await _enrich_objects(db, object_ids) if object_ids else {}
+
         return {
             "total": total,
             "page": params.page,
@@ -133,6 +217,7 @@ def create_workload_router(
                     "criticality_score": o.criticality_score,
                     "criticality_tier": o.criticality_tier,
                     "object_subtype": o.object_subtype,
+                    **(enrichment.get(o.id, {})),
                 }
                 for o in objects
             ],

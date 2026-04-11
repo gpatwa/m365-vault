@@ -43,6 +43,11 @@ export interface SLAPolicy {
   protected_objects_count?: number;
 }
 
+export interface BackupDayStatus {
+  date: string;
+  status: 'success' | 'failed' | 'none';
+}
+
 export interface ProtectedObject {
   id: number;
   display_name: string;
@@ -56,6 +61,9 @@ export interface ProtectedObject {
   total_size_bytes: number;
   criticality_score?: number;
   criticality_tier?: string;
+  item_count_delta?: number | null;
+  validation_status?: 'passed' | 'failed' | 'partial' | null;
+  backup_history_7d?: BackupDayStatus[] | null;
 }
 
 export interface Snapshot {

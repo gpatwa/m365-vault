@@ -12,7 +12,7 @@ pydantic-settings==2.5.0
 python-multipart==0.0.22
 
 # Auth
-bcrypt==4.0.1
+bcrypt==5.0.0
 passlib==1.7.4
 python-jose[cryptography]==3.4.0
 cryptography==46.0.7

@@ -39,11 +39,12 @@ async def ensure_seed_users(engine: AsyncEngine):
         ("viewer", "viewer@kavachiq.com", "VIEWER"),
     ]
 
-    # Users who should be assigned to ALL tenants
-    # Prospect is NOT here — they get assigned to their own tenant during onboarding
+    # Only platform admin gets ALL tenants.
+    # Demo gets their own tenant (MSFT) via onboarding — not all tenants.
+    # Prospect gets their own tenant (Patwa Inc) via onboarding — not all tenants.
+    # E2E tests use the admin user for cross-tenant validation.
     TENANT_ACCESS = {
         "admin": "owner",     # Platform admin — owns all tenants
-        "demo": "member",     # Demo user — needs full access for E2E
     }
 
     async with engine.begin() as conn:
@@ -79,21 +80,23 @@ async def ensure_seed_users(engine: AsyncEngine):
                   )
             """), {"username": username, "role": role})
 
-        # Clean up: prospect should only have their own tenant (not all tenants)
-        # Keep only their earliest membership (from original onboarding)
-        await conn.execute(text("""
-            DELETE FROM user_tenants ut
-            USING users u
-            WHERE ut.user_id = u.id
-              AND u.username = 'prospect'
-              AND ut.tenant_id != (
-                SELECT ut2.tenant_id FROM user_tenants ut2
-                JOIN users u2 ON ut2.user_id = u2.id
-                WHERE u2.username = 'prospect'
-                ORDER BY ut2.created_at ASC
-                LIMIT 1
-              )
-        """))
+        # Clean up: non-admin users should only have their OWN tenant.
+        # Keep only their earliest membership (from original onboarding).
+        # Admin keeps all tenants (platform admin).
+        for username in ('prospect', 'demo'):
+            await conn.execute(text("""
+                DELETE FROM user_tenants ut
+                USING users u
+                WHERE ut.user_id = u.id
+                  AND u.username = :username
+                  AND ut.tenant_id != (
+                    SELECT ut2.tenant_id FROM user_tenants ut2
+                    JOIN users u2 ON ut2.user_id = u2.id
+                    WHERE u2.username = :username
+                    ORDER BY ut2.created_at ASC
+                    LIMIT 1
+                  )
+            """), {"username": username})
 
         # ── 3. Ensure onboarding steps ──────────────────────────────────
         # Check if onboarding_steps table exists (might not on first deploy

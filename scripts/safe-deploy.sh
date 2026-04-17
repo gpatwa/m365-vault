@@ -186,7 +186,8 @@ fi
 
 echo ""
 echo -e "${GREEN}═══ Deploy Complete ═══${NC}"
-echo -e "  Backend:  https://$BACKEND_URL"
-echo -e "  Frontend: https://kavachiq.com"
-echo -e "  Image:    $TAG"
+echo -e "  Backend:    https://$BACKEND_URL"
+echo -e "  App SPA:    https://app.kavachiq.com  (Azure Container Apps)"
+echo -e "  Marketing:  https://kavachiq.com      (Cloudflare Pages — deploy separately: make pages-deploy)"
+echo -e "  Image:      $TAG"
 echo ""

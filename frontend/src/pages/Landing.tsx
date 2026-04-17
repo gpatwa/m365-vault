@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import {
   Shield, Mail, HardDrive, Globe, MessageSquare, KeyRound,
   AlertTriangle, ArrowRight, Check, X,
   Eye, Brain, ShieldCheck, ChevronRight, Scale, RotateCcw,
 } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
+import { appUrl } from '../utils/appUrl';
 
 // ── Scroll animation hook ──
 function useInView(threshold = 0.05) {
@@ -258,6 +260,36 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>KavachIQ — Microsoft 365 Backup & Ransomware Recovery</title>
+        <meta name="description" content="Open-source M365 data protection with identity-first recovery. Back up Exchange, OneDrive, SharePoint, Teams & Entra ID. Free for 25 users." />
+        <link rel="canonical" href="https://kavachiq.com/welcome" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://kavachiq.com/welcome" />
+        <meta property="og:title" content="KavachIQ — Microsoft 365 Backup & Ransomware Recovery" />
+        <meta property="og:description" content="Open-source M365 data protection with identity-first recovery. Back up Exchange, OneDrive, SharePoint, Teams & Entra ID." />
+        <meta property="og:image" content="https://kavachiq.com/og-image.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="KavachIQ — Microsoft 365 Backup & Ransomware Recovery" />
+        <meta name="twitter:description" content="Open-source M365 data protection with identity-first recovery. Free for 25 users." />
+        <meta name="twitter:image" content="https://kavachiq.com/og-image.jpg" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "KavachIQ",
+          "applicationCategory": "SecurityApplication",
+          "operatingSystem": "Cloud",
+          "description": "Open-source Microsoft 365 data protection platform with identity-first ransomware recovery.",
+          "url": "https://kavachiq.com",
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "description": "Free for up to 25 users" },
+          "publisher": {
+            "@type": "Organization",
+            "name": "KavachIQ",
+            "url": "https://kavachiq.com",
+            "logo": "https://kavachiq.com/favicon.svg"
+          }
+        })}</script>
+      </Helmet>
 
       {/* ═══ NAV ═══ */}
       <nav className="fixed top-0 w-full z-50 bg-card/80 backdrop-blur-sm border-b border-border">
@@ -276,10 +308,10 @@ export default function Landing() {
           <div className="flex items-center gap-3">
             <ThemeToggle />
             <Link to="/tour" className="text-sm text-muted-foreground hover:text-foreground">Product Tour</Link>
-            <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">Sign In</Link>
-            <Link to="/login?register=true" className="px-4 py-1.5 bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-sm font-medium rounded-lg hover:from-teal-400 hover:to-cyan-400 transition-all shadow-lg shadow-teal-500/20">
+            <a href={appUrl('/login')} className="text-sm text-muted-foreground hover:text-foreground">Sign In</a>
+            <a href={appUrl('/login?register=true')} className="px-4 py-1.5 bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-sm font-medium rounded-lg hover:from-teal-400 hover:to-cyan-400 transition-all shadow-lg shadow-teal-500/20">
               Start Free
-            </Link>
+            </a>
           </div>
         </div>
       </nav>
@@ -310,9 +342,9 @@ export default function Landing() {
 
           {/* CTAs */}
           <div className={`mt-8 flex items-center justify-center gap-4 transition-all duration-700 delay-700 ${heroReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            <Link to="/login?register=true" className="px-6 py-3 bg-teal-600 text-white font-semibold rounded-xl hover:bg-teal-700 transition-all hover:shadow-lg hover:shadow-teal-200/20 flex items-center gap-2">
+            <a href={appUrl('/login?register=true')} className="px-6 py-3 bg-teal-600 text-white font-semibold rounded-xl hover:bg-teal-700 transition-all hover:shadow-lg hover:shadow-teal-200/20 flex items-center gap-2">
               Start Free <ArrowRight className="w-4 h-4" />
-            </Link>
+            </a>
             <Link to="/tour" className="px-6 py-3 border border-teal-500/30 text-teal-400 font-medium rounded-xl hover:bg-teal-500/10 transition-colors flex items-center gap-2">
               <Eye className="w-4 h-4" /> See It In Action
             </Link>
@@ -568,11 +600,11 @@ export default function Landing() {
                       </li>
                     ))}
                   </ul>
-                  <Link to="/login" className={`block mt-6 text-center py-2.5 rounded-lg font-medium text-sm transition-colors ${
+                  <a href={appUrl('/login')} className={`block mt-6 text-center py-2.5 rounded-lg font-medium text-sm transition-colors ${
                     tier.primary ? 'bg-white text-teal-600 hover:bg-teal-500/10' : 'bg-muted text-muted-foreground hover:bg-accent'
                   }`}>
                     {tier.cta}
-                  </Link>
+                  </a>
                 </div>
               </FadeUp>
             ))}
@@ -587,9 +619,9 @@ export default function Landing() {
             <h2 className="text-2xl font-bold mb-3">See it live with your data in 10 minutes</h2>
             <p className="text-muted-foreground text-sm mb-6">Connect your M365 tenant. Watch KavachIQ discover your org, score criticality, and build a recovery plan — in real time.</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link to="/login" className="px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-semibold rounded-xl hover:from-teal-400 hover:to-cyan-400 transition-all shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40 flex items-center gap-2">
+              <a href={appUrl('/login?register=true')} className="px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-semibold rounded-xl hover:from-teal-400 hover:to-cyan-400 transition-all shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40 flex items-center gap-2">
                 Start Free <ArrowRight className="w-4 h-4" />
-              </Link>
+              </a>
               <Link to="/contact" className="px-6 py-3 bg-card text-foreground font-medium rounded-xl hover:bg-secondary transition-colors border border-border">
                 Book a Demo
               </Link>
@@ -640,9 +672,9 @@ export default function Landing() {
           <FadeUp>
             <h2 className="text-3xl font-bold mb-4">Ready to prove you can recover?</h2>
             <p className="text-teal-100 mb-8">Most backup vendors prove you can back up. KavachIQ proves you can recover.</p>
-            <Link to="/login" className="inline-flex items-center gap-2 px-8 py-3.5 bg-white text-teal-700 font-semibold rounded-xl hover:bg-teal-500/10 transition-colors text-lg">
+            <a href={appUrl('/login?register=true')} className="inline-flex items-center gap-2 px-8 py-3.5 bg-white text-teal-700 font-semibold rounded-xl hover:bg-teal-500/10 transition-colors text-lg">
               Get Started Free <ArrowRight className="w-5 h-5" />
-            </Link>
+            </a>
           </FadeUp>
         </div>
       </section>

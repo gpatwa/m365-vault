@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { Shield, Mail, Github, Linkedin, ArrowRight, Send, Calendar } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
+import { appUrl } from '../utils/appUrl';
 
 export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', company: '', message: '' });
@@ -16,6 +18,17 @@ export default function Contact() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <Helmet>
+        <title>Contact KavachIQ — Get in Touch</title>
+        <meta name="description" content="Contact KavachIQ for Microsoft 365 data protection questions, demos, or partnership inquiries. Open-source SaaS backup platform." />
+        <link rel="canonical" href="https://kavachiq.com/contact" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://kavachiq.com/contact" />
+        <meta property="og:title" content="Contact KavachIQ — Get in Touch" />
+        <meta property="og:description" content="Reach out for demos, support, or partnership inquiries about M365 data protection." />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="Contact KavachIQ" />
+      </Helmet>
       {/* Nav */}
       <nav className="fixed top-0 w-full z-50 bg-card/80 backdrop-blur-sm border-b border-border">
         <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
@@ -31,7 +44,7 @@ export default function Contact() {
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle />
-            <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">Sign In</Link>
+            <a href={appUrl('/login')} className="text-sm text-muted-foreground hover:text-foreground">Sign In</a>
           </div>
         </div>
       </nav>
@@ -111,10 +124,10 @@ export default function Contact() {
                 <Calendar className="w-8 h-8 mb-3 text-teal-200" />
                 <h3 className="text-lg font-semibold mb-2">Book a Demo</h3>
                 <p className="text-sm text-teal-100 mb-4">See KavachIQ protect your M365 data in 10 minutes. Free, no commitment.</p>
-                <Link to="/login?register=true"
+                <a href={appUrl('/login?register=true')}
                   className="inline-flex items-center gap-2 px-4 py-2 bg-white text-teal-700 rounded-lg font-medium text-sm hover:bg-teal-50 transition-colors">
                   Start Free Trial <ArrowRight className="w-4 h-4" />
-                </Link>
+                </a>
               </div>
             </div>
           </div>

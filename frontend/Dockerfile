@@ -11,6 +11,8 @@ RUN npm run build
 # Production stage
 FROM nginx:alpine
 COPY --from=build /app/dist /usr/share/nginx/html
+# Overlay prerendered SEO pages (generated locally via `npm run build:seo`)
+COPY prerendered/ /usr/share/nginx/html/
 COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 # Default backend URL (Docker Compose). Override via env var for cloud deploy.
 ENV BACKEND_URL=http://backend:8000

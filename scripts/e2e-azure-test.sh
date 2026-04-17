@@ -24,10 +24,11 @@ set -eo pipefail
 ENV="${1:-dev}"
 [[ "$1" == "--env" ]] && ENV="${2:-dev}"
 
-# Resolve URLs
-BACKEND="https://api.kavachiq.com"
-FRONTEND="https://kavachiq.com"        # Primary domain (app.kavachiq.com redirects here)
-ROOT="https://kavachiq.com"
+# Resolve URLs (post-cutover topology)
+BACKEND="https://api.kavachiq.com"        # Azure Container Apps backend
+FRONTEND="https://app.kavachiq.com"       # Azure Container Apps React SPA (authenticated app)
+MARKETING="https://kavachiq.com"          # Cloudflare Pages (marketing, static HTML)
+ROOT="https://app.kavachiq.com"            # App root (not marketing root)
 
 if [ "$ENV" != "dev" ] && [ "$ENV" != "prod" ]; then
   RG="rg-m365vault-${ENV}"
@@ -197,15 +198,18 @@ fi
 echo ""
 echo "── 9. Custom Domains & SSL ──"
 check "api.kavachiq.com SSL" "$(curl -sf --max-time 10 -o /dev/null -w "%{http_code}" https://api.kavachiq.com/health)" "200"
-check "kavachiq.com SSL" "$(curl -sf --max-time 10 -o /dev/null -w "%{http_code}" https://kavachiq.com/)" "200"
-# app.kavachiq.com should 301 redirect to kavachiq.com (single domain)
-check "app.kavachiq.com redirects" "$(curl -sI --max-time 10 https://app.kavachiq.com/ | head -1)" "301"
-# Verify no redirect loop — kavachiq.com should NOT redirect to app.kavachiq.com
-ROOT_REDIRECT=$(curl -sI --max-time 10 https://kavachiq.com/ | grep -i "^location:" || echo "none")
-check "kavachiq.com no redirect" "$ROOT_REDIRECT" "none"
-# Cloudflare proxy active
+# Post-cutover: kavachiq.com serves marketing via Cloudflare Pages; app is on app.kavachiq.com
+check "kavachiq.com SSL (marketing)" "$(curl -sf --max-time 10 -o /dev/null -w "%{http_code}" https://kavachiq.com/welcome/)" "200"
+check "app.kavachiq.com SSL" "$(curl -sf --max-time 10 -o /dev/null -w "%{http_code}" https://app.kavachiq.com/)" "200"
+# kavachiq.com/dashboard should 301 to app.kavachiq.com via CF Pages _redirects
+APP_REDIRECT=$(curl -sI --max-time 10 https://kavachiq.com/dashboard | grep -i "^location:" || echo "")
+check "kavachiq.com/dashboard → app.kavachiq.com" "$APP_REDIRECT" "app.kavachiq.com"
+# Cloudflare proxy active on all hosts
 check "Cloudflare on api" "$(curl -sI --max-time 10 https://api.kavachiq.com/ | grep -i cf-ray || echo "")" "cf-ray"
 check "Cloudflare on app" "$(curl -sI --max-time 10 https://app.kavachiq.com/ | grep -i cf-ray || echo "")" "cf-ray"
+check "Cloudflare Pages on marketing" "$(curl -sI --max-time 10 https://kavachiq.com/welcome/ | grep -i cf-ray || echo "")" "cf-ray"
+# SEO: prerendered HTML has unique title
+check "Marketing page title" "$(curl -s --max-time 10 https://kavachiq.com/welcome/ | grep -oE '<title>[^<]+</title>' | head -1)" "Ransomware Recovery"
 
 # ═══════════════════════════════════════════════════════
 # 10. BRANDING

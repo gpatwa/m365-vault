@@ -348,6 +348,11 @@ deploy: ## Full health-gated deploy: pre-check → build → push → apply → 
 safe-deploy: ## Safe deploy: build → push → wait for healthy → deactivate old (ENV=dev|prod)
 	@./scripts/safe-deploy.sh --env $(ENV)
 
+.PHONY: pages-deploy
+pages-deploy: ## Deploy marketing pages to Cloudflare Pages (free, always-on, CDN)
+	@set -a; . ./.env.azure; set +a; \
+		cd frontend && npm run build:marketing && npm run pages:deploy
+
 .PHONY: blue-green
 blue-green: ## Blue-green deploy: canary 10% → monitor → promote or rollback (ENV=dev|prod)
 	@./scripts/blue-green-deploy.sh --env $(ENV)

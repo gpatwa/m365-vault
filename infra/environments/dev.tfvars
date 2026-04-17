@@ -40,5 +40,10 @@ redis_family          = "C"
 backend_custom_domain     = "api.kavachiq.com"
 cors_origins              = "https://kavachiq.com,https://app.kavachiq.com"
 email_provider            = "resend"
-frontend_url              = "https://kavachiq.com"
+# NOTE: Post-cutover topology:
+#   kavachiq.com      → Cloudflare Pages (marketing, always-on)
+#   app.kavachiq.com  → Azure Container Apps (authenticated React SPA)
+#   api.kavachiq.com  → Azure Container Apps backend
+frontend_url              = "https://app.kavachiq.com"
+# OAuth callback stays on kavachiq.com; CF Pages _redirects 301s /onboard/* to app.kavachiq.com
 connector_redirect_uri    = "https://kavachiq.com/onboard/callback"

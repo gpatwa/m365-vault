@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /onboard
+Disallow: /settings
+Disallow: /api/
+Disallow: /sso/
+Disallow: /restore/
+Disallow: /docs/view/
+
+Sitemap: https://kavachiq.com/sitemap.xml

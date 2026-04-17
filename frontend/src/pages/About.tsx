@@ -1,10 +1,25 @@
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { Shield, KeyRound, Server, Github, ArrowRight, Brain, ShieldCheck, Check, X, AlertTriangle, Bot, Zap } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
+import { appUrl } from '../utils/appUrl';
 
 export default function About() {
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <Helmet>
+        <title>About KavachIQ — Identity-First M365 Data Protection</title>
+        <meta name="description" content="KavachIQ is the first data protection platform built for identity-first recovery. Back up Entra ID, score users by criticality, and pre-compute NIST recovery plans." />
+        <link rel="canonical" href="https://kavachiq.com/about" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://kavachiq.com/about" />
+        <meta property="og:title" content="About KavachIQ — Identity-First M365 Data Protection" />
+        <meta property="og:description" content="The first data protection platform built for identity-first recovery and the age of AI agents." />
+        <meta property="og:image" content="https://kavachiq.com/og-image.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="About KavachIQ — Identity-First M365 Data Protection" />
+        <meta name="twitter:description" content="The first data protection platform built for identity-first recovery and the age of AI agents." />
+      </Helmet>
       {/* Nav */}
       <nav className="fixed top-0 w-full z-50 bg-card/80 backdrop-blur-sm border-b border-border">
         <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
@@ -20,10 +35,10 @@ export default function About() {
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle />
-            <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">Sign In</Link>
-            <Link to="/login?register=true" className="px-4 py-1.5 bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-sm font-medium rounded-lg">
+            <a href={appUrl('/login')} className="text-sm text-muted-foreground hover:text-foreground">Sign In</a>
+            <a href={appUrl('/login?register=true')} className="px-4 py-1.5 bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-sm font-medium rounded-lg">
               Start Free
-            </Link>
+            </a>
           </div>
         </div>
       </nav>
@@ -286,10 +301,10 @@ export default function About() {
               className="px-6 py-3 bg-card border border-border text-foreground font-medium rounded-xl hover:bg-muted transition-colors flex items-center gap-2">
               <Github className="w-4 h-4" /> View on GitHub
             </a>
-            <Link to="/login?register=true"
+            <a href={appUrl('/login?register=true')}
               className="px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-semibold rounded-xl hover:from-teal-400 hover:to-cyan-400 transition-all shadow-lg shadow-teal-500/20 flex items-center gap-2">
               Start Free <ArrowRight className="w-4 h-4" />
-            </Link>
+            </a>
           </div>
         </div>
       </section>
@@ -302,10 +317,10 @@ export default function About() {
             Connect your tenant in 2 minutes. See your org hierarchy, criticality scores, and recovery plan — with your real data.
           </p>
           <div className="flex items-center justify-center gap-4">
-            <Link to="/login?register=true"
+            <a href={appUrl('/login?register=true')}
               className="px-8 py-3.5 bg-white text-teal-700 font-semibold rounded-xl hover:bg-teal-50 transition-colors text-lg flex items-center gap-2">
               Start Free Trial <ArrowRight className="w-5 h-5" />
-            </Link>
+            </a>
             <Link to="/contact"
               className="px-8 py-3.5 border-2 border-white/30 text-white font-medium rounded-xl hover:bg-white/10 transition-colors text-lg">
               Book a Demo

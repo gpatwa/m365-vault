@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 
 type Tab = 'tos' | 'privacy';
 
@@ -7,6 +8,14 @@ export default function Legal() {
 
   return (
     <div className="max-w-4xl mx-auto">
+      <Helmet>
+        <title>Legal — KavachIQ Terms of Service & Privacy Policy</title>
+        <meta name="description" content="KavachIQ terms of service and privacy policy. Read our data handling practices, GDPR compliance, and user agreements." />
+        <link rel="canonical" href="https://kavachiq.com/legal" />
+        <meta property="og:title" content="Legal — KavachIQ Terms & Privacy" />
+        <meta property="og:url" content="https://kavachiq.com/legal" />
+        <meta name="robots" content="noindex" />
+      </Helmet>
       <h1 className="text-2xl font-bold mb-6">Legal</h1>
 
       <div className="flex gap-2 mb-6">

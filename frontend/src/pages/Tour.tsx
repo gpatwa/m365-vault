@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import {
   Shield, AlertTriangle, ArrowRight, CheckCircle, XCircle,
   Eye, Brain, ShieldCheck, RefreshCw,
 } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
+import { appUrl } from '../utils/appUrl';
 
 // ── Scroll animation ──
 function useInView(threshold = 0.1) {
@@ -289,6 +291,19 @@ export default function Tour() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <Helmet>
+        <title>Product Tour — KavachIQ M365 Backup in Action</title>
+        <meta name="description" content="Interactive product tour: see how KavachIQ protects Microsoft 365 data and recovers from ransomware. Live dashboard, smart engine, threat detection, one-click recovery." />
+        <link rel="canonical" href="https://kavachiq.com/tour" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://kavachiq.com/tour" />
+        <meta property="og:title" content="Product Tour — KavachIQ M365 Backup in Action" />
+        <meta property="og:description" content="See how KavachIQ detects ransomware, scores user criticality, and recovers your Microsoft 365 data — identity first." />
+        <meta property="og:image" content="https://kavachiq.com/og-image.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Product Tour — KavachIQ M365 Backup in Action" />
+        <meta name="twitter:description" content="See how KavachIQ detects ransomware and recovers your Microsoft 365 data — identity first." />
+      </Helmet>
       {/* Nav */}
       <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
@@ -298,12 +313,12 @@ export default function Tour() {
           </Link>
           <div className="flex items-center gap-3">
             <ThemeToggle />
-            <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <a href={appUrl('/login')} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Sign In
-            </Link>
-            <Link to="/login?register=true" className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-500 flex items-center gap-1.5">
+            </a>
+            <a href={appUrl('/login?register=true')} className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-500 flex items-center gap-1.5">
               Start Free <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+            </a>
           </div>
         </div>
       </nav>
@@ -392,9 +407,9 @@ export default function Tour() {
               Free for up to 25 objects. No credit card required. Connect your Microsoft 365 in under 3 minutes.
             </p>
             <div className="flex items-center justify-center gap-4">
-              <Link to="/login?register=true" className="px-6 py-3 bg-teal-600 text-white rounded-xl text-sm font-bold hover:bg-teal-500 flex items-center gap-2 shadow-lg shadow-teal-500/20">
+              <a href={appUrl('/login?register=true')} className="px-6 py-3 bg-teal-600 text-white rounded-xl text-sm font-bold hover:bg-teal-500 flex items-center gap-2 shadow-lg shadow-teal-500/20">
                 Start Free <ArrowRight className="w-4 h-4" />
-              </Link>
+              </a>
               <Link to="/welcome" className="px-6 py-3 border border-border text-foreground rounded-xl text-sm font-semibold hover:bg-muted/50">
                 Learn More
               </Link>

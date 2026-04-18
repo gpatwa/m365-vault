@@ -268,11 +268,11 @@ export default function Landing() {
         <meta property="og:url" content="https://kavachiq.com/welcome" />
         <meta property="og:title" content="KavachIQ — Microsoft 365 Backup & Ransomware Recovery" />
         <meta property="og:description" content="Open-source M365 data protection with identity-first recovery. Back up Exchange, OneDrive, SharePoint, Teams & Entra ID." />
-        <meta property="og:image" content="https://kavachiq.com/og-image.jpg" />
+        <meta property="og:image" content="https://kavachiq.com/og-welcome.jpg" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="KavachIQ — Microsoft 365 Backup & Ransomware Recovery" />
         <meta name="twitter:description" content="Open-source M365 data protection with identity-first recovery. Free for 25 users." />
-        <meta name="twitter:image" content="https://kavachiq.com/og-image.jpg" />
+        <meta name="twitter:image" content="https://kavachiq.com/og-welcome.jpg" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",

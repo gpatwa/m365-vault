@@ -26,7 +26,9 @@ export default function Contact() {
         <meta property="og:url" content="https://kavachiq.com/contact" />
         <meta property="og:title" content="Contact KavachIQ — Get in Touch" />
         <meta property="og:description" content="Reach out for demos, support, or partnership inquiries about M365 data protection." />
-        <meta name="twitter:card" content="summary" />
+        <meta property="og:image" content="https://kavachiq.com/og-contact.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://kavachiq.com/og-contact.jpg" />
         <meta name="twitter:title" content="Contact KavachIQ" />
       </Helmet>
       {/* Nav */}

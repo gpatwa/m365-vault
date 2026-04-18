@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:og": "node scripts/generate-og-images.mjs",
     "build:seo": "tsc -b && vite build && node scripts/prerender.mjs",
     "build:marketing": "npm run build:seo && node scripts/build-marketing.mjs",
     "pages:deploy": "npx wrangler pages deploy dist-marketing --project-name kavachiq-marketing",

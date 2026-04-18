@@ -93,7 +93,7 @@ async function prerender() {
     });
 
     console.log(`  Rendering ${route} ...`);
-    await page.goto(`http://localhost:${PORT}${route}`, { waitUntil: 'networkidle0', timeout: 15000 });
+    await page.goto(`http://localhost:${PORT}${route}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
     // Wait for React to render content into #root
     await page.waitForFunction(

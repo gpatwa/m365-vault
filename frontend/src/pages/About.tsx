@@ -15,7 +15,7 @@ export default function About() {
         <meta property="og:url" content="https://kavachiq.com/about" />
         <meta property="og:title" content="About KavachIQ — Identity-First M365 Data Protection" />
         <meta property="og:description" content="The first data protection platform built for identity-first recovery and the age of AI agents." />
-        <meta property="og:image" content="https://kavachiq.com/og-image.jpg" />
+        <meta property="og:image" content="https://kavachiq.com/og-about.jpg" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="About KavachIQ — Identity-First M365 Data Protection" />
         <meta name="twitter:description" content="The first data protection platform built for identity-first recovery and the age of AI agents." />

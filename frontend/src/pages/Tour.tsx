@@ -299,7 +299,7 @@ export default function Tour() {
         <meta property="og:url" content="https://kavachiq.com/tour" />
         <meta property="og:title" content="Product Tour — KavachIQ M365 Backup in Action" />
         <meta property="og:description" content="See how KavachIQ detects ransomware, scores user criticality, and recovers your Microsoft 365 data — identity first." />
-        <meta property="og:image" content="https://kavachiq.com/og-image.jpg" />
+        <meta property="og:image" content="https://kavachiq.com/og-tour.jpg" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Product Tour — KavachIQ M365 Backup in Action" />
         <meta name="twitter:description" content="See how KavachIQ detects ransomware and recovers your Microsoft 365 data — identity first." />

@@ -37,6 +37,8 @@ import Legal from './pages/Legal';
 import Contact from './pages/Contact';
 import About from './pages/About';
 import ScenarioGlobalAdmin from './pages/ScenarioGlobalAdmin';
+import ScenarioDestructiveDeletion from './pages/ScenarioDestructiveDeletion';
+import PublicSecurity from './pages/PublicSecurity';
 import AgentShield from './pages/AgentShield';
 import ResetPassword from './pages/ResetPassword';
 import VerifyEmail from './pages/VerifyEmail';
@@ -135,6 +137,8 @@ function AppRoutes() {
       <Route path="/contact" element={<Contact />} />
       <Route path="/about" element={<About />} />
       <Route path="/scenarios/compromised-global-admin" element={<ScenarioGlobalAdmin />} />
+      <Route path="/scenarios/destructive-sharepoint-onedrive-deletion" element={<ScenarioDestructiveDeletion />} />
+      <Route path="/security" element={<PublicSecurity />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/docs" element={<Docs />} />

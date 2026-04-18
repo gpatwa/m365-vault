@@ -1,82 +1,82 @@
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import {
-  Shield, ArrowRight, AlertTriangle, KeyRound, Users, FileSearch,
-  CheckCircle2, Check, Eye, GitBranch, Lock, Activity,
+  Shield, ArrowRight, AlertTriangle, Users, FileSearch,
+  CheckCircle2, Check, Eye, GitBranch, Activity, HardDrive, Globe, Trash2,
 } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
 import { appUrl } from '../utils/appUrl';
 
-// Illustrative recovery-scenario page. This is a sales-enablement narrative,
-// not a fictional customer testimonial or an incident response playbook.
+// Illustrative recovery-scenario page. Sales-enablement narrative, not a
+// fictional customer testimonial and not fabricated metrics.
 
 const INCIDENT_SIGNALS = [
-  { icon: KeyRound, title: 'Privileged identity access', desc: 'Attacker phishes a privileged session or abuses a valid token. MFA is weakened or bypassed.' },
-  { icon: Shield, title: 'Global Admin abuse', desc: 'Global Admin is assigned to a new account or an existing account is elevated.' },
-  { icon: Lock, title: 'Conditional access modified', desc: 'CA policies and sign-in frequency requirements are loosened. Break-glass paths expanded.' },
-  { icon: Activity, title: 'OAuth grants and service principals', desc: 'New app consents or service principals added. Scoped permissions quietly expand.' },
-  { icon: Users, title: 'Group and role membership', desc: 'Security groups, role-assignable groups, and admin units shift. Blast radius grows.' },
-  { icon: AlertTriangle, title: 'Data access expands', desc: 'Mailbox delegation, SharePoint site access, OneDrive sharing, and Teams membership start drifting.' },
+  { icon: Trash2, title: 'High-volume deletion event', desc: 'Folders, libraries, sites, or entire OneDrive accounts are removed in a short window. Volume exceeds normal deletion patterns.' },
+  { icon: Users, title: 'Unclear scope for users', desc: 'Employees notice missing content and surface requests to IT. Different teams report different symptoms, and the real scope is not yet visible.' },
+  { icon: Globe, title: 'Multiple SharePoint sites affected', desc: 'Department sites, shared libraries, and project workspaces show deletions. Content spread across multiple site collections is now in flux.' },
+  { icon: HardDrive, title: 'OneDrive accounts impacted', desc: 'Several users report missing files across OneDrive. Desktop and mobile sync start propagating the deletions further.' },
+  { icon: Shield, title: 'Cause unclear at first', desc: 'Could be a compromised identity, a mistaken admin action, a runaway sync client, or a script or third-party app. The workflow still has to move forward while the cause is investigated.' },
+  { icon: Activity, title: 'Business impact spreads', desc: 'Sales, legal, finance, and engineering teams begin escalating. The recycle bin is not a coordinated recovery plan, and version history does not cover deleted libraries.' },
 ];
 
 const MANUAL_PAIN = [
-  'Blast radius is unclear. Who is actually affected, which policies changed, and what is safe to touch first is hard to answer in real time.',
-  'Policy drift is invisible. Conditional access and role changes over the last 24 hours are not trivially queryable across Entra.',
-  'Restore order is unclear. Teams pull mailboxes and files back first because that is what leadership asks for, but the attacker still holds admin rights.',
-  'Identity stays compromised while data is restored. The attacker re-encrypts, re-exfiltrates, or simply waits until attention drops.',
-  'Triage is slow. Cross-referencing Entra audit logs, M365 audit logs, and third-party alerts takes hours or days.',
+  'Blast radius is unclear. Which sites, libraries, users, and files are actually affected is hard to see across many workspaces.',
+  'Restore order is unclear. There is no obvious way to decide which content comes back first when business-critical data is mixed with lower-priority content.',
+  'Recycle bins and version history are not a business recovery plan. Items age out. Some content types are not recoverable once the retention window passes.',
+  'Restore is fragmented. Admins toggle between the SharePoint admin center, OneDrive admin views, and individual site recycle bins.',
+  'Triage is slow. Cross-referencing M365 audit logs, SharePoint site activity, and user reports to confirm scope takes hours to days.',
 ];
 
 const PHASES = [
   {
     num: '01', label: 'Protect', icon: Shield,
     color: 'from-blue-500 to-blue-600',
-    lede: 'Baseline identity and workload state is already captured.',
+    lede: 'Baseline workload state is already captured.',
     points: [
-      '12 Entra ID object types snapshotted: users, groups, role assignments, conditional access policies, OAuth grants, service principals, and administrative units.',
-      'Exchange, OneDrive, SharePoint, and Teams protected on a schedule. Snapshots are WORM-locked for the SLA retention window.',
-      'Per-tenant keys and audit trail are in place before any incident begins.',
+      'SharePoint sites, OneDrive accounts, and Teams content snapshotted on a schedule with per-tenant encryption.',
+      'Snapshots are WORM-locked for the SLA retention window. Attackers or scripts cannot purge protected copies.',
+      'Identity state is snapshotted alongside data so admin and policy context is available during recovery.',
     ],
   },
   {
     num: '02', label: 'Monitor', icon: Eye,
     color: 'from-blue-400 to-indigo-500',
-    lede: 'Baselines track normal tenant behavior.',
+    lede: 'Baselines track normal deletion and change volume per tenant.',
     points: [
-      'Change rate across identity objects and workload data is baselined per tenant.',
-      'Privileged role counts, conditional access policy counts, and MFA enforcement levels are tracked over time.',
-      'Unusual service-principal or OAuth-grant activity feeds into the anomaly model.',
+      'Per-site and per-user deletion rates are baselined over rolling windows.',
+      'Large deltas in SharePoint library or OneDrive account content are continuously tracked.',
+      'Correlated identity signals (recent privilege changes, new service principals) feed into the change picture.',
     ],
   },
   {
     num: '03', label: 'Detect', icon: AlertTriangle,
     color: 'from-rose-500 to-red-600',
-    lede: 'Destructive change and identity drift are flagged with evidence.',
+    lede: 'High-volume deletion activity is flagged with evidence.',
     points: [
-      'Global Admin count jumps. MFA enforcement drops on privileged users. Conditional access policies are modified or disabled.',
-      'Mass rename or mass-deletion patterns across OneDrive and SharePoint are flagged.',
-      'Alerts reference the specific object type, the affected users, and the time window, not just a generic anomaly score.',
+      'Mass deletions across sites and libraries that exceed baseline produce a specific, evidence-backed alert.',
+      'OneDrive accounts showing abnormal deletion activity are surfaced individually.',
+      'If the event correlates with a suspicious identity change, KavachIQ links the two so the team sees the full picture.',
     ],
   },
   {
     num: '04', label: 'Assess', icon: FileSearch,
     color: 'from-amber-400 to-amber-500',
-    lede: 'Blast radius is computed across identity and data.',
+    lede: 'Blast radius is computed across sites, libraries, users, and files.',
     points: [
-      'Diff the current Entra state against the last known-good snapshot. See exactly which policies, roles, OAuth grants, and group memberships changed.',
-      'Map identity changes to the users, mailboxes, and sites they affect.',
-      'Score affected users by business criticality. Surface a recommended recovery order before action is taken.',
+      'Diff the current SharePoint and OneDrive state against the last known-good snapshot. See exactly which sites, libraries, folders, and files were removed.',
+      'Group the affected content by site, department, and user. Surface the business-critical workspaces at the top of the list.',
+      'Confirm identity and admin integrity before any data restore, so the scenario does not silently include a privileged identity compromise.',
     ],
   },
   {
     num: '05', label: 'Recover', icon: GitBranch,
     color: 'from-blue-400 to-blue-500',
-    lede: 'Guided, identity-first restore in the safest business order.',
+    lede: 'Guided restore in a business-safe order.',
     points: [
-      'Phase A: Revert privileged role assignments. Remove attacker-added Global Admins and service principals.',
-      'Phase B: Restore conditional access, MFA enforcement, and OAuth grants to the last known-good state.',
-      'Phase C: Recover critical users first, then high-priority departments, then full business data.',
-      'Every restore action is logged and attributable. Broken changes can be rolled forward or reverted per object.',
+      'Restore identity controls first if any admin or policy drift is detected alongside the deletions.',
+      'Recover content for critical users, teams, and high-priority sites first. Executives, legal, finance, and compliance workspaces come back before broader tenant content.',
+      'Restore shared document libraries and department data next. Granular per-item restore avoids noisy full-site rollbacks when only part of a library was removed.',
+      'Complete broader tenant recovery after priority content is verified.',
     ],
   },
   {
@@ -84,37 +84,37 @@ const PHASES = [
     color: 'from-emerald-400 to-green-500',
     lede: 'Business recovery is confirmed with evidence.',
     points: [
-      'Checksums confirm data restore integrity. Policy-active checks confirm conditional access is enforcing again.',
-      'Sign-in tests verify privileged and critical users can authenticate cleanly.',
-      'A recovery report bundles the timeline, the actions taken, the evidence, and the snapshots used.',
+      'Checksum validation confirms restored files match the protected snapshot.',
+      'Access checks confirm the right users, groups, and sites can see the restored content.',
+      'A recovery report bundles the timeline, the restore actions, and the snapshots used, for post-incident review.',
     ],
   },
 ];
 
 const OUTCOMES = [
-  { icon: Activity, title: 'Faster recovery coordination', desc: 'Teams start from a computed blast radius and a pre-computed recovery plan instead of improvising under pressure.' },
-  { icon: Shield, title: 'Safer restore order', desc: 'Identity controls come back before data. Attackers lose their foothold before the tenant is fully restored.' },
-  { icon: FileSearch, title: 'Clearer blast radius understanding', desc: 'Identity and data diff-against-baseline make the actual scope of the incident visible, not assumed.' },
-  { icon: CheckCircle2, title: 'Stronger recovery confidence', desc: 'Recovery is scored with evidence. Leadership and security can sign off on "we are back" with a defensible artifact.' },
-  { icon: Lock, title: 'Better evidence for review', desc: 'A timestamped log of detected changes, decisions, and restores supports security, legal, and procurement review after the fact.' },
+  { icon: Activity, title: 'Faster coordination', desc: 'Teams work from a computed blast radius and a prioritized restore queue instead of triaging from user tickets and admin-center clicks.' },
+  { icon: FileSearch, title: 'Clearer view of affected content', desc: 'Specific sites, libraries, users, and files are identified. The team can brief leadership on scope with evidence, not estimates.' },
+  { icon: Shield, title: 'Safer restore prioritization', desc: 'Critical workspaces come back first. Business continuity is restored before lower-priority content is touched.' },
+  { icon: CheckCircle2, title: 'Reduced manual triage', desc: 'Cross-workload deletion patterns and identity correlation are surfaced directly. Less time in audit logs and admin centers.' },
+  { icon: Eye, title: 'Stronger recovery confidence and evidence', desc: 'Recovery is scored and logged. Security, compliance, and procurement reviewers have a clean artifact of what happened and how it was handled.' },
 ];
 
-export default function ScenarioGlobalAdmin() {
+export default function ScenarioDestructiveDeletion() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Helmet>
-        <title>Recovery Scenario — Compromised Global Admin in Microsoft 365 | KavachIQ</title>
-        <meta name="description" content="How identity-first recovery helps a Microsoft 365 team restore Entra controls, contain blast radius, recover critical users, and verify business recovery after a compromised Global Admin." />
-        <link rel="canonical" href="https://kavachiq.com/scenarios/compromised-global-admin" />
+        <title>Recovery Scenario — Destructive Deletion Across SharePoint and OneDrive | KavachIQ</title>
+        <meta name="description" content="How KavachIQ helps a Microsoft 365 team identify affected users, sites, and libraries, restore the right content in the right order, and verify recovery after a high-volume deletion event." />
+        <link rel="canonical" href="https://kavachiq.com/scenarios/destructive-sharepoint-onedrive-deletion" />
         <meta property="og:type" content="article" />
-        <meta property="og:url" content="https://kavachiq.com/scenarios/compromised-global-admin" />
-        <meta property="og:title" content="Recovery Scenario — Compromised Global Admin in Microsoft 365" />
-        <meta property="og:description" content="A concrete Microsoft 365 recovery scenario: privileged identity compromise, blast radius, identity-first restore, verified business recovery." />
-        <meta property="og:image" content="https://kavachiq.com/og-scenario-global-admin.jpg" />
+        <meta property="og:url" content="https://kavachiq.com/scenarios/destructive-sharepoint-onedrive-deletion" />
+        <meta property="og:title" content="Recovery Scenario — Destructive Deletion Across SharePoint and OneDrive" />
+        <meta property="og:description" content="A concrete Microsoft 365 recovery scenario: blast radius across sites and libraries, prioritized restore, verified business recovery." />
+        <meta property="og:image" content="https://kavachiq.com/og-scenario-destructive-deletion.jpg" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content="https://kavachiq.com/og-scenario-global-admin.jpg" />
-        <meta name="twitter:title" content="Recovery Scenario — Compromised Global Admin in Microsoft 365" />
-        <meta name="twitter:description" content="A concrete Microsoft 365 recovery scenario from privileged identity compromise through verified business recovery." />
+        <meta name="twitter:image" content="https://kavachiq.com/og-scenario-destructive-deletion.jpg" />
+        <meta name="twitter:title" content="Recovery Scenario — Destructive Deletion Across SharePoint and OneDrive" />
+        <meta name="twitter:description" content="A concrete Microsoft 365 recovery scenario from high-volume deletion through verified business recovery." />
       </Helmet>
 
       {/* Nav */}
@@ -149,20 +149,20 @@ export default function ScenarioGlobalAdmin() {
             <span>/</span>
             <span>Recovery scenarios</span>
             <span>/</span>
-            <span className="text-foreground">Compromised Global Admin</span>
+            <span className="text-foreground">Destructive deletion</span>
           </div>
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-rose-500/10 text-rose-400 rounded-full text-xs font-medium mb-5">
             <AlertTriangle className="w-3.5 h-3.5" />
             Illustrative recovery scenario
           </div>
           <h1 className="text-3xl md:text-5xl font-extrabold text-foreground leading-[1.1] tracking-tight mb-6">
-            Recovery scenario: compromised Global Admin in{' '}
+            Recovery scenario: destructive deletion across{' '}
             <span className="bg-gradient-to-r from-teal-500 to-cyan-500 bg-clip-text text-transparent">
-              Microsoft 365.
+              SharePoint and OneDrive.
             </span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-3xl mb-8 leading-relaxed">
-            See how identity-first recovery helps a Microsoft 365 team restore Entra controls, contain blast radius, recover critical users, and verify business recovery after a privileged identity compromise.
+            See how KavachIQ helps a Microsoft 365 team identify affected users, sites, libraries, and files, restore the right content in the right order, and verify recovery after a high-volume deletion event.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Link to="/contact" className="px-6 py-3 bg-teal-600 text-white font-semibold rounded-xl hover:bg-teal-700 transition-all hover:shadow-lg hover:shadow-teal-200/20 flex items-center gap-2">
@@ -173,10 +173,10 @@ export default function ScenarioGlobalAdmin() {
             </Link>
           </div>
           <p className="text-xs text-muted-foreground mt-6 max-w-2xl leading-relaxed">
-            This page describes an illustrative scenario. It is not a customer testimonial and does not contain fabricated metrics. It is intended to help Microsoft 365 teams, IT and security leaders, and procurement reviewers understand KavachIQ in the context of a realistic privileged identity compromise.
+            This page describes an illustrative scenario. It is not a customer testimonial and does not contain fabricated metrics. It is intended to help Microsoft 365 teams, IT and security leaders, and procurement reviewers understand KavachIQ in the context of a realistic high-volume deletion event.
           </p>
           <p className="text-sm text-muted-foreground mt-6">
-            Related: <Link to="/scenarios/destructive-sharepoint-onedrive-deletion" className="text-teal-500 hover:text-teal-400 underline underline-offset-2">Recovery scenario: destructive deletion across SharePoint and OneDrive</Link>
+            Related: <Link to="/scenarios/compromised-global-admin" className="text-teal-500 hover:text-teal-400 underline underline-offset-2">Recovery scenario: compromised Global Admin</Link>
           </p>
         </div>
       </section>
@@ -188,7 +188,7 @@ export default function ScenarioGlobalAdmin() {
             <div className="text-xs font-bold text-rose-400 tracking-widest mb-2">SECTION 1 · INCIDENT SETUP</div>
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">What the incident looks like in Microsoft 365</h2>
             <p className="text-muted-foreground max-w-3xl leading-relaxed">
-              A privileged identity is compromised. The attacker works inside Microsoft Entra and Microsoft 365 to establish persistence, expand access, and weaken the controls that would normally catch them.
+              A high-volume deletion event hits the tenant. Content disappears across SharePoint sites and OneDrive accounts. The cause could be a compromised identity, a mistaken admin action, or a runaway script or sync client. Recovery has to move forward while that is investigated.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -212,7 +212,7 @@ export default function ScenarioGlobalAdmin() {
             <div className="text-xs font-bold text-amber-400 tracking-widest mb-2">SECTION 2 · WHY MANUAL RECOVERY IS HARD</div>
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">Where teams run into trouble</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Most Microsoft 365 teams can eventually recover from this scenario. What makes it painful is the first few hours.
+              Most Microsoft 365 teams can eventually restore deleted content. What makes it painful is the first few hours.
             </p>
           </div>
           <div className="bg-card border border-border rounded-xl divide-y divide-border">
@@ -235,7 +235,7 @@ export default function ScenarioGlobalAdmin() {
             <div className="text-xs font-bold text-teal-500 tracking-widest mb-2">SECTION 3 · HOW KAVACHIQ HANDLES RECOVERY</div>
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">Six phases, applied to this incident</h2>
             <p className="text-muted-foreground max-w-3xl leading-relaxed">
-              KavachIQ runs the same six-phase workflow on every recovery. Applied to a compromised Global Admin, this is what each phase does.
+              KavachIQ runs the same six-phase workflow on every recovery. Applied to a high-volume deletion event, this is what each phase does.
             </p>
           </div>
           <div className="space-y-4">
@@ -267,22 +267,22 @@ export default function ScenarioGlobalAdmin() {
         </div>
       </section>
 
-      {/* 5. Identity-first recovery order */}
+      {/* 5. Recovery order for this incident */}
       <section className="py-16 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
-            <div className="text-xs font-bold text-teal-500 tracking-widest mb-2">SECTION 4 · IDENTITY-FIRST RECOVERY ORDER</div>
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">Why identity comes first, and in what order</h2>
+            <div className="text-xs font-bold text-teal-500 tracking-widest mb-2">SECTION 4 · RECOVERY ORDER</div>
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">Business-safe restore order for this incident</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Restoring mailboxes and files before restoring identity controls is not safe. The attacker still holds Global Admin or residual privileged access.
+              Identity-first thinking still applies. Confirm the control plane is trustworthy, then recover content in the order that restores business continuity fastest.
             </p>
           </div>
           <ol className="space-y-4">
             {[
-              { n: '01', t: 'Entra controls first', d: 'Privileged role assignments, conditional access policies, MFA enforcement, OAuth grants, service principals, administrative units, and security groups are reverted to the last known-good snapshot.' },
-              { n: '02', t: 'Critical users next', d: 'Executives, privileged-role holders, compliance and security owners, and finance leads are restored and verified first.' },
-              { n: '03', t: 'High-priority departments and sites', d: 'Directors, senior engineering, shared SharePoint sites, and legal repositories are recovered in the order their business criticality suggests.' },
-              { n: '04', t: 'Full business data, verified end-to-end', d: 'Remaining mailboxes, sites, Teams, and OneDrive content are restored. Checksums and sign-in tests confirm the tenant is actually back online.' },
+              { n: '01', t: 'Confirm identity and admin integrity', d: 'If any admin, role, or policy drift is detected alongside the deletions, restore Entra controls first. Do not restore data into a tenant whose control plane is still in question.' },
+              { n: '02', t: 'Critical users, teams, and high-priority sites', d: 'Executives, legal, finance, compliance, and incident-response workspaces are restored first. Their content unblocks decision-making for the rest of the recovery.' },
+              { n: '03', t: 'Shared document libraries and department data', d: 'Department sites, shared libraries, and active project workspaces are restored next. Granular per-item restore avoids full-site rollbacks when only part of a library was affected.' },
+              { n: '04', t: 'Broader tenant recovery, verified end-to-end', d: 'Remaining OneDrive accounts, secondary sites, and long-tail content are restored. Checksums and access checks confirm the tenant is actually back.' },
             ].map((x) => (
               <li key={x.n} className="flex gap-4">
                 <div className="w-10 h-10 rounded-full bg-teal-500/10 border border-teal-500/30 flex items-center justify-center shrink-0">
@@ -305,7 +305,7 @@ export default function ScenarioGlobalAdmin() {
             <div className="text-xs font-bold text-emerald-500 tracking-widest mb-2">SECTION 5 · OPERATIONAL OUTCOMES</div>
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">What changes for the team</h2>
             <p className="text-muted-foreground max-w-3xl leading-relaxed">
-              KavachIQ does not eliminate incidents. It changes how a Microsoft 365 team runs the recovery and how defensibly they can sign off on being back online.
+              KavachIQ does not prevent every deletion event. It changes how a Microsoft 365 team runs the recovery and how defensibly they can sign off on being back online.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -327,13 +327,13 @@ export default function ScenarioGlobalAdmin() {
         <div className="max-w-3xl mx-auto text-center text-white">
           <h2 className="text-3xl font-bold mb-4">Talk through your Microsoft 365 recovery scenario</h2>
           <p className="text-teal-100 mb-8 max-w-xl mx-auto leading-relaxed">
-            Walk the compromised Global Admin scenario, or your specific incident, with a KavachIQ recovery engineer. Bring the Entra, policy, and workload questions that matter for your tenant.
+            Walk the destructive-deletion scenario, or your specific incident, with a KavachIQ recovery engineer. Bring the site, library, OneDrive, and workflow details that matter for your tenant.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link to="/contact" className="inline-flex items-center gap-2 px-8 py-3.5 bg-white text-teal-700 font-semibold rounded-xl hover:bg-teal-50 transition-colors text-lg">
               Request a Demo <ArrowRight className="w-5 h-5" />
             </Link>
-            <Link to="/scenarios/destructive-sharepoint-onedrive-deletion" className="inline-flex items-center gap-2 px-8 py-3.5 border-2 border-white/30 text-white font-medium rounded-xl hover:bg-white/10 transition-colors text-lg">
+            <Link to="/scenarios/compromised-global-admin" className="inline-flex items-center gap-2 px-8 py-3.5 border-2 border-white/30 text-white font-medium rounded-xl hover:bg-white/10 transition-colors text-lg">
               Read another scenario
             </Link>
           </div>

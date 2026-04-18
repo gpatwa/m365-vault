@@ -28,7 +28,7 @@ const APP_ROUTES = [
   '/sla-policies', '/jobs', '/tenants', '/settings', '/msp', '/features',
   '/audit', '/failed-items', '/alerts', '/search', '/ediscovery',
   '/smart-engine', '/agent-shield', '/restore', '/recovery', '/reports',
-  '/usage', '/billing', '/security-posture', '/security', '/performance',
+  '/usage', '/billing', '/security-posture', '/performance',
   '/org-context', '/onboard',
 ];
 

@@ -37,8 +37,9 @@ export default function Docs() {
             <Shield className="w-6 h-6 text-blue-600" />
             <span className="font-bold text-foreground">KavachIQ</span>
           </Link>
-          <div className="flex items-center gap-3">
-            <a href={appUrl('/login')} className="hidden sm:inline text-sm text-muted-foreground hover:text-foreground">Sign In</a>
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <Link to="/security" className="hidden sm:inline hover:text-foreground">Security</Link>
+            <a href={appUrl('/login')} className="hidden sm:inline hover:text-foreground">Sign In</a>
             <Link to="/contact" className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">Request a Demo</Link>
           </div>
         </div>

@@ -9,14 +9,13 @@ import ThemeToggle from '../components/ThemeToggle';
 import { appUrl } from '../utils/appUrl';
 
 // ── Scroll animation ──
+// IntersectionObserver handles both initial and scroll-triggered visibility.
 function useInView(threshold = 0.1) {
   const ref = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const rect = el.getBoundingClientRect();
-    if (rect.top < window.innerHeight && rect.bottom > 0) { setInView(true); return; }
     const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setInView(true); }, { threshold, rootMargin: '50px' });
     obs.observe(el);
     return () => obs.disconnect();
@@ -311,9 +310,10 @@ export default function Tour() {
             <Shield className="w-6 h-6 text-teal-500" />
             <span className="font-bold text-lg text-foreground">KavachIQ</span>
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <Link to="/security" className="hidden md:inline hover:text-foreground">Security</Link>
             <ThemeToggle />
-            <a href={appUrl('/login')} className="hidden sm:inline text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <a href={appUrl('/login')} className="hidden sm:inline hover:text-foreground transition-colors">
               Sign In
             </a>
             <Link to="/contact" className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-500 flex items-center gap-1.5">
@@ -410,10 +410,16 @@ export default function Tour() {
               <Link to="/contact" className="px-6 py-3 bg-teal-600 text-white rounded-xl text-sm font-bold hover:bg-teal-500 flex items-center gap-2 shadow-lg shadow-teal-500/20">
                 Request a Demo <ArrowRight className="w-4 h-4" />
               </Link>
-              <Link to="/scenarios/compromised-global-admin" className="px-6 py-3 border border-border text-foreground rounded-xl text-sm font-semibold hover:bg-muted/50">
-                Read a recovery scenario
+              <Link to="/security" className="px-6 py-3 border border-border text-foreground rounded-xl text-sm font-semibold hover:bg-muted/50">
+                Review Security
               </Link>
             </div>
+            <p className="text-sm text-muted-foreground mt-6 max-w-xl mx-auto">
+              Or read a concrete narrative:{' '}
+              <Link to="/scenarios/compromised-global-admin" className="text-teal-500 hover:text-teal-400 underline underline-offset-2">compromised Global Admin</Link>
+              {' '}&middot;{' '}
+              <Link to="/scenarios/destructive-sharepoint-onedrive-deletion" className="text-teal-500 hover:text-teal-400 underline underline-offset-2">destructive deletion</Link>
+            </p>
             <p className="text-xs text-muted-foreground mt-4">
               Built on Microsoft Graph &middot; Tenant-scoped access &middot; SOC 2 / HIPAA / GDPR / DORA controls
             </p>

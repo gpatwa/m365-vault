@@ -55,8 +55,9 @@ export default function Contact() {
           </Link>
           <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
             <Link to="/welcome" className="hover:text-foreground">Home</Link>
-            <Link to="/about" className="hover:text-foreground">About</Link>
             <Link to="/tour" className="hover:text-foreground">Product Tour</Link>
+            <Link to="/security" className="hover:text-foreground">Security</Link>
+            <Link to="/about" className="hover:text-foreground">About</Link>
             <Link to="/contact" className="text-foreground font-medium">Contact</Link>
           </div>
           <div className="flex items-center gap-3">

@@ -21,7 +21,17 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://kavachiq.com/security</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://kavachiq.com/scenarios/compromised-global-admin</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://kavachiq.com/scenarios/destructive-sharepoint-onedrive-deletion</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

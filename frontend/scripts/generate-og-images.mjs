@@ -60,6 +60,22 @@ const PAGES = [
     subtitle: 'Identity-first recovery applied end-to-end: contain blast radius, restore Entra controls, recover critical users, verify business recovery.',
     badges: ['Protect → Verify', 'Entra-First Restore', 'Evidence-Based Sign-Off'],
   },
+  {
+    slug: 'scenario-destructive-deletion',
+    eyebrow: 'RECOVERY SCENARIO',
+    titleWhite: 'Destructive deletion across',
+    titleAccent: 'SharePoint and OneDrive.',
+    subtitle: 'Identify affected users, sites, libraries, and files. Restore the right content in the right order. Verify recovery with evidence.',
+    badges: ['Blast Radius Across Sites', 'Prioritized Restore', 'Verified Recovery'],
+  },
+  {
+    slug: 'security',
+    eyebrow: 'ENTERPRISE TRUST',
+    titleWhite: 'Enterprise security for',
+    titleAccent: 'Microsoft 365 cyber recovery.',
+    subtitle: 'Tenant-scoped access, encryption, immutability, auditability, and compliance-mapped controls from day one.',
+    badges: ['AES-256-GCM', 'Per-Tenant Keys', 'WORM · Audit Trail'],
+  },
 ];
 
 function html({ eyebrow, titleWhite, titleAccent, subtitle, badges }) {

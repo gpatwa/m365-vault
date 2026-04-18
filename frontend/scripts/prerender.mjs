@@ -21,7 +21,16 @@ const DIST = join(__dirname, '..', 'dist');
 const PRERENDERED = join(__dirname, '..', 'prerendered');
 const PORT = 4173;
 
-const ROUTES = ['/welcome', '/about', '/tour', '/contact', '/legal', '/scenarios/compromised-global-admin'];
+const ROUTES = [
+  '/welcome',
+  '/about',
+  '/tour',
+  '/contact',
+  '/legal',
+  '/security',
+  '/scenarios/compromised-global-admin',
+  '/scenarios/destructive-sharepoint-onedrive-deletion',
+];
 
 const MIME_TYPES = {
   '.html': 'text/html',

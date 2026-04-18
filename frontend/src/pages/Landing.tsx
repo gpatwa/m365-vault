@@ -11,17 +11,15 @@ import ThemeToggle from '../components/ThemeToggle';
 import { appUrl } from '../utils/appUrl';
 
 // ── Scroll animation hook ──
+// IntersectionObserver handles both initial (already-in-view) and scroll-triggered
+// visibility. The observer fires on the first animation frame after observe(), so
+// elements already in the viewport animate in within ~16ms.
 function useInView(threshold = 0.05) {
   const ref = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const rect = el.getBoundingClientRect();
-    if (rect.top < window.innerHeight + 100 && rect.bottom > -100) {
-      setInView(true);
-      return;
-    }
     const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setInView(true); }, { threshold, rootMargin: '100px 0px' });
     obs.observe(el);
     return () => obs.disconnect();
@@ -301,7 +299,7 @@ export default function Landing() {
             <a href="#platform" className="hover:text-foreground">Platform</a>
             <a href="#how-it-works" className="hover:text-foreground">How It Works</a>
             <Link to="/tour" className="hover:text-foreground">Product Tour</Link>
-            <a href="#security" className="hover:text-foreground">Security</a>
+            <Link to="/security" className="hover:text-foreground">Security</Link>
             <Link to="/about" className="hover:text-foreground">About</Link>
             <Link to="/contact" className="hover:text-foreground">Contact</Link>
           </div>
@@ -653,8 +651,8 @@ export default function Landing() {
             ))}
           </div>
           <div className="text-center mt-6">
-            <Link to="/docs" className="text-sm text-teal-500 hover:text-teal-400 font-medium">
-              Security documentation <ChevronRight className="w-3.5 h-3.5 inline" />
+            <Link to="/security" className="text-sm text-teal-500 hover:text-teal-400 font-medium">
+              View full security posture <ChevronRight className="w-3.5 h-3.5 inline" />
             </Link>
           </div>
         </div>
@@ -675,9 +673,13 @@ export default function Landing() {
               </Link>
             </div>
             <p className="mt-6 text-sm text-teal-100">
-              Or read a concrete narrative:{' '}
+              Or read a recovery scenario:{' '}
               <Link to="/scenarios/compromised-global-admin" className="underline underline-offset-2 hover:text-white">
-                Recovery scenario — compromised Global Admin
+                compromised Global Admin
+              </Link>
+              {' '}&middot;{' '}
+              <Link to="/scenarios/destructive-sharepoint-onedrive-deletion" className="underline underline-offset-2 hover:text-white">
+                destructive deletion
               </Link>
             </p>
           </FadeUp>
@@ -687,8 +689,8 @@ export default function Landing() {
       {/* ═══ FOOTER ═══ */}
       <footer className="py-12 px-6 bg-muted text-muted-foreground">
         <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
-            <div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-8">
+            <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-2 mb-4">
                 <Shield className="w-5 h-5 text-teal-400" />
                 <span className="font-semibold text-foreground">KavachIQ</span>
@@ -705,9 +707,15 @@ export default function Landing() {
                 <a href="#platform" className="block hover:text-foreground">Platform</a>
                 <a href="#how-it-works" className="block hover:text-foreground">How It Works</a>
                 <Link to="/tour" className="block hover:text-foreground">Product Tour</Link>
-                <Link to="/scenarios/compromised-global-admin" className="block hover:text-foreground">Recovery Scenario</Link>
-                <a href="#security" className="block hover:text-foreground">Security</a>
+                <Link to="/security" className="block hover:text-foreground">Security</Link>
                 <Link to="/docs" className="block hover:text-foreground">Documentation</Link>
+              </div>
+            </div>
+            <div>
+              <div className="text-xs font-semibold text-foreground uppercase tracking-wider mb-3">Recovery Scenarios</div>
+              <div className="space-y-2 text-sm">
+                <Link to="/scenarios/compromised-global-admin" className="block hover:text-foreground">Compromised Global Admin</Link>
+                <Link to="/scenarios/destructive-sharepoint-onedrive-deletion" className="block hover:text-foreground">Destructive Deletion</Link>
               </div>
             </div>
             <div>

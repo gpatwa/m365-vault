@@ -52,6 +52,14 @@ const PAGES = [
     subtitle: 'Walk through a recovery scenario with a KavachIQ engineer. Demo, sales, and security paths available.',
     badges: ['Demo-Led', 'Procurement Ready', 'hello@kavachiq.com'],
   },
+  {
+    slug: 'scenario-global-admin',
+    eyebrow: 'RECOVERY SCENARIO',
+    titleWhite: 'Compromised Global Admin',
+    titleAccent: 'in Microsoft 365.',
+    subtitle: 'Identity-first recovery applied end-to-end: contain blast radius, restore Entra controls, recover critical users, verify business recovery.',
+    badges: ['Protect → Verify', 'Entra-First Restore', 'Evidence-Based Sign-Off'],
+  },
 ];
 
 function html({ eyebrow, titleWhite, titleAccent, subtitle, badges }) {

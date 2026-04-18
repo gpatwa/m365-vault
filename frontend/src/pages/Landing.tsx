@@ -674,6 +674,12 @@ export default function Landing() {
                 See the Product Tour
               </Link>
             </div>
+            <p className="mt-6 text-sm text-teal-100">
+              Or read a concrete narrative:{' '}
+              <Link to="/scenarios/compromised-global-admin" className="underline underline-offset-2 hover:text-white">
+                Recovery scenario — compromised Global Admin
+              </Link>
+            </p>
           </FadeUp>
         </div>
       </section>
@@ -699,6 +705,7 @@ export default function Landing() {
                 <a href="#platform" className="block hover:text-foreground">Platform</a>
                 <a href="#how-it-works" className="block hover:text-foreground">How It Works</a>
                 <Link to="/tour" className="block hover:text-foreground">Product Tour</Link>
+                <Link to="/scenarios/compromised-global-admin" className="block hover:text-foreground">Recovery Scenario</Link>
                 <a href="#security" className="block hover:text-foreground">Security</a>
                 <Link to="/docs" className="block hover:text-foreground">Documentation</Link>
               </div>

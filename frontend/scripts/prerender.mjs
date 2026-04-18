@@ -21,7 +21,7 @@ const DIST = join(__dirname, '..', 'dist');
 const PRERENDERED = join(__dirname, '..', 'prerendered');
 const PORT = 4173;
 
-const ROUTES = ['/welcome', '/about', '/tour', '/contact', '/legal'];
+const ROUTES = ['/welcome', '/about', '/tour', '/contact', '/legal', '/scenarios/compromised-global-admin'];
 
 const MIME_TYPES = {
   '.html': 'text/html',

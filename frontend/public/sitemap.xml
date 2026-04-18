@@ -21,6 +21,11 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://kavachiq.com/scenarios/compromised-global-admin</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://kavachiq.com/legal</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>

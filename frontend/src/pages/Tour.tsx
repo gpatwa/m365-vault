@@ -410,8 +410,8 @@ export default function Tour() {
               <Link to="/contact" className="px-6 py-3 bg-teal-600 text-white rounded-xl text-sm font-bold hover:bg-teal-500 flex items-center gap-2 shadow-lg shadow-teal-500/20">
                 Request a Demo <ArrowRight className="w-4 h-4" />
               </Link>
-              <Link to="/welcome" className="px-6 py-3 border border-border text-foreground rounded-xl text-sm font-semibold hover:bg-muted/50">
-                Learn More
+              <Link to="/scenarios/compromised-global-admin" className="px-6 py-3 border border-border text-foreground rounded-xl text-sm font-semibold hover:bg-muted/50">
+                Read a recovery scenario
               </Link>
             </div>
             <p className="text-xs text-muted-foreground mt-4">

@@ -420,18 +420,18 @@ export default function Landing() {
         <div className="max-w-5xl mx-auto">
           <FadeUp>
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-foreground">What KavachIQ does</h2>
-              <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">A focused recovery workflow for Microsoft 365.</p>
+              <h2 className="text-3xl font-bold text-foreground">A six-phase recovery workflow for Microsoft 365</h2>
+              <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">Protect, Monitor, Detect, Assess, Recover, Verify. Each phase is purpose-built for identity-first Microsoft 365 recovery.</p>
             </div>
           </FadeUp>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              { step: '01', title: 'Protect', desc: 'Capture identity and workload state across Microsoft Entra, Exchange, OneDrive, SharePoint, and Teams.' },
-              { step: '02', title: 'Capture', desc: 'Snapshot configuration: policies, roles, groups, OAuth grants, and data.' },
-              { step: '03', title: 'Assess', desc: 'Detect anomalies. Compute blast radius. Diff identity and data state across snapshots.' },
-              { step: '04', title: 'Guide', desc: 'Produce a business-safe recovery plan: identity first, critical users next, business data after.' },
-              { step: '05', title: 'Recover', desc: 'Execute guided restore and rollback actions across Entra and M365 workloads.' },
-              { step: '06', title: 'Verify', desc: 'Validate recovery with checksums, policy-active checks, and sign-in confirmation.' },
+              { step: '01', title: 'Protect', desc: 'Capture protected identity and workload state across Microsoft Entra and Microsoft 365. Snapshot policies, roles, groups, OAuth grants, and data.' },
+              { step: '02', title: 'Monitor', desc: 'Track ongoing workload and identity activity. Baselines for change rate, privileged role counts, and conditional access drift.' },
+              { step: '03', title: 'Detect', desc: 'Flag destructive changes, ransomware-like activity, and suspicious identity drift with evidence.' },
+              { step: '04', title: 'Assess', desc: 'Compute blast radius. Diff state across snapshots. Identify affected users, identities, policies, and workloads.' },
+              { step: '05', title: 'Recover', desc: 'Execute identity-first restore and rollback in the safest business order. Guided by pre-computed recovery plans.' },
+              { step: '06', title: 'Verify', desc: 'Confirm business recovery with checksum validation, policy-active checks, and sign-in validation.' },
             ].map((s, i) => (
               <FadeUp key={s.title} delay={i * 100}>
                 <div className="bg-card border border-border rounded-xl p-5 h-full">

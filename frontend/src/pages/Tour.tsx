@@ -134,7 +134,7 @@ function SceneAttack() {
         {[
           { time: '09:14 AM', event: 'Suspicious login from unfamiliar IP (Kazakhstan)', icon: AlertTriangle, show: phase >= 1 },
           { time: '09:17 AM', event: '1,847 Exchange items renamed to .encrypted', icon: XCircle, show: phase >= 2 },
-          { time: '09:18 AM', event: 'KavachIQ Smart Engine: Z-score 8.4 — anomaly flagged', icon: Brain, show: phase >= 3 },
+          { time: '09:18 AM', event: 'KavachIQ detects destructive change. Z-score 8.4 flagged across OneDrive.', icon: Brain, show: phase >= 3 },
           { time: '09:19 AM', event: 'Auto-snapshot triggered, recovery point secured', icon: Shield, show: phase >= 4 },
         ].map((evt, i) => (
           <div key={i} className={`flex items-start gap-3 px-3 py-2 rounded-lg transition-all duration-500 ${evt.show ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'} ${i <= 1 ? 'bg-red-500/5 border border-red-500/10' : i === 2 ? 'bg-amber-500/5 border border-amber-500/10' : 'bg-green-500/5 border border-green-500/10'}`}>
@@ -265,23 +265,23 @@ const SCENES = [
   },
   {
     id: 'criticality',
-    badge: 'SMART ENGINE',
-    title: 'AI-Powered Criticality Scoring',
-    description: 'Automatically ranks users by business impact. CEO recovered first, interns last. No manual configuration needed.',
+    badge: 'CRITICALITY SCORING',
+    title: 'Criticality scoring based on business impact',
+    description: 'Score every user and system by role weight, data sensitivity, activity, and business dependency. Recovery order reflects who and what actually matters.',
     Component: SceneCriticality,
   },
   {
     id: 'attack',
     badge: 'THREAT DETECTION',
-    title: 'Ransomware Hits. KavachIQ Responds.',
-    description: 'Smart Engine detects anomalies in real-time. Auto-snapshots secure your recovery point before damage spreads.',
+    title: 'Detect destructive change. Secure the last clean recovery point.',
+    description: 'KavachIQ flags ransomware-like activity and suspicious identity drift, then isolates a clean snapshot before damage spreads.',
     Component: SceneAttack,
   },
   {
     id: 'recovery',
-    badge: 'ONE-CLICK RECOVERY',
-    title: 'Identity-First, NIST-Ordered Recovery',
-    description: 'Restore Entra ID first (roles, policies, MFA), then critical users, then everyone. Full recovery in 170 minutes.',
+    badge: 'IDENTITY-FIRST RECOVERY',
+    title: 'Identity-first, NIST-ordered recovery',
+    description: 'Restore Entra controls first. Recover critical users next. Bring business data back online in the safest order.',
     Component: SceneRecovery,
   },
 ];

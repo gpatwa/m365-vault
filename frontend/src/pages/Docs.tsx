@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Shield, FileText, Download, ExternalLink, Lock, Server, BookOpen, ShieldCheck, Activity, Zap } from 'lucide-react';
+import { appUrl } from '../utils/appUrl';
 
 const DOCS = [
   {
@@ -37,8 +38,8 @@ export default function Docs() {
             <span className="font-bold text-foreground">KavachIQ</span>
           </Link>
           <div className="flex items-center gap-3">
-            <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">Sign In</Link>
-            <Link to="/login" className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">Start Free</Link>
+            <a href={appUrl('/login')} className="hidden sm:inline text-sm text-muted-foreground hover:text-foreground">Sign In</a>
+            <Link to="/contact" className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">Request a Demo</Link>
           </div>
         </div>
       </nav>

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 import { Shield, ArrowLeft, FileText } from 'lucide-react';
 import { api } from '../api/client';
+import { appUrl } from '../utils/appUrl';
 import mermaid from 'mermaid';
 
 mermaid.initialize({
@@ -138,7 +139,8 @@ export default function DocViewer() {
             <Link to="/docs" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
               <ArrowLeft className="w-3.5 h-3.5" /> All Docs
             </Link>
-            <Link to="/login" className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">Start Free</Link>
+            <a href={appUrl('/login')} className="hidden sm:inline text-sm text-muted-foreground hover:text-foreground">Sign In</a>
+            <Link to="/contact" className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">Request a Demo</Link>
           </div>
         </div>
       </nav>

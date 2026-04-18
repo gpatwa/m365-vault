@@ -292,17 +292,17 @@ export default function Tour() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Helmet>
-        <title>Product Tour — KavachIQ M365 Backup in Action</title>
-        <meta name="description" content="Interactive product tour: see how KavachIQ protects Microsoft 365 data and recovers from ransomware. Live dashboard, smart engine, threat detection, one-click recovery." />
+        <title>Product Tour — KavachIQ Identity-First M365 Recovery</title>
+        <meta name="description" content="Interactive product tour. See how KavachIQ detects disruptive changes, assesses blast radius, and recovers Microsoft 365 in identity-first order." />
         <link rel="canonical" href="https://kavachiq.com/tour" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://kavachiq.com/tour" />
-        <meta property="og:title" content="Product Tour — KavachIQ M365 Backup in Action" />
-        <meta property="og:description" content="See how KavachIQ detects ransomware, scores user criticality, and recovers your Microsoft 365 data — identity first." />
+        <meta property="og:title" content="Product Tour — KavachIQ Identity-First M365 Recovery" />
+        <meta property="og:description" content="See how KavachIQ detects disruptive changes, assesses blast radius, and recovers Microsoft 365 in identity-first order." />
         <meta property="og:image" content="https://kavachiq.com/og-tour.jpg" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Product Tour — KavachIQ M365 Backup in Action" />
-        <meta name="twitter:description" content="See how KavachIQ detects ransomware and recovers your Microsoft 365 data — identity first." />
+        <meta name="twitter:title" content="Product Tour — KavachIQ Identity-First M365 Recovery" />
+        <meta name="twitter:description" content="See how KavachIQ detects disruptive changes, assesses blast radius, and recovers Microsoft 365 in identity-first order." />
       </Helmet>
       {/* Nav */}
       <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
@@ -313,12 +313,12 @@ export default function Tour() {
           </Link>
           <div className="flex items-center gap-3">
             <ThemeToggle />
-            <a href={appUrl('/login')} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <a href={appUrl('/login')} className="hidden sm:inline text-sm text-muted-foreground hover:text-foreground transition-colors">
               Sign In
             </a>
-            <a href={appUrl('/login?register=true')} className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-500 flex items-center gap-1.5">
-              Start Free <ArrowRight className="w-3.5 h-3.5" />
-            </a>
+            <Link to="/contact" className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-500 flex items-center gap-1.5">
+              Request a Demo <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
         </div>
       </nav>
@@ -401,21 +401,21 @@ export default function Tour() {
         <FadeUp>
           <div className="bg-gradient-to-r from-teal-500/10 to-cyan-500/10 border border-teal-500/20 rounded-2xl p-8 md:p-12 text-center">
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-              Ready to Protect Your Data?
+              See this with your Microsoft 365 environment
             </h2>
             <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
-              Free for up to 25 objects. No credit card required. Connect your Microsoft 365 in under 3 minutes.
+              Request a walkthrough with a recovery engineer. We will cover Entra ID recovery, blast radius analysis, and your specific incident scenarios.
             </p>
-            <div className="flex items-center justify-center gap-4">
-              <a href={appUrl('/login?register=true')} className="px-6 py-3 bg-teal-600 text-white rounded-xl text-sm font-bold hover:bg-teal-500 flex items-center gap-2 shadow-lg shadow-teal-500/20">
-                Start Free <ArrowRight className="w-4 h-4" />
-              </a>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link to="/contact" className="px-6 py-3 bg-teal-600 text-white rounded-xl text-sm font-bold hover:bg-teal-500 flex items-center gap-2 shadow-lg shadow-teal-500/20">
+                Request a Demo <ArrowRight className="w-4 h-4" />
+              </Link>
               <Link to="/welcome" className="px-6 py-3 border border-border text-foreground rounded-xl text-sm font-semibold hover:bg-muted/50">
                 Learn More
               </Link>
             </div>
             <p className="text-xs text-muted-foreground mt-4">
-              Free &middot; No credit card &middot; Setup in 3 minutes &middot; SOC 2 ready
+              Built on Microsoft Graph &middot; Tenant-scoped access &middot; SOC 2 / HIPAA / GDPR / DORA controls
             </p>
           </div>
         </FadeUp>

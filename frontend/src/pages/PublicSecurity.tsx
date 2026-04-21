@@ -76,6 +76,7 @@ const DATA_LIFECYCLE: { num: string; icon: typeof Network; stage: string; lede: 
     num: '03', icon: Database, stage: 'Store',
     lede: 'Snapshots are protected by encryption and immutability.',
     points: [
+      'Customer recovery data is stored in Microsoft Azure Storage in the region configured for the deployment.',
       'Encryption at rest uses AES-256-GCM. Each tenant has its own data encryption key, wrapped by a master key.',
       'Snapshots under a WORM-enabled SLA are locked for the retention window. Deletion is blocked at the storage and API layers until the lock expires.',
       'Storage is tenant-scoped. A tenant key compromise cannot expose another tenant.',

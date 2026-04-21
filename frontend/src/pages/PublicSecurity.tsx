@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import {
   Shield, ArrowRight, Lock, KeyRound, Archive, Users, FileText, Eye,
   CheckCircle2, Activity, ShieldCheck, Server, GitBranch, ChevronRight,
+  Network, Camera, Database, RefreshCw,
 } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
 import { appUrl } from '../utils/appUrl';
@@ -52,6 +53,63 @@ const COMPLIANCE = [
   { icon: '🏦', framework: 'DORA', detail: 'Digital Operational Resilience Act controls for financial-sector operational recovery mapped against KavachIQ capabilities.' },
 ];
 
+const DATA_LIFECYCLE: { num: string; icon: typeof Network; stage: string; lede: string; points: string[] }[] = [
+  {
+    num: '01', icon: Network, stage: 'Connect',
+    lede: 'Tenant-scoped access through Microsoft Graph.',
+    points: [
+      'Connection uses Microsoft Entra OAuth admin consent. No passwords are seen or stored.',
+      'Each workload has its own consent URL that grants only the least-privilege scopes it needs.',
+      'Access is scoped to a specific tenant. Cross-tenant operations require platform-admin privileges and produce an audit record.',
+    ],
+  },
+  {
+    num: '02', icon: Camera, stage: 'Capture',
+    lede: 'Identity and workload state are snapshotted on a schedule.',
+    points: [
+      'Microsoft Entra: 12 object types including users, groups, roles, conditional access policies, OAuth grants, service principals, and administrative units.',
+      'Microsoft 365 workloads: Exchange Online, OneDrive, SharePoint, and Teams. Granular per-item state is preserved.',
+      'Signals needed for blast radius and recovery sequencing (change counts, privilege shifts, deletion patterns) are computed at capture time.',
+    ],
+  },
+  {
+    num: '03', icon: Database, stage: 'Store',
+    lede: 'Snapshots are protected by encryption and immutability.',
+    points: [
+      'Encryption at rest uses AES-256-GCM. Each tenant has its own data encryption key, wrapped by a master key.',
+      'Snapshots under a WORM-enabled SLA are locked for the retention window. Deletion is blocked at the storage and API layers until the lock expires.',
+      'Storage is tenant-scoped. A tenant key compromise cannot expose another tenant.',
+    ],
+  },
+  {
+    num: '04', icon: RefreshCw, stage: 'Recover',
+    lede: 'Restore and rollback actions run through guided, controlled workflows.',
+    points: [
+      'Role-based access gates destructive actions. Platform admin, MSP admin, tenant admin, and viewer roles are least-privilege by default.',
+      'Recovery follows identity-first order: Entra controls first, critical users next, high-priority content, then broader tenant recovery.',
+      'Every restore action is attributable per object and produces an audit record before and after execution.',
+    ],
+  },
+  {
+    num: '05', icon: CheckCircle2, stage: 'Verify',
+    lede: 'Recovery ends with evidence, not just a completed job.',
+    points: [
+      'Checksum validation confirms restored data matches the protected snapshot.',
+      'Policy-active checks confirm Entra controls like conditional access are enforcing again.',
+      'Sign-in validation verifies privileged and critical users can authenticate cleanly. A recovery report bundles the timeline, actions, and snapshots used.',
+    ],
+  },
+  {
+    num: '06', icon: FileText, stage: 'Audit',
+    lede: 'Every privileged action is logged and reviewable.',
+    points: [
+      'Audit records capture timestamp, user, tenant, action, and result for every privileged API and UI action.',
+      'Audit records are exportable for security, compliance, and incident review.',
+      'Deeper review artifacts and questionnaire responses can be requested through security@kavachiq.com.',
+    ],
+  },
+];
+
 const ARCHITECTURE = [
   { icon: Server, title: 'Deployed on Azure', desc: 'Primary deployment is on Microsoft Azure Container Apps with Azure Storage and Azure Database for PostgreSQL.' },
   { icon: GitBranch, title: 'Control plane and data plane', desc: 'Control plane (API, scheduler, UI) is separate from the data plane (snapshot storage). Snapshots live in tenant-scoped, per-tenant-encrypted storage.' },
@@ -66,11 +124,11 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: 'How is customer access scoped and isolated by tenant?',
-    a: 'Every backup, snapshot, restore job, and audit record is scoped to a specific tenant. API calls and UI actions carry an explicit tenant context. Each tenant has its own data encryption key wrapped by a master key, so a tenant key compromise cannot expose another tenant.',
+    a: 'Every backup, snapshot, restore job, and audit record is scoped to a specific tenant. API calls and UI actions carry an explicit tenant context. Each tenant has its own data encryption key wrapped by a master key, so a tenant key compromise cannot expose another tenant. See the Connect and Store stages in the Data handling section for the end-to-end view.',
   },
   {
     q: 'How are backups protected from deletion or tampering?',
-    a: 'Snapshots under a WORM-enabled SLA are locked for the retention window. Deletion is blocked at the storage and API layers until the lock expires. Privileged override requires platform-admin credentials and produces an audit record.',
+    a: 'Snapshots under a WORM-enabled SLA are locked for the retention window. Deletion is blocked at the storage and API layers until the lock expires. Privileged override requires platform-admin credentials and produces an audit record. The Store stage in the Data handling section describes this in context.',
   },
   {
     q: 'What evidence do you provide to verify recovery?',
@@ -161,7 +219,10 @@ export default function PublicSecurity() {
             </a>
           </div>
           <p className="text-sm text-muted-foreground mt-6">
-            Jump to: <a href="#faq" className="text-teal-500 hover:text-teal-400 underline underline-offset-2">Procurement FAQ</a>
+            Jump to:{' '}
+            <a href="#data-handling" className="text-teal-500 hover:text-teal-400 underline underline-offset-2">Data handling</a>
+            {' '}&middot;{' '}
+            <a href="#faq" className="text-teal-500 hover:text-teal-400 underline underline-offset-2">Procurement FAQ</a>
           </p>
         </div>
       </section>
@@ -214,8 +275,50 @@ export default function PublicSecurity() {
         </div>
       </section>
 
+      {/* Tenant data handling lifecycle */}
+      <section id="data-handling" className="py-16 px-6 bg-muted/30">
+        <div className="max-w-5xl mx-auto">
+          <div className="mb-10">
+            <div className="text-xs font-bold text-teal-500 tracking-widest mb-2">TENANT DATA HANDLING</div>
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">What KavachIQ does with tenant data, end to end</h2>
+            <p className="text-muted-foreground max-w-3xl leading-relaxed">
+              Six stages that describe the practical lifecycle of tenant data and recovery workflows in KavachIQ. Each stage states what is accessed, what is stored or computed, and how it is protected or controlled.
+            </p>
+          </div>
+          <div className="space-y-4">
+            {DATA_LIFECYCLE.map((stage) => (
+              <div key={stage.num} className="bg-card border border-border rounded-xl p-5 md:p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-11 h-11 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shrink-0">
+                    <stage.icon className="w-5 h-5 text-teal-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-1.5">
+                      <span className="text-xs font-bold text-muted-foreground tracking-widest">STAGE {stage.num}</span>
+                      <span className="text-lg font-bold text-foreground">{stage.stage}</span>
+                    </div>
+                    <p className="text-sm text-foreground font-medium mb-3">{stage.lede}</p>
+                    <ul className="space-y-2">
+                      {stage.points.map((pt, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground leading-relaxed">
+                          <CheckCircle2 className="w-4 h-4 text-teal-500 mt-0.5 shrink-0" />
+                          <span>{pt}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground mt-6 max-w-3xl leading-relaxed">
+            For environment-specific retention, residency, or data-processing questions, route requests through <a href="mailto:security@kavachiq.com" className="text-teal-500 hover:text-teal-400">security@kavachiq.com</a>.
+          </p>
+        </div>
+      </section>
+
       {/* Compliance */}
-      <section className="py-16 px-6 bg-muted/30">
+      <section className="py-16 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="mb-10">
             <div className="text-xs font-bold text-teal-500 tracking-widest mb-2">COMPLIANCE AND REVIEW</div>
@@ -242,7 +345,7 @@ export default function PublicSecurity() {
       </section>
 
       {/* Architecture trust signals */}
-      <section className="py-16 px-6">
+      <section className="py-16 px-6 bg-muted/30">
         <div className="max-w-5xl mx-auto">
           <div className="mb-10">
             <div className="text-xs font-bold text-teal-500 tracking-widest mb-2">DEPLOYMENT ARCHITECTURE</div>
@@ -266,7 +369,7 @@ export default function PublicSecurity() {
       </section>
 
       {/* Procurement FAQ */}
-      <section id="faq" className="py-16 px-6 bg-muted/30">
+      <section id="faq" className="py-16 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="mb-10">
             <div className="text-xs font-bold text-teal-500 tracking-widest mb-2">PROCUREMENT FAQ</div>
@@ -295,7 +398,7 @@ export default function PublicSecurity() {
       </section>
 
       {/* Follow-up */}
-      <section className="py-16 px-6">
+      <section className="py-16 px-6 bg-muted/30">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
             <div className="text-xs font-bold text-teal-500 tracking-widest mb-2">NEXT STEPS</div>

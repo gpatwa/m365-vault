@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import {
   Shield, ArrowRight, Lock, KeyRound, Archive, Users, FileText, Eye,
-  CheckCircle2, Activity, ShieldCheck, Server, GitBranch,
+  CheckCircle2, Activity, ShieldCheck, Server, GitBranch, ChevronRight,
 } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
 import { appUrl } from '../utils/appUrl';
@@ -57,6 +57,41 @@ const ARCHITECTURE = [
   { icon: GitBranch, title: 'Control plane and data plane', desc: 'Control plane (API, scheduler, UI) is separate from the data plane (snapshot storage). Snapshots live in tenant-scoped, per-tenant-encrypted storage.' },
   { icon: Activity, title: 'Microsoft Graph integration', desc: 'Built on Microsoft Graph for Entra, Exchange, OneDrive, SharePoint, and Teams. Permissions use least-privilege scopes per workload.' },
   { icon: FileText, title: 'API and onboarding', desc: 'Documented API for tenant onboarding, workload enablement, and restore operations. OAuth admin consent handles permission grants.' },
+];
+
+const FAQ: { q: string; a: string }[] = [
+  {
+    q: 'Do you store our Microsoft 365 credentials?',
+    a: 'No. KavachIQ uses Microsoft Entra OAuth admin consent. Your Global Admin approves scoped access, and only a tenant-scoped API token is used. Passwords are never seen or stored.',
+  },
+  {
+    q: 'How is customer access scoped and isolated by tenant?',
+    a: 'Every backup, snapshot, restore job, and audit record is scoped to a specific tenant. API calls and UI actions carry an explicit tenant context. Each tenant has its own data encryption key wrapped by a master key, so a tenant key compromise cannot expose another tenant.',
+  },
+  {
+    q: 'How are backups protected from deletion or tampering?',
+    a: 'Snapshots under a WORM-enabled SLA are locked for the retention window. Deletion is blocked at the storage and API layers until the lock expires. Privileged override requires platform-admin credentials and produces an audit record.',
+  },
+  {
+    q: 'What evidence do you provide to verify recovery?',
+    a: 'Recovery verification includes checksum validation against the protected snapshot, policy-active checks that confirm conditional access is enforcing again, and sign-in validation for privileged and critical users. A recovery report bundles the timeline, actions taken, and snapshots used.',
+  },
+  {
+    q: 'What security and compliance documentation can we review?',
+    a: 'Public documentation covers security architecture, tenant security, compliance mapping (SOC 2, GDPR, HIPAA, DORA), and API reference. Formal artifacts such as a SOC 2 report, DPA, or vendor-risk questionnaire responses should be requested through security@kavachiq.com.',
+  },
+  {
+    q: 'How do security and procurement teams engage with KavachIQ?',
+    a: 'Route vendor-risk questionnaires, audit artifact requests, and DPA reviews to security@kavachiq.com. For evaluation walkthroughs with an engineer, request a demo. Expect a reply within one business day.',
+  },
+  {
+    q: 'What Microsoft 365 workloads and Entra objects are in scope?',
+    a: 'Microsoft Entra (12 object types including users, groups, roles, conditional access, OAuth grants, service principals, and administrative units), Exchange Online, OneDrive, SharePoint, and Teams. Each workload has a scoped consent URL that grants only the permissions it needs.',
+  },
+  {
+    q: 'How is access to recovery actions controlled and audited?',
+    a: 'Role-based access gates destructive actions. Platform admin, MSP admin, tenant admin, and viewer roles are least-privilege by default. Every privileged action is logged with timestamp, user, tenant, and result. Audit records are exportable for security and compliance review.',
+  },
 ];
 
 export default function PublicSecurity() {
@@ -125,6 +160,9 @@ export default function PublicSecurity() {
               Security &amp; Procurement
             </a>
           </div>
+          <p className="text-sm text-muted-foreground mt-6">
+            Jump to: <a href="#faq" className="text-teal-500 hover:text-teal-400 underline underline-offset-2">Procurement FAQ</a>
+          </p>
         </div>
       </section>
 
@@ -227,8 +265,37 @@ export default function PublicSecurity() {
         </div>
       </section>
 
+      {/* Procurement FAQ */}
+      <section id="faq" className="py-16 px-6 bg-muted/30">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-10">
+            <div className="text-xs font-bold text-teal-500 tracking-widest mb-2">PROCUREMENT FAQ</div>
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">Questions we hear from security and procurement teams</h2>
+            <p className="text-muted-foreground max-w-3xl leading-relaxed">
+              Short, specific answers to the questions that come up during vendor evaluation. For formal artifacts and questionnaire responses, use the security contact path below.
+            </p>
+          </div>
+          <div className="space-y-3">
+            {FAQ.map((item, i) => (
+              <details key={i} className="group bg-card border border-border rounded-xl overflow-hidden hover:border-teal-500/30 transition-all">
+                <summary className="flex items-center justify-between gap-4 px-5 py-4 cursor-pointer text-foreground font-medium text-sm">
+                  <span>{item.q}</span>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground transition-transform group-open:rotate-90 shrink-0" />
+                </summary>
+                <div className="px-5 pb-5 text-sm text-muted-foreground leading-relaxed">
+                  {item.a}
+                </div>
+              </details>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground mt-6 max-w-3xl leading-relaxed">
+            If a question specific to your environment is not covered here, reach out at <a href="mailto:security@kavachiq.com" className="text-teal-500 hover:text-teal-400">security@kavachiq.com</a>.
+          </p>
+        </div>
+      </section>
+
       {/* Follow-up */}
-      <section className="py-16 px-6 bg-muted/30">
+      <section className="py-16 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
             <div className="text-xs font-bold text-teal-500 tracking-widest mb-2">NEXT STEPS</div>

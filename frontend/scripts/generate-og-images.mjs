@@ -69,6 +69,14 @@ const PAGES = [
     badges: ['Blast Radius Across Sites', 'Prioritized Restore', 'Verified Recovery'],
   },
   {
+    slug: 'scenario-bulk-mailbox-deletion',
+    eyebrow: 'RECOVERY SCENARIO',
+    titleWhite: 'Bulk mailbox deletion and',
+    titleAccent: 'retention drift in Microsoft 365.',
+    subtitle: 'Recover mailboxes past the native window, restore the right retention posture, and produce evidence for compliance review.',
+    badges: ['Past Native Windows', 'Retention Posture Verified', 'Compliance Evidence'],
+  },
+  {
     slug: 'security',
     eyebrow: 'ENTERPRISE TRUST',
     titleWhite: 'Enterprise security for',

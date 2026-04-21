@@ -30,6 +30,7 @@ const ROUTES = [
   '/security',
   '/scenarios/compromised-global-admin',
   '/scenarios/destructive-sharepoint-onedrive-deletion',
+  '/scenarios/bulk-mailbox-deletion-retention-drift',
 ];
 
 const MIME_TYPES = {

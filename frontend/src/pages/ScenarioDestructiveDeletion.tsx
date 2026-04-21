@@ -176,7 +176,10 @@ export default function ScenarioDestructiveDeletion() {
             This page describes an illustrative scenario. It is not a customer testimonial and does not contain fabricated metrics. It is intended to help Microsoft 365 teams, IT and security leaders, and procurement reviewers understand KavachIQ in the context of a realistic high-volume deletion event.
           </p>
           <p className="text-sm text-muted-foreground mt-6">
-            Related: <Link to="/scenarios/compromised-global-admin" className="text-teal-500 hover:text-teal-400 underline underline-offset-2">Recovery scenario: compromised Global Admin</Link>
+            Related:{' '}
+            <Link to="/scenarios/compromised-global-admin" className="text-teal-500 hover:text-teal-400 underline underline-offset-2">compromised Global Admin</Link>
+            {' '}&middot;{' '}
+            <Link to="/scenarios/bulk-mailbox-deletion-retention-drift" className="text-teal-500 hover:text-teal-400 underline underline-offset-2">bulk mailbox deletion and retention drift</Link>
           </p>
         </div>
       </section>

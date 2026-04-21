@@ -681,6 +681,10 @@ export default function Landing() {
               <Link to="/scenarios/destructive-sharepoint-onedrive-deletion" className="underline underline-offset-2 hover:text-white">
                 destructive deletion
               </Link>
+              {' '}&middot;{' '}
+              <Link to="/scenarios/bulk-mailbox-deletion-retention-drift" className="underline underline-offset-2 hover:text-white">
+                bulk mailbox deletion
+              </Link>
             </p>
           </FadeUp>
         </div>
@@ -716,6 +720,7 @@ export default function Landing() {
               <div className="space-y-2 text-sm">
                 <Link to="/scenarios/compromised-global-admin" className="block hover:text-foreground">Compromised Global Admin</Link>
                 <Link to="/scenarios/destructive-sharepoint-onedrive-deletion" className="block hover:text-foreground">Destructive Deletion</Link>
+                <Link to="/scenarios/bulk-mailbox-deletion-retention-drift" className="block hover:text-foreground">Bulk Mailbox Deletion</Link>
               </div>
             </div>
             <div>

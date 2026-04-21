@@ -419,6 +419,8 @@ export default function Tour() {
               <Link to="/scenarios/compromised-global-admin" className="text-teal-500 hover:text-teal-400 underline underline-offset-2">compromised Global Admin</Link>
               {' '}&middot;{' '}
               <Link to="/scenarios/destructive-sharepoint-onedrive-deletion" className="text-teal-500 hover:text-teal-400 underline underline-offset-2">destructive deletion</Link>
+              {' '}&middot;{' '}
+              <Link to="/scenarios/bulk-mailbox-deletion-retention-drift" className="text-teal-500 hover:text-teal-400 underline underline-offset-2">bulk mailbox deletion</Link>
             </p>
             <p className="text-xs text-muted-foreground mt-4">
               Built on Microsoft Graph &middot; Tenant-scoped access &middot; SOC 2 / HIPAA / GDPR / DORA controls

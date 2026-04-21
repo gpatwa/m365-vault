@@ -137,7 +137,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: 'What security and compliance documentation can we review?',
-    a: 'Public documentation covers security architecture, tenant security, compliance mapping (SOC 2, GDPR, HIPAA, DORA), and API reference. Formal artifacts such as a SOC 2 report, DPA, or vendor-risk questionnaire responses should be requested through security@kavachiq.com.',
+    a: 'Public documentation covers security architecture, tenant security, compliance mapping (SOC 2, GDPR, HIPAA, DORA), and API reference. Formal artifacts such as a data processing agreement (DPA), SOC 2 report, or vendor-risk questionnaire responses should be requested through security@kavachiq.com.',
   },
   {
     q: 'How do security and procurement teams engage with KavachIQ?',

@@ -673,18 +673,11 @@ export default function Landing() {
               </Link>
             </div>
             <p className="mt-6 text-sm text-teal-100">
-              Or read a recovery scenario:{' '}
-              <Link to="/scenarios/compromised-global-admin" className="underline underline-offset-2 hover:text-white">
-                compromised Global Admin
+              Or browse{' '}
+              <Link to="/scenarios" className="underline underline-offset-2 hover:text-white">
+                our recovery scenarios
               </Link>
-              {' '}&middot;{' '}
-              <Link to="/scenarios/destructive-sharepoint-onedrive-deletion" className="underline underline-offset-2 hover:text-white">
-                destructive deletion
-              </Link>
-              {' '}&middot;{' '}
-              <Link to="/scenarios/bulk-mailbox-deletion-retention-drift" className="underline underline-offset-2 hover:text-white">
-                bulk mailbox deletion
-              </Link>
+              {' '}for concrete narratives.
             </p>
           </FadeUp>
         </div>
@@ -716,11 +709,12 @@ export default function Landing() {
               </div>
             </div>
             <div>
-              <div className="text-xs font-semibold text-foreground uppercase tracking-wider mb-3">Recovery Scenarios</div>
+              <Link to="/scenarios" className="text-xs font-semibold text-foreground uppercase tracking-wider mb-3 block hover:text-teal-400">Recovery Scenarios</Link>
               <div className="space-y-2 text-sm">
                 <Link to="/scenarios/compromised-global-admin" className="block hover:text-foreground">Compromised Global Admin</Link>
                 <Link to="/scenarios/destructive-sharepoint-onedrive-deletion" className="block hover:text-foreground">Destructive Deletion</Link>
                 <Link to="/scenarios/bulk-mailbox-deletion-retention-drift" className="block hover:text-foreground">Bulk Mailbox Deletion</Link>
+                <Link to="/scenarios" className="block text-teal-500 hover:text-teal-400">All scenarios →</Link>
               </div>
             </div>
             <div>

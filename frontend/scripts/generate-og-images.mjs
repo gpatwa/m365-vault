@@ -53,6 +53,14 @@ const PAGES = [
     badges: ['Demo-Led', 'Procurement Ready', 'hello@kavachiq.com'],
   },
   {
+    slug: 'scenarios',
+    eyebrow: 'ILLUSTRATIVE RECOVERY SCENARIOS',
+    titleWhite: 'Recovery scenarios for',
+    titleAccent: 'Microsoft 365.',
+    subtitle: 'Operator-grade walkthroughs of identity-first cyber recovery for common Microsoft 365 incidents.',
+    badges: ['Identity Compromise', 'Destructive Deletion', 'Bulk Mailbox Loss'],
+  },
+  {
     slug: 'scenario-global-admin',
     eyebrow: 'RECOVERY SCENARIO',
     titleWhite: 'Compromised Global Admin',

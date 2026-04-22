@@ -415,12 +415,9 @@ export default function Tour() {
               </Link>
             </div>
             <p className="text-sm text-muted-foreground mt-6 max-w-xl mx-auto">
-              Or read a concrete narrative:{' '}
-              <Link to="/scenarios/compromised-global-admin" className="text-teal-500 hover:text-teal-400 underline underline-offset-2">compromised Global Admin</Link>
-              {' '}&middot;{' '}
-              <Link to="/scenarios/destructive-sharepoint-onedrive-deletion" className="text-teal-500 hover:text-teal-400 underline underline-offset-2">destructive deletion</Link>
-              {' '}&middot;{' '}
-              <Link to="/scenarios/bulk-mailbox-deletion-retention-drift" className="text-teal-500 hover:text-teal-400 underline underline-offset-2">bulk mailbox deletion</Link>
+              Or browse{' '}
+              <Link to="/scenarios" className="text-teal-500 hover:text-teal-400 underline underline-offset-2">our recovery scenarios</Link>
+              {' '}for concrete narratives.
             </p>
             <p className="text-xs text-muted-foreground mt-4">
               Built on Microsoft Graph &middot; Tenant-scoped access &middot; SOC 2 / HIPAA / GDPR / DORA controls

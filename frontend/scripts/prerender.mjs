@@ -28,6 +28,7 @@ const ROUTES = [
   '/contact',
   '/legal',
   '/security',
+  '/scenarios',
   '/scenarios/compromised-global-admin',
   '/scenarios/destructive-sharepoint-onedrive-deletion',
   '/scenarios/bulk-mailbox-deletion-retention-drift',

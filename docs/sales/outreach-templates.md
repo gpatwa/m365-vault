@@ -1,76 +1,91 @@
 # LinkedIn & Email Outreach Templates
 
+> **Strategic anchor**: KavachIQ is the identity-first cyber recovery platform for Microsoft Entra and Microsoft 365. Every template here positions on that. Do not reintroduce pricing-led hooks, free-tier anchors, or anti-Microsoft framing.
+>
+> **Default ask**: a short conversation, not a "free signup" or "10-minute setup." Route serious responses to a 30-minute walkthrough at <https://kavachiq.com/contact>.
+
 ---
 
 ## 1. LinkedIn Connection Request (Generic)
 
-> Hi [Name], I work with IT teams at [healthcare clinics / law firms / financial services firms] on Microsoft 365 data protection. I noticed we share some connections in the space — would love to connect and exchange ideas. Looking forward to it.
+> Hi [Name], I work with Microsoft 365 and Entra teams on identity-first cyber recovery — the recovery side of incidents that touch both identity and data. We have some shared connections in the M365 / security space; would be glad to connect and trade notes.
 
 ---
 
 ## 2. LinkedIn Message: Healthcare IT Manager
 
-**Subject angle:** M365 backup beyond the recycle bin
+**Subject angle:** Identity-first recovery in M365 environments holding ePHI
 
-> Hi [Name], quick question — does your clinic have a backup solution for M365 data beyond Microsoft's built-in recycle bin? I ask because we keep hearing from healthcare IT teams that their HIPAA auditors are flagging the recycle bin as insufficient for ePHI backup. We built KavachIQ specifically for this — encrypted, immutable M365 backup starting at $1.50/user. It's free for up to 25 users if you want to test it. Would it be worth a 10-minute look?
+> Hi [Name], quick question — when your team thinks about Microsoft 365 recovery for ePHI, do you have a clear order in mind for restoring identity controls (Entra roles, conditional access, MFA) before restoring patient data? We work with healthcare IT teams on identity-first cyber recovery for Microsoft 365 — the operational recovery layer on top of whatever backup tooling is already in place. Worth a 20-minute conversation if it fits your evaluation calendar?
 
 ---
 
 ## 3. LinkedIn Message: Law Firm IT
 
-**Subject angle:** Legal hold on M365 data
+**Subject angle:** Recovery order for case files and privileged identity in M365
 
-> Hi [Name], how does your firm currently handle legal hold on Microsoft 365 data? We've been talking to a lot of law firm IT teams who are frustrated that Microsoft's native retention tools don't provide true WORM immutability or a defensible chain of custody for eDiscovery. KavachIQ adds legal hold, cross-workload search, and immutable backup on top of M365 — without changing your existing setup. Would it make sense to show you a quick demo?
-
----
-
-## 4. LinkedIn Message: Finance/Accounting IT
-
-**Subject angle:** M365 backup for SOX compliance
-
-> Hi [Name], quick question — when your SOX auditor asks about M365 backup and recoverability, what do you point them to? We built KavachIQ because Microsoft's native tools don't produce the compliance evidence that auditors expect — things like recovery confidence scores, encryption attestations, and tamper-proof retention logs. It's free for 25 users and takes about 10 minutes to set up. Worth a look?
+> Hi [Name], how does your firm handle Microsoft 365 recovery if a privileged identity is compromised — for example, a Global Admin account that touches matter sites and partner mailboxes? We help law firm IT teams recover from incidents that mix identity changes and destructive data events in M365: restore Entra controls first, recover priority matters next, then verify with audit-ready evidence. Open to a short walkthrough if useful.
 
 ---
 
-## 5. Follow-Up Message (5 Days After No Reply)
+## 4. LinkedIn Message: Finance / Accounting IT
 
-> Hi [Name], just circling back on my earlier message. I know M365 backup isn't the most exciting topic, but it tends to become urgent fast — usually right after an accidental deletion or a compliance audit finding. If the timing isn't right, no worries at all. But if you'd like to see what a purpose-built M365 backup looks like, I'm happy to do a quick 10-minute walkthrough. What does your calendar look like this week?
+**Subject angle:** Identity-first M365 recovery under SOX / SOC 2 / DORA
+
+> Hi [Name], when your auditor asks not "do you have backup?" but "show me a recovery, with evidence" — how does your team answer that for Microsoft 365? We work with financial-services IT and security teams on identity-first cyber recovery: privileged Entra controls restored before records-bearing data, recovery sequenced for critical functions first, with verification artifacts mapped to SOC 2, FINRA, and DORA controls. Worth a short call?
 
 ---
 
-## 6. Email to HIPAA Compliance Consultant
+## 5. Follow-Up Message (5 Business Days After No Reply)
 
-**Subject:** Your clients may have an M365 backup gap — let's fix it together
+> Hi [Name], circling back. M365 recovery posture rarely feels urgent until an actual incident — a privileged identity compromise, a destructive change in SharePoint, a bulk mailbox deletion. If the timing is not right, no problem at all. If it is, here is a concrete narrative your team can read in 5 minutes that shows how a real recovery unfolds: <https://kavachiq.com/scenarios/compromised-global-admin>. Happy to walk it together if that lands.
+
+---
+
+## 6. Email to a HIPAA / Compliance Consultant
+
+**Subject:** Microsoft 365 recovery context for your healthcare clients
 
 > Hi [Name],
 >
-> I'm reaching out because I suspect many of your healthcare clients are relying on Microsoft's recycle bin as their M365 "backup" — which doesn't satisfy the technical safeguards under 45 CFR 164.312 for ePHI protection. We built KavachIQ to close exactly this gap: AES-256-GCM encrypted, WORM immutable, fully auditable M365 backup starting at $1.50/user/month (free for up to 25 users).
+> Reaching out because your healthcare clients running Microsoft 365 likely face the same recovery question we hear from every regulated team: not "do we have a backup?" but "if a privileged identity is compromised or a bulk deletion event hits, do we know the order to restore in, and can we produce evidence the recovery is complete?"
 >
-> We're looking for compliance consultants who want to offer their clients a concrete remediation path when backup gaps come up in risk assessments. Would you be open to a 15-minute call to see if there's a fit?
+> KavachIQ is an identity-first cyber recovery platform for Microsoft Entra and Microsoft 365. We restore Entra controls before patient data and verify recovery with evidence that maps to HIPAA technical safeguards. Mapping is internal documentation, not a substitute for a formal HIPAA audit; SOC 2 reports, BAAs, and questionnaire responses route through security@kavachiq.com.
+>
+> Would a 20-minute conversation be useful, in case it fits remediation paths you recommend after a risk assessment?
 >
 > Best,
 > [Your name]
+>
+> One-page overview, forwardable: <https://kavachiq.com/overview>
 
 ---
 
-## 7. Email to SOC 2 Auditor
+## 7. Email to a SOC 2 / Compliance Auditor
 
-**Subject:** KavachIQ as a remediation tool for M365 backup findings
+**Subject:** Microsoft 365 recovery as a remediation path for audit findings
 
 > Hi [Name],
 >
-> When your audit clients get flagged for insufficient M365 backup controls — no independent backup, no encryption attestation, no recovery testing — what do you typically recommend? We built KavachIQ as a purpose-built remediation tool for exactly these findings: per-tenant AES-256 encryption, WORM immutable storage, automated recovery confidence scoring, and exportable audit reports that map directly to SOC 2 Trust Services Criteria.
+> When your audit clients get findings related to Microsoft 365 recovery — unclear restore order after a privileged identity compromise, missing recovery evidence, retention drift after a destructive event — what do you typically point them toward?
 >
-> It deploys in under 10 minutes and starts at $1.50/user/month. Would it be useful to have in your remediation toolkit? Happy to walk you through it.
+> KavachIQ is an identity-first cyber recovery platform for Microsoft Entra and Microsoft 365. Sixteen controls mapped to SOC 2 Trust Services Criteria; recovery verification produces an evidence artifact (checksums, policy-active checks, sign-in validation) that supports your clients' control-effectiveness narrative. Mapping is internal documentation; formal audit artifacts route through security@kavachiq.com.
+>
+> Would it be useful to walk through what KavachIQ produces for a typical recovery scenario? About 30 minutes.
 >
 > Best,
 > [Your name]
+>
+> Security and trust controls: <https://kavachiq.com/security>
 
 ---
 
 ## Usage Notes
 
-- Personalize the bracketed fields before sending.
-- Keep connection requests under 300 characters (LinkedIn limit).
-- Send follow-ups 5 business days after the initial message.
-- Track responses in your CRM to measure which vertical and angle converts best.
+- **Personalize the bracketed fields before sending.** Generic blasts get ignored.
+- **LinkedIn connection requests under 300 characters.** Template 1 is sized for that.
+- **Send follow-ups 5 business days after the initial message.** One follow-up only — do not overrun.
+- **Default landing page**: <https://kavachiq.com/contact> for a demo conversation, <https://kavachiq.com/overview> as a forwardable one-pager.
+- **Do not reintroduce off-strategy hooks**: no "$X/user", no "free for 25 users", no "10-minute setup", no "Microsoft's recycle bin doesn't...". Those reads contradict the live site and the founder demo script.
+- **Track responses in CRM** by template number and vertical so the highest-converting angles surface.
+- **If a prospect raises a specific scenario in their reply**, switch to the matching scenario URL in your next message: `compromised-global-admin`, `destructive-sharepoint-onedrive-deletion`, or `bulk-mailbox-deletion-retention-drift`. Index at <https://kavachiq.com/scenarios>.

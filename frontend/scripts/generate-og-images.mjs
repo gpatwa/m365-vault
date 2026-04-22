@@ -53,6 +53,14 @@ const PAGES = [
     badges: ['Demo-Led', 'Procurement Ready', 'hello@kavachiq.com'],
   },
   {
+    slug: 'overview',
+    eyebrow: 'ONE-PAGE OVERVIEW',
+    titleWhite: 'Identity-first cyber recovery for',
+    titleAccent: 'Microsoft Entra and Microsoft 365.',
+    subtitle: 'What KavachIQ is, who it is for, and why identity-first recovery matters. Forwardable after a call.',
+    badges: ['Purpose-Built for M365', 'Entra-First', 'Enterprise Trust'],
+  },
+  {
     slug: 'scenarios',
     eyebrow: 'ILLUSTRATIVE RECOVERY SCENARIOS',
     titleWhite: 'Recovery scenarios for',

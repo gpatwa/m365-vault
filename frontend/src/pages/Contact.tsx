@@ -246,7 +246,7 @@ export default function Contact() {
               ))}
             </div>
             <p className="text-xs text-muted-foreground mt-5 max-w-2xl leading-relaxed">
-              Prefer to walk a scenario first? Browse <Link to="/scenarios" className="text-teal-500 hover:text-teal-400 underline underline-offset-2">our recovery scenarios</Link> or review the <Link to="/security" className="text-teal-500 hover:text-teal-400 underline underline-offset-2">security page</Link>.
+              Prefer to walk a scenario first? Browse <Link to="/scenarios" className="text-teal-500 hover:text-teal-400 underline underline-offset-2">our recovery scenarios</Link>, review the <Link to="/security" className="text-teal-500 hover:text-teal-400 underline underline-offset-2">security page</Link>, or read a <Link to="/overview" className="text-teal-500 hover:text-teal-400 underline underline-offset-2">one-page overview</Link>.
             </p>
           </div>
         </div>

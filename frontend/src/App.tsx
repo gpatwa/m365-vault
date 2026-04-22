@@ -40,6 +40,7 @@ import ScenarioGlobalAdmin from './pages/ScenarioGlobalAdmin';
 import ScenarioDestructiveDeletion from './pages/ScenarioDestructiveDeletion';
 import ScenarioBulkMailboxDeletion from './pages/ScenarioBulkMailboxDeletion';
 import ScenariosIndex from './pages/ScenariosIndex';
+import Overview from './pages/Overview';
 import PublicSecurity from './pages/PublicSecurity';
 import AgentShield from './pages/AgentShield';
 import ResetPassword from './pages/ResetPassword';
@@ -142,6 +143,7 @@ function AppRoutes() {
       <Route path="/scenarios/destructive-sharepoint-onedrive-deletion" element={<ScenarioDestructiveDeletion />} />
       <Route path="/scenarios/bulk-mailbox-deletion-retention-drift" element={<ScenarioBulkMailboxDeletion />} />
       <Route path="/scenarios" element={<ScenariosIndex />} />
+      <Route path="/overview" element={<Overview />} />
       <Route path="/security" element={<PublicSecurity />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/verify-email" element={<VerifyEmail />} />

@@ -161,6 +161,9 @@ export default function Contact() {
                   className="inline-flex items-center gap-2 px-4 py-2 bg-white text-teal-700 rounded-lg font-medium text-sm hover:bg-teal-50 transition-colors">
                   Request a Demo <ArrowRight className="w-4 h-4" />
                 </a>
+                <p className="text-xs text-teal-200/80 mt-4">
+                  Typical first call runs 30 minutes. Deeper technical walkthroughs: about 60.
+                </p>
               </div>
 
               <div className="bg-card border border-border rounded-2xl p-6 space-y-4">

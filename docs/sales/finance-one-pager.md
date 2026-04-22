@@ -1,58 +1,73 @@
-# KavachIQ for Financial Services — SOC 2 + SOX Ready M365 Backup
+# KavachIQ for Financial Services — Identity-First Cyber Recovery for Microsoft 365
+
+> KavachIQ is the identity-first cyber recovery platform for Microsoft Entra and Microsoft 365. For financial services firms, that means restoring privileged identity and policy controls before restoring data, and producing the operational evidence that SOX, SOC 2, FINRA, and DORA reviewers expect.
 
 ---
 
-## The Problem
+## What is at risk in financial services Microsoft 365 environments
 
-Financial services firms operate under overlapping regulatory frameworks — SEC, FINRA, SOX, and increasingly DORA for EU operations. Each requires demonstrable backup, retention, encryption, and audit controls for electronic records. Microsoft 365's native tools (recycle bin, retention policies, Purview) were not designed to produce the compliance evidence that auditors and regulators demand. When your SOX auditor asks for proof of backup recoverability or your FINRA examiner requests an encryption attestation, Microsoft's Shared Responsibility Model puts that burden squarely on you.
-
----
-
-## The Solution
-
-KavachIQ provides automated Microsoft 365 backup with built-in compliance controls — per-tenant encryption, auditable retention, recovery confidence scoring, and pre-mapped regulatory coverage. Deploy in minutes, prove compliance in your next audit.
+- **Privileged identity compromise.** A compromised Global Admin can disable MFA, modify conditional access, and grant service principals access to mailboxes and SharePoint that hold financial records and material non-public information.
+- **Destructive change in records-bearing workloads.** Bulk mailbox deletion, mass SharePoint deletion, or retention-policy drift can move records out of the recoverability window assumed by SOX, FINRA, and DORA.
+- **Operational resilience under DORA.** EU-regulated entities must demonstrate practical, testable recovery for ICT systems, including the Microsoft 365 platform their business depends on.
+- **Audit defensibility.** Auditors and examiners increasingly ask not "do you have a backup?" but "show me a recovery, with evidence." That artifact is hard to produce from native tools alone.
 
 ---
 
-## Key Features
+## Why backup alone is not enough for financial services
 
-| Feature | Value for Financial Services |
+Microsoft 365 retention and third-party backup tools preserve copies of mailboxes, sites, and increasingly Entra configuration. That matters. But under regulatory pressure, the question is operational: *what changed, who is affected, what do I restore first, and how do I prove we are actually back online for the next examination?*
+
+Restoring records-bearing data into a tenant whose privileged role assignments, conditional access, or OAuth grants are still drifting is not safe and not defensible. KavachIQ runs the recovery workflow on top of whatever backup tooling is already in place.
+
+---
+
+## Where identity-first recovery matters most in financial services
+
+- **Restore Entra controls before financial records.** Privileged role assignments, conditional access, MFA enforcement, OAuth grants, and admin units come back to a known-good state first. Records data is then restored into a control plane that is trustworthy.
+- **Recover critical functions next.** CFO, controller, compliance officers, trading desks, treasury, and incident-response leads come back ahead of broader user populations.
+- **Restore retention posture and holds alongside content.** Retention labels, retention policies, and any holds on records-bearing workloads are restored to the known-good state, not assumed intact.
+
+---
+
+## How KavachIQ fits a financial services M365 environment
+
+| Financial services concern | KavachIQ capability |
 |---|---|
-| **Per-Tenant Encryption** | AES-256-GCM with dedicated data encryption keys per tenant. Key management under your control — not Microsoft's. |
-| **Recovery Confidence Score** | Quantified, testable metric that proves backup recoverability to auditors. Run recovery tests without disrupting production. |
-| **SLA-Driven Retention** | Configure retention by workload, department, or regulatory requirement. Automatic enforcement prevents premature deletion. |
-| **DORA Compliance** | ICT risk management controls, operational resilience testing, and third-party oversight reporting for EU financial entities. |
-| **Anomaly Detection** | AI-powered monitoring flags bulk deletions, unusual access patterns, or configuration changes in real time. |
-| **Audit-Ready Reports** | Exportable compliance reports covering backup status, encryption state, retention adherence, and recovery test results. |
+| Privileged identity compromise that expands access to records and MNPI | **Entra Recovery** — snapshot and restore 12 Entra ID object types, including conditional access, role assignments, OAuth grants, and service principals |
+| Records loss past native recovery windows | **M365 Data Recovery** — point-in-time restore across Exchange, OneDrive, SharePoint, Teams; covers content beyond Microsoft 365's native windows |
+| Unclear blast radius across users, policies, and workloads | **Blast Radius Analysis** — diff identity and data state across snapshots to see exactly which users, sites, and policies were affected |
+| Operational resilience evidence for audit and examination | **Recovery Verification** — checksum validation, policy-active checks, sign-in tests, and a recovery report aligned to the kind of evidence reviewers expect |
+| Recovery sequencing under business pressure | **Guided Recovery Plans** — pre-computed, NIST SP 800-184-aligned plans refreshed on a schedule, ready before an incident |
 
 ---
 
-## Compliance Coverage
+## Compliance and review controls, mapped
 
-| Framework | How KavachIQ Helps |
+KavachIQ controls are mapped to common financial-sector frameworks. Mapping is internal documentation, not a substitute for a formal audit. SOC 2 reports, DPAs, and questionnaire responses are routed through the security contact below.
+
+| Framework | Mapped KavachIQ controls |
 |---|---|
-| **SOC 2 Type II** | Certified platform. Audit logs, encryption, access controls, and availability monitoring map directly to Trust Services Criteria. |
-| **SOX (Sarbanes-Oxley)** | Backup of financial records in Exchange and SharePoint with tamper-proof retention. Recovery confidence scoring proves IT general control effectiveness. |
-| **FINRA** | Books and records retention (Rules 4511, 3110). WORM storage satisfies immutability requirements for electronic communications. |
-| **DORA** | ICT third-party risk management, operational resilience testing, and incident reporting support for EU-regulated financial entities. |
-| **GDPR** | Data residency controls, encryption, right-to-erasure workflows, and data processing agreements. |
+| **SOC 2** | Access control, encryption, audit, change management, monitoring, incident response — 16 controls mapped to Trust Services Criteria |
+| **SOX (IT general controls)** | Access controls on records workloads, audit trail of every privileged action, recovery verification with evidence supporting the effectiveness of recovery procedures |
+| **FINRA Books and Records (Rules 4511, 17a-4)** | WORM-locked snapshots under SLA retention, point-in-time restore, exportable audit log for electronic-records review |
+| **DORA** | Operational resilience controls, ICT third-party support paths, recovery verification artifacts for testable recovery requirements |
+| **GDPR** | Tenant-scoped storage in the configured Azure region, right-to-erasure workflows, encryption and audit; DPA available through security@ |
 
 ---
 
-## Pricing
+## Proof to walk next
 
-| Plan | Price | Best For |
-|---|---|---|
-| **Professional** | $1.50/user/month | Small advisory firms needing encrypted backup with retention controls |
-| **Business** | $3.00/user/month | Mid-size firms requiring WORM storage, legal hold, and audit-ready reports |
-| **Enterprise** | $5.00/user/month | Regulated institutions needing self-hosted deployment, custom retention, and SLA guarantees |
-
-*Free tier available for up to 25 users — test with your compliance team before committing.*
+- **Closest scenario for financial services incidents**: <https://kavachiq.com/scenarios/compromised-global-admin>
+- **Live product walkthrough**: <https://kavachiq.com/tour>
+- **Security and trust controls**: <https://kavachiq.com/security>
+- **One-page overview, forwardable**: <https://kavachiq.com/overview>
 
 ---
 
-## Get Started
+## Next step
 
-Free for 25 users. Start today at **kavachiq.com**.
+Request a focused walkthrough of KavachIQ in your Microsoft 365 environment with a recovery engineer. Bring your CISO, internal audit lead, or DORA owner if helpful. Typical first call runs 30 minutes.
 
-Contact sales: **sales@kavachiq.com** | Book a demo: **kavachiq.com/demo**
+- **Request a demo**: <https://kavachiq.com/contact>
+- **Security and procurement (SOC 2 mapping, DPA, vendor-risk questionnaires)**: security@kavachiq.com
+- **General**: hello@kavachiq.com

@@ -1,60 +1,73 @@
-# KavachIQ for Law Firms — Immutable Backup with Legal Hold
+# KavachIQ for Law Firms — Identity-First Cyber Recovery for Microsoft 365
+
+> KavachIQ is the identity-first cyber recovery platform for Microsoft Entra and Microsoft 365. For law firms, that means restoring privileged identity and policy controls before restoring case files and client communications, and producing the evidence that supports ethical, regulatory, and discovery obligations.
 
 ---
 
-## The Problem
+## What is at risk in law firm Microsoft 365 environments
 
-Law firms handle privileged client communications, case files, and sensitive documents across Microsoft 365 every day. When a paralegal accidentally deletes a SharePoint case folder, or a departing attorney purges their mailbox, Microsoft's recycle bin offers a 93-day window with no guarantees — no immutability, no legal hold, and no defensible chain of custody. For firms subject to litigation holds, ethical obligations, or regulatory discovery requests, that is not enough.
-
----
-
-## The Solution
-
-KavachIQ delivers WORM (write-once, read-many) immutable storage with built-in legal hold, cross-workload eDiscovery search, and point-in-time restore — so your firm can protect client data, respond to discovery requests, and prove compliance with a clear audit trail.
+- **Privileged identity compromise.** A compromised Global Admin or modified conditional access can quietly expand access to mailboxes and SharePoint sites holding privileged client communications and case files.
+- **Destructive change in case workspaces.** A paralegal mistake, a departing attorney's purge, a compromised script, or a malicious actor can remove SharePoint case folders, OneDrive client files, or Teams channels in volume.
+- **Mailbox loss past native windows.** Departing-attorney mailboxes purged or beyond Microsoft 365's 30-day soft-delete window are not recoverable through native tools alone.
+- **Defensible chain of custody.** Litigation hold and electronic discovery require evidence of what existed, when, who changed it, and what was restored — not just that data was somewhere.
 
 ---
 
-## Key Features
+## Why backup alone is not enough for law firms
 
-| Feature | Why It Matters for Law Firms |
+Microsoft 365 retention and third-party backup tools preserve copies of mailboxes, sites, and increasingly Entra configuration. That matters. But under ethics rules, court orders, and discovery obligations, the question is operational: *what changed, who is affected, what do I restore first, and how do I prove it for a court submission or partner review?*
+
+Restoring case files into a tenant whose admin role assignments, conditional access, or OAuth grants are still drifting is unsafe. Under privilege and confidentiality obligations, it is also indefensible. KavachIQ runs the recovery workflow on top of whatever backup tooling is already in place.
+
+---
+
+## Where identity-first recovery matters most in law firms
+
+- **Restore Entra controls before client data.** Privileged role assignments, conditional access, MFA enforcement, OAuth grants, and security groups are reverted to a known-good state first. Client mailboxes and case workspaces are then restored into a control plane that is trustworthy.
+- **Recover privileged matters and partners next.** Managing partners, general counsel, ethics committee, and matter teams under active deadlines come back ahead of broader user populations.
+- **Restore retention and hold posture alongside content.** Litigation holds, retention labels, and matter-specific retention policies are restored to the known-good state, not assumed intact after a destructive event.
+
+---
+
+## How KavachIQ fits a law firm M365 environment
+
+| Law firm concern | KavachIQ capability |
 |---|---|
-| **Legal Hold** | Place indefinite holds on specific mailboxes, users, or sites that override normal retention policies. Data under hold cannot be modified or deleted. |
-| **eDiscovery Search** | Cross-workload search across Exchange, OneDrive, SharePoint, and Teams backups. Find relevant documents by date range, keyword, custodian, or metadata. |
-| **Entra ID Config Backup** | Protect privileged access configurations — Conditional Access policies, group memberships, and admin role assignments. Recover from accidental or malicious changes. |
-| **Self-Hosted Option** | Keep all backup data in your own infrastructure for full data sovereignty. No third-party cloud dependency. |
-| **Audit Trail** | Every backup, restore, hold, and search action is logged with identity, timestamp, and action detail — ready for compliance review or court submission. |
-| **Point-in-Time Restore** | Restore any mailbox, site, or drive to any point in time. Recover from ransomware, accidental deletion, or malicious purges. |
+| Privileged identity compromise that expands access to client confidential data | **Entra Recovery** — snapshot and restore 12 Entra ID object types, including conditional access, role assignments, OAuth grants, and service principals |
+| Case files and matter content removed across SharePoint, OneDrive, and Teams | **M365 Data Recovery** — point-in-time restore across all four data workloads; recovers content beyond Microsoft 365's native windows |
+| Unclear blast radius across users, sites, and matter teams | **Blast Radius Analysis** — diff identity and data state across snapshots to see which users, sites, and policies were affected |
+| Audit-ready evidence for court, ethics review, or partner sign-off | **Recovery Verification** — checksum validation, policy-active checks, sign-in tests, and a recovery report supporting chain-of-custody documentation |
+| Sequencing recovery under deadline pressure | **Guided Recovery Plans** — pre-computed, NIST SP 800-184-aligned plans refreshed on a schedule, ready before an incident |
 
 ---
 
-## Compliance
+## Compliance and ethical-obligation alignment
 
-| Standard | Status |
+KavachIQ controls are mapped to common frameworks and to the duties law firms operate under. Mapping is internal documentation, not a substitute for a formal audit. SOC 2 reports, DPAs, and questionnaire responses are routed through the security contact below.
+
+| Standard or duty | Alignment |
 |---|---|
-| **SOC 2 Type II** | Certified — security, availability, confidentiality |
-| **GDPR** | Data residency controls, right-to-erasure workflows |
-| **Data Residency** | Choose storage region. Self-hosted option for full geographic control. |
-| **ABA Model Rules** | Supports duties of competence (1.1), communication (1.4), and safekeeping (1.15) as they apply to electronic records. |
+| **SOC 2** | Access control, encryption, audit, change management, monitoring, incident response — 16 controls mapped to Trust Services Criteria |
+| **GDPR** | Tenant-scoped storage in the configured Azure region, right-to-erasure workflows, encryption and audit; DPA available through security@ |
+| **ABA Model Rule 1.1 (Competence)** | Operational recovery workflow that supports a firm's duty to maintain reasonable familiarity with the technology used to deliver legal services |
+| **ABA Model Rule 1.6 (Confidentiality)** | Tenant-scoped access, per-tenant encryption keys, audit trail of every privileged action |
+| **ABA Model Rule 1.15 (Safekeeping of property)** | WORM-locked snapshots, point-in-time restore, recovery verification with evidence |
 
 ---
 
-## Recommended Plan for Law Firms
+## Proof to walk next
 
-### Business — $3.00/user/month
-
-- WORM immutable storage
-- Legal hold with indefinite retention override
-- 1-year default retention (configurable)
-- eDiscovery cross-workload search
-- Full audit trail with exportable reports
-- All 5 workloads: Exchange, OneDrive, SharePoint, Teams, Entra ID
-
-*Enterprise ($5.00/user/month) available for firms requiring self-hosted deployment or custom retention policies.*
+- **Closest scenario for law firm incidents**: <https://kavachiq.com/scenarios/destructive-sharepoint-onedrive-deletion>
+- **Live product walkthrough**: <https://kavachiq.com/tour>
+- **Security and trust controls**: <https://kavachiq.com/security>
+- **One-page overview, forwardable**: <https://kavachiq.com/overview>
 
 ---
 
-## Schedule a Demo
+## Next step
 
-See how KavachIQ protects client privilege and simplifies legal hold.
+Request a focused walkthrough of KavachIQ in your firm's Microsoft 365 environment with a recovery engineer. Bring your IT lead, ethics counsel, or eDiscovery owner if helpful. Typical first call runs 30 minutes.
 
-**kavachiq.com/demo** | **sales@kavachiq.com**
+- **Request a demo**: <https://kavachiq.com/contact>
+- **Security and procurement (SOC 2 mapping, DPA, vendor-risk questionnaires)**: security@kavachiq.com
+- **General**: hello@kavachiq.com

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Shield, Mail, Linkedin, ArrowRight, Send, Calendar, Lock, Users } from 'lucide-react';
+import { Shield, Mail, Linkedin, ArrowRight, Send, Calendar, Lock, Users, Server, FileSearch, KeyRound, ShieldCheck } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
 import { appUrl } from '../utils/appUrl';
 
@@ -199,6 +199,52 @@ export default function Contact() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* What to expect in the demo */}
+          <div className="mt-16">
+            <div className="mb-8">
+              <div className="text-xs font-bold text-teal-500 tracking-widest mb-2">WHAT TO EXPECT IN THE DEMO</div>
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">A practical walkthrough, built around your environment</h2>
+              <p className="text-muted-foreground max-w-2xl leading-relaxed">
+                A first demo is a working conversation with a KavachIQ recovery engineer. Bring your Microsoft 365 tenant details, a real incident scenario, or a procurement question. The agenda adapts to what you actually need.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                {
+                  icon: Server,
+                  title: 'Your environment and incident scope',
+                  desc: 'Start from your Microsoft 365 tenant, workloads in scope, and the kind of incident you care about: ransomware, destructive change, mailbox loss, or identity compromise.',
+                },
+                {
+                  icon: FileSearch,
+                  title: 'Blast radius and recovery workflow',
+                  desc: 'See how KavachIQ computes blast radius across identity and data, and how the six-phase Protect to Verify workflow applies to your case.',
+                },
+                {
+                  icon: KeyRound,
+                  title: 'Identity-first recovery order',
+                  desc: 'Walk through how Microsoft Entra controls are restored before data, and how critical users come back ahead of broader business recovery.',
+                },
+                {
+                  icon: ShieldCheck,
+                  title: 'Security, controls, and next steps',
+                  desc: 'Review tenant isolation, encryption, immutability, and audit. Route deeper security and procurement questions through the right path.',
+                },
+              ].map((item) => (
+                <div key={item.title} className="bg-card border border-border rounded-xl p-5 h-full">
+                  <div className="w-9 h-9 rounded-lg bg-teal-500/10 flex items-center justify-center mb-3">
+                    <item.icon className="w-5 h-5 text-teal-400" />
+                  </div>
+                  <h3 className="font-semibold text-foreground text-sm mb-1.5">{item.title}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-5 max-w-2xl leading-relaxed">
+              Prefer to walk a scenario first? Browse <Link to="/scenarios" className="text-teal-500 hover:text-teal-400 underline underline-offset-2">our recovery scenarios</Link> or review the <Link to="/security" className="text-teal-500 hover:text-teal-400 underline underline-offset-2">security page</Link>.
+            </p>
           </div>
         </div>
       </div>

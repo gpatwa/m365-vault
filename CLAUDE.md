@@ -96,6 +96,72 @@ The `docker-compose.yml` also sets `platform: linux/amd64` on backend and fronte
 | `make az-cleanup` | Full Azure teardown + state reset |
 | `make bootstrap` | One-time Azure + GitHub setup |
 
+## Azure Dev Environment — Dormant Mode (cost-optimized)
+
+The dev Azure environment is intentionally **stripped to the data plane** to minimize idle cost (~$22/month vs ~$81/month with full stack). Marketing (`kavachiq.com` on Cloudflare Pages) is unaffected.
+
+### What's deleted vs kept
+
+**Deleted** (rebuildable via terraform + safe-deploy):
+- Container Apps environment `cae-m365vault-dev`
+- 3 container apps: `m365vault-backend-dev`, `m365vault-worker-dev`, `m365vault-frontend-dev`
+- PostgreSQL Flexible Server `pg-kavachiq-dev` (data lost — fresh DB on rebuild)
+
+**Kept** (data plane + always-on minimums):
+- Redis `redis-m365vault-dev` (Basic C0, ~$16/mo — Basic tier can't be stopped)
+- ACR `acrm365vaultdev` (Basic, ~$5/mo — image registry)
+- Storage Account `stm365vaultdev` (snapshot blobs from prior runs, if any)
+- Key Vault `kv-m365vault-dev` (secrets)
+- Log Analytics `log-m365vault-dev` (under free tier)
+
+### Side effects of dormant mode
+
+- `app.kavachiq.com` returns an error (no Azure backend). Marketing Sign In button on `kavachiq.com` will route to a broken URL until cold-wake. Acceptable for pre-customer phase.
+- `api.kavachiq.com` returns an error.
+- Marketing site `kavachiq.com` (Cloudflare Pages) **stays up**.
+- All `docs/sales/` assets, scenarios, security page, etc. remain live.
+
+### Cold-wake runbook (~30–60 minutes)
+
+When you need to bring the dev app back for a demo or evaluation:
+
+```bash
+# 1. Recreate infrastructure (Container Apps env + apps + Postgres) via terraform
+make tf-apply ENV=dev   # ~10 min
+
+# 2. Build + push images, then deploy revisions
+make safe-deploy ENV=dev   # ~15 min
+
+# 3. Run database migrations on the fresh Postgres
+make db-migrate ENV=dev   # ~2 min
+
+# 4. (Manual, Azure portal) Re-bind custom domains — these are NOT in terraform:
+#    Container Apps → m365vault-backend-dev → Custom domains → add api.kavachiq.com
+#    Container Apps → m365vault-frontend-dev → Custom domains → add app.kavachiq.com
+#    Each binding waits 5–15 min for managed cert issuance.
+#    Cloudflare DNS CNAMEs already point to the Azure FQDNs — no DNS changes needed.
+
+# 5. Verify
+curl -sI https://api.kavachiq.com/health
+curl -sI https://app.kavachiq.com/
+```
+
+### Re-dormant runbook (~5 minutes)
+
+When done with the demo:
+
+```bash
+az containerapp delete -n m365vault-backend-dev  -g rg-m365vault-dev --yes
+az containerapp delete -n m365vault-worker-dev   -g rg-m365vault-dev --yes
+az containerapp delete -n m365vault-frontend-dev -g rg-m365vault-dev --yes
+az containerapp env delete -n cae-m365vault-dev  -g rg-m365vault-dev --yes
+az postgres flexible-server delete -n pg-kavachiq-dev -g rg-m365vault-dev --yes
+```
+
+### Why dormant instead of stop/start
+
+PostgreSQL Flexible Server **auto-restarts after 7 days** of being stopped, which cascades into backend container scale-up + worker scale-up + cost climb. Deleting the Container Apps env breaks the cascade permanently. Deleting Postgres removes the auto-restart timer entirely.
+
 ## CDN Caching Strategy (Cloudflare)
 
 The frontend is served through Cloudflare CDN. Cache policy is controlled at the
